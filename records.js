@@ -1,6 +1,6 @@
 import {searchLocalGames} from './game-catalog.js';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=8';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=9';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=9';
 import {bggSearchUrl} from './firebase-config.js';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],syncing=false,searchTimer=null;
@@ -47,7 +47,7 @@ async function searchGames(){
  if(!bggSearchUrl){$('gameSearchStatus').textContent=local.length?local.length+'개 결과 · 저장 게임 / 기본 목록':'기본 목록에 없는 게임입니다. 이름을 직접 입력해 저장하거나 BGG 웹 검색을 이용해주세요.';return;}
  searchController?.abort();searchController=new AbortController();const controller=searchController,serial=++searchSerial,button=$('searchBgg');button.disabled=true;$('gameSearchStatus').textContent='BGG 검색 중…';
  try{
- const token=await idToken();const url=new URL(bggSearchUrl);url.searchParams.set('query',query);const response=await fetch(url,{signal:controller.signal,headers:{Authorization:'Bearer '+token}});
+ const token=await idToken(currentUser?.uid);if(serial!==searchSerial)return;const url=new URL(bggSearchUrl);url.searchParams.set('query',query);const response=await fetch(url,{signal:controller.signal,headers:{Authorization:'Bearer '+token}});
  if(!response.ok)throw Error(response.status===202||response.status===429?'BGG가 검색을 준비 중입니다. 잠시 후 다시 검색해주세요.':'BGG에 연결하지 못했습니다. 아래 결과를 선택하거나 게임명을 직접 입력할 수 있어요.');
  const data=await response.json();if(serial!==searchSerial)return;const merged=new Map(local.map(g=>[g.id?'bgg:'+g.id:'name:'+g.name,g]));
  for(const game of Array.isArray(data.games)?data.games:[])if(/^[1-9][0-9]{0,9}$/.test(String(game.id))&&typeof game.name==='string')merged.set('bgg:'+game.id,{...game,source:'BGG'});
@@ -73,4 +73,4 @@ $('guestUpload').onclick=()=>api.confirm('기기 기록을 계정에 저장','�
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);
 window.addEventListener('scorecounter:changed',updateButtons);window.addEventListener('online',()=>{if(currentUser)refreshCloud();});
 loadLocal();updateButtons();
-if(cloudConfigured())connectCloud(async user=>{accountEpoch++;currentUser=user;if(!user){close('savePlayDialog');close('historyDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();}).catch(error=>notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error)));
+if(cloudConfigured())connectCloud(async user=>{accountEpoch++;searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;if(!user){close('savePlayDialog');close('historyDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();}).catch(error=>notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error)));

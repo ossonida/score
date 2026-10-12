@@ -7,13 +7,14 @@ export function winnerIds(play) {
   return play.players.filter(p => p.score === best).map(p => p.id);
 }
 export function createPlay({game, date, rule, players}, id = crypto.randomUUID()) {
-  const name = String(game.name || '').trim();
+  if(!game||typeof game.name!=='string'||typeof id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(id))throw Error('기록 형식을 확인해주세요.');
+  const name = game.name.trim();
   if (!name || name.length > 120) throw Error('게임명을 120자 이내로 입력해주세요.');
   const bggId = game.bggId ? String(game.bggId) : '';
   if (bggId && !/^[1-9][0-9]{0,9}$/.test(bggId)) throw Error('BGG 게임 ID는 양의 정수여야 합니다.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(date + 'T00:00:00Z').toISOString().slice(0,10) !== date) throw Error('날짜를 확인해주세요.');
   if (!['highest','lowest','cooperative'].includes(rule)) throw Error('승리 조건을 선택해주세요.');
-  if (!Array.isArray(players) || !players.length || players.length > 100 || players.some(p => !p.id || !p.name.trim() || !Number.isSafeInteger(p.score) || !/^#[0-9a-f]{6}$/i.test(p.color))) throw Error('플레이어와 점수를 확인해주세요.');
+  if (!Array.isArray(players) || !players.length || players.length > 100 || players.some(p => !p||typeof p.id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>120 || !Number.isSafeInteger(p.score) || !/^#[0-9a-f]{6}$/i.test(p.color))) throw Error('플레이어와 점수를 확인해주세요.');
   return {id, game:{name, bggId}, date, rule, createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score}))};
 }
 export function isPlay(p) {

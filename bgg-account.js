@@ -1,4 +1,5 @@
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=8';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=9';
 import {bggSearchUrl} from './firebase-config.js';
 const $=id=>document.getElementById(id);
 let user=null,epoch=0,busy=false,collection=[],plays=[];
@@ -19,7 +20,7 @@ function render(){
 }
 $('bggUsername').addEventListener('input',render);
 $('bggRegister').onclick=async()=>{
- if(!user||busy)return;const username=$('bggUsername').value.trim();if(!username||username.length>64||/[\u0000-\u001f]/.test(username)){status('BGG 사용자명을 64자 이내로 입력해주세요.');return;}
+ if(!user||busy)return;const username=$('bggUsername').value.trim();if(!validUsername(username)){status('BGG 사용자명을 64자 이내로 입력해주세요.');return;}
  const uid=user.uid,version=epoch;busy=true;render();try{
  const previous=cached('profile',{});localStorage.setItem(key('profile'),JSON.stringify({username}));
  if(previous.username?.toLowerCase()!==username.toLowerCase()){collection=[];plays=[];localStorage.removeItem(key('collection'));localStorage.removeItem(key('plays'));}
@@ -37,11 +38,12 @@ $('bggImport').onclick=async()=>{
    do{
     status(`${action==='collection'?'보유 게임':'플레이 기록'} 가져오는 중 · ${page}페이지`);
     const url=new URL(bggSearchUrl);url.searchParams.set('action',action);url.searchParams.set('username',username);url.searchParams.set('page',page);
-    const response=await fetch(url,{headers:{Authorization:`Bearer ${await idToken()}`},signal:AbortSignal.timeout(25000)});
+    const token=await idToken(uid);if(version!==epoch)return;
+    const response=await fetch(url,{headers:{Authorization:`Bearer ${token}`},signal:AbortSignal.timeout(25000)});
     if(!response.ok)throw Error(response.status===202||response.status===429?'BGG가 정보를 준비 중입니다. 잠시 후 다시 가져오기를 눌러주세요.':'BGG 공개 정보를 가져오지 못했습니다. 사용자명과 서버 설정을 확인해주세요.');
     const data=await response.json();if(version!==epoch)return;
     if(!Array.isArray(data.items))throw Error('BGG 응답 형식을 확인해주세요.');const rows=data.items;
-    if(rows.some(r=>!r.id||!r.name||!/^\d+$/.test(String(r.gameId))))throw Error('BGG 응답 형식을 확인해주세요.');
+    if(rows.length>(action==='plays'?100:10000)||rows.some(r=>!validBggItem(r,action)))throw Error('BGG 응답 형식을 확인해주세요.');
     items.push(...rows);total=Number(data.total)||items.length;page++;
     if(action==='collection'||!rows.length)break;
    }while(items.length<total&&page<=10);
@@ -58,7 +60,7 @@ render();
 if(cloudConfigured())connectCloud(async next=>{
  const version=++epoch;user=next;busy=false;collection=[];plays=[];$('bggUsername').value='';status('');
  if(!user){render();return;}
- const uid=user.uid;$('bggUsername').value=cached('profile',{}).username||'';collection=cached('collection',[]);plays=cached('plays',[]);render();
- try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;collection=data.collection;plays=data.plays;render();}}
+ const uid=user.uid,profileCache=cached('profile',{});$('bggUsername').value=validUsername(profileCache?.username)?profileCache.username:'';collection=safeBggItems(cached('collection',[]),'collection');plays=safeBggItems(cached('plays',[]),'plays');render();
+ try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;collection=safeBggItems(data.collection,'collection');plays=safeBggItems(data.plays,'plays');render();}}
  catch{if(version===epoch)status('계정의 BGG 정보를 불러오지 못해 이 기기에 저장된 내용을 표시합니다.');}
 }).catch(()=>{});

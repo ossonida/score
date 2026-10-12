@@ -1,0 +1,7 @@
+export function validUsername(value){return typeof value==='string'&&value.length>0&&value.length<=64&&!/[\u0000-\u001f\u007f]/.test(value);}
+export function validBggItem(item,kind){
+ if(!item||typeof item!=='object'||typeof item.id!=='string'||! /^[1-9][0-9]{0,19}$/.test(item.id)||typeof item.gameId!=='string'||! /^[1-9][0-9]{0,9}$/.test(item.gameId)||typeof item.name!=='string'||!item.name||item.name.length>300)return false;
+ if(kind==='collection')return item.id===item.gameId&&(item.year===undefined||typeof item.year==='string'&&item.year.length<=10);
+ return kind==='plays'&&typeof item.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(item.date)&&Number.isSafeInteger(item.quantity)&&item.quantity>0&&item.quantity<=10000&&Array.isArray(item.players)&&item.players.length<=100&&item.players.every(p=>p&&typeof p.name==='string'&&p.name.length<=120&&typeof p.username==='string'&&p.username.length<=64&&(p.score===null||Number.isFinite(p.score)&&Math.abs(p.score)<=Number.MAX_SAFE_INTEGER)&&typeof p.win==='boolean');
+}
+export function safeBggItems(value,kind){return Array.isArray(value)?value.slice(0,kind==='plays'?1000:10000).filter(p=>validBggItem(p,kind)):[];}
