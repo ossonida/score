@@ -27,6 +27,6 @@ npm run android:open
 
 현재 Android에서는 Google 로그인 버튼을 누르면 다음 단계에서 연결한다는 안내가 표시됩니다. 기존 브라우저용 Google 팝업 로그인을 Android WebView에서 그대로 사용하는 방식은 지원하지 않습니다. 웹사이트의 로그인은 변경하지 않습니다.
 
-앱 식별자는 프로토타입용 `io.github.ossonida.score`, 표시 이름은 `Score Counter`입니다. Play 등록 전에 식별자를 확정합니다. 현재 런처 아이콘·시작 화면은 Capacitor 기본값입니다.
+앱 식별자는 프로토타입용 `io.github.ossonida.score`, 표시 이름은 `Score Counter`입니다. Play 등록 전에 식별자를 확정합니다. `android:setup`을 실행하면 기존 파랑·빨강 2:0 score 아이콘이 런처와 시작 화면에 적용됩니다.
 
 첫 실행 이후 순서: 네이티브 Google 로그인 / Firebase Android 등록 및 SHA 인증서 → 앱 아이콘·실기기 테스트 → 개인정보·계정 삭제 흐름 → Play 테스트 배포. Firebase 서버·보안 규칙과 BGG 서버는 별도 배포가 필요합니다.

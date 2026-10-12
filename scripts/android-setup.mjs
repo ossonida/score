@@ -11,8 +11,8 @@ const path=resolve(root,'android/app/src/main/AndroidManifest.xml');
 let manifest=await readFile(path,'utf8');manifest=manifest.replace('android:allowBackup="true"','android:allowBackup="false"').replace('<application','<application android:usesCleartextTraffic="false"');
 manifest=manifest.replace(/(<application android:usesCleartextTraffic="false") android:usesCleartextTraffic="false"/g,'$1');
 await writeFile(path,manifest);
-
 const gradlePath=resolve(root,'android/app/build.gradle');
 const gradle=await readFile(gradlePath,'utf8');
 await writeFile(gradlePath,gradle.replaceAll("getDefaultProguardFile('proguard-android.txt')","getDefaultProguardFile('proguard-android-optimize.txt')"));
+await import('./android-icons.mjs');
 console.log('Android project ready. Run npm run android:open to open Android Studio.');
