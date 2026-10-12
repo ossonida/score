@@ -1,8 +1,8 @@
 'use strict';
-const CACHE='score-counter-shell-v9-security';
+const CACHE='score-counter-shell-v10-native-auth';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
-const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=9','bgg-account.js','records.js','records.js?v=9','records-core.js','records-core.js?v=9','bgg-validation.js','cloud-records.js','cloud-records.js?v=9','firebase-config.js','modal-ui.css?v=9','modal-ui.css','records.css','records.css?v=9','game-catalog.js'].map(path=>new URL(path,BASE).href);
+const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=10','bgg-account.js','native-auth-flow.js','records.js','records.js?v=10','records-core.js','records-core.js?v=10','bgg-validation.js','cloud-records.js','cloud-records.js?v=10','firebase-config.js','modal-ui.css?v=10','modal-ui.css','records.css','records.css?v=10','game-catalog.js'].map(path=>new URL(path,BASE).href);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('score-counter-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

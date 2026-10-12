@@ -1,3 +1,4 @@
+import {signInNativeGoogle} from './native-auth-flow.js';
 import {validUsername,validBggItem} from './bgg-validation.js';
 import {firebaseConfig} from './firebase-config.js';
 let connection;
@@ -18,8 +19,8 @@ export async function connectCloud(onUser){
   if(onUser)c.auth.onAuthStateChanged(c.session,onUser);
   return c;
 }
-export async function login(){const c=await connectCloud();await c.auth.signInWithPopup(c.session,new c.auth.GoogleAuthProvider());}
-export async function logout(){const c=await connectCloud();await c.auth.signOut(c.session);}
+export async function login(){const c=await connectCloud();if(globalThis.Capacitor?.isNativePlatform?.()){if(!globalThis.ScoreNativeAuth)throw Error('앱 로그인 모듈을 준비하지 못했습니다. 앱을 다시 실행해주세요.');await signInNativeGoogle(globalThis.ScoreNativeAuth,c);}else await c.auth.signInWithPopup(c.session,new c.auth.GoogleAuthProvider());}
+export async function logout(){const c=await connectCloud();await c.auth.signOut(c.session);if(globalThis.Capacitor?.isNativePlatform?.())await globalThis.ScoreNativeAuth?.signOut();}
 function userId(c,expected){if(!c.session.currentUser)throw Error('로그인이 필요합니다.');if(expected&&c.session.currentUser.uid!==expected)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');return c.session.currentUser.uid;}
 export async function loadCloud(uid){const c=await connectCloud();const result=await c.store.getDocs(c.store.collection(c.db,'users',userId(c,uid),'plays'));return result.docs.map(d=>({...d.data(),id:d.id}));}
 export async function saveCloud(play,uid){const c=await connectCloud();await c.store.setDoc(c.store.doc(c.db,'users',userId(c,uid),'plays',play.id),play);}

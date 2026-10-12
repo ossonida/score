@@ -1,1 +1,19 @@
-{"appId":"io.github.ossonida.score","appName":"Score Counter","webDir":"dist","android":{"allowMixedContent":false},"server":{"androidScheme":"https"}}
+{
+  "appId": "io.github.ossonida.score",
+  "appName": "Score Counter",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": [
+        "google.com"
+      ]
+    }
+  }
+}
