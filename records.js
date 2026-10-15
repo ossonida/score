@@ -1,19 +1,22 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=35';
-import {enrichGames} from './bgg-details-client.js?v=35';
-import {renderOverview} from './overview-dashboard.js?v=35';
-import {latestPlayDate} from './stats-overview.js?v=35';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=35';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=35';
-import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=35';
-import {renderStatsDashboard} from './stats-dashboard.js?v=35';
-import {mergeImported} from './data-transfer.js?v=35';
-import {searchLocalGames} from './game-catalog.js?v=35';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=35';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=35';
-import {bggSearchUrl} from './firebase-config.js?v=35';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=36';
+import {enrichGames} from './bgg-details-client.js?v=36';
+import {renderOverview} from './overview-dashboard.js?v=36';
+import {latestPlayDate} from './stats-overview.js?v=36';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=36';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=36';
+import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=36';
+import {renderStatsDashboard} from './stats-dashboard.js?v=36';
+import {mergeImported} from './data-transfer.js?v=36';
+import {searchLocalGames} from './game-catalog.js?v=36';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=36';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=36';
+import {bggSearchUrl} from './firebase-config.js?v=36';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
-let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=false,searchTimer=null;
-let recordRevision=0;
+let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
+let recordRevision=0,cloudState='idle',cloudError='';
+function recoveryKey(){return key()+'.recovery';}
+function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
+function syncFailure(error){cloudState='error';cloudError=friendly(error);message('accountError','클라우드 동기화 실패: '+cloudError);}
 let recordLoginPending=false,recordDraftVersion=0;
 const guestKey='score.plays.v1.guest';
 function key(){return currentUser?`score.plays.v1.user.${currentUser.uid}`:guestKey;}
@@ -22,12 +25,12 @@ function persist(){localStorage.setItem(key(),JSON.stringify({records,pending:[.
 function loadLocal(){const data=read(key());records=data.records;pending=new Set(data.pending);window.dispatchEvent?.(new Event('score-records:changed'));}
 function notify(text){$('recordMessage').textContent=text;if(location.hash==='#settings')$('accountStatus').textContent=text;if(location.hash==='#stats')$('statsStatus').textContent=text;}
 function message(id,error){$(id).textContent=typeof error==='string'?error:(error?.message||'처리하지 못했습니다. 다시 시도해주세요.');}
-function friendly(error){if(error?.code==='auth/popup-blocked')return '팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 로그인해주세요.';if(error?.code==='auth/popup-closed-by-user')return '로그인이 취소됐습니다.';return error?.message||'연결하지 못했습니다. 기록은 이 브라우저에 보관됩니다.';}
+function friendly(error){if(error?.code==='permission-denied')return 'Firebase 기록 접근 권한을 확인해야 합니다. 이 기기의 기록은 유지됩니다.';if(error?.code==='unavailable')return '서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 동기화해주세요.';if(error?.code==='auth/popup-blocked')return '팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 로그인해주세요.';if(error?.code==='auth/popup-closed-by-user')return '로그인이 취소됐습니다.';return error?.message||'연결하지 못했습니다. 기록은 이 브라우저에 보관됩니다.';}
 function node(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
 function close(id){$(id).close();}
 function show(id){$(id).showModal();}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function updateButtons(){ $('savePlay').hidden=!api.getPlayers().length;$('recordLoginHint').hidden=!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('accountStorage').textContent=currentUser?(pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:'이 계정의 기록을 클라우드에 저장합니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
+function updateButtons(){ $('savePlay').hidden=!api.getPlayers().length;$('recordLoginHint').hidden=!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}
@@ -149,11 +152,34 @@ $('recordFilter').onchange=()=>{mode='stats';renderHistory();};
 for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
 $('savePlay').onclick=openSave;
-async function sync(){if(!currentUser||syncing)return;syncing=true;const uid=currentUser.uid,epoch=accountEpoch;try{while(pending.size){const id=[...pending][0];if(epoch!==accountEpoch)return;const play=records.find(p=>p.id===id);if(play)await saveCloud(play,uid);else await deleteCloud(id,uid);if(epoch!==accountEpoch)return;if(records.find(p=>p.id===id)!==play)continue;pending.delete(id);persist();}notify('기록을 클라우드에 저장했습니다.');}catch(error){if(epoch===accountEpoch)notify('클라우드 저장 대기 중입니다. '+friendly(error));}finally{syncing=false;updateButtons();}}
-async function refreshCloud(){if(!currentUser)return;const uid=currentUser.uid,epoch=accountEpoch,revision=recordRevision;try{const remote=(await loadCloud(uid)).filter(isPlay);if(epoch!==accountEpoch||revision!==recordRevision)return;const map=new Map(remote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);records=[...map.values()];persist();await sync();if(epoch===accountEpoch)renderHistory();}catch(error){if(epoch===accountEpoch)notify('클라우드 기록을 불러오지 못했습니다. 기기 기록은 유지됩니다. '+friendly(error));}updateButtons();}
+async function sync(){
+ if(!currentUser||syncing===accountEpoch)return;
+ const uid=currentUser.uid,epoch=accountEpoch;syncing=epoch;
+ try{while(pending.size){const id=[...pending][0];if(epoch!==accountEpoch)return;const play=records.find(p=>p.id===id);if(play)await saveCloud(play,uid);else await deleteCloud(id,uid);if(epoch!==accountEpoch)return;if(records.find(p=>p.id===id)!==play)continue;pending.delete(id);persist();}
+ if(epoch===accountEpoch){cloudState='ready';cloudError='';message('accountError','');notify('기록을 클라우드에 저장했습니다.');}
+ }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 저장 대기 중입니다. '+friendly(error));}}
+ finally{if(syncing===epoch)syncing=null;updateButtons();}
+}
+async function refreshCloud(){
+ if(!currentUser)return;
+ const uid=currentUser.uid,epoch=accountEpoch,revision=recordRevision;cloudState='loading';updateButtons();
+ try{const remote=await loadCloud(uid);if(epoch!==accountEpoch)return;
+ if(!Array.isArray(remote)||remote.some(p=>!isPlay(p)))throw Error('클라우드 기록 형식을 확인하지 못했습니다. 기기 기록을 유지합니다.');
+ if(revision!==recordRevision){await sync();return;}
+ const map=new Map(remote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);
+ // Keep a separate, account-scoped recovery copy before accepting remote removals.
+ // Never automatically resurrect games intentionally deleted on another device.
+ const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));
+ if(missing.length){const backup=new Map(read(recoveryKey()).records.map(p=>[p.id,p]));for(const p of missing)backup.set(p.id,p);localStorage.setItem(recoveryKey(),JSON.stringify({records:[...backup.values()],pending:[]}));}
+ const previous=records;records=[...map.values()];try{persist();}catch(error){records=previous;throw error;}
+ await sync();if(epoch===accountEpoch)renderHistory();
+ }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 기록을 불러오지 못했습니다. 기기 기록은 유지됩니다. '+friendly(error));}}
+ finally{if(epoch===accountEpoch)updateButtons();}
+}
 $('accountLogin').onclick=async()=>{const button=$('accountLogin');button.disabled=true;$('accountError').textContent='';try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 잠시 후 다시 시도해주세요.');await login();}catch(e){message('accountError',friendly(e));}finally{button.disabled=false;}};
 $('accountLogout').onclick=async()=>{try{await logout();$('accountError').textContent='';notify('로그아웃했습니다.');}catch(e){message('accountError',friendly(e));}};
 $('cloudSync').onclick=refreshCloud;
+$('recoverRecords').onclick=()=>{const context={key:key(),epoch:accountEpoch},items=recoveryRecords();api.confirm('기기 기록 복구',items.length+'개 기록을 계정에 다시 저장할까요? 다른 기기에서 삭제한 기록도 포함될 수 있습니다.',async()=>{try{checkRecordContext(context);const old=records,oldPending=new Set(pending);const restored=recoveryRecords();records=[...records,...restored];for(const p of restored)pending.add(p.id);try{persist();}catch(error){records=old;pending=oldPending;throw error;}renderHistory();updateButtons();await sync();}catch(error){message('accountError',error);}});};
 $('guestUpload').onclick=()=>api.confirm('기기 기록을 계정에 저장','비로그인 상태에서 저장한 이 기기의 기록을 현재 계정에 복사할까요?',async()=>{const guest=read(guestKey).records;const old=records,oldPending=new Set(pending);try{const known=new Set(records.map(p=>p.id));for(const p of guest)if(!known.has(p.id)){records.push(p);pending.add(p.id);}persist();updateButtons();await sync();renderHistory();}catch(e){records=old;pending=oldPending;message('accountError',e);}});
 window.ScoreRecords={
  renderHistory,
@@ -181,4 +207,4 @@ window.ScoreRecords={
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);
 window.addEventListener('scorecounter:changed',updateButtons);window.addEventListener('online',()=>{if(currentUser)refreshCloud();});
 loadLocal();updateButtons();
-if(cloudConfigured())connectCloud(async user=>{accountEpoch++;recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error)));
+if(cloudConfigured())connectCloud(async user=>{accountEpoch++;recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error)));
