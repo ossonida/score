@@ -1,24 +1,24 @@
-import {bggId} from './bgg-metadata.js?v=28';
-import {recentHighlights,rivalStats} from './social-insights.js?v=28';
-import {gameKey} from './records-core.js?v=28';
-import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=28';
-import {readIdentity,meIn} from './personal-stats.js?v=28';
-import {renderGameArtwork} from './game-artwork.js?v=28';
+import {bggId} from './bgg-metadata.js?v=29';
+import {recentHighlights,rivalStats} from './social-insights.js?v=29';
+import {gameKey} from './records-core.js?v=29';
+import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=29';
+import {readIdentity,meIn} from './personal-stats.js?v=29';
+import {renderGameArtwork} from './game-artwork.js?v=29';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
-function metrics(box,values){const row=el('div',undefined,'insight-metrics');for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
+function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderOverview(container,records,{scope,view,onGame,onRecord}){
  container.replaceChildren();const profile=readIdentity(scope),day=latestPlayDate(records),subset=view==='recent'?records.filter(p=>p.date===day):records,s=overviewStats(subset,profile);
  const hero=el('section',undefined,'insight-hero overview-summary');hero.append(el('h2',view==='recent'?(day?`${Number(day.slice(5,7))}월 ${Number(day.slice(8,10))}일 함께한 기록`:'최근 기록'):'지금까지의 플레이'));
  if(!s.total){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings';hero.append(link);container.append(hero);return;}
  if(view==='recent'){hero.className+=' recent-summary';metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.total,'플레이 횟수'],[s.wins,'내 우승 횟수'],[s.gameCount,'게임 종류']]);note(hero,'저장된 전체 기록 기준입니다.');}container.append(hero);
- if(s.unassigned){const hint=el('div',undefined,'stats-self-hint');note(hint,`내 플레이어 미지정 ${num(s.unassigned)}경기 · 우승은 내 플레이어가 지정된 경쟁 기록에서 집계합니다.`);const button=el('button','내 플레이어 지정','insight-link');button.type='button';button.onclick=()=>{location.hash='settings';};hint.append(button);container.append(hint);}
+ if(s.unassigned){const hint=el('div',undefined,'stats-self-hint');note(hint,`내 플레이어 미지정 ${num(s.unassigned)}경기 · 우승은 내 플레이어가 지정된 경쟁 기록에서 집계합니다.`);const button=el('button','이름·닉네임 연결','insight-link');button.type='button';button.onclick=()=>{location.hash='settings';};hint.append(button);container.append(hint);}
  if(view==='recent')renderHighlights(container,records,profile,onRecord);
  if(view==='all'){
   renderRivals(container,records,profile,onRecord);
   const card=el('section',undefined,'insight-card overview-types');card.append(el('h3','어떤 게임을 했을까'));
-  for(const [type,label]of Object.entries(typeLabels)){const row=el('div',undefined,'type-count-row'),track=el('span',undefined,'type-track'),bar=el('span',undefined,'type-fill type-'+type);bar.style.width=`${s.types[type]/s.total*100}%`;track.setAttribute('aria-hidden','true');track.append(bar);row.append(el('span',label),el('strong',`${num(s.types[type])}건`),track);card.append(row);}container.append(card);
+  for(const [type,label]of Object.entries(typeLabels).filter(([type])=>s.types[type]>0)){const row=el('div',undefined,'type-count-row'),track=el('span',undefined,'type-track'),bar=el('span',undefined,'type-fill type-'+type);bar.style.width=`${s.types[type]/s.total*100}%`;track.setAttribute('aria-hidden','true');track.append(bar);row.append(el('span',label),el('strong',`${num(s.types[type])}건`),track);card.append(row);}container.append(card);
   if(s.types.unknown){const button=el('button',`미분류 ${s.types.unknown}건 · 분류 확인하기`,'insight-link');button.type='button';button.onclick=()=>onGame(s.games.find(g=>g.types.has('unknown')).key);card.append(button);}
  }
  const games=el('section',undefined,'insight-card overview-games');games.append(el('h3',view==='recent'?'이날 플레이한 게임':'많이 플레이한 게임'));

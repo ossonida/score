@@ -82,3 +82,8 @@ dialog .record-actions button,dialog .actions button{padding:10px 16px;border-ra
 #savePlay{background:#237bff;border-color:#237bff;color:white;font-weight:500}
 @media(min-width:700px) and (min-height:480px){#savePlayDialog{max-width:740px}.save-layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px}.save-result{border-top:0;border-left:1px solid var(--popup-line);padding:0 0 0 20px}#savePlayDialog .record-snapshot{max-height:280px}}
 @media(max-height:480px){.save-layout{gap:10px}.finish-note{margin-bottom:8px}.save-result{padding-top:10px}#savePlayDialog .record-snapshot{max-height:88px}.finish-player{padding:7px 10px;min-height:36px}}
+
+/* Readable supporting text and consistent touch targets in compact dialogs. */
+dialog label,dialog .field,.record-dialog label{font-size:13px}dialog .hint,dialog .record-note,dialog .error,dialog .record-error{font-size:13px;line-height:1.55}
+dialog button:not(.swatch):not(.score-close):not(.bgg-web-link):not(.game-result-choice){min-height:44px}dialog .record-head h2{font-weight:600}
+@media(max-height:480px){dialog .hint,dialog .record-note{margin:6px 0}}

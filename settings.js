@@ -1,8 +1,8 @@
-import {fillSelfSelect,rememberIdentity} from './player-memory.js?v=28';
-import {renderIdentitySettings} from './personal-dashboard.js?v=28';
-import {rememberGameImages} from './game-artwork.js?v=28';
-import './records.js?v=28';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=28';
+import {readIdentity} from './personal-stats.js?v=29';
+import {renderIdentitySettings} from './personal-dashboard.js?v=29';
+import {rememberGameImages} from './game-artwork.js?v=29';
+import './records.js?v=29';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=29';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
@@ -39,17 +39,8 @@ $('confirmImport').onclick=()=>{
  catch(error){status(error.message||'가져오지 못했습니다.');}
  finally{busy=false;update();}
 };
-route();update();
+let identityStamp='';
+function identityVersion(context){return JSON.stringify([context.key,context.epoch,readIdentity(context.key),context.records.map(p=>[p.id,p.players.map(x=>[x.name,x.anonymous])])]);}
+function renderSelf(context){const stamp=identityVersion(context);if(stamp===identityStamp)return;identityStamp=stamp;renderIdentitySettings($('identityEditor'),context.records,context.key,()=>{identityStamp=identityVersion(api.context());window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();});}
 
-function renderSelf(context){
- const make=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
- const players=window.ScoreCounter.getPlayers(),current=$('currentSelfEditor'),label=make('label','현재 점수판에서 나는'),select=make('select'),button=make('button','지정'),feedback=make('p');
- select.setAttribute('aria-label','현재 점수판의 내 플레이어');fillSelfSelect(select,players,context.key);button.type='button';button.className='secondary';button.disabled=!players.length;
- button.onclick=()=>{if(!contextMatches(context))return;try{window.ScoreCounter.setSelf(select.value,context.key);rememberIdentity(context.key,players.find(p=>p.id===select.value));window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();}catch{feedback.textContent='설정을 저장하지 못했습니다.';}};label.append(select);current.replaceChildren(label,button,feedback);
- renderIdentitySettings($('identityEditor'),context.records,context.key,()=>{window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();});
- const saved=$('savedSelfEditor');saved.replaceChildren();if(!context.records.length){saved.append(make('p','저장된 기록이 없습니다.'));return;}
- const games=make('select'),person=make('select'),save=make('button','내 플레이어 지정'),message=make('p');games.setAttribute('aria-label','내 플레이어를 지정할 경기');person.setAttribute('aria-label','저장된 경기의 내 플레이어');
- for(const play of [...context.records].sort((a,b)=>b.date.localeCompare(a.date))){const option=make('option',play.date+' · '+play.game.name);option.value=play.id;games.append(option);}games.value=games.children[0].value;
- const fill=()=>fillSelfSelect(person,context.records.find(p=>p.id===games.value).players,context.key);games.onchange=fill;fill();save.type='button';save.className='secondary';save.onclick=()=>{try{api.assignSelf(games.value,person.value,context);message.textContent='저장했습니다.';}catch(error){message.textContent=error.message;}};saved.append(games,person,save,message);
-}
-window.addEventListener('scorecounter:changed',()=>{if(location.hash==='#settings')update();});
+update();route();

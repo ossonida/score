@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=28';
+import {gameKey,winnerIds} from './records-core.js?v=29';
 const identity=name=>name.trim().normalize('NFKC').toLocaleLowerCase();
 const scored=p=>p.players.length>=2&&p.players.every(x=>typeof x.score==='number'&&Number.isFinite(x.score));
 export function summarizeStats(records,today){

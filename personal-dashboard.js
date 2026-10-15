@@ -1,5 +1,5 @@
-import {renderGameArtwork} from './game-artwork.js?v=28';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=28';
+import {renderGameArtwork} from './game-artwork.js?v=29';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=29';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';
@@ -7,12 +7,13 @@ function section(title,cls=''){const box=el('section',undefined,'insight-card '+
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderIdentitySettings(container,records,scope,onChange){
  if(!container)return;container.replaceChildren();const names=namesIn(records),profile=readIdentity(scope),form=el('form',undefined,'identity-form');
- note(form,'기록 속 내 이름을 선택하세요. 다른 닉네임도 연결할 수 있습니다. 익명 인원은 각 기록의 내 플레이어 지정에서 선택하세요.');
+ if(!names.length){note(container,'기록을 저장하거나 가져오면 이름·닉네임을 연결할 수 있습니다.');return;}
+ note(form,'기록 속 내 이름을 고르고, 같은 사람인 다른 닉네임을 연결하세요.');
  const label=el('label','내 이름'),select=el('select');select.setAttribute('aria-label','기록 속 내 이름');const empty=el('option','내 이름 선택');empty.value='';select.append(empty);
  for(const [key,name]of names){const option=el('option',name);option.value=key;select.append(option);}if(profile&&names.some(([key])=>key===profile.primary))select.value=profile.primary;
  label.append(select);form.append(label);const aliases=el('fieldset',undefined,'identity-aliases');aliases.append(el('legend','같은 사람인 다른 닉네임'));const checks=[];
  function drawAliases(){aliases.replaceChildren(el('legend','같은 사람인 다른 닉네임'));checks.length=0;for(const [key,name]of names){if(key===select.value)continue;const label=el('label',undefined,'identity-check'),check=el('input');check.type='checkbox';check.value=key;check.checked=Boolean(profile?.aliases.includes(key));label.append(check,el('span',name));aliases.append(label);checks.push(check);}aliases.hidden=!select.value;}
- select.onchange=drawAliases;drawAliases();form.append(aliases);const button=el('button','내 플레이어 저장','primary');button.type='submit';const feedback=el('p',undefined,'insight-footnote');feedback.setAttribute('role','status');form.append(button,feedback);note(form,'이 기기의 현재 계정에만 기억합니다. 로그인 계정이 바뀌면 따로 선택합니다.');
+ select.onchange=drawAliases;drawAliases();form.append(aliases);const button=el('button','연결 저장','primary');button.type='submit';const feedback=el('p',undefined,'insight-footnote');feedback.setAttribute('role','status');form.append(button,feedback);note(form,'이 기기의 현재 계정에만 기억합니다. 로그인 계정이 바뀌면 따로 선택합니다.');
  form.onsubmit=event=>{event.preventDefault();try{saveIdentity(scope,{primary:select.value,aliases:select.value?checks.filter(x=>x.checked).map(x=>x.value):[]});onChange();feedback.textContent='내 플레이어 설정을 저장했습니다.';}catch{feedback.textContent='설정을 저장하지 못했습니다. 브라우저 저장 공간을 확인해주세요.';}};container.append(form);
 }
 export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{}}={}){
