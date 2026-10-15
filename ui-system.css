@@ -126,3 +126,5 @@ dialog .actions .danger{margin-right:0}
 }
 
 .empty .empty-actions>.text-action{background:transparent;border:0;border-radius:0;color:#a8c6ec;min-height:44px;padding:10px 4px;font-size:13px;font-weight:400;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#526c8d}.empty .empty-actions>.text-action:hover{color:#d8eaff;text-decoration-color:currentColor}
+
+.bottom-nav{gap:0;padding-top:6px;padding-inline:12px}.bottom-nav button{gap:0;min-height:44px;border-radius:10px;background:transparent}.bottom-nav button[aria-current=page]{background:transparent;color:#82baff}.bottom-nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.bottom-nav svg circle{fill:#101722}.bottom-nav button:not([aria-current=page]){color:#8291a7}
