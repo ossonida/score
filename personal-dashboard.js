@@ -1,6 +1,6 @@
-import {metadata,domainLabels} from './bgg-metadata.js?v=39';
-import {renderGameArtwork} from './game-artwork.js?v=39';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=39';
+import {metadata,domainLabels} from './bgg-metadata.js?v=40';
+import {renderGameArtwork} from './game-artwork.js?v=40';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=40';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';

@@ -1,16 +1,16 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=39';
-import {enrichGames} from './bgg-details-client.js?v=39';
-import {renderOverview} from './overview-dashboard.js?v=39';
-import {latestPlayDate} from './stats-overview.js?v=39';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=39';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=39';
-import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=39';
-import {renderStatsDashboard} from './stats-dashboard.js?v=39';
-import {mergeImported} from './data-transfer.js?v=39';
-import {searchLocalGames,resolveGame,matchGameRecords} from './game-catalog.js?v=39';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=39';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=39';
-import {bggSearchUrl} from './firebase-config.js?v=39';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=40';
+import {enrichGames} from './bgg-details-client.js?v=40';
+import {renderOverview} from './overview-dashboard.js?v=40';
+import {latestPlayDate} from './stats-overview.js?v=40';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=40';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=40';
+import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=40';
+import {renderStatsDashboard} from './stats-dashboard.js?v=40';
+import {mergeImported} from './data-transfer.js?v=40';
+import {searchLocalGames,resolveGame,matchGameRecords} from './game-catalog.js?v=40';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=40';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=40';
+import {bggSearchUrl} from './firebase-config.js?v=40';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
@@ -49,7 +49,7 @@ function addRecordPerson(person){if(snapshot.length>=100)throw Error('참여자�
 function renderParticipantChoices(){const box=$('recentParticipants');box.replaceChildren();const people=recentRecordParticipants();$('recordParticipantsHint').textContent=people.length?'최근 함께한 사람 · 눌러서 선택':'함께한 사람을 추가하세요. 혼자 했다면 내 이름을 입력하세요.';for(const person of people){const button=node('button',person.name,'recent-game participant-choice'),selected=snapshot.some(p=>nameKey(p.name)===nameKey(person.name));button.type='button';button.setAttribute('aria-pressed',String(selected));button.onclick=()=>{try{if(selected){snapshot=snapshot.filter(p=>nameKey(p.name)!==nameKey(person.name));refreshSnapshotPeople();}else addRecordPerson(person);$('playError').textContent='';}catch(e){message('playError',e);}};box.append(button);}}
 function renderSnapshot(){$('recordAnonymousHint').hidden=!snapshot.some(isAutomatic);const noScores=$('playWithoutScores').checked,rule=$('playRule').value,wins=noScores?[]:winnerIds({rule,players:snapshot});$('playSnapshot').replaceChildren();const badges=new Map(),ranked=noScores?snapshot:[...snapshot].sort((a,b)=>!Number.isFinite(a.score)?1:!Number.isFinite(b.score)?-1:rule==='lowest'?a.score-b.score:b.score-a.score);for(const person of ranked){const row=node('div',undefined,'finish-player record-participant'),name=node('span',isAutomatic(person)?'익명의 플레이어 ('+person.name+')':person.name,'finish-name'),remove=node('button','×','record-participant-remove');remove.type='button';remove.setAttribute('aria-label',person.name+' 참여자 제외');remove.onclick=()=>{snapshot=snapshot.filter(p=>p.id!==person.id);refreshSnapshotPeople();};row.append(name);if(noScores)row.append(node('span','점수 없음','record-note'));else{const input=node('input');input.type='text';input.inputMode='decimal';input.value=Number.isFinite(person.score)?String(person.score):'';input.placeholder='점수';input.maxLength=24;input.setAttribute('aria-label',person.name+' 기록 점수');input.oninput=()=>{const raw=input.value.trim();person.score=raw===''?null:/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)?Number(raw):NaN;const current=winnerIds({rule,players:snapshot});for(const [id,badge]of badges)badge.textContent=current.includes(id)?'승리':'';};row.append(input);}const badge=node('span',wins.includes(person.id)?'승리':'','finish-winner');badges.set(person.id,badge);row.append(badge,remove);$('playSnapshot').append(row);}if(!snapshot.length)$('playSnapshot').append(node('p','참여자를 추가하면 여기에 표시됩니다.','record-note'));}
 function updateRecordStorage(){$('recordStorageHint').textContent=currentUser?'현재 로그인한 계정에 기록을 저장합니다.':'로그인 없이 이 기기에 저장할 수 있습니다. 로그인하면 다른 기기에서도 기록을 확인할 수 있습니다.';$('recordLogin').hidden=!!currentUser;$('commitPlay').textContent=currentUser?'기록 저장':'이 기기에 저장';}
-function openSave(){recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();fillSelfSelect($('playSelf'),snapshot,key());$('playWithoutScores').checked=!snapshot.length;$('recordParticipantName').value='';const draft=readDraft();$('playGame').value=draft.name||'';$('playBggId').value=/^[1-9][0-9]{0,9}$/.test(draft.bggId||'')?draft.bggId:'';$('playDate').value=today();$('playRule').value=['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(draft.name,draft.bggId);$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 기본 목록 검색 · 목록에 없으면 직접 입력할 수 있어요.';renderRecentGames();renderSnapshot();renderParticipantChoices();updateRecordStorage();updateGameOptions();show('savePlayDialog');}
+function openSave(){recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();fillSelfSelect($('playSelf'),snapshot,key());$('playWithoutScores').checked=!snapshot.length;$('recordParticipantName').value='';const draft=readDraft();$('playGame').value='';$('playBggId').value='';$('playDate').value=today();$('playRule').value=['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame('','');$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 기본 목록 검색 · 목록에 없으면 직접 입력할 수 있어요.';renderRecentGames();renderSnapshot();renderParticipantChoices();updateRecordStorage();updateGameOptions();show('savePlayDialog');}
 $('playWithoutScores').onchange=renderSnapshot;
 $('addRecordParticipant').onclick=()=>{try{addRecordPerson({name:$('recordParticipantName').value});$('recordParticipantName').value='';$('playError').textContent='';}catch(e){message('playError',e);}};
 $('recordParticipantName').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('addRecordParticipant').onclick();}});
