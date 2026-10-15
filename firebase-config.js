@@ -8,6 +8,6 @@ export const firebaseConfig = {
   appId: "1:846954040500:web:a963b214d62bd393451be1",
   measurementId: "G-Q00F1CE5S4"
 };
-// Google Analytics is already initialized by index.html using the existing site ID.
+// Google Analytics is initialized by app-analytics.js after checking exclusions.
 // Do not call getAnalytics here to avoid adding a second analytics destination.
 export const bggSearchUrl = '';
