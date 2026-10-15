@@ -1,7 +1,7 @@
-import {gameKey,winnerIds} from './records-core.js?v=23';
-import {meIn} from './personal-stats.js?v=23';
-import {starterGames,normalizeGameQuery} from './game-catalog.js?v=23';
-import {gameTypes} from './game-types.js?v=23';
+import {gameKey,winnerIds} from './records-core.js?v=24';
+import {meIn} from './personal-stats.js?v=24';
+import {starterGames,normalizeGameQuery} from './game-catalog.js?v=24';
+import {gameTypes} from './game-types.js?v=24';
 export const typeLabels={strategy:'전략',cooperative:'협동','family-party':'가족·파티',other:'기타',unknown:'미분류'};
 export function readGameTypes(scope){try{const data=JSON.parse(localStorage.getItem('score.gameTypes.v1.'+scope)||'{}');return data&&typeof data==='object'&&!Array.isArray(data)?Object.fromEntries(Object.entries(data).filter(([k,v])=>k.length<=160&&Object.hasOwn(typeLabels,v)&&v!=='unknown')):{};}catch{return {};}}
 export function saveGameType(scope,game,type){if(type!=='auto'&&(!Object.hasOwn(typeLabels,type)||type==='unknown'))throw Error('게임 분류를 확인해주세요.');const data=readGameTypes(scope),key=gameKey(game);if(type==='auto')delete data[key];else data[key]=type;localStorage.setItem('score.gameTypes.v1.'+scope,JSON.stringify(data));}

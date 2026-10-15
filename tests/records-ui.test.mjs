@@ -26,11 +26,11 @@ async function app(store=new Map(),mockCloud=false){
 async function save(a,name='카탄',rule='highest'){
  a.get('savePlay').onclick();a.get('playGame').value=name;a.get('playDate').value='2026-10-09';a.get('playRule').value=rule;await a.get('savePlayForm').onsubmit({preventDefault(){}});
 }
-test('save, reload, stats, restore and delete are usable without Firebase',async()=>{
+test('save, reload and stats work without Firebase; record management is absent',async()=>{
  const a=await app();await save(a);assert.match(a.get('recordMessage').textContent,/저장했습니다/);assert.equal(JSON.parse(a.store.get('score.plays.v1.guest')).records.length,1);
  const b=await app(a.store);b.bridge.renderHistory();assert.equal(b.get('recordList').children.length,1);
  b.get('statsGames').onclick();b.get('statsTab').onclick();assert.equal(b.get('recordList').children[0].children[2].children[0].children[1].children.length,2);
- b.get('historyTab').onclick();const findActions=e=>e.className==='record-actions'?e:e.children.map(findActions).find(Boolean);const actions=findActions(b.get('recordList').children[0]);actions.children[0].onclick();assert.equal(b.players()[0].score,20);await actions.children[1].onclick();assert.equal(JSON.parse(b.store.get('score.plays.v1.guest')).records.length,0);
+ b.get('historyTab').onclick();const walk=e=>[e,...e.children.flatMap(walk)];assert.equal(walk(b.get('recordList')).some(e=>e.className==='record-options'||e.className==='record-actions'),false);assert.equal(JSON.parse(b.store.get('score.plays.v1.guest')).records.length,1);
 });
 test('BGG fallback and unavailable login are honest and do not prevent saving',async()=>{const a=await app();a.get('savePlay').onclick();a.get('playGame').value='Catan';await a.get('openBggWebsite').onclick();assert.match(a.opens[0][0],/^https:\/\/boardgamegeek.com\/geeksearch/);await a.get('accountLogin').onclick();assert.match(a.get('accountError').textContent,/준비 중/);await save(a,'Catan');assert.equal(JSON.parse(a.store.get('score.plays.v1.guest')).records[0].game.name,'Catan');});
 test('untrusted game/player text is inserted as text, not HTML',async()=>{const a=await app();await save(a,'<img src=x onerror=alert(1)>');assert.equal(a.get('recordList').children[0].children[0].textContent,'<img src=x onerror=alert(1)>');});

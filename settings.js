@@ -1,11 +1,13 @@
-import {rememberGameImages} from './game-artwork.js?v=23';
-import './records.js?v=23';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=23';
+import {fillSelfSelect,rememberIdentity} from './player-memory.js?v=24';
+import {renderIdentitySettings} from './personal-dashboard.js?v=24';
+import {rememberGameImages} from './game-artwork.js?v=24';
+import './records.js?v=24';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=24';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){const context=api.context();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+function update(){const context=api.context();renderSelf(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
@@ -38,3 +40,16 @@ $('confirmImport').onclick=()=>{
  finally{busy=false;update();}
 };
 route();update();
+
+function renderSelf(context){
+ const make=(tag,text)=>{const e=document.createElement(tag);if(text)e.textContent=text;return e;};
+ const players=window.ScoreCounter.getPlayers(),current=$('currentSelfEditor'),label=make('label','현재 점수판에서 나는'),select=make('select'),button=make('button','지정'),feedback=make('p');
+ select.setAttribute('aria-label','현재 점수판의 내 플레이어');fillSelfSelect(select,players,context.key);button.type='button';button.className='secondary';button.disabled=!players.length;
+ button.onclick=()=>{if(!contextMatches(context))return;try{window.ScoreCounter.setSelf(select.value,context.key);rememberIdentity(context.key,players.find(p=>p.id===select.value));window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();}catch{feedback.textContent='설정을 저장하지 못했습니다.';}};label.append(select);current.replaceChildren(label,button,feedback);
+ renderIdentitySettings($('identityEditor'),context.records,context.key,()=>{window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();});
+ const saved=$('savedSelfEditor');saved.replaceChildren();if(!context.records.length){saved.append(make('p','저장된 기록이 없습니다.'));return;}
+ const games=make('select'),person=make('select'),save=make('button','내 플레이어 지정'),message=make('p');games.setAttribute('aria-label','내 플레이어를 지정할 경기');person.setAttribute('aria-label','저장된 경기의 내 플레이어');
+ for(const play of [...context.records].sort((a,b)=>b.date.localeCompare(a.date))){const option=make('option',play.date+' · '+play.game.name);option.value=play.id;games.append(option);}games.value=games.children[0].value;
+ const fill=()=>fillSelfSelect(person,context.records.find(p=>p.id===games.value).players,context.key);games.onchange=fill;fill();save.type='button';save.className='secondary';save.onclick=()=>{try{api.assignSelf(games.value,person.value,context);message.textContent='저장했습니다.';}catch(error){message.textContent=error.message;}};saved.append(games,person,save,message);
+}
+window.addEventListener('scorecounter:changed',()=>{if(location.hash==='#settings')update();});
