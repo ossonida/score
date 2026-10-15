@@ -103,3 +103,5 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .cloud-progress[hidden]{display:none}
 @keyframes score-loading{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){[aria-busy="true"]::before,.cloud-progress::before{animation:none;border-right-color:currentColor;border-style:dotted}}
+
+.toolbar .tool[hidden]{display:none}
