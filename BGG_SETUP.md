@@ -25,3 +25,8 @@ It returns official XML API `thing?stats=1` covers, all BGG family ranks (game t
 The frontend refreshes saved games in batches and caches details locally for seven days. Failures keep existing covers and records. Name-only games match only exact known aliases; arbitrary names are not guessed.
 Until BGG approval and server deployment are complete, only packaged BGG metadata and imported covers are available. The app deliberately does not bypass BGG API approval using a public proxy.
 Manual type overrides are no longer used. Types can overlap; totals can exceed play count. Cooperative is a mechanic, shown separately from BGG game types.
+
+## Approval received
+The public, non-commercial application has been approved by BGG. Approval does not configure the token or deploy the server. Obtain the API token from the approved application at https://boardgamegeek.com/applications and store it only using Firebase Secret Manager (command above). Never paste it into chat, frontend configuration, or GitHub.
+
+Before enabling live API access, display the official “Powered by BGG” logo in the app according to https://boardgamegeek.com/using_the_xml_api. A text credit is not a substitute for the required logo. Download the official artwork from BGG; do not redraw their logo. The official page/artwork could not be retrieved from this execution environment, so logo placement remains a prerequisite.

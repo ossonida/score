@@ -7,15 +7,18 @@ const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'
 function section(title,cls=''){const box=el('section',undefined,'insight-card '+cls);box.append(el('h3',title));return box;}
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderIdentitySettings(container,records,scope,onChange){
- if(!container)return;container.replaceChildren();const names=namesIn(records),profile=readIdentity(scope),form=el('form',undefined,'identity-form');
- if(!names.length){note(container,'기록을 저장하거나 가져오면 이름·닉네임을 연결할 수 있습니다.');return;}
- note(form,'기록 속 내 이름을 고르고, 같은 사람인 다른 닉네임을 연결하세요.');
- const label=el('label','내 이름'),select=el('select');select.setAttribute('aria-label','기록 속 내 이름');const empty=el('option','내 이름 선택');empty.value='';select.append(empty);
+ if(!container)return;container.replaceChildren();const names=namesIn(records);let profile=readIdentity(scope);const form=el('form',undefined,'identity-form');
+ if(!names.length){note(container,'기록을 저장하거나 가져오면 내 이름을 선택할 수 있습니다.');return;}
+ const label=el('label','기록에서 사용하는 내 이름'),select=el('select');select.setAttribute('aria-label','기록 속 내 이름');const empty=el('option','이름 선택');empty.value='';select.append(empty);
  for(const [key,name]of names){const option=el('option',name);option.value=key;select.append(option);}if(profile&&names.some(([key])=>key===profile.primary))select.value=profile.primary;
- label.append(select);form.append(label);const aliases=el('fieldset',undefined,'identity-aliases');aliases.append(el('legend','같은 사람인 다른 닉네임'));const checks=[];
- function drawAliases(){aliases.replaceChildren(el('legend','같은 사람인 다른 닉네임'));checks.length=0;for(const [key,name]of names){if(key===select.value)continue;const label=el('label',undefined,'identity-check'),check=el('input');check.type='checkbox';check.value=key;check.checked=Boolean(profile?.aliases.includes(key));label.append(check,el('span',name));aliases.append(label);checks.push(check);}aliases.hidden=!select.value;}
- select.onchange=drawAliases;drawAliases();form.append(aliases);const button=el('button','연결 저장','primary');button.type='submit';const feedback=el('p',undefined,'insight-footnote');feedback.setAttribute('role','status');form.append(button,feedback);note(form,'이 기기의 현재 계정에만 기억합니다. 로그인 계정이 바뀌면 따로 선택합니다.');
- form.onsubmit=event=>{event.preventDefault();try{saveIdentity(scope,{primary:select.value,aliases:select.value?checks.filter(x=>x.checked).map(x=>x.value):[]});onChange();feedback.textContent='내 플레이어 설정을 저장했습니다.';}catch{feedback.textContent='설정을 저장하지 못했습니다. 브라우저 저장 공간을 확인해주세요.';}};container.append(form);
+ label.append(select);form.append(label);const selected=el('div',undefined,'identity-selected'),details=el('details',undefined,'identity-more'),summary=el('summary','다른 이름도 사용하나요? 닉네임 연결'),choices=el('div',undefined,'identity-chips'),feedback=el('p',undefined,'insight-footnote');feedback.setAttribute('role','status');details.append(summary,choices);form.append(selected,details,feedback);
+ function save(next){try{saveIdentity(scope,next);profile=readIdentity(scope);onChange();feedback.textContent='저장되었습니다.';return true;}catch{feedback.textContent='저장하지 못했습니다. 다시 시도해주세요.';return false;}}
+ function draw(){selected.replaceChildren();choices.replaceChildren();const primary=select.value,aliases=new Set(profile?.aliases||[]);details.hidden=!primary||names.length<2;selected.hidden=!primary||!aliases.size;
+  for(const [key,name]of names){if(key===primary)continue;const linked=aliases.has(key),button=el('button',name,'identity-chip');button.type='button';button.setAttribute('aria-pressed',String(linked));button.onclick=()=>{const next=new Set(profile?.aliases||[]);if(next.has(key))next.delete(key);else next.add(key);if(save({primary,aliases:[...next]}))draw();};choices.append(button);
+   if(linked){const chip=el('button',name+' ×','identity-chip identity-linked');chip.type='button';chip.setAttribute('aria-label',name+' 닉네임 연결 해제');chip.onclick=()=>{if(save({primary,aliases:[...aliases].filter(x=>x!==key)}))draw();};selected.append(chip);}
+  }
+ }
+ select.onchange=()=>{const next={primary:select.value,aliases:select.value?(profile?.aliases||[]).filter(x=>x!==select.value):[]};if(!save(next))select.value=profile?.primary||'';draw();};form.onsubmit=event=>event.preventDefault();draw();container.append(form);
 }
 export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{}}={}){
  const previousRule=container.querySelector('.personal-rule')?.value;

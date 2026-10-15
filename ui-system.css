@@ -135,3 +135,13 @@ dialog .actions .danger{margin-right:0}
 #bulkDialog .saved-player-chip[aria-pressed=true]::before{content:'✓';margin-right:5px}
 
 .bulk-count-stepper{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:12px;align-items:center;padding:8px;border:1px solid var(--ui-line);border-radius:12px;background:#0b111c}#bulkDialog .bulk-count-stepper>button{width:48px;height:48px;min-height:48px;padding:0;border:0;border-radius:10px;background:var(--ui-secondary);color:#dceaff;font-size:26px;line-height:1;touch-action:manipulation}.bulk-count-number{display:flex;justify-content:center;align-items:baseline;gap:6px;min-width:0}.bulk-count-number output{font-size:26px;font-weight:500;line-height:1.2;font-variant-numeric:tabular-nums}.bulk-count-number span{font-size:13px;color:var(--ui-muted)}
+
+/* Keep identity setup focused on one selection; aliases are optional. */
+#settingsIdentityCard .identity-form{gap:10px}
+.identity-more>summary{cursor:pointer;color:#a9c6e8;font-size:13px;padding:10px 0;min-height:44px}
+.identity-chips,.identity-selected{display:flex;flex-wrap:wrap;gap:7px}
+#settingsIdentityCard .identity-chip{width:auto;min-height:36px;padding:7px 12px;border:1px solid #34465d;border-radius:18px;background:#172335;color:#d3dfef;font-size:13px;font-weight:400}
+#settingsIdentityCard .identity-chip[aria-pressed=true],#settingsIdentityCard .identity-linked{border-color:#448fff;background:#183453;color:#cde4ff}
+.identity-chip[aria-pressed=true]::before{content:'✓ ';color:#80b7ff}
+.identity-form [hidden]{display:none!important}
+.identity-form .insight-footnote:empty{display:none}
