@@ -1,18 +1,18 @@
-import {metadata} from './bgg-metadata.js?v=53';
-import {enhanceGamePicker} from './game-picker.js?v=53';
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=53';
-import {enrichGames} from './bgg-details-client.js?v=53';
-import {renderOverview} from './overview-dashboard.js?v=53';
-import {latestPlayDate} from './stats-overview.js?v=53';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=53';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=53';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=53';
-import {renderStatsDashboard} from './stats-dashboard.js?v=53';
-import {mergeImported} from './data-transfer.js?v=53';
-import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=53';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=53';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=53';
-import {bggSearchUrl} from './firebase-config.js?v=53';
+import {metadata} from './bgg-metadata.js?v=54';
+import {enhanceGamePicker} from './game-picker.js?v=54';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=54';
+import {enrichGames} from './bgg-details-client.js?v=54';
+import {renderOverview} from './overview-dashboard.js?v=54';
+import {latestPlayDate} from './stats-overview.js?v=54';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=54';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=54';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=54';
+import {renderStatsDashboard} from './stats-dashboard.js?v=54';
+import {mergeImported} from './data-transfer.js?v=54';
+import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=54';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=54';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=54';
+import {bggSearchUrl} from './firebase-config.js?v=54';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let statsGameTarget='';
@@ -226,6 +226,7 @@ $('cloudSync').onclick=refreshCloud;
 $('recoverRecords').onclick=()=>{const context={key:key(),epoch:accountEpoch},items=recoveryRecords();api.confirm('기기 기록 복구',items.length+'개 기록을 계정에 다시 저장할까요? 다른 기기에서 삭제한 기록도 포함될 수 있습니다.',async()=>{try{checkRecordContext(context);const old=records,oldPending=new Set(pending);const restored=recoveryRecords();records=[...records,...restored];for(const p of restored)pending.add(p.id);try{persist();}catch(error){records=old;pending=oldPending;throw error;}renderHistory();updateButtons();await sync();}catch(error){message('accountError',error);}});};
 $('guestUpload').onclick=()=>api.confirm('기기 기록을 계정에 저장','비로그인 상태에서 저장한 이 기기의 기록을 현재 계정에 복사할까요?',async()=>{const guest=read(guestKey).records;const old=records,oldPending=new Set(pending);try{const known=new Set(records.map(p=>p.id));for(const p of guest)if(!known.has(p.id)){records.push(p);pending.add(p.id);}persist();updateButtons();await sync();renderHistory();}catch(e){records=old;pending=oldPending;message('accountError',e);}});
 window.ScoreRecords={
+ playerChoices:()=>({scope:key()+':'+accountEpoch,players:savedPlayerChoices(records)}),
  renderHistory,
  openSave,
  openFinish:()=>openSave({finish:true}),

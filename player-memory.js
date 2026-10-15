@@ -1,7 +1,20 @@
-import {nameKey,readIdentity,saveIdentity} from './personal-stats.js?v=53';
+import {nameKey,readIdentity,saveIdentity} from './personal-stats.js?v=54';
 export const isAutomatic=p=>Boolean(p.anonymous===true||(typeof p.autoName==='string'&&p.autoName&&p.name===p.autoName));
 export function savingPlayers(players,selfId){return players.map(p=>({ ...p,name:isAutomatic(p)?'익명의 플레이어':p.name,anonymous:isAutomatic(p),isSelf:p.id===selfId}));}
 export function withSelf(play,playerId){if(playerId&&!play.players.some(p=>p.id===playerId))throw Error('플레이어를 확인해주세요.');return {...play,players:play.players.map(p=>({...p,isSelf:p.id===playerId}))};}
 export function selectedSelf(players,scope){const relevant=players.filter(p=>!p.selfScope||p.selfScope===scope),flagged=relevant.filter(p=>p.isSelf===true);if(flagged.length===1)return flagged[0].id;if(flagged.length>1)return '';const profile=readIdentity(scope);if(!profile)return '';const keys=new Set([profile.primary,...profile.aliases]);const matches=players.filter(p=>!isAutomatic(p)&&keys.has(nameKey(p.name)));return matches.length===1?matches[0].id:'';}
 export function rememberIdentity(scope,player){if(!player||isAutomatic(player))return;const old=readIdentity(scope),primary=nameKey(player.name),related=old&&(old.primary===primary||old.aliases.includes(primary));saveIdentity(scope,{primary,aliases:related?[...new Set([old.primary,...old.aliases])].filter(x=>x!==primary):[]});}
 export function fillSelfSelect(select,players,scope){select.replaceChildren();const empty=document.createElement('option');empty.value='';empty.textContent='나중에 지정';select.append(empty);for(const [index,p]of players.entries()){const option=document.createElement('option');option.value=p.id;option.textContent=`${index+1}. ${p.name}${isAutomatic(p)?' · 익명으로 저장':''}${Number.isFinite(p.score)?' · '+p.score+'점':''}`;select.append(option);}select.value=selectedSelf(players,scope);}
+
+// Derive suggestions from this account's saved games, without a separate roster store.
+export function savedPlayerChoices(plays){
+ const names=new Map();
+ for(const play of [...plays].sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt).localeCompare(String(a.createdAt)))){
+  for(const person of play.players||[]){
+   const name=typeof person.name==='string'?person.name.trim():'',key=nameKey(name);
+   if(!key||name.length>120||isAutomatic(person)||/^(?:익명(?:의)?플레이어|anonymous(?:player)?)(?:[0-9]+|\([0-9]+\))?$/.test(key.replace(/\s+/g,'')))continue;
+   if(!names.has(key))names.set(key,{name});
+  }
+ }
+ return [...names.values()];
+}
