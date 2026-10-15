@@ -1,5 +1,5 @@
-import {bggId,metadataFresh,rememberMetadata} from './bgg-metadata.js?v=48';
-import {rememberGameImages,safeGameImage} from './game-artwork.js?v=48';
+import {bggId,metadataFresh,rememberMetadata} from './bgg-metadata.js?v=49';
+import {rememberGameImages,safeGameImage} from './game-artwork.js?v=49';
 const attempts=new Map();
 export async function enrichGames(games,{endpoint,token,fetcher=fetch,onUpdate=()=>{}}={}){
  if(!endpoint||!token)return;

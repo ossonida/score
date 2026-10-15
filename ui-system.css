@@ -1,0 +1,126 @@
+/* Shared controls. Score-card typography and colors remain player-specific. */
+:root{
+ --ui-control:44px;
+ --ui-radius:10px;
+ --ui-gap:8px;
+ --ui-primary:#237bff;
+ --ui-secondary:#202e43;
+ --ui-line:#30415a;
+ --ui-muted:#a8b8ce;
+}
+button{touch-action:manipulation}
+button:disabled{cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #8fc7ff;outline-offset:3px}
+:is(dialog,#settingsScreen) .primary,
+:is(dialog,#settingsScreen) .secondary,
+:is(dialog,#settingsScreen) .actions>button,
+:is(dialog,#settingsScreen) .record-actions>button,
+#settingsScreen .account-actions>button,
+#settingsScreen .transfer-actions>button,
+#settingsScreen .identity-form>button,
+#settingsAccountCard #bggRegister,
+#settingsAccountCard #bggImport,
+#playerDialog .random,
+#playerDialog .player-remove{
+ box-sizing:border-box;min-height:var(--ui-control);border:1px solid transparent;
+ border-radius:var(--ui-radius);padding:10px 14px;font-size:14px;
+ font-weight:500;line-height:22px;background:var(--ui-secondary);color:#e4edfa;
+ display:inline-flex;align-items:center;justify-content:center;gap:var(--ui-gap);
+}
+:is(dialog,#settingsScreen) button.primary{background:var(--ui-primary);border-color:var(--ui-primary);color:#fff}
+:is(dialog,#settingsScreen) button[hidden]{display:none!important}
+:is(dialog,#settingsScreen) button:disabled{opacity:.45}
+dialog .record-danger,dialog .player-remove{background:#3a2230!important;color:#ffb1bd!important;border-color:#643447!important}
+dialog{border-radius:16px;padding:16px;border-color:var(--ui-line)}
+dialog h2{font-size:18px;line-height:1.35;font-weight:600;letter-spacing:-.3px}
+dialog .record-head,dialog .score-heading,dialog .player-heading,dialog .popup-heading{
+ min-height:var(--ui-control);margin-bottom:12px;gap:var(--ui-gap);
+}
+dialog .score-close{
+ width:var(--ui-control);height:var(--ui-control);min-height:var(--ui-control);
+ border-radius:var(--ui-radius);background:var(--ui-secondary);font-size:24px;
+}
+dialog .record-row{gap:var(--ui-gap);align-items:end}
+dialog .record-row>button{height:var(--ui-control);min-width:68px}
+dialog .record-actions,dialog .actions{gap:var(--ui-gap);margin-top:16px;align-items:stretch}
+dialog .record-actions>button,dialog .actions>button{flex:1;min-width:0}
+dialog .actions .danger{margin-right:0}
+#savePlayForm>.record-actions{bottom:-16px;padding:12px 0 0;background:var(--popup-surface)}
+#savePlayDialog .save-layout{gap:16px}
+#savePlayDialog .finish-note{margin:0 0 12px}
+#savePlayDialog .save-result{padding-top:16px}
+#savePlayDialog .record-row>div>label{margin-top:0}
+#savePlayDialog .save-layout h3{margin-bottom:12px;color:#b6c6dd}
+#savePlayDialog .game-result-detail{min-width:44px;min-height:44px;display:grid;place-items:center;padding:8px}
+#savePlayDialog .recent-games-disclosure{margin-block:8px;padding:0 12px}
+#savePlayDialog .recent-games-disclosure summary{min-height:44px;display:list-item;align-content:center;padding:10px 0;font-size:13px}
+#savePlayDialog .recent-games{margin:0 0 12px;gap:8px}
+#savePlayDialog .recent-game{min-height:44px!important;border-radius:var(--ui-radius);padding:8px 12px;font-size:13px}
+#playerDialog .player-entry{grid-template-columns:minmax(0,1fr) 72px;align-items:stretch}
+#playerDialog .player-entry>button{height:44px}
+#playerDialog .player-remove{padding:8px 10px;font-size:13px}
+#playerDialog .color-row{height:auto;min-height:44px;gap:8px;margin-top:12px}
+#playerDialog .color-row>label{margin:0}
+#playerDialog .random{padding:8px 12px}
+#playerDialog .palette{grid-template-columns:repeat(auto-fit,minmax(32px,1fr));gap:8px;justify-items:center;margin-top:12px}
+#playerDialog .swatch{width:32px;height:32px}
+#scoreDialog .score-entry{align-items:stretch}
+#scoreDialog .score-entry>button{height:48px;min-height:48px}
+#scoreDialog .signs>button{height:44px;padding:8px 12px;border-radius:var(--ui-radius);font-size:14px;font-weight:500}
+#endGameDialog .end-game-actions{gap:8px;margin:16px 0 12px}
+#endGameDialog .end-game-actions>button{width:100%;min-height:44px}
+#gamePlayersForm .record-row>button{padding-inline:12px}
+.toolbar{gap:4px}
+.toolbar .tool{width:44px;height:44px;min-height:44px;min-width:44px;padding:10px;border-radius:var(--ui-radius)}
+.toolbar .tool svg{width:22px;height:22px}
+.toolbar .game-end-tool{width:auto;min-width:68px;padding:8px 12px;font-size:12px;line-height:20px;white-space:nowrap;background:var(--ui-primary);border-color:var(--ui-primary)}
+.empty-board #reset,.empty-board #resetPlayers{display:none}
+.empty .empty-actions{gap:8px;max-width:280px}
+.empty .empty-actions>button{min-height:48px;padding:12px 16px;border-radius:var(--ui-radius);font-size:14px;line-height:22px;font-weight:500}
+.empty .empty-actions>.secondary{background:var(--ui-secondary);border:1px solid var(--ui-line);color:#d8e6fb}
+#settingsScreen .settings-grid{gap:16px}
+#settingsScreen .settings-card{padding:18px;border-radius:16px}
+#settingsScreen .settings-card h2{font-size:17px;margin-bottom:12px}
+#settingsScreen .settings-subheading{margin-bottom:8px}
+#settingsAccountCard .account-actions{gap:8px}
+#settingsAccountCard .account-actions>button{font-size:14px;line-height:22px;min-height:44px}
+#settingsAccountCard #guestUpload,#settingsAccountCard #recoverRecords{grid-column:1/-1}
+#settingsAccountCard .account-actions:has(#accountLogin:not([hidden])){grid-template-columns:1fr}
+#settingsAccountCard .record-row{align-items:end;gap:8px}
+#settingsAccountCard #bggImport{margin-top:8px;width:100%}
+#settingsAccountCard input,#settingsIdentityCard select{height:44px;border-radius:var(--ui-radius);font-size:16px}
+#settingsScreen .identity-form>button{justify-self:stretch;width:100%}
+#settingsScreen .transfer-actions{gap:8px;margin-top:12px}
+#settingsScreen #importData{justify-content:space-between;text-align:left;width:100%}
+#settingsScreen #importData small{display:inline;margin:0;font-size:12px;font-weight:400;line-height:18px;color:#a8bad3}
+#statsScreen .stats-view-tabs,#statsScreen .record-tabs{gap:4px;padding:4px;border-radius:12px}
+#statsScreen .stats-view-tabs>button,#statsScreen .record-tabs>button{min-height:44px;border-radius:8px;font-size:13px;line-height:20px;font-weight:500;padding:8px}
+#statsScreen .record-delete-row .record-danger{min-height:44px;border-radius:var(--ui-radius);padding:10px 14px;font-size:13px;line-height:22px}
+#statsScreen .record-edit-name,#statsScreen .record-edit-score{min-height:44px}
+#gameFilterSection .select2-selection--single{height:44px;border-radius:var(--ui-radius)}
+#gameFilterSection .select2-selection__rendered{line-height:42px;font-size:14px}
+#gameFilterSection .select2-selection__arrow{height:42px}
+#gameFilterSection .select2-search__field{border-radius:var(--ui-radius)}
+@media(max-width:600px){
+ .empty-board #homeScreen header .toolbar{width:auto}
+ #homeScreen header{margin-bottom:16px}
+ #homeScreen .board-status{margin-bottom:12px}
+ .settings-card .settings-note{font-size:12px;line-height:1.6}
+}
+@media(min-width:700px) and (min-height:480px){
+ #savePlayDialog .save-layout{gap:20px}
+ #savePlayDialog .save-result{padding:0 0 0 20px}
+}
+@media(max-height:480px){
+ dialog{padding:12px 16px}
+ dialog .record-head,dialog .score-heading,dialog .player-heading,dialog .popup-heading{margin-bottom:8px}
+ #savePlayForm>.record-actions{bottom:-12px}
+ #savePlayDialog .save-layout{gap:12px}
+ #playerDialog .color-row{margin-top:8px}
+ #playerDialog .palette{margin-top:8px}
+}
+.toolbar .tool.primary{background:var(--ui-primary);border-color:var(--ui-primary);color:#fff}
+@media(max-width:390px){
+ #savePlayDialog .record-row:has(#playDate){grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+ #savePlayDialog #playDate,#savePlayDialog #playRule{padding-inline:10px}
+}

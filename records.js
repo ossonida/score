@@ -1,17 +1,17 @@
-import {enhanceGamePicker} from './game-picker.js?v=48';
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=48';
-import {enrichGames} from './bgg-details-client.js?v=48';
-import {renderOverview} from './overview-dashboard.js?v=48';
-import {latestPlayDate} from './stats-overview.js?v=48';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=48';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=48';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=48';
-import {renderStatsDashboard} from './stats-dashboard.js?v=48';
-import {mergeImported} from './data-transfer.js?v=48';
-import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=48';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=48';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=48';
-import {bggSearchUrl} from './firebase-config.js?v=48';
+import {enhanceGamePicker} from './game-picker.js?v=49';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=49';
+import {enrichGames} from './bgg-details-client.js?v=49';
+import {renderOverview} from './overview-dashboard.js?v=49';
+import {latestPlayDate} from './stats-overview.js?v=49';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=49';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=49';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=49';
+import {renderStatsDashboard} from './stats-dashboard.js?v=49';
+import {mergeImported} from './data-transfer.js?v=49';
+import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=49';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=49';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=49';
+import {bggSearchUrl} from './firebase-config.js?v=49';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let statsGameTarget='';
@@ -40,7 +40,7 @@ function updateButtons(){
  $('authChecking').hidden=authReady;$('accountName').hidden=!authReady;$('accountStorage').hidden=!authReady;
  const working=!!currentUser&&['loading','saving'].includes(cloudState),progress=cloudState==='saving'?'기록 동기화 중…':'기록 불러오는 중…';
  $('cloudProgress').hidden=!working;$('cloudProgress').textContent=working?progress:'';
- $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?progress:'클라우드 동기화';
+ $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?(cloudState==='saving'?'동기화 중…':'불러오는 중…'):'클라우드 동기화';
  const onBoard=api.getPlayers().length>0;if(!onBoard&&activeSession){activeSession=null;try{localStorage.setItem(sessionKey,'null');}catch{}}
  $('boardCaption').textContent='점수는 이 기기에 자동 저장됩니다.';$('recordingStatus').hidden=!onBoard||!activeSession;$('recordingStatus').textContent=onBoard&&activeSession?activeSession.game.name+' 점수 기록을 시작했습니다.':'';$('recordingStatus').title=$('recordingStatus').textContent;
  $('savePlay').textContent='게임 종료';
@@ -61,13 +61,13 @@ function renderSnapshot(){
 function updateRecordStorage(){
  $('recordResultHeading').textContent=recordFlow==='setup'?'플레이 설정':'참여자 · 결과';
  $('recordFormTitle').textContent=recordFlow==='setup'?'게임 기록하기':'경기 기록 저장';
- $('recordFormHint').textContent=recordFlow==='setup'?'게임과 날짜, 승리 조건을 선택한 뒤 플레이어를 추가하세요.':'점수판의 이름과 점수를 저장합니다. 이름·점수 수정은 점수판에서 할 수 있습니다.';
+ $('recordFormHint').textContent=recordFlow==='setup'?'게임을 선택하고 플레이어를 추가하세요.':'점수판의 이름과 점수를 저장합니다. 이름·점수 수정은 점수판에서 할 수 있습니다.';
  $('recordStorageHint').hidden=recordFlow==='setup';$('recordStorageHint').textContent=currentUser?'현재 로그인한 계정에 기록을 저장합니다.':'이 기기에 저장됩니다. 로그인하면 다른 기기에서도 기록을 확인할 수 있습니다.';
  $('recordLogin').hidden=recordFlow==='setup'||!!currentUser;$('commitPlay').textContent=recordFlow==='setup'?'플레이어 추가':currentUser?'기록 저장':'이 기기에 저장';
 }
 function openSave({finish=false,showDialog=true}={}){
  recordFlow=finish?'finish':'setup';$('recentGamesSection').open=false;recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();
- const config=finish?activeSession:null;const draft=readDraft();$('playWithoutScores').checked=config?config.noScores:false;$('playGame').value=config?config.game.name:'';$('playBggId').value=config?config.game.bggId:'';$('playDate').value=config?config.date:today();$('playRule').value=config?config.rule:['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(config?.game.name,config?.game.bggId);$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 기본 목록 검색 · 목록에 없으면 직접 입력할 수 있어요.';renderRecentGames();renderSnapshot();updateRecordStorage();updateGameOptions();if(showDialog)show('savePlayDialog');
+ const config=finish?activeSession:null;const draft=readDraft();$('playWithoutScores').checked=config?config.noScores:false;$('playGame').value=config?config.game.name:'';$('playBggId').value=config?config.game.bggId:'';$('playDate').value=config?config.date:today();$('playRule').value=config?config.rule:['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(config?.game.name,config?.game.bggId);$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 검색하거나 직접 입력하세요.';renderRecentGames();renderSnapshot();updateRecordStorage();updateGameOptions();if(showDialog)show('savePlayDialog');
 }
 $('playWithoutScores').onchange=renderSnapshot;
 $('recordLogin').onclick=async()=>{if($('savePlayForm').reportValidity?.()===false)return;if(!snapshot.length){message('playError','플레이어를 먼저 추가해주세요.');return;}const button=$('recordLogin');button.disabled=true;button.setAttribute('aria-busy','true');recordLoginPending=true;try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 이 기기에 먼저 저장할 수 있습니다.');await login();}catch(error){recordLoginPending=false;message('playError',friendly(error));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
