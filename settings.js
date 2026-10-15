@@ -1,10 +1,10 @@
 import './records.js?v=16';
-import {parseImport,exportBackup,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false;
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){const context=api.context();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('exportData').disabled=busy||!context.records.length;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+function update(){const context=api.context();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
  document.documentElement.classList.toggle('settings-view',view==='settings');document.documentElement.classList.toggle('stats-view',view==='stats');
@@ -34,16 +34,5 @@ $('confirmImport').onclick=()=>{
  try{const result=api.merge(preview.records,preview.context);clearPreview();status(`${result.added}개를 가져왔습니다. 중복 ${result.duplicates}개는 제외했습니다. 진행 중인 점수는 유지됩니다.${api.context().key.endsWith('.guest')?' 이 기기에 저장됐으며, 계정에 옮기려면 로그인 후 내 계정에서 기기 기록 저장을 선택하세요.':' 계정 동기화 상태는 내 계정에서 확인하세요.'}`);}
  catch(error){status(error.message||'가져오지 못했습니다.');}
  finally{busy=false;update();}
-};
-$('exportData').onclick=async()=>{
- if(busy)return;busy=true;update();
- try{const context=api.context(),data=exportBackup(context.records),filename=`score-backup-${new Date().toISOString().slice(0,10)}.json`;
-  if(globalThis.Capacitor?.isNativePlatform?.()){
-   if(!globalThis.ScoreNativeFiles)throw Error('내보내기 기능이 포함된 최신 앱으로 업데이트해주세요.');
-   await globalThis.ScoreNativeFiles.exportJson({filename,data});status('공유 창에서 백업을 저장할 위치를 선택할 수 있습니다.');
-  }else{
-   const blob=new Blob([data],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);status(`${context.records.length}개 기록의 JSON 백업 다운로드를 요청했습니다.`);
-  }
- }catch(error){status(error.message||'백업 파일을 만들지 못했습니다.');}finally{busy=false;update();}
 };
 route();update();
