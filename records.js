@@ -1,19 +1,19 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=37';
-import {enrichGames} from './bgg-details-client.js?v=37';
-import {renderOverview} from './overview-dashboard.js?v=37';
-import {latestPlayDate} from './stats-overview.js?v=37';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=37';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=37';
-import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=37';
-import {renderStatsDashboard} from './stats-dashboard.js?v=37';
-import {mergeImported} from './data-transfer.js?v=37';
-import {searchLocalGames} from './game-catalog.js?v=37';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=37';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=37';
-import {bggSearchUrl} from './firebase-config.js?v=37';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=38';
+import {enrichGames} from './bgg-details-client.js?v=38';
+import {renderOverview} from './overview-dashboard.js?v=38';
+import {latestPlayDate} from './stats-overview.js?v=38';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=38';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=38';
+import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=38';
+import {renderStatsDashboard} from './stats-dashboard.js?v=38';
+import {mergeImported} from './data-transfer.js?v=38';
+import {searchLocalGames} from './game-catalog.js?v=38';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=38';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=38';
+import {bggSearchUrl} from './firebase-config.js?v=38';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
-let recordRevision=0,cloudState='idle',cloudError='';
+let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
 function recoveryKey(){return key()+'.recovery';}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
 function syncFailure(error){cloudState='error';cloudError=friendly(error);message('accountError','클라우드 동기화 실패: '+cloudError);}
@@ -31,10 +31,11 @@ function close(id){$(id).close();}
 function show(id){$(id).showModal();}
 function today(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function updateButtons(){
+ $('authChecking').hidden=authReady;$('accountName').hidden=!authReady;$('accountStorage').hidden=!authReady;
  const working=!!currentUser&&['loading','saving'].includes(cloudState),progress=cloudState==='saving'?'기록 동기화 중…':'기록 불러오는 중…';
  $('cloudProgress').hidden=!working;$('cloudProgress').textContent=working?progress:'';
  $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?progress:'클라우드 동기화';
- $('savePlay').hidden=!api.getPlayers().length;$('recordLoginHint').hidden=!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
+ $('savePlay').hidden=!api.getPlayers().length;$('recordLoginHint').hidden=!authReady||!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}
@@ -211,4 +212,4 @@ window.ScoreRecords={
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);
 window.addEventListener('scorecounter:changed',updateButtons);window.addEventListener('online',()=>{if(currentUser)refreshCloud();});
 loadLocal();updateButtons();
-if(cloudConfigured())connectCloud(async user=>{accountEpoch++;recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error)));
+if(cloudConfigured())connectCloud(async user=>{authReady=true;accountEpoch++;recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));});
