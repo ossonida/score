@@ -6,7 +6,7 @@ function section(title,cls=''){const box=el('section',undefined,'insight-card '+
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderIdentitySettings(container,records,scope,onChange){
  if(!container)return;container.replaceChildren();const names=namesIn(records),profile=readIdentity(scope),form=el('form',undefined,'identity-form');
- note(form,'기록 속 내 이름을 선택하세요. 다른 닉네임도 연결할 수 있으며 원본 기록은 바뀌지 않습니다.');
+ note(form,'기록 속 내 이름을 선택하세요. 다른 닉네임도 연결할 수 있습니다. 익명 인원은 각 기록의 내 플레이어 지정에서 선택하세요.');
  const label=el('label','내 이름'),select=el('select');select.setAttribute('aria-label','기록 속 내 이름');const empty=el('option','내 이름 선택');empty.value='';select.append(empty);
  for(const [key,name]of names){const option=el('option',name);option.value=key;select.append(option);}if(profile&&names.some(([key])=>key===profile.primary))select.value=profile.primary;
  label.append(select);form.append(label);const aliases=el('fieldset',undefined,'identity-aliases');aliases.append(el('legend','같은 사람인 다른 닉네임'));const checks=[];
@@ -16,10 +16,11 @@ export function renderIdentitySettings(container,records,scope,onChange){
 }
 export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{}}={}){
  const previousRule=container.querySelector('.personal-rule')?.value;container.replaceChildren();const profile=readIdentity(scope),game=records[0]?.game;
- const identity=el('details',undefined,'identity-editor');identity.append(el('summary',profile?.primary?'내 이름 · 닉네임 연결 변경':'먼저 기록 속 내 이름을 선택하세요'));const body=el('div');identity.append(body);renderIdentitySettings(body,allRecords,scope,()=>{onIdentityChange();renderPersonalGame(container,records,onOpen,{scope,allRecords,onIdentityChange});});container.append(identity);
- if(!profile?.primary){identity.open=true;note(container,'내 이름을 선택하면 게임별 플레이 횟수, 우승, 개인 기록과 점수 흐름을 보여드립니다.');return;}
+ const overview=el('section',undefined,'insight-hero game-overview');overview.append(el('p','GAME OVERVIEW','insight-kicker'),el('h2',game?.name||'게임 통계'));const scores=records.flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number'),best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null,metrics=el('div',undefined,'insight-metrics');for(const [value,label]of[[num(records.length)+'회','총 플레이'],[num(best),'최고점']]){const metric=el('div');metric.append(el('strong',value),el('span',label));metrics.append(metric);}overview.append(metrics);container.append(overview);
+ const identity=el('details',undefined,'identity-editor');identity.append(el('summary',profile?.primary||records.some(p=>p.players.some(x=>x.isSelf))?'내 이름 · 닉네임 연결 변경':'먼저 기록 속 내 이름을 선택하세요'));const body=el('div');identity.append(body);renderIdentitySettings(body,allRecords,scope,()=>{onIdentityChange();renderPersonalGame(container,records,onOpen,{scope,allRecords,onIdentityChange});});container.append(identity);
+ if(!profile?.primary&&!records.some(p=>p.players.filter(x=>x.isSelf===true).length===1)){identity.open=true;note(container,'내 이름을 선택하거나 아래 전체 기록에서 내 플레이어를 지정하면 개인 성적과 점수 흐름을 보여드립니다.');return;}
  const initial=personalGame(records,profile,previousRule);const heading=el('div',undefined,'personal-game-heading');heading.append(el('p','MY GAME','insight-kicker'),el('h2',game?.name||'게임 통계'));
- const display=namesIn(allRecords).find(([key])=>key===profile.primary)?.[1]||profile.primary;note(heading,`${display}의 성적표 · 연결한 닉네임 ${profile.aliases.length}개`);container.append(heading);
+ const display=namesIn(allRecords).find(([key])=>key===profile?.primary)?.[1]||profile?.primary||'나';note(heading,`${display}의 성적표 · 연결한 닉네임 ${profile?.aliases.length||0}개`);container.append(heading);
  const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','승리 조건'),rule=el('select',undefined,'personal-rule');for(const value of initial.rules){const option=el('option',ruleName(value));option.value=value;rule.append(option);}rule.value=initial.rule;ruleLabel.append(rule);controls.append(ruleLabel);if(initial.rules.length>1)note(controls,'점수와 성적은 승리 조건별로 나눠 계산합니다.');container.append(controls);controls.hidden=initial.rules.length<2;
  const content=el('div');container.append(content);
  function draw(){const s=personalGame(records,profile,rule.value);content.replaceChildren();
@@ -34,7 +35,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   for(const entry of s.recent){const {play,person,rank}=entry,button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${play.date} · ${play.players.length}인`),el('strong',person.score===null?'점수 없음':num(person.score)+'점'),el('small',`${entry.won?'우승 · ':''}${rank?rank.value+'위':s.rule==='cooperative'?'협력':'순위 없음'}`));button.onclick=()=>openMatch(play);recent.append(button);}content.append(recent,matchBox);
   function openMatch(play){renderMatchInsight(matchBox,records,play,profile);const button=el('button','전체 경기 결과 보기 ↗','insight-link');button.type='button';button.onclick=()=>onOpen(play.id);matchBox.append(button);matchBox.scrollIntoView?.({behavior:'smooth',block:'nearest'});}
   const grid=el('div',undefined,'insight-grid');const sizes=section('몇 명이 할 때 성적이 좋을까');for(const row of s.sizes){const line=el('div',undefined,'personal-comparison');line.append(el('strong',`${row.size}인 게임`),el('span',`${row.count}회 · ${s.rule==='cooperative'?'협력':row.known?`${row.wins}승 · 승률 ${num(row.wins/row.known*100)}%`:'승자 정보 없음'}`));sizes.append(line);if(row.known&&row.known!==row.count)note(sizes,`${row.size}인 승자 확인 ${row.known}경기 기준`);}grid.append(sizes);
-  const rivals=section('누구와 함께했을까','personal-opponents');note(rivals,'앞섬·뒤짐은 우승 횟수가 아닙니다. 기록 순위가 둘 다 있으면 순위로, 그 외에는 두 사람의 점수로 비교합니다. 협력 게임은 함께한 횟수만 표시합니다.');
+  const rivals=section('누구와 함께했을까','personal-opponents');note(rivals,'앞섬·뒤짐은 우승 횟수가 아닙니다. 기록 순위가 둘 다 있으면 순위로, 그 외에는 두 사람의 점수로 비교합니다. 협력 게임은 함께한 횟수만 표시하며 익명 상대는 개별 전적에서 제외합니다.');
   if(!s.opponents.length)note(rivals,'함께한 상대 기록이 아직 없습니다.');for(const row of s.opponents){const line=el('div',undefined,'personal-opponent');line.append(el('strong',row.name),el('span',`함께 ${row.count}회`));if(s.rule!=='cooperative'){line.append(el('p',`${row.ahead}회 앞섬 · ${row.behind}회 뒤짐 · ${row.tied}회 동점`));if(row.compared!==row.count)note(line,`비교 가능 ${row.compared}경기 · 점수·순위 없는 기록 제외`);}rivals.append(line);}grid.append(rivals);content.append(grid);
  }rule.onchange=draw;draw();
 }
@@ -50,7 +51,7 @@ function drawChart(container,entries,best){
 }
 export function renderMatchInsight(container,records,play,profile){
  container.replaceChildren();const s=matchInsight(records,play,profile),box=section(`${play.date} · 이 경기의 의미`,'match-insight');container.append(box);
- if(!s){note(box,'설정 → 통계 속 내 플레이어에서 내 이름을 선택하거나 닉네임 연결을 확인해주세요. 연결한 이름이 한 경기에 둘 이상 있으면 개인 분석에서 제외합니다.');return;}
+ if(!s){note(box,'설정 → 내 플레이어 · 최근 인원에서 내 이름을 선택하거나 닉네임 연결을 확인해주세요. 연결한 이름이 한 경기에 둘 이상 있으면 개인 분석에서 제외합니다.');return;}
  const badges=el('div',undefined,'match-badges');for(const text of [s.won&&!s.cooperative?'우승':null,s.newBest?'개인 기록 경신':null,s.rank?`${s.rank.source} ${s.rank.value}위`:null].filter(Boolean))badges.append(el('span',text));box.append(badges);box.append(el('p',`${s.person.name} · ${s.person.score===null?'점수 없음':num(s.person.score)+'점'} · ${play.players.length}인 게임`,'growth-summary'));
  const results=el('details',undefined,'match-results');results.open=play.players.length<=6;results.append(el('summary','전체 결과'));const list=el('ul');for(const p of [...play.players].sort((a,b)=>{if(a.rank&&b.rank)return a.rank-b.rank;if(a.score===null)return b.score===null?0:1;if(b.score===null)return -1;return play.rule==='lowest'?a.score-b.score:b.score-a.score;})){const line=el('li'),rank=personalRank(play,p);line.append(el('span',`${p.name}${p.id===s.person.id?' · 나':''}${rank?' · '+rank.value+'위':''}`),el('strong',p.score===null?'점수 없음':num(p.score)+'점'));list.append(line);}results.append(list);box.append(results);
  if(s.scoreRank!==null)note(box,`이 게임·승리 조건의 내 점수 기록 ${s.scoreTotal}개 중 ${s.scoreRank}번째 ${play.rule==='lowest'?'낮은':'높은'} 점수 (동점은 공동 순위)`);

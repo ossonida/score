@@ -6,7 +6,7 @@ export function renderStatsDashboard(container,records,today,onOpen,selectedGame
  if(selectedGame){renderPersonalGame(container,records,onOpen,options);return;}
  const s=summarizeStats(records,today);container.replaceChildren();
  const hero=element('section',undefined,'insight-hero');hero.append(element('p',s.day===today?'TODAY’S PLAY':'LATEST PLAY','insight-kicker'),element('h2',s.day===today?'오늘, 우리의 게임':`${s.day} · 함께한 게임`),element('p',s.total?`총 ${number(s.total)}개의 기록에서 찾은 플레이 이야기`:'첫 게임을 기록하면 우리의 이야기가 시작됩니다.','insight-subtitle'));
- const metrics=element('div',undefined,'insight-metrics');for(const [value,label]of[[s.dayCount,'플레이'],[s.gameCount,'게임'],[s.playerCount,'함께한 사람']]){const metric=element('div');metric.append(element('strong',number(value)),element('span',label));metrics.append(metric);}hero.append(metrics);
+ const metrics=element('div',undefined,'insight-metrics');for(const [value,label]of[[s.dayCount,'플레이'],[s.gameCount,'게임'],[s.playerCount,'이름이 있는 사람']]){const metric=element('div');metric.append(element('strong',number(value)),element('span',label));metrics.append(metric);}hero.append(metrics);
  if(s.day!==today&&s.total)hero.append(element('p','오늘은 아직 기록이 없어 최근 플레이한 날을 보여드려요.','insight-footnote'));
  if(s.leaders.length){const leaders=element('div',undefined,'day-leaders');leaders.append(element('span','이날의 승리'));for(const person of s.leaders)leaders.append(element('span',`${person.name} ${person.wins}승`,'leader-chip'));hero.append(leaders);}container.append(hero);
  if(!s.total){const empty=element('section',undefined,'insight-empty');empty.append(element('h3','다음 게임에서 기억할 순간을 남겨보세요'),element('p','게임 종료 후 기록하면 접전 경기와 개인 기록, 함께한 상대의 전적을 여기서 볼 수 있습니다.'));container.append(empty);return;}

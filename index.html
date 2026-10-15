@@ -155,8 +155,8 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="./records.css?v=19">
-<link rel="stylesheet" href="./modal-ui.css?v=19">
+<link rel="stylesheet" href="./records.css?v=20">
+<link rel="stylesheet" href="./modal-ui.css?v=20">
 </head>
 <body>
 <main id="homeScreen">
@@ -167,7 +167,7 @@ dialog .swatch{width:28px;height:28px}
 
 <main id="settingsScreen" hidden><header class="settings-heading"><div><h1>설정</h1><p>계정과 게임 기록을 관리하세요.</p></div></header><div class="settings-grid">
 <section id="settingsAccountCard" class="settings-card"><h2>계정</h2><div class="account-profile"><p id="accountName" class="record-note"></p><p id="accountStorage" class="record-note"></p></div><p id="accountStatus" class="record-note" role="status"></p><p id="accountError" class="record-error" role="alert"></p><div class="account-actions"><button id="accountLogin" class="primary" type="button">Google로 로그인</button><button id="accountLogout" class="secondary" type="button" hidden>로그아웃</button><button id="guestUpload" class="secondary" type="button" hidden>이 기기 기록을 계정에 저장</button><button id="cloudSync" class="secondary" type="button" hidden>클라우드 동기화</button></div><section id="bggAccountSection" hidden><h3>BGG 공개 정보 연동</h3><p class="record-note">사용자명으로 공개 보유 게임과 플레이 기록을 가져옵니다.</p><label for="bggUsername">BGG 사용자명</label><div class="record-row"><div><input id="bggUsername" type="text" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false"></div><button id="bggRegister" class="secondary" type="button">등록</button></div><p id="bggServerHint" class="record-note">BGG API 승인과 서버 연결 후 공개 정보를 가져올 수 있습니다.</p><button id="bggImport" class="secondary" type="button" disabled>공개 정보 가져오기 · 저장</button><p id="bggAccountStatus" class="record-note" role="status"></p><details class="bgg-explanation"><summary>연동 범위 안내</summary><p>BGG 로그인 인증이나 BGG에 기록 쓰기는 제공하지 않습니다. 가져온 원본 기록은 별도 보관하며 점수 통계에는 포함하지 않습니다.</p></details><div id="bggAccountData"></div></section></section>
-<section class="settings-card"><h2>통계 속 내 플레이어</h2><div id="settingsIdentity"></div></section><section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록에 합치며 같은 기록은 중복 저장하지 않습니다. 진행 중인 플레이어와 점수는 변경하지 않습니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
+<section class="settings-card"><h2>내 플레이어 · 최근 인원</h2><div id="settingsRosters"></div><details class="identity-editor"><summary>기존 기록의 이름 · 닉네임 연결</summary><div id="settingsIdentity"></div></details></section><section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록에 합치며 같은 기록은 중복 저장하지 않습니다. 진행 중인 플레이어와 점수는 변경하지 않습니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
 <div id="importPreview" class="import-preview" hidden><h3>가져오기 미리보기</h3><p id="importSummary"></p><p id="importScope" class="settings-note"></p><div id="importWarnings" class="import-warnings"></div><div id="importExamples"></div><div class="transfer-actions"><button id="cancelImport" type="button">취소</button><button id="confirmImport" type="button" class="primary" disabled>기록 가져오기</button></div></div>
 </section></div></main>
 <main id="statsScreen" class="record-dialog" hidden><header class="settings-heading"><div><h1>통계</h1><p>함께한 게임에서 기억할 순간을 찾아보세요.</p></div></header><label for="recordFilter">게임 선택</label><select id="recordFilter" class="record-select"><option value="">모든 게임</option></select><div id="statsInsights" class="stats-insights"></div><details id="statsDetails" class="stats-details"><summary><span>전체 기록 · 상세 통계 보기</span><small id="statsDetailCount"></small></summary><div class="record-tabs"><button id="historyTab" type="button" class="active">기록</button><button id="statsTab" type="button">게임별 통계</button></div><div id="recordList" class="record-list"></div></details></main>
@@ -177,7 +177,7 @@ dialog .swatch{width:28px;height:28px}
 <p class="finish-note">기록을 저장해도 현재 플레이어와 점수는 유지됩니다.</p><div class="save-layout"><section class="save-game"><div id="recentGamesSection" hidden><h3>최근 게임</h3><div id="recentGames" class="recent-games"></div></div><label for="playGame">게임명</label><div class="record-row"><div><input id="playGame" type="text" list="savedGames" maxlength="120" required autocomplete="off" placeholder="게임명을 입력하세요"></div><button id="searchBgg" class="secondary" type="button">검색</button></div><datalist id="savedGames"></datalist><p id="gameSearchStatus" class="record-note" role="status"></p><div id="bggResults" class="record-results" aria-label="게임 검색 결과"></div><p id="selectedGameInfo" class="selected-game" role="status"></p><button id="openBggWebsite" class="bgg-web-link" type="button">BGG 웹 검색 ↗</button>
 <details><summary class="record-note">BGG 게임 ID (선택)</summary><input id="playBggId" type="text" inputmode="numeric" pattern="[1-9][0-9]{0,9}" aria-label="BGG 게임 ID" placeholder="예: 13"></details>
 </section><section class="save-result"><h3>결과 확인</h3><div class="record-row"><div><label for="playDate">플레이 날짜</label><input id="playDate" type="date" required></div><div><label for="playRule">승리 조건</label><select id="playRule"><option value="highest">높은 점수 승리</option><option value="lowest">낮은 점수 승리</option><option value="cooperative">협력 게임</option></select></div></div>
-<div id="playSnapshot" class="record-snapshot" aria-label="저장할 이름과 점수"></div></section></div><p id="playError" class="record-error" role="alert"></p>
+<label class="field" for="playSelf">이 경기에서 나는</label><select id="playSelf" class="record-select"></select><p class="record-note">수정하지 않은 자동 이름은 익명의 플레이어로 저장합니다. 내 플레이어는 나중에도 지정할 수 있습니다.</p><div id="playSnapshot" class="record-snapshot" aria-label="저장할 이름과 점수"></div></section></div><p id="playError" class="record-error" role="alert"></p>
 <div class="record-actions"><button class="secondary" type="button" data-record-close="savePlayDialog">취소</button><button id="commitPlay" class="primary" type="submit">기록 저장</button></div></form></dialog>
 
 
@@ -191,7 +191,7 @@ dialog .swatch{width:28px;height:28px}
 'use strict';
 const KEY='pointer.players.v1';
 const colors=['#52c7ef','#ffcc00','#b44cdb','#b19be6','#087fff','#ff2496','#f9dcec','#45d9a0','#ff9461','#a9d951','#6bd6d3','#e86b70'];
-let players=[],editing=null,scoring=null,sign=1,pending=null,swipedId=null;
+let players=[],editing=null,scoring=null,sign=1,pending=null,swipedId=null,suggestedName='';
 const $=id=>document.getElementById(id);
 try{const saved=JSON.parse(localStorage.getItem(KEY)||'[]');if(Array.isArray(saved))players=saved.filter(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&/^#[0-9a-f]{6}$/i.test(p.color)&&Number.isSafeInteger(p.score)).map(p=>({...p,color:p.color.toLowerCase()}));}catch{}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(players));$('stats').title='자동 저장 완료';}catch{$('stats').title='브라우저 저장 공간을 사용할 수 없습니다';}render();}
@@ -258,8 +258,8 @@ animation.oncancel=()=>{card.style.zIndex='';};
 }
 function change(p,delta){if(!Number.isSafeInteger(p.score+delta)){alert('입력 가능한 점수 범위를 초과했어요.');return false;}p.score+=delta;save();return true;}
 function palette(){const box=$('palette');box.replaceChildren();for(const c of colors){const b=document.createElement('button');b.type='button';b.className='swatch'+($('color').value===c?' selected':'');b.style.setProperty('--swatch',c);b.disabled=used(c);b.setAttribute('aria-label',`${c} 컬러${b.disabled?' (사용 중)':''}`);b.setAttribute('aria-pressed',String($('color').value===c));b.onclick=()=>{$('color').value=c;palette();};box.append(b);}}
-function openPlayer(id=null){editing=id;const p=players.find(p=>p.id===id);$('playerTitle').textContent=p?'플레이어 수정':'플레이어 추가';$('nickname').value=p?p.name:randomName();$('color').value=p?p.color:randomColor();$('remove').hidden=!p;$('playerError').textContent='';palette();$('playerDialog').showModal();$('nickname').focus({preventScroll:true});}
-$('playerForm').onsubmit=e=>{e.preventDefault();const name=$('nickname').value.trim(),color=$('color').value.toLowerCase();if(!name){$('playerError').textContent='닉네임을 입력해주세요.';return;}if(used(color)){$('playerError').textContent='이미 사용 중인 컬러예요. 다른 컬러를 선택해주세요.';return;}const p=players.find(p=>p.id===editing);if(p){p.name=name;p.color=color;}else players.push({id:crypto.randomUUID(),name,color,score:0});save();$('playerDialog').close();};
+function openPlayer(id=null){editing=id;const p=players.find(p=>p.id===id);$('playerTitle').textContent=p?'플레이어 수정':'플레이어 추가';$('nickname').value=p?p.name:randomName();suggestedName=p?(p.autoName||''):$('nickname').value;$('color').value=p?p.color:randomColor();$('remove').hidden=!p;$('playerError').textContent='';palette();$('playerDialog').showModal();$('nickname').focus({preventScroll:true});}
+$('playerForm').onsubmit=e=>{e.preventDefault();const name=$('nickname').value.trim(),color=$('color').value.toLowerCase();if(!name){$('playerError').textContent='닉네임을 입력해주세요.';return;}if(used(color)){$('playerError').textContent='이미 사용 중인 컬러예요. 다른 컬러를 선택해주세요.';return;}const p=players.find(p=>p.id===editing);if(p){if(p.name!==name){p.autoName='';p.anonymous=false;}p.name=name;p.color=color;}else players.push({id:crypto.randomUUID(),name,color,score:0,autoName:name===suggestedName?suggestedName:''});save();$('playerDialog').close();};
 $('random').onclick=()=>{$('color').value=randomColor();palette();};$('color').oninput=palette;$('add').onclick=()=>openPlayer();
 function confirmation(title,message,callback){$('confirmTitle').textContent=title;$('confirmText').textContent=message;pending=callback;$('confirmDialog').showModal();}
 function deletePlayer(id){const p=players.find(p=>p.id===id);if(!p)return;confirmation('플레이어 삭제',`${p.name} 플레이어와 점수를 삭제할까요?`,()=>{players=players.filter(x=>x.id!==id);if(swipedId===id)swipedId=null;save();if($('playerDialog').open)$('playerDialog').close();});}
@@ -272,7 +272,7 @@ const englishNames=['Sky','Sea','Cloud','Tree','Star','Moon','Sunny','Dawn','Spr
 function namePool(){return /^ko(?:-|$)/i.test(navigator.language||'en')?koreanNames:englishNames;}
 function randomName(){const simpleNames=namePool();const available=simpleNames.filter(n=>!players.some(p=>p.name===n));if(available.length)return available[Math.floor(Math.random()*available.length)];const base=simpleNames[Math.floor(Math.random()*simpleNames.length)];let suffix=2;while(players.some(p=>p.name===base+suffix))suffix++;return base+suffix;}
 $('bulk').onclick=()=>{$('bulkCount').value='4';$('bulkError').textContent='';$('bulkDialog').showModal();$('bulkCount').focus();};
-$('bulkForm').onsubmit=e=>{e.preventDefault();const count=Number($('bulkCount').value);if(!/^[0-9]+$/.test($('bulkCount').value)||!Number.isInteger(count)||count<1||count>100){$('bulkError').textContent='1명부터 100명까지 입력해주세요.';return;}for(let i=0;i<count;i++)players.push({id:crypto.randomUUID(),name:randomName(),color:randomColor(null),score:0});save();$('bulkDialog').close();};
+$('bulkForm').onsubmit=e=>{e.preventDefault();const count=Number($('bulkCount').value);if(!/^[0-9]+$/.test($('bulkCount').value)||!Number.isInteger(count)||count<1||count>100){$('bulkError').textContent='1명부터 100명까지 입력해주세요.';return;}for(let i=0;i<count;i++){const name=randomName();players.push({id:crypto.randomUUID(),name,color:randomColor(null),score:0,autoName:name});}save();$('bulkDialog').close();};
 $('confirm').onclick=()=>{const callback=pending;pending=null;$('confirmDialog').close();if(callback)callback();};
 function setSign(value){sign=value;for(const [id,s] of [['positive',1],['negative',-1]]){$(id).classList.toggle('active',s===sign);$(id).setAttribute('aria-pressed',String(s===sign));}preview();}
 function preview(){const p=players.find(p=>p.id===scoring);const a=Number($('amount').value);$('preview').textContent=p?`${p.score.toLocaleString('ko-KR')} ${sign===1?'+':'−'} ${Number.isSafeInteger(a)&&a>=0?a.toLocaleString('ko-KR'):'…'} = ${Number.isSafeInteger(a)&&a>=0&&Number.isSafeInteger(p.score+sign*a)?(p.score+sign*a).toLocaleString('ko-KR'):'…'}`:'';}
@@ -305,15 +305,16 @@ window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{
 }
 window.ScoreCounter={
 getPlayers:()=>players.map(p=>({...p})),
-restorePlayers:next=>{players=next.map(p=>({...p}));swipedId=null;save();},
+setSelf:(id,scope)=>{players=players.map(p=>({...p,isSelf:p.id===id,selfScope:scope}));save();},
+restorePlayers:next=>{players=next.map(({winner,rank,...p})=>({...p}));swipedId=null;save();},
 confirm:(title,message,callback)=>confirmation(title,message,callback)
 };
 fitDialogs();
 render();
 </script>
-<script type="module" src="./app-analytics.js?v=19"></script>
-<script type="module" src="./records.js?v=19"></script>
-<script type="module" src="./bgg-account.js?v=19"></script>
-<script type="module" src="./settings.js?v=19"></script>
+<script type="module" src="./app-analytics.js?v=20"></script>
+<script type="module" src="./records.js?v=20"></script>
+<script type="module" src="./bgg-account.js?v=20"></script>
+<script type="module" src="./settings.js?v=20"></script>
 </body>
 </html>
