@@ -1,5 +1,5 @@
-import {renderGameArtwork} from './game-artwork.js?v=29';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=29';
+import {renderGameArtwork} from './game-artwork.js?v=30';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=30';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';
@@ -30,15 +30,9 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  }
  const personal=personalGame(records,profile,previousRule);if(!personal.total)overview.append(metrics);container.append(overview);
  const configured=Boolean(profile?.primary||records.some(p=>p.players.filter(x=>x.isSelf===true).length===1));
- const identity=el('details',undefined,'identity-editor');
- identity.append(el('summary',configured?'내 플레이어 변경':'내 플레이어 선택'));
- const body=el('div');identity.append(body);
- renderIdentitySettings(body,allRecords,scope,()=>{onIdentityChange();renderPersonalGame(container,records,onOpen,{scope,allRecords,onIdentityChange});});
- container.append(identity);
- if(!configured){identity.open=true;note(container,'내 이름을 선택하거나 기록에서 내 플레이어를 지정해주세요.');return;}
+ const heading=el('div',undefined,'personal-game-heading');heading.append(el('h2','나의 기록'));container.append(heading);
+ if(!configured){note(container,'설정에서 내 이름·닉네임을 연결하면 나의 기록을 볼 수 있습니다.');return;}
  const initial=personal;
- const display=namesIn(allRecords).find(([key])=>key===profile?.primary)?.[1]||profile?.primary||'나';
- const heading=el('div',undefined,'personal-game-heading');heading.append(el('h2',display==='나'?'내 기록':display+'의 기록'));container.append(heading);
  const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','승리 조건'),rule=el('select',undefined,'personal-rule');
  for(const value of initial.rules){const option=el('option',ruleName(value));option.value=value;rule.append(option);}
  rule.value=initial.rule;ruleLabel.append(rule);controls.append(ruleLabel);controls.hidden=initial.rules.length<2;container.append(controls);

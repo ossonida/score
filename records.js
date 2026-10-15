@@ -1,16 +1,16 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=29';
-import {enrichGames} from './bgg-details-client.js?v=29';
-import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=29';
-import {latestPlayDate} from './stats-overview.js?v=29';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=29';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=29';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=29';
-import {renderStatsDashboard} from './stats-dashboard.js?v=29';
-import {mergeImported} from './data-transfer.js?v=29';
-import {searchLocalGames} from './game-catalog.js?v=29';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=29';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=29';
-import {bggSearchUrl} from './firebase-config.js?v=29';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=30';
+import {enrichGames} from './bgg-details-client.js?v=30';
+import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=30';
+import {latestPlayDate} from './stats-overview.js?v=30';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=30';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=30';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=30';
+import {renderStatsDashboard} from './stats-dashboard.js?v=30';
+import {mergeImported} from './data-transfer.js?v=30';
+import {searchLocalGames} from './game-catalog.js?v=30';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=30';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=30';
+import {bggSearchUrl} from './firebase-config.js?v=30';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=false,searchTimer=null;
 let recordRevision=0;
@@ -111,7 +111,7 @@ $('recordDeletePlayer').onclick=()=>{if(!recordEditing)return;const editing=reco
 $('recordEditForm').onsubmit=event=>{event.preventDefault();if(!recordEditing)return;const {playId,personId,field,context,original}=recordEditing;try{updateRecordedPlayer(playId,personId,field,$('recordEditValue').value,context,original);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}};
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
-function chooseStatsGame(game){statsView='games';mode='history';$('recordFilter').value=game;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
+function chooseStatsGame(game){statsView='games';mode='stats';$('recordFilter').value=game;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
 let enriching=false;
 async function enrichRecordGames(){if(enriching||!currentUser||!bggSearchUrl)return;enriching=true;const uid=currentUser.uid,epoch=accountEpoch;try{const token=await idToken(uid);if(epoch!==accountEpoch)return;await enrichGames(records.map(p=>p.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(epoch===accountEpoch)renderHistory();}});}catch{}finally{enriching=false;}}
 function renderHistory(){
@@ -125,7 +125,7 @@ function renderHistory(){
  for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']]){$(id).setAttribute('aria-selected',String(statsView===view));$(id).setAttribute('tabindex',statsView===view?'0':'-1');}
  $('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
  $('gameFilterSection').hidden=statsView!=='games';$('gameTypeEditor').hidden=statsView!=='games'||!filtered.length;$('gameDetailTabs').hidden=statsView!=='games';
- $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?'전체 기록 보기':'이 게임의 기록 · 플레이어 성적';
+ $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?'전체 기록 보기':'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){
   if(filtered.length)renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});
   else $('statsInsights').replaceChildren(node('p','저장된 게임 기록이 없습니다.','record-note'));
@@ -135,8 +135,8 @@ function renderHistory(){
 if(!filtered.length){box.append(node('p','저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
 if(statsView==='games'&&mode==='stats'){for(const g of gameStats(filtered)){const article=node('article',undefined,'record-item');article.append(node('h3',g.game.name),node('p',`${g.count}회 플레이 · 경쟁 ${g.competitive}회 · 협력 ${g.cooperative}회`));const wrap=node('div',undefined,'record-table-wrap'),table=node('table',undefined,'record-table'),head=node('thead'),row=node('tr');for(const label of ['플레이어','횟수','승리','승률','평균','최고','최저'])row.append(node('th',label));head.append(row);table.append(head);const body=node('tbody');for(const p of g.players){const tr=node('tr');for(const v of [p.name,p.count,p.wins,p.winRate===null?'—':`${Math.round(p.winRate*100)}%`,p.average===null?'—':p.average.toLocaleString('ko-KR',{maximumFractionDigits:1}),p.highest??'—',p.lowest??'—'])tr.append(node('td',String(v)));body.append(tr);}table.append(body);wrap.append(table);article.append(wrap,node('p','직접 기록한 동점은 공동 승리로, 가져온 기록은 원본 승자로 집계합니다. 승률은 승자가 확인된 경쟁 경기만 기준으로 하며 내 플레이어로 지정한 기록은 나로 합산하며, 그 외에는 같은 이름을 같은 플레이어로 집계합니다.'));box.append(article);}return;}
 for(const p of filtered){const article=node('article',undefined,'record-item');article.id='record-'+p.id;article.append(node('h3',p.game.name),node('p',`${p.date} · ${p.players.length}인${p.rule==='lowest'?' · 낮은 점수 승리':p.rule==='cooperative'?' · 협력':''}${currentUser&&pending.has(p.id)?' · 저장 대기':''}`));const wins=winnerIds(p),me=meIn(p,profile),list=node('ul',undefined,'record-scores');for(const person of [...p.players].sort((a,b)=>a.score===null?(b.score===null?0:1):b.score===null?-1:p.rule==='lowest'?a.score-b.score:b.score-a.score)){const row=node('li'),name=node('button',person.name+(person.id===me?.id?' · 나':''),'record-edit-name'),score=node('button',person.score===null?'점수 없음':person.score.toLocaleString('ko-KR')+'점','record-edit-score'),result=node('span',wins.includes(person.id)?'우승':'','record-win');name.type=score.type='button';name.setAttribute('aria-label',person.name+' 이름 수정');score.setAttribute('aria-label',person.name+' 점수 수정');name.onclick=()=>openRecordEditor(p,person,'name');score.onclick=()=>openRecordEditor(p,person,'score');row.append(name,score,result);list.append(row);}article.append(list);const actions=node('div',undefined,'record-delete-row'),remove=node('button','기록 삭제','record-danger');remove.type='button';remove.setAttribute('aria-label',p.game.name+' '+p.date+' 기록 삭제');remove.onclick=()=>{const context={key:key(),epoch:accountEpoch};api.confirm('기록 삭제',p.game.name+'의 '+p.date+' 기록을 삭제할까요?',()=>{try{deleteRecordedPlay(p.id,context);}catch(error){notify(error.message);}});};actions.append(remove);article.append(actions);if(personalBests.has(p.id))article.append(node('p','개인 기록 갱신','record-best-badge'));box.append(article);}}
-$('recordFilter').onchange=()=>{mode='history';renderHistory();};
-for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode='history';$('statsDetails').open=false;renderHistory();};
+$('recordFilter').onchange=()=>{mode='stats';renderHistory();};
+for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
 $('savePlay').onclick=openSave;
 async function sync(){if(!currentUser||syncing)return;syncing=true;const uid=currentUser.uid,epoch=accountEpoch;try{while(pending.size){const id=[...pending][0];if(epoch!==accountEpoch)return;const play=records.find(p=>p.id===id);if(play)await saveCloud(play,uid);else await deleteCloud(id,uid);if(epoch!==accountEpoch)return;if(records.find(p=>p.id===id)!==play)continue;pending.delete(id);persist();}notify('기록을 클라우드에 저장했습니다.');}catch(error){if(epoch===accountEpoch)notify('클라우드 저장 대기 중입니다. '+friendly(error));}finally{syncing=false;updateButtons();}}

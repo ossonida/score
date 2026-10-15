@@ -74,3 +74,8 @@
 @media(min-width:760px){.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#settingsAccountCard{grid-column:1 / -1}#settingsAccountCard .account-actions{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}
 
 .transfer-actions button small{font-size:13px;line-height:1.5}
+
+/* Game overview: keep all four personal indicators in one row. */
+#statsScreen .personal-hero .personal-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+#statsScreen .personal-hero .personal-metrics span{font-size:13px;white-space:nowrap;letter-spacing:-.3px}
+@media(max-width:480px){#statsScreen .personal-hero{padding:16px 14px}#statsScreen .personal-hero .personal-metrics{gap:6px}#statsScreen .personal-hero .personal-metrics strong{font-size:clamp(18px,5.4vw,25px);font-weight:500;line-height:1.2}#statsScreen .personal-hero .personal-metrics span{font-size:12px}}
