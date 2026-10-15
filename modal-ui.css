@@ -89,3 +89,8 @@ dialog button:not(.swatch):not(.score-close):not(.bgg-web-link):not(.game-result
 @media(max-height:480px){dialog .hint,dialog .record-note{margin:6px 0}}
 
 .record-participants{margin-top:14px}.record-no-scores{display:flex!important;align-items:center;gap:10px;min-height:44px;font-size:14px!important}.record-no-scores input{width:20px;height:20px;accent-color:#398fff}.participant-choice[aria-pressed=true]{background:#285382;border:1px solid #82b9f5}.participant-choice{border:1px solid transparent}.record-participant{grid-template-columns:minmax(0,1fr) 72px 28px 32px;gap:6px}.record-participant input{height:40px!important;min-height:40px!important;padding:8px!important;font-size:16px!important}.record-participant-remove{min-width:36px;min-height:40px;padding:4px;background:transparent;color:#b5c8e3;font-size:22px;border-radius:8px}#playSnapshot>p{padding:12px}#recordLogin{min-height:44px;color:#9bc7ff;font-size:14px;padding:8px 0;background:transparent;text-align:left}
+
+/* iOS date controls must shrink inside their grid column. */
+dialog{width:calc(100% - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px) - 24px)}
+#savePlayDialog .record-row>div{min-width:0}#savePlayDialog input[type=date]{display:block;min-width:0;max-width:100%;width:100%;-webkit-appearance:none;appearance:none}input[type=date]::-webkit-date-and-time-value{text-align:left;min-height:22px}#savePlayDialog select{min-width:0;text-overflow:ellipsis}
+@media(max-width:390px){dialog{padding:16px}dialog .record-head h2{font-size:18px}#savePlayForm>.record-actions{bottom:-16px}.record-participant{grid-template-columns:minmax(0,1fr) 68px 26px 32px;gap:5px}.record-head{gap:6px}}

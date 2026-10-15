@@ -1,5 +1,5 @@
-import {gameTypes} from './game-types.js?v=34';
-import {starterGames,normalizeGameQuery} from './game-catalog.js?v=34';
+import {gameTypes} from './game-types.js?v=35';
+import {starterGames,normalizeGameQuery} from './game-catalog.js?v=35';
 const KEY='score.bgg.metadata.v1';
 export const domainLabels={'Strategy Games':'전략','Family Games':'가족','Party Games':'파티','Abstract Games':'추상','Thematic Games':'테마','Wargames':'워게임',"Children’s Games":'어린이',"Children\'s Games":'어린이','Customizable Games':'커스터마이징'};
 export function bggId(game){const id=game?.bggId||game?.id||starterGames.find(g=>[g.name,...g.aliases].some(n=>normalizeGameQuery(n)===normalizeGameQuery(game?.name||'')))?.id;return /^[1-9][0-9]{0,9}$/.test(String(id||''))?String(id):'';}

@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=34';
+import {gameKey,winnerIds} from './records-core.js?v=35';
 export const nameKey=name=>String(name||'').trim().normalize('NFKC').toLocaleLowerCase();
 const numeric=value=>typeof value==='number'&&Number.isFinite(value);
 const mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
