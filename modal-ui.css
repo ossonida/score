@@ -94,3 +94,5 @@ dialog button:not(.swatch):not(.score-close):not(.bgg-web-link):not(.game-result
 dialog{width:calc(100% - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px) - 24px)}
 #savePlayDialog .record-row>div{min-width:0}#savePlayDialog input[type=date]{display:block;min-width:0;max-width:100%;width:100%;-webkit-appearance:none;appearance:none}input[type=date]::-webkit-date-and-time-value{text-align:left;min-height:22px}#savePlayDialog select{min-width:0;text-overflow:ellipsis}
 @media(max-width:390px){dialog{padding:16px}dialog .record-head h2{font-size:18px}#savePlayForm>.record-actions{bottom:-16px}.record-participant{grid-template-columns:minmax(0,1fr) 68px 26px 32px;gap:5px}.record-head{gap:6px}}
+
+#savePlayDialog .recent-games-disclosure{margin:8px 0}#savePlayDialog .recent-games-disclosure summary{cursor:pointer;font-size:13px;color:#a9bad2;padding:8px 0}#savePlayDialog .recent-games-disclosure[open] summary{margin-bottom:4px}

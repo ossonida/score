@@ -1,8 +1,8 @@
-import {recentHighlights,rivalStats} from './social-insights.js?v=41';
-import {gameKey} from './records-core.js?v=41';
-import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=41';
-import {readIdentity,meIn} from './personal-stats.js?v=41';
-import {renderGameArtwork} from './game-artwork.js?v=41';
+import {recentHighlights,rivalStats} from './social-insights.js?v=42';
+import {gameKey} from './records-core.js?v=42';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=42';
+import {readIdentity,meIn} from './personal-stats.js?v=42';
+import {renderGameArtwork} from './game-artwork.js?v=42';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
