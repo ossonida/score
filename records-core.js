@@ -1,3 +1,4 @@
+import {resolveGame,matchGameRecords} from './game-catalog.js?v=39';
 export function gameKey(game) {
   return game.bggId ? `bgg:${game.bggId}` : `name:${game.name.trim().normalize('NFKC').toLocaleLowerCase()}`;
 }
@@ -14,6 +15,7 @@ export function createPlay({game, date, rule, players}, id = crypto.randomUUID()
   if(!game||typeof game.name!=='string'||typeof id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(id))throw Error('기록 형식을 확인해주세요.');
   const name = game.name.trim();
   if (!name || name.length > 120) throw Error('게임명을 120자 이내로 입력해주세요.');
+  game=resolveGame(game);
   const bggId = game.bggId ? String(game.bggId) : '';
   if (bggId && !/^[1-9][0-9]{0,9}$/.test(bggId)) throw Error('BGG 게임 ID는 양의 정수여야 합니다.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(date + 'T00:00:00Z').toISOString().slice(0,10) !== date) throw Error('날짜를 확인해주세요.');
@@ -25,6 +27,7 @@ export function isPlay(p) {
   try { return typeof p.id==='string' && p.id.length<=100 && typeof p.createdAt==='string' && p.createdAt.length<=40 && Number.isFinite(Date.parse(p.createdAt)) && !!createPlay(p,p.id); } catch { return false; }
 }
 export function gameStats(plays) {
+  plays=matchGameRecords(plays);
   const groups = new Map();
   for (const play of plays) {
     const key=gameKey(play.game);

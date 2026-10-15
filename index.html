@@ -156,8 +156,8 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="./records.css?v=38">
-<link rel="stylesheet" href="./modal-ui.css?v=38">
+<link rel="stylesheet" href="./records.css?v=39">
+<link rel="stylesheet" href="./modal-ui.css?v=39">
 </head>
 <body>
 <main id="homeScreen">
@@ -181,7 +181,7 @@ dialog .swatch{width:28px;height:28px}
 <dialog id="savePlayDialog" class="record-dialog"><form id="savePlayForm">
 <div class="record-head"><h2>게임 기록하기</h2><button class="score-close" type="button" data-record-close="savePlayDialog" aria-label="닫기">×</button></div>
 <p class="finish-note">게임과 함께한 사람을 선택하세요. 점수는 생략할 수 있습니다.</p><div class="save-layout"><section class="save-game"><div id="recentGamesSection" hidden><h3>최근 게임</h3><div id="recentGames" class="recent-games"></div></div><label for="playGame">게임명</label><div class="record-row"><div><input id="playGame" type="text" list="savedGames" maxlength="120" required autocomplete="off" placeholder="게임명을 입력하세요"></div><button id="searchBgg" class="secondary" type="button">검색</button></div><datalist id="savedGames"></datalist><p id="gameSearchStatus" class="record-note" role="status"></p><div id="bggResults" class="record-results" aria-label="게임 검색 결과"></div><p id="selectedGameInfo" class="selected-game" role="status"></p><button id="openBggWebsite" class="bgg-web-link" type="button">BGG 웹 검색 ↗</button>
-<details><summary class="record-note">BGG 게임 ID (선택)</summary><input id="playBggId" type="text" inputmode="numeric" pattern="[1-9][0-9]{0,9}" aria-label="BGG 게임 ID" placeholder="예: 13"></details>
+<details><summary class="record-note">BGG 게임 ID (선택)</summary><input id="playBggId" type="text" inputmode="numeric" pattern="[1-9][0-9]{0,9}" aria-label="BGG 게임 ID" placeholder="예: 13"><p class="record-note">BGG 게임 주소의 /boardgame/ 다음 숫자입니다. 예: /boardgame/13/catan → 13. 검색 결과에서 게임을 선택하면 자동 입력됩니다.</p></details>
 </section><section class="save-result"><h3>참여자 · 결과</h3><div class="record-row"><div><label for="playDate">플레이 날짜</label><input id="playDate" type="date" required></div><div><label for="playRule">승리 조건</label><select id="playRule"><option value="highest">높은 점수 승리</option><option value="lowest">낮은 점수 승리</option><option value="cooperative">협력 게임</option></select></div></div>
 <div class="record-participants"><p class="record-note" id="recordParticipantsHint">최근 함께한 사람</p><div id="recentParticipants" class="recent-games"></div><label for="recordParticipantName">참여자 추가</label><div class="record-row"><div><input id="recordParticipantName" type="text" maxlength="120" autocomplete="off" placeholder="이름 또는 닉네임"></div><button id="addRecordParticipant" type="button" class="secondary">추가</button></div></div><label class="record-no-scores"><input id="playWithoutScores" type="checkbox">점수 없이 기록</label>
 <label class="field" for="playSelf">이 경기에서 나는</label><select id="playSelf" class="record-select"></select><p id="recordAnonymousHint" class="record-note">수정하지 않은 자동 이름은 익명으로 저장됩니다.</p><div id="playSnapshot" class="record-snapshot" aria-label="저장할 이름과 점수"></div></section></div><p id="playError" class="record-error" role="alert"></p>
@@ -322,9 +322,9 @@ confirm:(title,message,callback)=>confirmation(title,message,callback)
 fitDialogs();
 render();
 </script>
-<script type="module" src="./app-analytics.js?v=38"></script>
-<script type="module" src="./records.js?v=38"></script>
-<script type="module" src="./bgg-account.js?v=38"></script>
-<script type="module" src="./settings.js?v=38"></script>
+<script type="module" src="./app-analytics.js?v=39"></script>
+<script type="module" src="./records.js?v=39"></script>
+<script type="module" src="./bgg-account.js?v=39"></script>
+<script type="module" src="./settings.js?v=39"></script>
 </body>
 </html>

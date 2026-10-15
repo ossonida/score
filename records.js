@@ -1,16 +1,16 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=38';
-import {enrichGames} from './bgg-details-client.js?v=38';
-import {renderOverview} from './overview-dashboard.js?v=38';
-import {latestPlayDate} from './stats-overview.js?v=38';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=38';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=38';
-import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=38';
-import {renderStatsDashboard} from './stats-dashboard.js?v=38';
-import {mergeImported} from './data-transfer.js?v=38';
-import {searchLocalGames} from './game-catalog.js?v=38';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=38';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=38';
-import {bggSearchUrl} from './firebase-config.js?v=38';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=39';
+import {enrichGames} from './bgg-details-client.js?v=39';
+import {renderOverview} from './overview-dashboard.js?v=39';
+import {latestPlayDate} from './stats-overview.js?v=39';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=39';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=39';
+import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=39';
+import {renderStatsDashboard} from './stats-dashboard.js?v=39';
+import {mergeImported} from './data-transfer.js?v=39';
+import {searchLocalGames,resolveGame,matchGameRecords} from './game-catalog.js?v=39';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=39';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=39';
+import {bggSearchUrl} from './firebase-config.js?v=39';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
@@ -20,7 +20,7 @@ function syncFailure(error){cloudState='error';cloudError=friendly(error);messag
 let recordLoginPending=false,recordDraftVersion=0;
 const guestKey='score.plays.v1.guest';
 function key(){return currentUser?`score.plays.v1.user.${currentUser.uid}`:guestKey;}
-function read(keyName){try{const data=JSON.parse(localStorage.getItem(keyName)||'{}');return {records:Array.isArray(data.records)?data.records.filter(isPlay):[],pending:Array.isArray(data.pending)?data.pending:[]};}catch{return {records:[],pending:[]};}}
+function read(keyName){try{const data=JSON.parse(localStorage.getItem(keyName)||'{}');return {records:Array.isArray(data.records)?matchGameRecords(data.records.filter(isPlay)):[],pending:Array.isArray(data.pending)?data.pending:[]};}catch{return {records:[],pending:[]};}}
 function persist(){localStorage.setItem(key(),JSON.stringify({records,pending:[...pending]}));recordRevision++;window.dispatchEvent?.(new Event('score-records:changed'));}
 function loadLocal(){const data=read(key());records=data.records;pending=new Set(data.pending);window.dispatchEvent?.(new Event('score-records:changed'));}
 function notify(text){$('recordMessage').textContent=text;if(location.hash==='#settings')$('accountStatus').textContent=text;if(location.hash==='#stats')$('statsStatus').textContent=text;}
@@ -57,7 +57,7 @@ $('recordLogin').onclick=async()=>{if($('savePlayForm').reportValidity?.()===fal
 $('savePlayDialog').addEventListener('close',()=>{recordLoginPending=false;});
 $('playSelf').onchange=renderSnapshot;
 $('playRule').addEventListener('change',()=>{renderSnapshot();rememberGame();});
-function selectedGame(){const name=$('playGame').value.trim();const known=records.find(p=>p.game.name.normalize('NFKC').toLocaleLowerCase()===name.normalize('NFKC').toLocaleLowerCase());return {name,bggId:$('playBggId').value.trim()||known?.game.bggId||''};}
+function selectedGame(){return resolveGame({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim()},records);}
 $('playGame').addEventListener('input',()=>{$('playBggId').value='';$('selectedGameInfo').textContent='';searchSerial++;searchController?.abort();clearTimeout(searchTimer);$('searchBgg').disabled=false;rememberGame();renderGameResults(searchLocalGames($('playGame').value,records));if(bggSearchUrl)searchTimer=setTimeout(searchGames,500);});
 $('savePlayForm').onsubmit=async event=>{event.preventDefault();const button=$('commitPlay');button.disabled=true;button.setAttribute('aria-busy','true');try{
  if(snapshotScope!==key())throw Error('계정이 변경됐습니다. 저장 창을 다시 열어주세요.');
@@ -134,6 +134,7 @@ function chooseStatsGame(game){statsView='games';mode='stats';$('recordFilter').
 let enriching=false;
 async function enrichRecordGames(){if(enriching||!currentUser||!bggSearchUrl)return;enriching=true;const uid=currentUser.uid,epoch=accountEpoch;try{const token=await idToken(uid);if(epoch!==accountEpoch)return;await enrichGames(records.map(p=>p.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(epoch===accountEpoch)renderHistory();}});}catch{}finally{enriching=false;}}
 function renderHistory(){
+ records=matchGameRecords(records);
  void enrichRecordGames();
  const groups=gameStats(records),select=$('recordFilter'),selected=select.value;
  select.replaceChildren(node('option','게임 선택'));select.firstChild.textContent='게임 선택';select.firstChild.value='';select.firstChild.disabled=groups.length>0;
@@ -171,7 +172,7 @@ async function refreshCloud(){
  try{const remote=await loadCloud(uid);if(epoch!==accountEpoch)return;
  if(!Array.isArray(remote)||remote.some(p=>!isPlay(p)))throw Error('클라우드 기록 형식을 확인하지 못했습니다. 기기 기록을 유지합니다.');
  if(revision!==recordRevision){await sync();return;}
- const map=new Map(remote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);
+ const matchedRemote=matchGameRecords(remote);const map=new Map(matchedRemote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);
  // Keep a separate, account-scoped recovery copy before accepting remote removals.
  // Never automatically resurrect games intentionally deleted on another device.
  const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));

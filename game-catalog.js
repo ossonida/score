@@ -1260,3 +1260,16 @@ export function searchLocalGames(query,plays=[]){
  for(const game of starterGames){if(![game.name,...game.aliases].some(name=>normalizeGameQuery(name).includes(q)))continue;const key=`bgg:${game.id}`;if(!map.has(key))map.set(key,{...game,source:'기본 목록'});}
  return [...map.values()].slice(0,40);
 }
+
+// Only exact names/aliases identify a game. Similar titles and editions stay separate.
+const exactGameIds=new Map();
+function addExactGame(index,name,id){const key=normalizeGameQuery(name);if(!key||!id)return;if(!index.has(key))index.set(key,new Set());index.get(key).add(String(id));}
+for(const game of starterGames)for(const name of [game.name,...game.aliases])addExactGame(exactGameIds,name,game.id);
+export function gameResolver(plays=[]){
+ const index=new Map([...exactGameIds].map(([name,ids])=>[name,new Set(ids)]));
+ for(const play of plays)if(play.game?.bggId)addExactGame(index,play.game.name,play.game.bggId);
+ return game=>{if(game.bggId)return game;const ids=index.get(normalizeGameQuery(game.name));return ids?.size===1?{...game,bggId:[...ids][0]}:game;};
+}
+const resolveCatalogGame=gameResolver();
+export function resolveGame(game,plays=[]){return plays.length?gameResolver(plays)(game):resolveCatalogGame(game);}
+export function matchGameRecords(plays){const resolve=gameResolver(plays);return plays.map(play=>{const game=resolve(play.game);return game===play.game?play:{...play,game};});}
