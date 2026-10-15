@@ -124,3 +124,5 @@ dialog .actions .danger{margin-right:0}
  #savePlayDialog .record-row:has(#playDate){grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
  #savePlayDialog #playDate,#savePlayDialog #playRule{padding-inline:10px}
 }
+
+.empty .empty-actions>.text-action{background:transparent;border:0;border-radius:0;color:#a8c6ec;min-height:44px;padding:10px 4px;font-size:13px;font-weight:400;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#526c8d}.empty .empty-actions>.text-action:hover{color:#d8eaff;text-decoration-color:currentColor}
