@@ -1,14 +1,15 @@
-import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=24';
-import {latestPlayDate} from './stats-overview.js?v=24';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=24';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=24';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=24';
-import {renderStatsDashboard} from './stats-dashboard.js?v=24';
-import {mergeImported} from './data-transfer.js?v=24';
-import {searchLocalGames} from './game-catalog.js?v=24';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=24';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=24';
-import {bggSearchUrl} from './firebase-config.js?v=24';
+import {enrichGames} from './bgg-details-client.js?v=25';
+import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=25';
+import {latestPlayDate} from './stats-overview.js?v=25';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=25';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=25';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=25';
+import {renderStatsDashboard} from './stats-dashboard.js?v=25';
+import {mergeImported} from './data-transfer.js?v=25';
+import {searchLocalGames} from './game-catalog.js?v=25';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=25';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=25';
+import {bggSearchUrl} from './firebase-config.js?v=25';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=false,searchTimer=null;
 const guestKey='score.plays.v1.guest';
@@ -78,7 +79,10 @@ $('searchBgg').onclick=searchGames;
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
 function chooseStatsGame(game){statsView='games';mode='history';$('recordFilter').value=game;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
+let enriching=false;
+async function enrichRecordGames(){if(enriching||!currentUser||!bggSearchUrl)return;enriching=true;const uid=currentUser.uid,epoch=accountEpoch;try{const token=await idToken(uid);if(epoch!==accountEpoch)return;await enrichGames(records.map(p=>p.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(epoch===accountEpoch)renderHistory();}});}catch{}finally{enriching=false;}}
 function renderHistory(){
+ void enrichRecordGames();
  const groups=gameStats(records),select=$('recordFilter'),selected=select.value;
  select.replaceChildren(node('option','게임 선택'));select.firstChild.textContent='게임 선택';select.firstChild.value='';select.firstChild.disabled=groups.length>0;
  for(const g of groups){const o=node('option',`${g.game.name} (${g.count}회)`);o.value=g.key;select.append(o);}

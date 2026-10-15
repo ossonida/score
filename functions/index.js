@@ -1,3 +1,4 @@
+import {gameDetails} from './game-details.js';
 import {onRequest} from 'firebase-functions/v2/https';
 import {defineSecret} from 'firebase-functions/params';
 import {initializeApp} from 'firebase-admin/app';
@@ -17,7 +18,19 @@ export const bggSearch=onRequest({region:'asia-northeast3',cors:['https://ossoni
   try{const db=getFirestore(),ref=db.collection('_bggLimits').doc(session.uid);const allowed=await db.runTransaction(async tx=>{const snap=await tx.get(ref),next=rateWindow(snap.exists?snap.data():null,Date.now());if(!next)return false;tx.set(ref,next);return true;});if(!allowed){res.set('Retry-After','60');res.status(429).json({error:'Too many requests'});return;}}catch{res.status(503).json({error:'Request limit service unavailable'});return;}
 
   const action=typeof req.query.action==='string'?req.query.action:'search';
-  if(!['search','collection','plays'].includes(action)){res.status(400).json({error:'Invalid action'});return;}
+  if(!['search','collection','plays','details'].includes(action)){res.status(400).json({error:'Invalid action'});return;}
+  if(action==='details'){
+    const ids=typeof req.query.ids==='string'?req.query.ids.split(','):[];
+    if(!ids.length||ids.length>20||ids.some(id=>!/^[1-9][0-9]{0,9}$/.test(id))){res.status(400).json({error:'Invalid game IDs'});return;}
+    try{
+      const url=new URL('https://boardgamegeek.com/xmlapi2/thing');url.searchParams.set('id',[...new Set(ids)].join(','));url.searchParams.set('stats','1');
+      const response=await fetch(url,{redirect:'error',headers:{Authorization:`Bearer ${token.value()}`},signal:AbortSignal.timeout(12000)});
+      if(response.status===202||response.status===429){res.status(response.status).json({error:'BGG temporarily busy'});return;}
+      if(!response.ok)throw Error('BGG request failed');
+      const parsed=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>['item','name','link','rank'].includes(name)}).parse(await boundedXml(response));
+      res.json({games:gameDetails(parsed)});
+    }catch{res.status(502).json({error:'BGG game details unavailable'});}return;
+  }
   if(action!=='search'){
     const username=typeof req.query.username==='string'?req.query.username.trim():'';
     const page=Number(req.query.page||1);
