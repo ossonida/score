@@ -1,12 +1,12 @@
-import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=36';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=36';
-import {bggSearchUrl} from './firebase-config.js?v=36';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=37';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=37';
+import {bggSearchUrl} from './firebase-config.js?v=37';
 const $=id=>document.getElementById(id);
 let user=null,epoch=0,busy=false,collection=[],plays=[];
 function key(part){return `score.bgg.${user.uid}.${part}`;}
 function cached(part,fallback){try{return JSON.parse(localStorage.getItem(key(part)))??fallback;}catch{return fallback;}}
 function status(text){$('bggAccountStatus').textContent=text;}
-function render(){
+function render(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  $('bggAccountSection').hidden=!user;
  $('bggRegister').disabled=!user||busy;$('bggImport').disabled=!user||busy||!$('bggUsername').value.trim()||!bggSearchUrl;
  $('bggServerHint').hidden=!!bggSearchUrl;
@@ -21,7 +21,7 @@ function render(){
 $('bggUsername').addEventListener('input',render);
 $('bggRegister').onclick=async()=>{
  if(!user||busy)return;const username=$('bggUsername').value.trim();if(!validUsername(username)){status('BGG 사용자명을 64자 이내로 입력해주세요.');return;}
- const uid=user.uid,version=epoch;busy=true;render();try{
+ const uid=user.uid,version=epoch;busy=true;status('BGG 계정 저장 중…');render();try{
  const previous=cached('profile',{});localStorage.setItem(key('profile'),JSON.stringify({username}));
  if(previous.username?.toLowerCase()!==username.toLowerCase()){collection=[];plays=[];localStorage.removeItem(key('collection'));localStorage.removeItem(key('plays'));}
  await saveBggProfile({username},uid);if(version===epoch)status('BGG 사용자명을 저장했습니다. 공개 정보 가져오기를 눌러주세요.');

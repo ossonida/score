@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs/promises';
-class Element{constructor(){this.value='';this.children=[];this.listeners={};}addEventListener(name,fn){this.listeners[name]=fn;}replaceChildren(){this.children=[];}append(...nodes){this.children.push(...nodes);}}
+class Element{setAttribute(name,value){(this.attributes??={})[name]=value;}constructor(){this.value='';this.children=[];this.listeners={};}addEventListener(name,fn){this.listeners[name]=fn;}replaceChildren(){this.children=[];}append(...nodes){this.children.push(...nodes);}}
 async function app(url='',tokenProvider=async()=> 'token'){
  const elements=new Map(),store=new Map(),writes=[],get=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
  const ctx=vm.createContext({console,URL,AbortSignal,Map,Set,Number,JSON,Error,localStorage:{getItem:k=>store.get(k),setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},document:{getElementById:get,createElement:()=>new Element()},writes,tokenProvider,fetch:async url=>({ok:true,json:async()=>({items:new URL(url).searchParams.get('action')==='collection'?[{id:'13',gameId:'13',name:'Catan'}]:[{id:'99',gameId:'13',name:'Catan',date:'2026-10-10',quantity:1,players:[]}],total:1})})});

@@ -1,13 +1,13 @@
-import {readIdentity} from './personal-stats.js?v=36';
-import {renderIdentitySettings} from './personal-dashboard.js?v=36';
-import {rememberGameImages} from './game-artwork.js?v=36';
-import './records.js?v=36';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=36';
+import {readIdentity} from './personal-stats.js?v=37';
+import {renderIdentitySettings} from './personal-dashboard.js?v=37';
+import {rememberGameImages} from './game-artwork.js?v=37';
+import './records.js?v=37';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=37';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){const context=api.context();renderSelf(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
