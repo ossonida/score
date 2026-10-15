@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=45';
+import {gameKey,winnerIds} from './records-core.js?v=46';
 export const nameKey=name=>String(name||'').trim().normalize('NFKC').toLocaleLowerCase();
 const numeric=value=>typeof value==='number'&&Number.isFinite(value);
 const mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
@@ -7,7 +7,7 @@ const ordered=records=>[...records].sort((a,b)=>a.date.localeCompare(b.date)||a.
 export function namesIn(records){return [...new Map(records.flatMap(p=>p.players.filter(x=>x.anonymous!==true).map(x=>[nameKey(x.name),x.name]))).entries()].sort((a,b)=>a[1].localeCompare(b[1]));}
 export function readIdentity(scope){try{const p=JSON.parse(localStorage.getItem('score.identity.v1.'+scope)||'null');if(!p||typeof p.primary!=='string'||!Array.isArray(p.aliases))return null;return {primary:nameKey(p.primary),aliases:[...new Set(p.aliases.filter(x=>typeof x==='string').map(nameKey))].slice(0,100)};}catch{return null;}}
 export function saveIdentity(scope,profile){localStorage.setItem('score.identity.v1.'+scope,JSON.stringify({primary:nameKey(profile.primary),aliases:[...new Set(profile.aliases.map(nameKey))].slice(0,100)}));}
-export function meIn(play,profile){if(play.players.some(p=>typeof p.isSelf==='boolean')){const selected=play.players.filter(p=>p.isSelf===true);return selected.length===1?selected[0]:null;}if(!profile)return null;const keys=new Set([profile.primary,...profile.aliases].map(nameKey)),people=play.players.filter(p=>p.anonymous!==true&&keys.has(nameKey(p.name)));return people.length===1?people[0]:null;}
+export function meIn(play,profile){const selected=play.players.filter(p=>p.isSelf===true);if(selected.length)return selected.length===1?selected[0]:null;if(!profile)return null;const keys=new Set([profile.primary,...profile.aliases].map(nameKey)),people=play.players.filter(p=>p.anonymous!==true&&keys.has(nameKey(p.name)));return people.length===1?people[0]:null;}
 export function personalRank(play,person){
  if(play.rule==='cooperative')return null;
  if(Number.isInteger(person.rank)&&person.rank>0)return {value:person.rank,source:'기록 순위'};
