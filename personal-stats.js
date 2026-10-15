@@ -44,3 +44,17 @@ export function matchInsight(records,play,profile){
  const meetings=others.filter(p=>p.anonymous!==true).map(p=>({name:p.name,count:own.filter(x=>x.play.players.some(o=>nameKey(o.name)===nameKey(p.name))).length}));
  return {person,rank:personalRank(play,person),won:wins.includes(person.id),known:play.rule!=='cooperative'&&wins.length>0,scoreRank:numeric(score)?1+scored.filter(x=>better(x.person.score,score,play.rule)).length:null,scoreTotal:scored.length,previousAverage,delta:numeric(score)&&previousAverage!==null?score-previousAverage:null,newBest:play.rule!=='cooperative'&&numeric(score)&&bestBefore!==null&&better(score,bestBefore,play.rule),bestBefore,gap,meetings,cooperative:play.rule==='cooperative'};
 }
+
+export function personalRecordIds(records,profile){
+ const groups=new Map(),result=new Set();
+ for(const play of ordered(records)){
+  const person=meIn(play,profile);if(play.rule==='cooperative'||!person||!numeric(person.score))continue;
+  const key=JSON.stringify([gameKey(play.game),play.rule]);
+  const group=groups.get(key)||{day:null,previous:null,dayBest:null};
+  if(group.day!==play.date){if(group.dayBest!==null&&(group.previous===null||better(group.dayBest,group.previous,play.rule)))group.previous=group.dayBest;group.day=play.date;group.dayBest=null;}
+  if(group.previous!==null&&better(person.score,group.previous,play.rule))result.add(play.id);
+  if(group.dayBest===null||better(person.score,group.dayBest,play.rule))group.dayBest=person.score;
+  groups.set(key,group);
+ }
+ return result;
+}

@@ -1,8 +1,8 @@
 'use strict';
-const CACHE='score-counter-shell-v20-player-memory';
+const CACHE='score-counter-shell-v21-simple-ui';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
-const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=20','bgg-account.js','native-auth-flow.js','app-analytics.js?v=20','app-analytics.js','analytics-policy.js','settings.js?v=20','settings.js','data-transfer.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=20','records-core.js','records-core.js?v=20','bgg-validation.js','cloud-records.js','cloud-records.js?v=20','firebase-config.js','modal-ui.css?v=20','modal-ui.css','records.css','records.css?v=20','game-catalog.js'].map(path=>new URL(path,BASE).href);
+const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=21','bgg-account.js','native-auth-flow.js','app-analytics.js?v=21','app-analytics.js','analytics-policy.js','settings.js?v=21','settings.js','data-transfer.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=21','records-core.js','records-core.js?v=21','bgg-validation.js','cloud-records.js','cloud-records.js?v=21','firebase-config.js','modal-ui.css?v=21','modal-ui.css','records.css','records.css?v=21','game-catalog.js'].map(path=>new URL(path,BASE).href);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('score-counter-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
