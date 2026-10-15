@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),dist=resolve(root,'dist');
 await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
 // Explicit allowlist keeps server code, credentials, tests and dependencies out of the APK.
-const files=['app-analytics.js','analytics-policy.js','native-auth-flow.js','index.html','records.js','records-core.js','records.css','modal-ui.css','cloud-records.js','firebase-config.js','bgg-account.js','bgg-validation.js','game-catalog.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const files=['settings.js','data-transfer.js','app-analytics.js','analytics-policy.js','native-auth-flow.js','index.html','records.js','records-core.js','records.css','modal-ui.css','cloud-records.js','firebase-config.js','bgg-account.js','bgg-validation.js','game-catalog.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 for(const name of files)await copyFile(resolve(root,name),resolve(dist,name));
 let html=await readFile(resolve(dist,'index.html'),'utf8');
 html=html.replace("if('serviceWorker' in navigator&&", "if(false&&'serviceWorker' in navigator&&");
