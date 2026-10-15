@@ -1,5 +1,5 @@
-import {bggId} from './bgg-metadata.js?v=46';
-import {gameImages} from './game-images.js?v=46';
+import {bggId} from './bgg-metadata.js?v=47';
+import {gameImages} from './game-images.js?v=47';
 export function safeGameImage(value){try{if(typeof value!=='string'||value.length>2048)return '';const u=new URL(value);return u.protocol==='https:'&&u.hostname==='cf.geekdo-images.com'&&!u.username&&!u.password&&!u.port?u.href:'';}catch{return '';}}
 const idKey=value=>/^[1-9][0-9]{0,9}$/.test(String(value||''))?String(value):'';
 function savedImages(){try{const value=JSON.parse(localStorage.getItem('score.bgg.covers.v1')||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}}

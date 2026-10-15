@@ -157,12 +157,12 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=46">
-<link rel="stylesheet" href="./modal-ui.css?v=46">
+<link rel="stylesheet" href="./records.css?v=47">
+<link rel="stylesheet" href="./modal-ui.css?v=47">
 </head>
 <body>
 <main id="homeScreen">
- <header><div><div class="brand">Score Counter</div><div class="caption" id="boardCaption" role="status">점수는 이 기기에 자동 저장됩니다.</div></div><div class="toolbar"><button id="savePlay" class="tool game-end-tool" type="button" hidden aria-label="게임종료 점수저장" title="게임종료 점수저장">게임종료 점수저장</button><button class="tool" id="reset" aria-label="점수 초기화" title="점수 초기화"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 2 8"/><path d="M3 4v6h6"/><path d="M12 8v4l3 2"/></svg></button><button class="tool" id="resetPlayers" aria-label="플레이어 전체 리셋" title="플레이어 전체 리셋"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4"/><path d="m16 15 5 6m0-6-5 6"/></svg></button><button class="tool" id="bulk" aria-label="여러 명 추가" title="여러 명 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M15 4a3 3 0 0 1 0 6m3 4v6m-3-3h6"/></svg></button><button class="tool primary" id="add" hidden aria-label="플레이어 추가" title="플레이어 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4m5-3v8m-4-4h8"/></svg></button></div></header>
+ <header><div><div class="brand">Score Counter</div><div class="caption" id="boardCaption" role="status">점수는 이 기기에 자동 저장됩니다.</div></div><div class="toolbar"><button id="savePlay" class="tool game-end-tool" type="button" hidden aria-label="게임 종료" title="게임 종료">게임 종료</button><button class="tool" id="reset" aria-label="점수 초기화" title="점수 초기화"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 2 8"/><path d="M3 4v6h6"/><path d="M12 8v4l3 2"/></svg></button><button class="tool" id="resetPlayers" aria-label="플레이어 전체 리셋" title="플레이어 전체 리셋"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4"/><path d="m16 15 5 6m0-6-5 6"/></svg></button><button class="tool" id="bulk" aria-label="여러 명 추가" title="여러 명 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M15 4a3 3 0 0 1 0 6m3 4v6m-3-3h6"/></svg></button><button class="tool primary" id="add" hidden aria-label="플레이어 추가" title="플레이어 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4m5-3v8m-4-4h8"/></svg></button></div></header>
  <div class="board-status"><div class="stats" id="stats"></div><p id="recordingStatus" class="recording-status" role="status" hidden></p></div><section class="cards" id="cards" aria-label="플레이어 점수"></section>
  <footer><div class="footer-guide">이름은 수정 · 점수는 직접 입력 · 왼쪽으로 밀면 삭제</div><div class="record-links"><span id="recordLoginHint">이 기기에 기록됩니다. <a href="#settings">Google 로그인</a></span></div><p id="recordMessage" class="record-message" role="status"></p><button id="installApp" type="button">앱을 홈화면에 추가</button></footer>
 </main>
@@ -190,6 +190,8 @@ dialog .swatch{width:28px;height:28px}
 
 
 
+<div id="recordSavedNotice" class="record-saved-notice" role="status" aria-live="polite" hidden></div>
+<dialog id="endGameDialog"><div class="record-head"><h2>게임 종료</h2><button class="score-close" type="button" data-record-close="endGameDialog" aria-label="닫기">×</button></div><p id="endGameName" class="record-note"></p><div class="end-game-actions"><button id="endGameSave" class="primary" type="button">점수 저장</button><button id="endGameHome" class="secondary" type="button">초기 화면으로 돌아가기</button></div><p class="record-note">초기 화면으로 돌아가면 현재 점수판이 비워집니다. 저장한 기록은 유지됩니다.</p><p id="endGameError" class="record-error" role="alert"></p></dialog>
 <dialog id="gamePlayersDialog"><form id="gamePlayersForm"><div class="record-head"><h2>플레이어 추가</h2><button class="score-close" type="button" data-record-close="gamePlayersDialog" aria-label="닫기">×</button></div><label for="gamePlayerCount">플레이어 수</label><div class="record-row"><div><input id="gamePlayerCount" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="3" autocomplete="off" enterkeyhint="done" required value="2" aria-describedby="gamePlayerHint"></div><button class="primary" type="submit">점수 기록 시작</button></div><p id="gamePlayerHint" class="record-note">1~100명 · 이름은 점수판에서 변경할 수 있습니다.</p><p id="gamePlayersError" class="record-error" role="alert"></p></form></dialog>
 <dialog id="playerDialog"><form id="playerForm"><div class="player-heading"><h2 id="playerTitle">플레이어 추가</h2><button class="player-remove" id="remove" type="button">삭제</button><button class="score-close" type="button" data-close aria-label="플레이어 입력 취소" title="취소">×</button></div><div class="player-entry"><input id="nickname" type="text" maxlength="30" placeholder="닉네임" aria-label="닉네임" required autocomplete="off" enterkeyhint="done"><button class="primary" type="submit">저장</button></div><div class="color-row"><label for="color">컬러</label><input id="color" type="color"><button class="random" id="random" type="button">↻ 랜덤</button></div><div class="palette" id="palette" aria-label="플레이어 컬러 선택"></div><div class="error" id="playerError" role="alert"></div></form></dialog>
 <dialog id="scoreDialog"><form id="scoreForm"><div class="score-heading"><h2 id="scoreTitle">점수 입력</h2><button type="button" class="score-close" data-close aria-label="점수 입력 취소">×</button></div><div class="signs"><button type="button" id="positive" class="active" aria-pressed="true">＋ 더하기</button><button type="button" id="negative" aria-pressed="false">− 빼기</button></div><div class="score-entry"><input id="amount" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" autocapitalize="off" spellcheck="false" required placeholder="점수" aria-label="변경할 점수"><button class="primary" type="submit">적용</button></div><div class="preview" id="preview" aria-live="polite"></div><div class="error" id="scoreError" role="alert"></div></form></dialog>
@@ -317,6 +319,7 @@ window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{
 }
 window.ScoreCounter={
 getPlayers:()=>players.map(p=>({...p})),
+clearPlayers:()=>{localStorage.setItem(KEY,'[]');players=[];swipedId=null;render();},
 startPlayers:count=>{if(!Number.isInteger(count)||count<1||count>100)throw Error('플레이어는 1~100명으로 지정해주세요.');const before=players;players=[];try{for(let i=0;i<count;i++){const name=randomName();players.push({id:crypto.randomUUID(),name,color:randomColor(null),score:0,autoName:name});}localStorage.setItem(KEY,JSON.stringify(players));}catch(error){players=before;throw error;}swipedId=null;render();},
 setSelf:(id,scope)=>{players=players.map(p=>({...p,isSelf:p.id===id,selfScope:scope}));save();},
 restorePlayers:next=>{players=next.map(({winner,rank,...p})=>({...p}));swipedId=null;save();},
@@ -327,9 +330,9 @@ render();
 </script>
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
-<script type="module" src="./app-analytics.js?v=46"></script>
-<script type="module" src="./records.js?v=46"></script>
-<script type="module" src="./bgg-account.js?v=46"></script>
-<script type="module" src="./settings.js?v=46"></script>
+<script type="module" src="./app-analytics.js?v=47"></script>
+<script type="module" src="./records.js?v=47"></script>
+<script type="module" src="./bgg-account.js?v=47"></script>
+<script type="module" src="./settings.js?v=47"></script>
 </body>
 </html>

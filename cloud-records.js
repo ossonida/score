@@ -1,6 +1,6 @@
-import {signInNativeGoogle} from './native-auth-flow.js?v=46';
-import {validUsername,validBggItem} from './bgg-validation.js?v=46';
-import {firebaseConfig} from './firebase-config.js?v=46';
+import {signInNativeGoogle} from './native-auth-flow.js?v=47';
+import {validUsername,validBggItem} from './bgg-validation.js?v=47';
+import {firebaseConfig} from './firebase-config.js?v=47';
 let connection;
 export function cloudConfigured(){return !!(firebaseConfig?.apiKey && firebaseConfig?.projectId && firebaseConfig?.authDomain);}
 export async function connectCloud(onUser){

@@ -98,3 +98,5 @@ dialog{width:calc(100% - env(safe-area-inset-left,0px) - env(safe-area-inset-rig
 #savePlayDialog .recent-games-disclosure{margin:8px 0}#savePlayDialog .recent-games-disclosure summary{cursor:pointer;font-size:13px;color:#a9bad2;padding:8px 0}#savePlayDialog .recent-games-disclosure[open] summary{margin-bottom:4px}
 
 #savePlayDialog .record-snapshot[hidden],#savePlayDialog #recordAnonymousHint[hidden],#savePlayDialog #recordStorageHint[hidden],#savePlayDialog #recordLogin[hidden]{display:none}#gamePlayersDialog{max-width:380px}#gamePlayersForm .record-row{margin-top:8px}#gamePlayerCount{width:100%;min-width:0;font-size:20px;text-align:center}#gamePlayersForm .record-row>div{min-width:60px;flex:1}#boardCaption{overflow-wrap:anywhere}#newRecording[hidden]{display:none}
+
+#endGameDialog{max-width:380px}.end-game-actions{display:grid;gap:10px;margin:16px 0}.end-game-actions button{min-height:48px;padding:12px 14px;border-radius:12px;font-size:15px}.end-game-actions .secondary{background:#243047;color:#e4edff}
