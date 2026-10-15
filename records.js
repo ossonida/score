@@ -1,23 +1,27 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=42';
-import {enrichGames} from './bgg-details-client.js?v=42';
-import {renderOverview} from './overview-dashboard.js?v=42';
-import {latestPlayDate} from './stats-overview.js?v=42';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=42';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=42';
-import {readIdentity,meIn,personalRecordIds,nameKey} from './personal-stats.js?v=42';
-import {renderStatsDashboard} from './stats-dashboard.js?v=42';
-import {mergeImported} from './data-transfer.js?v=42';
-import {searchLocalGames,resolveGame,matchGameRecords} from './game-catalog.js?v=42';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=42';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=42';
-import {bggSearchUrl} from './firebase-config.js?v=42';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=43';
+import {enrichGames} from './bgg-details-client.js?v=43';
+import {renderOverview} from './overview-dashboard.js?v=43';
+import {latestPlayDate} from './stats-overview.js?v=43';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=43';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=43';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=43';
+import {renderStatsDashboard} from './stats-dashboard.js?v=43';
+import {mergeImported} from './data-transfer.js?v=43';
+import {searchLocalGames,resolveGame,matchGameRecords} from './game-catalog.js?v=43';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=43';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=43';
+import {bggSearchUrl} from './firebase-config.js?v=43';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
 function recoveryKey(){return key()+'.recovery';}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
 function syncFailure(error){cloudState='error';cloudError=friendly(error);message('accountError','클라우드 동기화 실패: '+cloudError);}
-let recordLoginPending=false,recordDraftVersion=0;
+let recordLoginPending=false,recordDraftVersion=0,recordFlow='setup',pendingGame=null;
+const sessionKey='score.activeGame.v1';
+function checkedGame(config){const checked=createPlay({...config,players:[{id:'check',name:'check',score:0,color:'#ffffff'}]});return {game:checked.game,date:checked.date,rule:checked.rule,noScores:config.noScores===true};}
+function readSession(){try{const saved=JSON.parse(localStorage.getItem(sessionKey)||'null');if(!saved||!/^[-a-zA-Z0-9_.:]{1,100}$/.test(saved.recordId))return null;return {...checkedGame(saved),recordId:saved.recordId};}catch{return null;}}
+let activeSession=readSession();
 const guestKey='score.plays.v1.guest';
 function key(){return currentUser?`score.plays.v1.user.${currentUser.uid}`:guestKey;}
 function read(keyName){try{const data=JSON.parse(localStorage.getItem(keyName)||'{}');return {records:Array.isArray(data.records)?matchGameRecords(data.records.filter(isPlay)):[],pending:Array.isArray(data.pending)?data.pending:[]};}catch{return {records:[],pending:[]};}}
@@ -35,7 +39,10 @@ function updateButtons(){
  const working=!!currentUser&&['loading','saving'].includes(cloudState),progress=cloudState==='saving'?'기록 동기화 중…':'기록 불러오는 중…';
  $('cloudProgress').hidden=!working;$('cloudProgress').textContent=working?progress:'';
  $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?progress:'클라우드 동기화';
- $('savePlay').hidden=!api.getPlayers().length;$('recordLoginHint').hidden=!authReady||!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
+ const onBoard=api.getPlayers().length>0;if(!onBoard&&activeSession){activeSession=null;try{localStorage.setItem(sessionKey,'null');}catch{}}
+ $('boardCaption').textContent=onBoard&&activeSession?activeSession.game.name+' 기록 중':'점수는 이 기기에 자동 저장됩니다.';
+ $('newRecording').hidden=!onBoard;$('savePlay').textContent=activeSession?'경기 기록 저장':'게임 지정하여 점수기록';
+ $('savePlay').hidden=!onBoard;$('recordLoginHint').hidden=!authReady||!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}
@@ -43,26 +50,42 @@ function rememberGame(){try{localStorage.setItem(draftKey(),JSON.stringify({name
 function showSelectedGame(name,bggId,image){if(image&&bggId)try{rememberGameImages({[bggId]:image});}catch{}const box=$('selectedGameInfo');box.replaceChildren();if(!name)return;const art=node('span',undefined,'selected-game-art');renderGameArtwork(art,{name,bggId});box.append(art,node('span',name));}
 function chooseGame(game){$('searchBgg').disabled=false;$('playGame').value=game.name;$('playBggId').value=String(game.bggId||game.id||'');showSelectedGame(game.name,game.bggId||game.id,gameImageUrl(game));$('bggResults').replaceChildren();$('gameSearchStatus').textContent='게임을 선택했습니다. 참여자와 결과를 확인하세요.';rememberGame();}
 function renderRecentGames(){const games=new Map();for(const play of [...records].sort((a,b)=>b.createdAt.localeCompare(a.createdAt))){const key=gameKey(play.game);if(!games.has(key))games.set(key,play.game);if(games.size===5)break;}$('recentGames').replaceChildren(...[...games.values()].map(game=>{const button=node('button',game.name,'recent-game');button.type='button';button.onclick=()=>{searchController?.abort();clearTimeout(searchTimer);searchSerial++;chooseGame(game);};return button;}));$('recentGamesSection').hidden=!games.size;}
-function recentRecordParticipants(){const people=new Map();for(const play of [...records].sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt)))for(const person of play.players){const name=nameKey(person.name);if(!name||isAutomatic(person)||/^(?:익명(?:의)?플레이어|anonymous(?:player)?)(?:[0-9]+|\([0-9]+\))?$/.test(name.replace(/\s+/g,'')))continue;if(!people.has(name))people.set(name,person);}return [...people.values()].slice(0,12);}
-function refreshSnapshotPeople(){const selected=$('playSelf').value;fillSelfSelect($('playSelf'),snapshot,key());if(snapshot.some(p=>p.id===selected))$('playSelf').value=selected;renderSnapshot();renderParticipantChoices();}
-function addRecordPerson(person){if(snapshot.length>=100)throw Error('참여자는 최대 100명까지 추가할 수 있습니다.');const name=String(person.name||'').trim();if(!name||name.length>120)throw Error('이름을 1~120자로 입력해주세요.');if(snapshot.some(p=>nameKey(p.name)===nameKey(name)))throw Error('이미 추가한 이름입니다.');const colors=['#52c7ef','#ffcc00','#b44cdb','#45d9a0','#ff9461','#b19be6'];snapshot.push({id:crypto.randomUUID(),name,color:/^#[0-9a-f]{6}$/i.test(person.color||'')?person.color:colors[snapshot.length%colors.length],score:null});refreshSnapshotPeople();}
-function renderParticipantChoices(){const box=$('recentParticipants');box.replaceChildren();const people=recentRecordParticipants();$('recordParticipantsHint').textContent=people.length?'최근 함께한 사람 · 눌러서 선택':'함께한 사람을 추가하세요. 혼자 했다면 내 이름을 입력하세요.';for(const person of people){const button=node('button',person.name,'recent-game participant-choice'),selected=snapshot.some(p=>nameKey(p.name)===nameKey(person.name));button.type='button';button.setAttribute('aria-pressed',String(selected));button.onclick=()=>{try{if(selected){snapshot=snapshot.filter(p=>nameKey(p.name)!==nameKey(person.name));refreshSnapshotPeople();}else addRecordPerson(person);$('playError').textContent='';}catch(e){message('playError',e);}};box.append(button);}}
-function renderSnapshot(){$('recordAnonymousHint').hidden=!snapshot.some(isAutomatic);const noScores=$('playWithoutScores').checked,rule=$('playRule').value,wins=noScores?[]:winnerIds({rule,players:snapshot});$('playSnapshot').replaceChildren();const badges=new Map(),ranked=noScores?snapshot:[...snapshot].sort((a,b)=>!Number.isFinite(a.score)?1:!Number.isFinite(b.score)?-1:rule==='lowest'?a.score-b.score:b.score-a.score);for(const person of ranked){const row=node('div',undefined,'finish-player record-participant'),name=node('span',isAutomatic(person)?'익명의 플레이어 ('+person.name+')':person.name,'finish-name'),remove=node('button','×','record-participant-remove');remove.type='button';remove.setAttribute('aria-label',person.name+' 참여자 제외');remove.onclick=()=>{snapshot=snapshot.filter(p=>p.id!==person.id);refreshSnapshotPeople();};row.append(name);if(noScores)row.append(node('span','점수 없음','record-note'));else{const input=node('input');input.type='text';input.inputMode='decimal';input.value=Number.isFinite(person.score)?String(person.score):'';input.placeholder='점수';input.maxLength=24;input.setAttribute('aria-label',person.name+' 기록 점수');input.oninput=()=>{const raw=input.value.trim();person.score=raw===''?null:/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw)?Number(raw):NaN;const current=winnerIds({rule,players:snapshot});for(const [id,badge]of badges)badge.textContent=current.includes(id)?'승리':'';};row.append(input);}const badge=node('span',wins.includes(person.id)?'승리':'','finish-winner');badges.set(person.id,badge);row.append(badge,remove);$('playSnapshot').append(row);}if(!snapshot.length)$('playSnapshot').append(node('p','참여자를 추가하면 여기에 표시됩니다.','record-note'));}
-function updateRecordStorage(){$('recordStorageHint').textContent=currentUser?'현재 로그인한 계정에 기록을 저장합니다.':'로그인 없이 이 기기에 저장할 수 있습니다. 로그인하면 다른 기기에서도 기록을 확인할 수 있습니다.';$('recordLogin').hidden=!!currentUser;$('commitPlay').textContent=currentUser?'기록 저장':'이 기기에 저장';}
-function openSave(){$('recentGamesSection').open=false;recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();fillSelfSelect($('playSelf'),snapshot,key());$('playWithoutScores').checked=!snapshot.length;$('recordParticipantName').value='';const draft=readDraft();$('playGame').value='';$('playBggId').value='';$('playDate').value=today();$('playRule').value=['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame('','');$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 기본 목록 검색 · 목록에 없으면 직접 입력할 수 있어요.';renderRecentGames();renderSnapshot();renderParticipantChoices();updateRecordStorage();updateGameOptions();show('savePlayDialog');}
+function renderSnapshot(){
+ const visible=recordFlow==='finish';$('playSnapshot').hidden=!visible;$('recordAnonymousHint').hidden=!visible||!snapshot.some(isAutomatic);$('playSnapshot').replaceChildren();
+ if(!visible)return;
+ const noScores=$('playWithoutScores').checked,rule=$('playRule').value,wins=noScores?[]:winnerIds({rule,players:snapshot});
+ for(const person of [...snapshot].sort((a,b)=>noScores?0:rule==='lowest'?a.score-b.score:b.score-a.score)){const row=node('div',undefined,'finish-player'),name=node('span',isAutomatic(person)?'익명의 플레이어 ('+person.name+')':person.name,'finish-name');row.append(name,node('strong',noScores?'점수 없음':person.score.toLocaleString('ko-KR')+'점'),node('span',wins.includes(person.id)?'승리':'','finish-winner'));$('playSnapshot').append(row);}
+}
+function updateRecordStorage(){
+ $('recordResultHeading').textContent=recordFlow==='setup'?'플레이 설정':'참여자 · 결과';
+ $('recordFormTitle').textContent=recordFlow==='setup'?'게임 기록하기':'경기 기록 저장';
+ $('recordFormHint').textContent=recordFlow==='setup'?'게임과 날짜, 승리 조건을 선택한 뒤 플레이어를 추가하세요.':'점수판의 이름과 점수를 저장합니다. 이름·점수 수정은 점수판에서 할 수 있습니다.';
+ $('recordStorageHint').hidden=recordFlow==='setup';$('recordStorageHint').textContent=currentUser?'현재 로그인한 계정에 기록을 저장합니다.':'이 기기에 저장됩니다. 로그인하면 다른 기기에서도 기록을 확인할 수 있습니다.';
+ $('recordLogin').hidden=recordFlow==='setup'||!!currentUser;$('commitPlay').textContent=recordFlow==='setup'?'플레이어 추가':currentUser?'기록 저장':'이 기기에 저장';
+}
+function openSave({finish=false}={}){
+ recordFlow=finish?'finish':'setup';$('recentGamesSection').open=false;recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();
+ const config=finish?activeSession:null;const draft=readDraft();$('playWithoutScores').checked=config?config.noScores:false;$('playGame').value=config?config.game.name:'';$('playBggId').value=config?config.game.bggId:'';$('playDate').value=config?config.date:today();$('playRule').value=config?config.rule:['highest','lowest','cooperative'].includes(draft.rule)?draft.rule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(config?.game.name,config?.game.bggId);$('gameSearchStatus').textContent=bggSearchUrl?'게임명을 입력하거나 최근 게임을 선택하세요.':'한글·영문으로 기본 목록 검색 · 목록에 없으면 직접 입력할 수 있어요.';renderRecentGames();renderSnapshot();updateRecordStorage();updateGameOptions();show('savePlayDialog');
+}
 $('playWithoutScores').onchange=renderSnapshot;
-$('addRecordParticipant').onclick=()=>{try{addRecordPerson({name:$('recordParticipantName').value});$('recordParticipantName').value='';$('playError').textContent='';}catch(e){message('playError',e);}};
-$('recordParticipantName').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('addRecordParticipant').onclick();}});
-$('recordLogin').onclick=async()=>{if($('savePlayForm').reportValidity?.()===false)return;if(!snapshot.length){message('playError','함께한 사람을 한 명 이상 추가해주세요.');return;}const button=$('recordLogin');button.disabled=true;button.setAttribute('aria-busy','true');recordLoginPending=true;try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 이 기기에 먼저 저장할 수 있습니다.');await login();}catch(error){recordLoginPending=false;message('playError',friendly(error));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
+$('recordLogin').onclick=async()=>{if($('savePlayForm').reportValidity?.()===false)return;if(!snapshot.length){message('playError','플레이어를 먼저 추가해주세요.');return;}const button=$('recordLogin');button.disabled=true;button.setAttribute('aria-busy','true');recordLoginPending=true;try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 이 기기에 먼저 저장할 수 있습니다.');await login();}catch(error){recordLoginPending=false;message('playError',friendly(error));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
 $('savePlayDialog').addEventListener('close',()=>{recordLoginPending=false;});
-$('playSelf').onchange=renderSnapshot;
 $('playRule').addEventListener('change',()=>{renderSnapshot();rememberGame();});
+$('gamePlayersForm').onsubmit=event=>{
+ event.preventDefault();const raw=$('gamePlayerCount').value,count=Number(raw),config=pendingGame,context=snapshotScope;
+ if(!config||context!==key()){message('gamePlayersError','계정이 변경됐습니다. 게임을 다시 선택해주세요.');return;}
+ if(!/^[0-9]+$/.test(raw)||!Number.isInteger(count)||count<1||count>100){message('gamePlayersError','플레이어는 1~100명으로 지정해주세요.');return;}
+ const start=()=>{try{if(context!==key())throw Error('계정이 변경됐습니다. 게임을 다시 선택해주세요.');const previous=activeSession,next={...config,recordId:crypto.randomUUID()};localStorage.setItem(sessionKey,JSON.stringify(next));activeSession=next;try{api.startPlayers(count);}catch(error){activeSession=previous;localStorage.setItem(sessionKey,JSON.stringify(previous));throw error;}pendingGame=null;close('gamePlayersDialog');location.hash='home';updateButtons();notify(next.game.name+' 점수 기록을 시작했습니다.');}catch(error){message('gamePlayersError',error);show('gamePlayersDialog');}};
+ if(api.getPlayers().length){close('gamePlayersDialog');api.confirm('새 게임 시작','현재 점수판을 새 플레이어와 0점으로 바꿀까요? 저장한 경기 기록은 유지됩니다.',start);}else start();
+};
 function selectedGame(){return resolveGame({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim()},records);}
 $('playGame').addEventListener('input',()=>{$('playBggId').value='';$('selectedGameInfo').textContent='';searchSerial++;searchController?.abort();clearTimeout(searchTimer);$('searchBgg').disabled=false;rememberGame();renderGameResults(searchLocalGames($('playGame').value,records));if(bggSearchUrl)searchTimer=setTimeout(searchGames,500);});
 $('savePlayForm').onsubmit=async event=>{event.preventDefault();const button=$('commitPlay');button.disabled=true;button.setAttribute('aria-busy','true');try{
  if(snapshotScope!==key())throw Error('계정이 변경됐습니다. 저장 창을 다시 열어주세요.');
- if(!snapshot.length)throw Error('함께한 사람을 한 명 이상 추가해주세요.');const noScores=$('playWithoutScores').checked;const selfId=$('playSelf').value;const savedPlayers=snapshot.map(p=>{const next={...p};if(noScores){next.score=null;delete next.winner;delete next.rank;}return next;});const play=createPlay({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,players:savingPlayers(savedPlayers,selfId)});
- rememberGame();const before=records;const oldPending=new Set(pending);records=[play,...records];if(currentUser)pending.add(play.id);
+ if(recordFlow==='setup'){pendingGame=checkedGame({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,noScores:$('playWithoutScores').checked});rememberGame();close('savePlayDialog');$('gamePlayerCount').value=String(api.getPlayers().length||2);$('gamePlayersError').textContent='';show('gamePlayersDialog');$('gamePlayerCount').focus();return;}
+
+ if(!snapshot.length)throw Error('함께한 사람을 한 명 이상 추가해주세요.');const noScores=$('playWithoutScores').checked;const selfId=selectedSelf(snapshot,key());const savedPlayers=snapshot.map(p=>{const next={...p};if(noScores){next.score=null;delete next.winner;delete next.rank;}return next;});const play=createPlay({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,players:savingPlayers(savedPlayers,selfId)},activeSession?.recordId);
+ rememberGame();const before=records;const oldPending=new Set(pending);const previous=records.find(p=>p.id===play.id);if(previous)play.createdAt=previous.createdAt;records=[play,...records.filter(p=>p.id!==play.id)];if(currentUser)pending.add(play.id);
  try{persist();}catch(e){records=before;pending=oldPending;throw Error('브라우저 저장 공간을 사용할 수 없습니다. 기록을 저장하지 못했어요.');}
  try{rememberIdentity(key(),snapshot.find(p=>p.id===selfId));if(api.getPlayers().some(p=>p.id===selfId))api.setSelf?.(selfId,key());}catch{}
  close('savePlayDialog');notify(`${play.game.name} 기록을 ${currentUser?'이 기기에 저장했습니다. 클라우드에 동기화합니다.':'이 브라우저에 저장했습니다.'}`);updateButtons();renderHistory();if(currentUser)void sync();
@@ -157,7 +180,8 @@ for(const p of filtered){const article=node('article',undefined,'record-item');a
 $('recordFilter').onchange=()=>{mode='stats';renderHistory();};
 for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
-$('savePlay').onclick=openSave;
+$('savePlay').onclick=()=>openSave({finish:true});
+$('newRecording').onclick=()=>openSave();
 async function sync(){
  if(!currentUser||syncing===accountEpoch)return;
  const uid=currentUser.uid,epoch=accountEpoch;syncing=epoch;cloudState='saving';updateButtons();
@@ -190,6 +214,7 @@ $('guestUpload').onclick=()=>api.confirm('기기 기록을 계정에 저장','�
 window.ScoreRecords={
  renderHistory,
  openSave,
+ openFinish:()=>openSave({finish:true}),
  updatePlayer:updateRecordedPlayer,
  deletePlay:deleteRecordedPlay,
  deletePlayer:deleteRecordedPlayer,
@@ -213,4 +238,4 @@ window.ScoreRecords={
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);
 window.addEventListener('scorecounter:changed',updateButtons);window.addEventListener('online',()=>{if(currentUser)refreshCloud();});
 loadLocal();updateButtons();
-if(cloudConfigured())connectCloud(async user=>{authReady=true;accountEpoch++;recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));});
+if(cloudConfigured())connectCloud(async user=>{authReady=true;accountEpoch++;pendingGame=null;close('gamePlayersDialog');recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();updateButtons();renderHistory();if(user)await refreshCloud();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));});

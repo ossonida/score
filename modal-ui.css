@@ -96,3 +96,5 @@ dialog{width:calc(100% - env(safe-area-inset-left,0px) - env(safe-area-inset-rig
 @media(max-width:390px){dialog{padding:16px}dialog .record-head h2{font-size:18px}#savePlayForm>.record-actions{bottom:-16px}.record-participant{grid-template-columns:minmax(0,1fr) 68px 26px 32px;gap:5px}.record-head{gap:6px}}
 
 #savePlayDialog .recent-games-disclosure{margin:8px 0}#savePlayDialog .recent-games-disclosure summary{cursor:pointer;font-size:13px;color:#a9bad2;padding:8px 0}#savePlayDialog .recent-games-disclosure[open] summary{margin-bottom:4px}
+
+#savePlayDialog .record-snapshot[hidden],#savePlayDialog #recordAnonymousHint[hidden],#savePlayDialog #recordStorageHint[hidden],#savePlayDialog #recordLogin[hidden]{display:none}#gamePlayersDialog{max-width:380px}#gamePlayersForm .record-row{margin-top:8px}#gamePlayerCount{width:100%;min-width:0;font-size:20px;text-align:center}#gamePlayersForm .record-row>div{min-width:60px;flex:1}#boardCaption{overflow-wrap:anywhere}#newRecording[hidden]{display:none}
