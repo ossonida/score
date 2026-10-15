@@ -4,7 +4,8 @@ export function gameKey(game) {
 export function winnerIds(play) {
   if (play.rule === 'cooperative') return [];
   if(play.players.some(p=>typeof p.winner==='boolean'))return play.players.filter(p=>p.winner===true).map(p=>p.id);
-  const scored=play.players.filter(p=>typeof p.score==='number'&&Number.isFinite(p.score));
+  if(!play.players.every(p=>typeof p.score==='number'&&Number.isFinite(p.score)))return [];
+  const scored=play.players;
   if(!scored.length)return [];
   const best = (play.rule === 'lowest' ? Math.min : Math.max)(...scored.map(p => p.score));
   return scored.filter(p => p.score === best).map(p => p.id);
@@ -32,10 +33,10 @@ export function gameStats(plays) {
     const winners=winnerIds(play);
     for (const p of play.players) {
       const identity=p.name.normalize('NFKC').toLocaleLowerCase();
-      if (!group.players.has(identity)) group.players.set(identity,{name:p.name,count:0,competitive:0,wins:0,total:0,scoreCount:0,highest:null,lowest:null});
+      if (!group.players.has(identity)) group.players.set(identity,{name:p.name,count:0,competitive:0,known:0,wins:0,total:0,scoreCount:0,highest:null,lowest:null});
       const row=group.players.get(identity);row.count++;if(typeof p.score==='number'){row.total+=p.score;row.scoreCount++;row.highest=row.highest===null?p.score:Math.max(row.highest,p.score);row.lowest=row.lowest===null?p.score:Math.min(row.lowest,p.score);}
-      if(play.rule!=='cooperative'){row.competitive++;if(winners.includes(p.id))row.wins++;}
+      if(play.rule!=='cooperative'){row.competitive++;if(winners.length)row.known++;if(winners.includes(p.id))row.wins++;}
     }
   }
-  return [...groups.values()].map(g=>({...g,players:[...g.players.values()].map(p=>({...p,average:p.scoreCount?p.total/p.scoreCount:null,winRate:p.competitive?p.wins/p.competitive:null})).sort((a,b)=>b.wins-a.wins||b.average-a.average)})).sort((a,b)=>b.count-a.count||a.game.name.localeCompare(b.game.name));
+  return [...groups.values()].map(g=>({...g,players:[...g.players.values()].map(p=>({...p,average:p.scoreCount?p.total/p.scoreCount:null,winRate:p.known?p.wins/p.known:null})).sort((a,b)=>b.wins-a.wins||b.average-a.average)})).sort((a,b)=>b.count-a.count||a.game.name.localeCompare(b.game.name));
 }

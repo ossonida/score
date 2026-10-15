@@ -1,17 +1,18 @@
-import './records.js?v=18';
+import {renderIdentitySettings} from './personal-dashboard.js';
+import './records.js?v=19';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false;
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){const context=api.context();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+function update(){const context=api.context();renderIdentitySettings($('settingsIdentity'),context.records,context.key,()=>{api.renderHistory();update();});$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
  document.documentElement.classList.toggle('settings-view',view==='settings');document.documentElement.classList.toggle('stats-view',view==='stats');
  for(const [name,id] of [['home','navHome'],['stats','navStats'],['settings','navSettings']])$(id).setAttribute('aria-current',view===name?'page':'false');
  if(view==='settings')update();if(view==='stats')api.renderHistory();
 }
-$('navHome').onclick=()=>{location.hash='home';};$('navStats').onclick=()=>{location.hash='stats';};$('navSettings').onclick=()=>{location.hash='settings';};window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);
+$('navHome').onclick=()=>{location.hash='home';};$('navStats').onclick=()=>{location.hash='stats';};$('navSettings').onclick=()=>{location.hash='settings';};window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);
 $('importData').onclick=()=>{if(!busy)$('importFile').click();};
 $('importFile').addEventListener('change',async event=>{
  const file=event.target.files?.[0];event.target.value='';if(!file||busy)return;const serial=++reading,context=api.context();clearPreview();busy=true;update();status('파일을 확인하고 있습니다…');
