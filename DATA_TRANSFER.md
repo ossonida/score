@@ -1,6 +1,6 @@
 # Settings, backup and Board Game Stats import
 
-Bottom navigation provides Home and Settings. File import/export is under Settings → Data management. Files are parsed on the device and imported only after preview confirmation. Existing records win on duplicate IDs. Live players and scores are never replaced by import or navigation.
+Bottom navigation provides Home, Statistics, and Settings. Statistics contains record history, per-game player statistics, and game filtering; the former history popup/button has been removed. File import/export is under Settings → Data management. Files are parsed on the device and imported only after preview confirmation. Existing records win on duplicate IDs. Live players and scores are never replaced by import or navigation.
 
 Supported inputs:
 - Score JSON: `{format:"score-backup", version:1, records:[...]}` exported by this application.
