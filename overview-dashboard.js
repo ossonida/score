@@ -1,9 +1,8 @@
-import {bggId,metadata,domainLabels} from './bgg-metadata.js?v=32';
-import {recentHighlights,rivalStats} from './social-insights.js?v=32';
-import {gameKey} from './records-core.js?v=32';
-import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=32';
-import {readIdentity,meIn} from './personal-stats.js?v=32';
-import {renderGameArtwork} from './game-artwork.js?v=32';
+import {recentHighlights,rivalStats} from './social-insights.js?v=33';
+import {gameKey} from './records-core.js?v=33';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=33';
+import {readIdentity,meIn} from './personal-stats.js?v=33';
+import {renderGameArtwork} from './game-artwork.js?v=33';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
@@ -25,14 +24,6 @@ export function renderOverview(container,records,{scope,view,onGame,onRecord}){
  for(const group of s.games.slice(0,view==='recent'?s.games.length:8)){const button=el('button',undefined,'overview-game-row'),cover=el('span',undefined,'overview-game-art');button.type='button';renderGameArtwork(cover,group.game);const text=el('span',undefined,'overview-game-name');text.append(el('strong',group.game.name),el('small',[...group.types].map(t=>typeLabels[t]).join(' · ')));button.append(cover,text,el('span',`${num(group.count)}회`));button.onclick=()=>onGame(group.key);games.append(button);}container.append(games);
  const criteria=el('details',undefined,'stats-methods');criteria.append(el('summary','집계 기준'));note(criteria,'플레이 횟수와 게임 분류는 저장된 경기 수 기준입니다. 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.');if(view==='all')note(criteria,'BGG 유형을 모두 반영하므로 한 경기가 전략·가족 등에 중복 집계될 수 있습니다. 협동은 BGG의 Cooperative Game 메커니즘 기준입니다. BGG 정보가 없는 게임은 미분류로 표시합니다.');container.append(criteria);
 }
-export function renderGameTypeEditor(container,records){
- container.replaceChildren();if(!records.length)return;const game=records[0].game,data=metadata(game),card=el('div',undefined,'stats-game-type');
- card.append(el('p','BGG 유형 · '+(data?(data.domains.map(d=>domainLabels[d]).join(' · ')||'미지정'):'미분류'),'insight-footnote'));
- if(data?.cooperative)note(card,'플레이 방식 · 협동 (BGG 메커니즘)');
- const id=bggId(game);if(id){const link=el('a','BGG에서 게임 정보 보기','insight-link');link.href='https://boardgamegeek.com/boardgame/'+id;link.target='_blank';link.rel='noopener noreferrer';card.append(link);}
- if(!data||!data.domains.length)note(card,data?'BGG에 게임 유형이 지정되지 않은 게임입니다.':'BGG 정보가 아직 없습니다. 서버 연결 후 자동으로 가져옵니다.');container.append(card);
-}
-
 function highlightRow(card,play,title,detail,onRecord){const button=el('button',undefined,'overview-game-row');button.type='button';const text=el('span',undefined,'overview-game-name');text.append(el('strong',title),el('small',play.game.name+' · '+detail));button.append(text);button.onclick=()=>onRecord(play.id);card.append(button);}
 function renderHighlights(container,records,profile,onRecord){
  const data=recentHighlights(records,profile),winners=el('section',undefined,'insight-card');winners.append(el('h3','이날의 승자'));for(const {play,players}of data.winners)highlightRow(winners,play,players.map(p=>p.anonymous?'익명의 플레이어':p.name).join(' · '),players.length>1?'공동 우승':'우승',onRecord);if(!data.winners.length)note(winners,'승자를 확인할 수 있는 경쟁 경기 기록이 없습니다.');container.append(winners);

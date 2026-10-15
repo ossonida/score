@@ -1,5 +1,6 @@
-import {renderGameArtwork} from './game-artwork.js?v=32';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=32';
+import {metadata,domainLabels} from './bgg-metadata.js?v=33';
+import {renderGameArtwork} from './game-artwork.js?v=33';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=33';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';
@@ -21,7 +22,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  container.replaceChildren();
  const profile=readIdentity(scope),game=records[0]?.game;
  const overview=el('section',undefined,'insight-hero game-overview');
- const title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',game.name+' · BGG에서 보기');}renderGameArtwork(art,game);title.append(art,el('h2',game?.name||'게임 통계'));overview.append(title);
+ const title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',game.name+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',game?.name||'게임 통계'),el('p',types.join(' · '),'game-type-label'));title.append(art,copy);overview.append(title);
  const scores=records.flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
  const best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null;
  const metrics=el('div',undefined,'insight-metrics');

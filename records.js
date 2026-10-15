@@ -1,16 +1,16 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=32';
-import {enrichGames} from './bgg-details-client.js?v=32';
-import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=32';
-import {latestPlayDate} from './stats-overview.js?v=32';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=32';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=32';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=32';
-import {renderStatsDashboard} from './stats-dashboard.js?v=32';
-import {mergeImported} from './data-transfer.js?v=32';
-import {searchLocalGames} from './game-catalog.js?v=32';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=32';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=32';
-import {bggSearchUrl} from './firebase-config.js?v=32';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=33';
+import {enrichGames} from './bgg-details-client.js?v=33';
+import {renderOverview} from './overview-dashboard.js?v=33';
+import {latestPlayDate} from './stats-overview.js?v=33';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=33';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=33';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=33';
+import {renderStatsDashboard} from './stats-dashboard.js?v=33';
+import {mergeImported} from './data-transfer.js?v=33';
+import {searchLocalGames} from './game-catalog.js?v=33';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=33';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=33';
+import {bggSearchUrl} from './firebase-config.js?v=33';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=false,searchTimer=null;
 let recordRevision=0;
@@ -124,12 +124,11 @@ function renderHistory(){
  const filtered=records.filter(p=>statsView==='recent'?p.date===recentDate:statsView==='games'?gameKey(p.game)===select.value:true).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
  for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']]){$(id).setAttribute('aria-selected',String(statsView===view));$(id).setAttribute('tabindex',statsView===view?'0':'-1');}
  $('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
- $('gameFilterSection').hidden=statsView!=='games';$('gameTypeEditor').hidden=statsView!=='games'||!filtered.length;$('gameDetailTabs').hidden=statsView!=='games';
+ $('gameFilterSection').hidden=statsView!=='games';$('gameDetailTabs').hidden=statsView!=='games';
  $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?'전체 기록 보기':'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){
   if(filtered.length)renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});
   else $('statsInsights').replaceChildren(node('p','저장된 게임 기록이 없습니다.','record-note'));
-  renderGameTypeEditor($('gameTypeEditor'),filtered,key(),renderHistory);
  }else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord});
  $('statsDetailCount').textContent=`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p','저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
