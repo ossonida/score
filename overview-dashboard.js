@@ -1,9 +1,9 @@
-import {bggId} from './bgg-metadata.js?v=27';
-import {recentHighlights,rivalStats} from './social-insights.js?v=27';
-import {gameKey} from './records-core.js?v=27';
-import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=27';
-import {readIdentity,meIn} from './personal-stats.js?v=27';
-import {renderGameArtwork} from './game-artwork.js?v=27';
+import {bggId} from './bgg-metadata.js?v=28';
+import {recentHighlights,rivalStats} from './social-insights.js?v=28';
+import {gameKey} from './records-core.js?v=28';
+import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=28';
+import {readIdentity,meIn} from './personal-stats.js?v=28';
+import {renderGameArtwork} from './game-artwork.js?v=28';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}

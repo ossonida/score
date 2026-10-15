@@ -1,16 +1,16 @@
-import {editRecordedPlayer} from './record-edit.js?v=27';
-import {enrichGames} from './bgg-details-client.js?v=27';
-import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=27';
-import {latestPlayDate} from './stats-overview.js?v=27';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=27';
-import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=27';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=27';
-import {renderStatsDashboard} from './stats-dashboard.js?v=27';
-import {mergeImported} from './data-transfer.js?v=27';
-import {searchLocalGames} from './game-catalog.js?v=27';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=27';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=27';
-import {bggSearchUrl} from './firebase-config.js?v=27';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=28';
+import {enrichGames} from './bgg-details-client.js?v=28';
+import {renderOverview,renderGameTypeEditor} from './overview-dashboard.js?v=28';
+import {latestPlayDate} from './stats-overview.js?v=28';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=28';
+import {isAutomatic,savingPlayers,withSelf,fillSelfSelect,rememberIdentity} from './player-memory.js?v=28';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=28';
+import {renderStatsDashboard} from './stats-dashboard.js?v=28';
+import {mergeImported} from './data-transfer.js?v=28';
+import {searchLocalGames} from './game-catalog.js?v=28';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=28';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=28';
+import {bggSearchUrl} from './firebase-config.js?v=28';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=false,searchTimer=null;
 let recordRevision=0;
@@ -84,7 +84,8 @@ let recordEditing=null;
 function openRecordEditor(play,person,field){
  recordEditing={playId:play.id,personId:person.id,field,original:play,context:{key:key(),epoch:accountEpoch}};
  const input=$('recordEditValue');$('recordEditTitle').textContent=field==='name'?'플레이어 이름 수정':'기록 점수 수정';$('recordEditLabel').textContent=field==='name'?'이름':person.name+' · 점수';
- input.type='text';input.inputMode=field==='score'?'decimal':'text';input.maxLength=field==='name'?120:24;input.value=person[field]===null?'':String(person[field]);$('recordEditHint').textContent=field==='score'?'새 점수로 순위·승자를 다시 계산합니다. 비워두면 점수 없음으로 저장됩니다.':'이 경기에 저장된 이름을 변경합니다.';$('recordEditError').textContent='';show('recordEditDialog');input.focus({preventScroll:true});input.select?.();
+ $('recordDeletePlayer').hidden=field!=='name';$('recordDeletePlayer').disabled=play.players.length<=1;
+ input.type='text';input.inputMode=field==='score'?'decimal':'text';input.maxLength=field==='name'?120:24;input.value=person[field]===null?'':String(person[field]);$('recordEditHint').textContent=field==='score'?'새 점수로 순위·승자를 다시 계산합니다. 비워두면 점수 없음으로 저장됩니다.':(play.players.length<=1?'마지막 플레이어입니다. 경기 전체 삭제는 기록 삭제를 이용해주세요.':'이 경기에 저장된 이름을 수정하거나 플레이어를 삭제합니다.');$('recordEditError').textContent='';show('recordEditDialog');input.focus({preventScroll:true});input.select?.();
 }
 function checkRecordContext(context){if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 기록을 다시 열어주세요.');}
 function updateRecordedPlayer(playId,personId,field,value,context,expected){
@@ -98,6 +99,15 @@ function deleteRecordedPlay(playId,context){
  try{persist();}catch{records=old;pending=oldPending;throw Error('삭제하지 못했습니다. 기기 저장 공간을 확인해주세요.');}
  renderHistory();updateButtons();notify(currentUser?'기록을 삭제했습니다. 계정에 동기화합니다.':'기록을 삭제했습니다.');if(currentUser)void sync();
 }
+
+function deleteRecordedPlayer(playId,personId,context,expected){
+ checkRecordContext(context);const original=records.find(p=>p.id===playId);if(!original)throw Error('기록을 찾을 수 없습니다.');if(expected&&expected!==original)throw Error('기록이 변경됐습니다. 다시 열어주세요.');
+ const updated=removeRecordedPlayer(original,personId),old=records,oldPending=new Set(pending);records=records.map(p=>p.id===playId?updated:p);if(currentUser)pending.add(playId);
+ try{persist();}catch{records=old;pending=oldPending;throw Error('플레이어를 삭제하지 못했습니다. 기기 저장 공간을 확인해주세요.');}
+ renderHistory();updateButtons();notify('기록에서 플레이어를 삭제했습니다.');if(currentUser)void sync();return updated;
+}
+$('recordDeletePlayer').onclick=()=>{if(!recordEditing)return;const editing=recordEditing,person=editing.original.players.find(p=>p.id===editing.personId);$('recordEditValue').blur?.();api.confirm('플레이어 삭제',person.name+'을(를) 이 경기 기록에서 삭제할까요?',()=>{try{deleteRecordedPlayer(editing.playId,editing.personId,editing.context,editing.original);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}});};
+
 $('recordEditForm').onsubmit=event=>{event.preventDefault();if(!recordEditing)return;const {playId,personId,field,context,original}=recordEditing;try{updateRecordedPlayer(playId,personId,field,$('recordEditValue').value,context,original);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}};
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
@@ -139,6 +149,7 @@ window.ScoreRecords={
  renderHistory,
  updatePlayer:updateRecordedPlayer,
  deletePlay:deleteRecordedPlay,
+ deletePlayer:deleteRecordedPlayer,
  assignSelf:(playId,playerId,context)=>{
   if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 선택해주세요.');
   const original=records.find(p=>p.id===playId);if(!original)throw Error('기록을 찾을 수 없습니다.');const updated=withSelf(original,playerId),old=records,oldPending=new Set(pending);records=records.map(p=>p.id===playId?updated:p);if(currentUser)pending.add(playId);

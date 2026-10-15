@@ -46,3 +46,5 @@
 .record-scores .record-edit-name,.record-scores .record-edit-score{background:transparent;color:#dceaff;min-height:42px;padding:8px 4px;border-radius:6px;font:inherit;text-align:left;overflow-wrap:anywhere}.record-scores .record-edit-score{font-size:15px;text-align:right;white-space:nowrap}.record-scores button:hover,.record-scores button:focus-visible{background:#20324c;outline:1px solid #5579a6}.record-delete-row{display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid #26384e}#recordEditDialog{max-width:420px}#recordEditDialog .record-actions{position:static}#recordEditDialog input{font-size:18px}
 
 .recent-summary .insight-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+#recordDeletePlayer{margin-right:auto}#recordDeletePlayer:disabled{opacity:.45;cursor:not-allowed}
