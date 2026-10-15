@@ -115,3 +115,5 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .record-list,.record-item,.record-table-wrap{min-width:0}.record-table-wrap{max-width:100%;overflow-x:auto}
 
 .toolbar .game-end-tool{width:68px;white-space:nowrap}.record-saved-notice{position:fixed;z-index:110;left:50%;bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);max-width:calc(100% - 28px);padding:12px 18px;border:1px solid #427d68;border-radius:14px;background:#163b30;color:#e7fff3;font-size:14px;line-height:1.4;text-align:center;pointer-events:none}.record-saved-notice[hidden]{display:none}
+
+.empty-actions [data-start-player]{display:flex;align-items:center;justify-content:center;gap:8px}.empty-actions [data-start-player] svg{width:22px;height:22px;flex:none}

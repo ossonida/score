@@ -1,4 +1,4 @@
-import {searchableGameGroups} from './game-catalog.js?v=47';
+import {searchableGameGroups} from './game-catalog.js?v=48';
 // Select2 filters its own options; searching never changes the selected game's records.
 export function enhanceGamePicker(select,groups){
  const $=window.jQuery;if(!$?.fn?.select2)return;
