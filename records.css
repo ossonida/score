@@ -105,3 +105,5 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 @media(prefers-reduced-motion:reduce){[aria-busy="true"]::before,.cloud-progress::before{animation:none;border-right-color:currentColor;border-style:dotted}}
 
 .toolbar .tool[hidden]{display:none}
+
+#statsGameSearch{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:44px;margin:6px 0 12px;padding:10px 12px;border:1px solid #34435d;border-radius:10px;background:#101827;color:#edf4ff;font:inherit;font-size:16px}#gameFilterSection label{display:block;font-size:13px;color:#b4c3d8}#gameFilterSection .record-select{margin-top:6px}

@@ -1273,3 +1273,10 @@ export function gameResolver(plays=[]){
 const resolveCatalogGame=gameResolver();
 export function resolveGame(game,plays=[]){return plays.length?gameResolver(plays)(game):resolveCatalogGame(game);}
 export function matchGameRecords(plays){const resolve=gameResolver(plays);return plays.map(play=>{const game=resolve(play.game);return game===play.game?play:{...play,game};});}
+
+const alphabeticalNames=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
+const titleBucket=name=>/^[a-z]/i.test(name.trim())?0:/^[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(name.trim())?1:2;
+export function searchableGameGroups(groups,query=''){
+ const q=normalizeGameQuery(query);
+ return groups.filter(group=>{if(!q)return true;const known=starterGames.find(game=>game.id===group.game.bggId);return [group.game.name,...(known?[known.name,...known.aliases]:[])].some(name=>normalizeGameQuery(name).includes(q));}).sort((a,b)=>titleBucket(a.game.name)-titleBucket(b.game.name)||alphabeticalNames.compare(a.game.name,b.game.name));
+}

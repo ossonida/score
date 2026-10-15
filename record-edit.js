@@ -1,4 +1,4 @@
-import {isPlay} from './records-core.js?v=43';
+import {isPlay} from './records-core.js?v=44';
 export function editRecordedPlayer(play,playerId,field,value){
  if(!play.players.some(p=>p.id===playerId))throw Error('플레이어를 찾을 수 없습니다.');
  if(!['name','score'].includes(field))throw Error('수정 항목을 확인해주세요.');
