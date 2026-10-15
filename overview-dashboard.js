@@ -1,9 +1,9 @@
-import {bggId,metadata,domainLabels} from './bgg-metadata.js?v=31';
-import {recentHighlights,rivalStats} from './social-insights.js?v=31';
-import {gameKey} from './records-core.js?v=31';
-import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=31';
-import {readIdentity,meIn} from './personal-stats.js?v=31';
-import {renderGameArtwork} from './game-artwork.js?v=31';
+import {bggId,metadata,domainLabels} from './bgg-metadata.js?v=32';
+import {recentHighlights,rivalStats} from './social-insights.js?v=32';
+import {gameKey} from './records-core.js?v=32';
+import {overviewStats,latestPlayDate,typeLabels,gameTypeList,attendanceCount} from './stats-overview.js?v=32';
+import {readIdentity,meIn} from './personal-stats.js?v=32';
+import {renderGameArtwork} from './game-artwork.js?v=32';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
@@ -40,7 +40,7 @@ function renderHighlights(container,records,profile,onRecord){
  const best=el('section',undefined,'insight-card');best.append(el('h3','개인 최고점'));for(const {play,me,improved}of data.personal)highlightRow(best,play,me.score.toLocaleString('ko-KR')+'점', (play.rule==='lowest'?'이날 최저점':'이날 최고점')+(improved?' · 개인 기록 갱신':''),onRecord);if(!data.personal.length)note(best,'내 플레이어와 점수가 지정된 경쟁 기록이 필요합니다.');else note(best,'이날의 내 최고 성적을 게임별로 표시합니다. 낮은 점수 승리 게임은 최저점 기준입니다.');container.append(best);
 }
 function renderRivals(container,records,profile,onRecord){
- const rivals=rivalStats(records,profile),card=el('section',undefined,'insight-card');card.append(el('h3','나의 라이벌'));if(!rivals.length){note(card,'내 플레이어를 지정하고 이름이 있는 상대와의 경기를 저장하면 전적을 볼 수 있습니다.');container.append(card);return;}
- const select=el('select'),body=el('div');select.setAttribute('aria-label','라이벌 선택');for(const r of rivals){const option=el('option',r.name+' · 함께 '+r.met+'회');option.value=r.key;select.append(option);}select.value=rivals[0].key;
- const draw=()=>{const r=rivals.find(x=>x.key===select.value);body.replaceChildren();metrics(body,[[r.met,'함께한 경기'],[r.ahead,'내가 앞섬'],[r.behind,'상대가 앞섬'],[r.tied,'동점']]);if(r.unknown)note(body,'비교할 수 없는 경기 '+r.unknown+'회');body.append(el('h4','최근 대결'));for(const entry of r.recent){const names={ahead:'내가 앞섬',behind:'상대가 앞섬',tied:'동점',unknown:'비교 불가'},score=p=>p.score===null?'—':p.score.toLocaleString('ko-KR');highlightRow(body,entry.play,entry.play.date+' · '+names[entry.result],'나 '+score(entry.me)+' : '+score(entry.opponent)+' '+r.name,onRecord);}};select.onchange=draw;draw();card.append(select,body);note(card,'다인 경기도 나와 상대의 순위를 비교합니다. 기록 순위를 우선하고, 없으면 승리 조건에 따른 점수를 비교합니다. 협동 경기와 익명 상대는 제외합니다.');container.append(card);
+ const rivals=rivalStats(records,profile),card=el('section',undefined,'insight-card rival-card');card.append(el('h3','나의 라이벌'));
+ const select=el('select'),body=el('div'),placeholder=el('option','플레이어 선택');placeholder.value='';select.append(placeholder);select.setAttribute('aria-label','함께한 플레이어 선택');for(const r of rivals){const option=el('option',r.name+' · 함께 '+r.met+'회');option.value=r.key;select.append(option);}select.value='';select.disabled=!rivals.length;
+ const draw=()=>{const r=rivals.find(x=>x.key===select.value);body.replaceChildren();if(!r){note(body,rivals.length?'함께한 플레이어를 선택하면 전적과 최근 대결을 볼 수 있습니다.':'이름이 있는 상대와의 경기를 저장하면 전적을 볼 수 있습니다.');return;}metrics(body,[[r.met,'함께한 경기'],[r.ahead,'내가 앞섬'],[r.behind,'상대가 앞섬'],[r.tied,'동점']]);if(r.unknown)note(body,'비교할 수 없는 경기 '+r.unknown+'회');body.append(el('h4','최근 대결'));for(const entry of r.recent){const names={ahead:'내가 앞섬',behind:'상대가 앞섬',tied:'동점',unknown:'비교 불가'},score=p=>p.score===null?'—':p.score.toLocaleString('ko-KR');highlightRow(body,entry.play,entry.play.date+' · '+names[entry.result],'나 '+score(entry.me)+' : '+score(entry.opponent)+' '+r.name,onRecord);}};select.onchange=draw;draw();card.append(select,body);if(rivals.length)note(card,'다인 경기도 나와 상대의 순위를 비교합니다. 기록 순위를 우선하고, 없으면 승리 조건에 따른 점수를 비교합니다. 협동 경기와 익명 상대는 제외합니다.');container.append(card);
 }

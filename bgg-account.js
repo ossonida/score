@@ -1,6 +1,6 @@
-import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=31';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=31';
-import {bggSearchUrl} from './firebase-config.js?v=31';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=32';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=32';
+import {bggSearchUrl} from './firebase-config.js?v=32';
 const $=id=>document.getElementById(id);
 let user=null,epoch=0,busy=false,collection=[],plays=[];
 function key(part){return `score.bgg.${user.uid}.${part}`;}

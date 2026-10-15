@@ -1,6 +1,6 @@
-import {gameKey,winnerIds} from './records-core.js?v=31';
-import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=31';
-import {latestPlayDate} from './stats-overview.js?v=31';
+import {gameKey,winnerIds} from './records-core.js?v=32';
+import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=32';
+import {latestPlayDate} from './stats-overview.js?v=32';
 const scored=p=>typeof p.score==='number'&&Number.isFinite(p.score);
 export function recentHighlights(records,profile){
  const day=latestPlayDate(records),recent=records.filter(p=>p.date===day),bests=personalRecordIds(records,profile);
@@ -14,7 +14,7 @@ export function recentHighlights(records,profile){
  return {day,winners,closest:close.filter(x=>x.gap===close[0]?.gap),personal:[...personal.values()]};
 }
 export function rivalStats(records,profile){
- const rivals=new Map();for(const play of records){if(play.rule==='cooperative')continue;const me=meIn(play,profile);if(!me)continue;const seen=new Set();for(const opponent of play.players){const key=nameKey(opponent.name);if(opponent.id===me.id||opponent.anonymous||!key||key===nameKey(me.name)||[profile?.primary,...(profile?.aliases||[])].includes(key)||play.players.filter(p=>nameKey(p.name)===key).length!==1||seen.has(key))continue;seen.add(key);
+ const rivals=new Map();for(const play of records){if(play.rule==='cooperative')continue;const me=meIn(play,profile);if(!me)continue;const seen=new Set();for(const opponent of play.players){const key=nameKey(opponent.name);if(opponent.id===me.id||opponent.anonymous||/^(?:익명(?:의)?플레이어|익명|anonymous(?:player)?|unknownplayer)(?:[0-9]+|\([0-9]+\))?$/.test(key.replace(/\s+/g,''))||!key||key===nameKey(me.name)||[profile?.primary,...(profile?.aliases||[])].includes(key)||play.players.filter(p=>nameKey(p.name)===key).length!==1||seen.has(key))continue;seen.add(key);
   let rival=rivals.get(key);if(!rival){rival={key,name:opponent.name,met:0,ahead:0,behind:0,tied:0,unknown:0,recent:[]};rivals.set(key,rival);}rival.met++;
   const ranked=Number.isFinite(me.rank)&&me.rank>0&&Number.isFinite(opponent.rank)&&opponent.rank>0;
   const delta=ranked?opponent.rank-me.rank:scored(me)&&scored(opponent)?(play.rule==='lowest'?opponent.score-me.score:me.score-opponent.score):null;
