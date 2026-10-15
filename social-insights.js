@@ -1,6 +1,6 @@
-import {gameKey,winnerIds} from './records-core.js?v=44';
-import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=44';
-import {latestPlayDate} from './stats-overview.js?v=44';
+import {gameKey,winnerIds} from './records-core.js?v=45';
+import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=45';
+import {latestPlayDate} from './stats-overview.js?v=45';
 const scored=p=>typeof p.score==='number'&&Number.isFinite(p.score);
 export function recentHighlights(records,profile){
  const day=latestPlayDate(records),recent=records.filter(p=>p.date===day),bests=personalRecordIds(records,profile);

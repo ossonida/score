@@ -1,16 +1,16 @@
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=44';
-import {enrichGames} from './bgg-details-client.js?v=44';
-import {renderOverview} from './overview-dashboard.js?v=44';
-import {latestPlayDate} from './stats-overview.js?v=44';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=44';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=44';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=44';
-import {renderStatsDashboard} from './stats-dashboard.js?v=44';
-import {mergeImported} from './data-transfer.js?v=44';
-import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=44';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=44';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=44';
-import {bggSearchUrl} from './firebase-config.js?v=44';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=45';
+import {enrichGames} from './bgg-details-client.js?v=45';
+import {renderOverview} from './overview-dashboard.js?v=45';
+import {latestPlayDate} from './stats-overview.js?v=45';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=45';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity} from './player-memory.js?v=45';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=45';
+import {renderStatsDashboard} from './stats-dashboard.js?v=45';
+import {mergeImported} from './data-transfer.js?v=45';
+import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=45';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=45';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=45';
+import {bggSearchUrl} from './firebase-config.js?v=45';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let statsGameTarget='';
@@ -41,8 +41,8 @@ function updateButtons(){
  $('cloudProgress').hidden=!working;$('cloudProgress').textContent=working?progress:'';
  $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?progress:'클라우드 동기화';
  const onBoard=api.getPlayers().length>0;if(!onBoard&&activeSession){activeSession=null;try{localStorage.setItem(sessionKey,'null');}catch{}}
- $('boardCaption').textContent=onBoard&&activeSession?activeSession.game.name+' 기록 중':'점수는 이 기기에 자동 저장됩니다.';
- $('newRecording').hidden=!onBoard;$('savePlay').textContent=activeSession?'경기 기록 저장':'게임 지정하여 점수기록';
+ $('boardCaption').textContent='점수는 이 기기에 자동 저장됩니다.';$('recordingStatus').hidden=!onBoard||!activeSession;$('recordingStatus').textContent=onBoard&&activeSession?activeSession.game.name+' 점수 기록을 시작했습니다.':'';$('recordingStatus').title=$('recordingStatus').textContent;
+ $('savePlay').textContent='게임종료 점수저장';
  $('savePlay').hidden=!onBoard;$('recordLoginHint').hidden=!authReady||!!currentUser||!api.getPlayers().length; $('savePlay').disabled=false;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
@@ -76,7 +76,7 @@ $('gamePlayersForm').onsubmit=event=>{
  event.preventDefault();const raw=$('gamePlayerCount').value,count=Number(raw),config=pendingGame,context=snapshotScope;
  if(!config||context!==key()){message('gamePlayersError','계정이 변경됐습니다. 게임을 다시 선택해주세요.');return;}
  if(!/^[0-9]+$/.test(raw)||!Number.isInteger(count)||count<1||count>100){message('gamePlayersError','플레이어는 1~100명으로 지정해주세요.');return;}
- const start=()=>{try{if(context!==key())throw Error('계정이 변경됐습니다. 게임을 다시 선택해주세요.');const previous=activeSession,next={...config,recordId:crypto.randomUUID()};localStorage.setItem(sessionKey,JSON.stringify(next));activeSession=next;try{api.startPlayers(count);}catch(error){activeSession=previous;localStorage.setItem(sessionKey,JSON.stringify(previous));throw error;}pendingGame=null;close('gamePlayersDialog');location.hash='home';updateButtons();notify(next.game.name+' 점수 기록을 시작했습니다.');}catch(error){message('gamePlayersError',error);show('gamePlayersDialog');}};
+ const start=()=>{try{if(context!==key())throw Error('계정이 변경됐습니다. 게임을 다시 선택해주세요.');const previous=activeSession,next={...config,recordId:crypto.randomUUID()};localStorage.setItem(sessionKey,JSON.stringify(next));activeSession=next;try{api.startPlayers(count);}catch(error){activeSession=previous;localStorage.setItem(sessionKey,JSON.stringify(previous));throw error;}pendingGame=null;close('gamePlayersDialog');location.hash='home';updateButtons();$('recordMessage').textContent='';}catch(error){message('gamePlayersError',error);show('gamePlayersDialog');}};
  if(api.getPlayers().length){close('gamePlayersDialog');api.confirm('새 게임 시작','현재 점수판을 새 플레이어와 0점으로 바꿀까요? 저장한 경기 기록은 유지됩니다.',start);}else start();
 };
 function selectedGame(){return resolveGame({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim()},records);}
@@ -183,7 +183,7 @@ $('recordFilter').onchange=()=>{mode='stats';renderHistory();};
 for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
 $('savePlay').onclick=()=>openSave({finish:true});
-$('newRecording').onclick=()=>openSave();
+
 async function sync(){
  if(!currentUser||syncing===accountEpoch)return;
  const uid=currentUser.uid,epoch=accountEpoch;syncing=epoch;cloudState='saving';updateButtons();
