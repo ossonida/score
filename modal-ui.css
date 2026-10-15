@@ -71,3 +71,14 @@ dialog .record-actions button,dialog .actions button{padding:10px 16px;border-ra
 #bulkDialog .actions button{flex:1}
 @media(max-width:380px){dialog{padding:16px}#savePlayForm>.record-actions{bottom:-16px}#playerDialog .palette{grid-template-columns:repeat(6,24px)}#accountDialog .account-actions{grid-template-columns:1fr}}
 @media(max-height:480px){dialog{padding:12px 16px;max-height:calc(var(--keyboard-height,100dvh) - 12px)}.record-head,.score-heading,.player-heading,.popup-heading{margin-bottom:8px}#savePlayForm>.record-actions{bottom:-12px;padding-top:8px}#savePlayDialog .record-snapshot{max-height:40px}#accountDialog .record-note{margin:5px 0}}
+
+/* Game completion: game selection and a prefilled result, no score reset. */
+.finish-note{margin:0 0 14px;color:#9eb0ca;font-size:12px;line-height:1.6}
+.save-layout{display:grid;gap:16px}.save-layout section{min-width:0}.save-layout h3{font-size:13px;font-weight:500;color:#c2cfe2;margin:0 0 8px}
+.recent-games{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.recent-games .recent-game{min-height:36px!important;max-width:100%;padding:7px 10px;border-radius:9px;color:#bdd6fb;background:#1e304c;font-size:12px;overflow-wrap:anywhere}
+#recentGamesSection[hidden]{display:none}.save-result{border-top:1px solid var(--popup-line);padding-top:14px}
+#savePlayDialog .record-snapshot{display:grid;gap:0;max-height:210px;margin:12px 0 0;border:1px solid var(--popup-line);border-radius:12px;overflow:auto;background:#0b111c}
+.finish-player{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;gap:8px;align-items:center;min-height:44px;padding:10px 12px;border-bottom:1px solid var(--popup-line)}.finish-player:last-child{border-bottom:0}.finish-name{font-size:14px;overflow-wrap:anywhere}.finish-score{font-size:17px;font-weight:500;white-space:nowrap}.finish-winner{color:#91c8ff;font-size:11px;text-align:right}
+#savePlay{background:#237bff;border-color:#237bff;color:white;font-weight:500}
+@media(min-width:700px) and (min-height:480px){#savePlayDialog{max-width:740px}.save-layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px}.save-result{border-top:0;border-left:1px solid var(--popup-line);padding:0 0 0 20px}#savePlayDialog .record-snapshot{max-height:280px}}
+@media(max-height:480px){.save-layout{gap:10px}.finish-note{margin-bottom:8px}.save-result{padding-top:10px}#savePlayDialog .record-snapshot{max-height:88px}.finish-player{padding:7px 10px;min-height:36px}}
