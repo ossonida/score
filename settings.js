@@ -1,12 +1,11 @@
-import {renderRosterSettings} from './player-memory.js';
-import {renderIdentitySettings} from './personal-dashboard.js';
-import './records.js?v=21';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js';
+import {rememberGameImages} from './game-artwork.js?v=22';
+import './records.js?v=22';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=22';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){const context=api.context();renderRosterSettings($('settingsRosters'),context.key,api,update);renderIdentitySettings($('settingsIdentity'),context.records,context.key,()=>{api.renderHistory();update();});$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+function update(){const context=api.context();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
@@ -14,7 +13,7 @@ function route(){const view=location.hash==='#settings'?'settings':location.hash
  for(const [name,id] of [['home','navHome'],['stats','navStats'],['settings','navSettings']])$(id).setAttribute('aria-current',view===name?'page':'false');
  if(view==='settings')update();if(view==='stats')api.renderHistory();
 }
-$('navHome').onclick=()=>{location.hash='home';};$('navStats').onclick=()=>{location.hash='stats';};$('navSettings').onclick=()=>{location.hash='settings';};window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);window.addEventListener('scorecounter:changed',()=>{if(location.hash==='#settings')update();});
+$('navHome').onclick=()=>{location.hash='home';};$('navStats').onclick=()=>{location.hash='stats';};$('navSettings').onclick=()=>{location.hash='settings';};window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);
 $('importData').onclick=()=>{if(!busy)$('importFile').click();};
 $('importFile').addEventListener('change',async event=>{
  const file=event.target.files?.[0];event.target.value='';if(!file||busy)return;const serial=++reading,context=api.context();clearPreview();busy=true;update();status('파일을 확인하고 있습니다…');
@@ -34,7 +33,7 @@ $('importFile').addEventListener('change',async event=>{
 $('cancelImport').onclick=()=>{reading++;clearPreview();status('가져오기를 취소했습니다.');};
 $('confirmImport').onclick=()=>{
  if(!preview||busy)return;busy=true;$('confirmImport').disabled=true;
- try{const result=api.merge(preview.records,preview.context);clearPreview();status(`${result.added}개를 가져왔습니다. 중복 ${result.duplicates}개는 제외했습니다. 진행 중인 점수는 유지됩니다.${api.context().key.endsWith('.guest')?' 이 기기에 저장됐으며, 계정에 옮기려면 로그인 후 내 계정에서 기기 기록 저장을 선택하세요.':' 계정 동기화 상태는 내 계정에서 확인하세요.'}`);}
+ try{const result=api.merge(preview.records,preview.context);try{rememberGameImages(preview.gameImages);}catch{}clearPreview();api.renderHistory();status(`${result.added}개를 가져왔습니다. 중복 ${result.duplicates}개는 제외했습니다. 진행 중인 점수는 유지됩니다.${api.context().key.endsWith('.guest')?' 이 기기에 저장됐으며, 계정에 옮기려면 로그인 후 내 계정에서 기기 기록 저장을 선택하세요.':' 계정 동기화 상태는 내 계정에서 확인하세요.'}`);}
  catch(error){status(error.message||'가져오지 못했습니다.');}
  finally{busy=false;update();}
 };

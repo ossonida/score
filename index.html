@@ -155,8 +155,8 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="./records.css?v=21">
-<link rel="stylesheet" href="./modal-ui.css?v=21">
+<link rel="stylesheet" href="./records.css?v=22">
+<link rel="stylesheet" href="./modal-ui.css?v=22">
 </head>
 <body>
 <main id="homeScreen">
@@ -167,7 +167,7 @@ dialog .swatch{width:28px;height:28px}
 
 <main id="settingsScreen" hidden><header class="settings-heading"><div><h1>설정</h1></div></header><div class="settings-grid">
 <section id="settingsAccountCard" class="settings-card"><h2>계정</h2><div class="account-profile"><p id="accountName" class="record-note"></p><p id="accountStorage" class="record-note"></p></div><p id="accountStatus" class="record-note" role="status"></p><p id="accountError" class="record-error" role="alert"></p><div class="account-actions"><button id="accountLogin" class="primary" type="button">Google로 로그인</button><button id="accountLogout" class="secondary" type="button" hidden>로그아웃</button><button id="guestUpload" class="secondary" type="button" hidden>이 기기 기록을 계정에 저장</button><button id="cloudSync" class="secondary" type="button" hidden>클라우드 동기화</button></div><details id="bggAccountSection" hidden><summary>BGG 공개 정보 연동</summary><p class="record-note">사용자명으로 공개 보유 게임과 플레이 기록을 가져옵니다.</p><label for="bggUsername">BGG 사용자명</label><div class="record-row"><div><input id="bggUsername" type="text" maxlength="64" autocomplete="off" autocapitalize="none" spellcheck="false"></div><button id="bggRegister" class="secondary" type="button">등록</button></div><p id="bggServerHint" class="record-note">BGG API 승인과 서버 연결 후 공개 정보를 가져올 수 있습니다.</p><button id="bggImport" class="secondary" type="button" disabled>공개 정보 가져오기 · 저장</button><p id="bggAccountStatus" class="record-note" role="status"></p><details class="bgg-explanation"><summary>연동 범위 안내</summary><p>BGG 로그인 인증이나 BGG에 기록 쓰기는 제공하지 않습니다. 가져온 원본 기록은 별도 보관하며 점수 통계에는 포함하지 않습니다.</p></details><div id="bggAccountData"></div></details></section>
-<section class="settings-card"><h2>내 플레이어</h2><div id="settingsRosters"></div><details class="identity-editor"><summary>기록 속 이름 연결</summary><div id="settingsIdentity"></div></details></section><section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록과 합치고 중복은 제외합니다. 점수판은 유지됩니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
+<section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록과 합치고 중복은 제외합니다. 점수판은 유지됩니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
 <div id="importPreview" class="import-preview" hidden><h3>가져오기 미리보기</h3><p id="importSummary"></p><p id="importScope" class="settings-note"></p><div id="importWarnings" class="import-warnings"></div><div id="importExamples"></div><div class="transfer-actions"><button id="cancelImport" type="button">취소</button><button id="confirmImport" type="button" class="primary" disabled>기록 가져오기</button></div></div>
 </section></div></main>
 <main id="statsScreen" class="record-dialog" hidden><header class="settings-heading"><div><h1>통계</h1></div></header><p id="statsStatus" class="record-message" role="status" aria-live="polite"></p><label for="recordFilter">게임 선택</label><select id="recordFilter" class="record-select"><option value="">모든 게임</option></select><div id="statsInsights" class="stats-insights"></div><details id="statsDetails" class="stats-details"><summary><span>전체 기록 · 게임별 통계</span><small id="statsDetailCount"></small></summary><div class="record-tabs"><button id="historyTab" type="button" class="active">기록</button><button id="statsTab" type="button">게임별 통계</button></div><div id="recordList" class="record-list"></div></details></main>
@@ -312,9 +312,9 @@ confirm:(title,message,callback)=>confirmation(title,message,callback)
 fitDialogs();
 render();
 </script>
-<script type="module" src="./app-analytics.js?v=21"></script>
-<script type="module" src="./records.js?v=21"></script>
-<script type="module" src="./bgg-account.js?v=21"></script>
-<script type="module" src="./settings.js?v=21"></script>
+<script type="module" src="./app-analytics.js?v=22"></script>
+<script type="module" src="./records.js?v=22"></script>
+<script type="module" src="./bgg-account.js?v=22"></script>
+<script type="module" src="./settings.js?v=22"></script>
 </body>
 </html>

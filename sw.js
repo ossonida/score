@@ -1,16 +1,16 @@
 'use strict';
-const CACHE='score-counter-shell-v21-simple-ui';
+const CACHE='score-counter-shell-v22-game-covers';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
-const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=21','bgg-account.js','native-auth-flow.js','app-analytics.js?v=21','app-analytics.js','analytics-policy.js','settings.js?v=21','settings.js','data-transfer.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=21','records-core.js','records-core.js?v=21','bgg-validation.js','cloud-records.js','cloud-records.js?v=21','firebase-config.js','modal-ui.css?v=21','modal-ui.css','records.css','records.css?v=21','game-catalog.js'].map(path=>new URL(path,BASE).href);
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
+const ASSETS=[...new Set(['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=22','bgg-account.js','native-auth-flow.js','app-analytics.js?v=22','app-analytics.js','analytics-policy.js','settings.js?v=22','settings.js','data-transfer.js','game-artwork.js','game-images.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=22','records-core.js','records-core.js?v=22','bgg-validation.js','cloud-records.js','cloud-records.js?v=22','firebase-config.js','modal-ui.css?v=22','modal-ui.css','records.css','records.css?v=22','game-catalog.js'].flatMap(path=>path.endsWith('.js')?[path,path+'?v=22']:[path]).map(path=>new URL(path,BASE).href))];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS.map(url=>new Request(url,{cache:'reload'})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('score-counter-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
 const request=event.request,url=new URL(request.url);
 if(request.method!=='GET'||url.origin!==BASE.origin||!url.pathname.startsWith(BASE.pathname))return;
 if(request.mode==='navigate'){
-event.respondWith((async()=>{try{const response=await fetch(request);if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(INDEX,copy)));}return response;}catch{const cached=await caches.match(INDEX)||await caches.match(request);return cached||new Response('인터넷에 연결한 뒤 다시 열어주세요.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});}})());
+event.respondWith((async()=>{try{const response=await fetch(request,{cache:'no-cache'});if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(INDEX,copy)));}return response;}catch{const cached=await caches.match(INDEX)||await caches.match(request);return cached||new Response('인터넷에 연결한 뒤 다시 열어주세요.',{status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});}})());
 }else if(ASSETS.includes(url.href)){
-event.respondWith((async()=>{try{const response=await fetch(request);if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)));}return response;}catch{const cached=await caches.match(request);return cached||Response.error();}})());
+event.respondWith((async()=>{try{const response=await fetch(request,{cache:'no-cache'});if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)));}return response;}catch{const cached=await caches.match(request);return cached||Response.error();}})());
 }
 });

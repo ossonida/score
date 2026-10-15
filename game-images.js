@@ -1,0 +1,25 @@
+// Verified public BGG cover URLs for the starter catalog (2026-10-15).
+export const gameImages = {
+  "420087": "https://cf.geekdo-images.com/YrQxEB9Ef0kQorRApzG5vQ__previewthumb/img/Uz6XJlsaVYPaz3_4NFYr_C9yzVk=/fit-in/300x320/filters:strip_icc()/pic8780246.jpg",
+  "463441": "https://cf.geekdo-images.com/ZW3pPCcG069GkXkk7HSHlg__previewthumb/img/IFOrcBPYeLeeCsO_XrZu6lC-Itk=/fit-in/300x320/filters:strip_icc()/pic9385115.jpg",
+  "13": "https://cf.geekdo-images.com/0XODRpReiZBFUffEcqT5-Q__previewthumb/img/6DsnQZpWcdOSo8O18m-QhvgclKY=/fit-in/300x320/filters:strip_icc()/pic9156909.png",
+  "822": "https://cf.geekdo-images.com/peUgu3A20LRmAXAMyDQfpQ__previewthumb/img/CNYO9XZt0eqN5fu_wc6VptdWwIE=/fit-in/300x320/filters:strip_icc()/pic8621446.jpg",
+  "9209": "https://cf.geekdo-images.com/kdWYkW-7AqG63HhqPL6ekA__previewthumb/img/32owvagSnqmny6qXaUjGN06WL98=/fit-in/300x320/filters:strip_icc()/pic8937637.jpg",
+  "230802": "https://cf.geekdo-images.com/aPSHJO0d0XOpQR5X-wJonw__previewthumb/img/qLCJBbjkXD_hN7ftt-5DLpC1xTw=/fit-in/300x320/filters:strip_icc()/pic6973671.png",
+  "266192": "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__previewthumb/img/Wb5DRcUTi7d-Mykb1rTwD9wLO1U=/fit-in/300x320/filters:strip_icc()/pic4458123.jpg",
+  "167791": "https://cf.geekdo-images.com/wg9oOLcsKvDesSUdZQ4rxw__previewthumb/img/lsfgQWp_sp8fECx1Tty3Hd36brI=/fit-in/300x320/filters:strip_icc()/pic3536616.jpg",
+  "342942": "https://cf.geekdo-images.com/SoU8p28Sk1s8MSvoM4N8pQ__previewthumb/img/vJS50Sdz48YBUXhkMbOKvFCpyuE=/fit-in/300x320/filters:strip_icc()/pic6293412.jpg",
+  "316554": "https://cf.geekdo-images.com/PhjygpWSo-0labGrPBMyyg__previewthumb/img/B6kEGrzc7zfY15pvGlLX1W8-LVg=/fit-in/300x320/filters:strip_icc()/pic5666597.jpg",
+  "397598": "https://cf.geekdo-images.com/UVUkjMV_Q2paVUIUP30Vvw__previewthumb/img/WnVf4HbZyx132sJij4G2_NcyqYU=/fit-in/300x320/filters:strip_icc()/pic7664424.jpg",
+  "182874": "https://cf.geekdo-images.com/PJRaImV8iXGAq2L-6rrn-w__previewthumb/img/NHj0WFfn2ojmw0hmQ5URRE71ams=/fit-in/300x320/filters:strip_icc()/pic2649931.jpg",
+  "68448": "https://cf.geekdo-images.com/35h9Za_JvMMMtx_92kT0Jg__previewthumb/img/zPH-lJh3s6emy3dcwJH-60t-hts=/fit-in/300x320/filters:strip_icc()/pic7149798.jpg",
+  "173346": "https://cf.geekdo-images.com/zdagMskTF7wJBPjX74XsRw__previewthumb/img/q9aKi0ZYFY2LKJWeWHG96JDq6Pg=/fit-in/300x320/filters:strip_icc()/pic2576399.jpg",
+  "148228": "https://cf.geekdo-images.com/vNFe4JkhKAERzi4T0Ntwpw__previewthumb/img/UpYSCLFjM_oFFxqgCFP3ymfqZGk=/fit-in/300x320/filters:strip_icc()/pic8234167.png",
+  "36218": "https://cf.geekdo-images.com/j6iQpZ4XkemZP07HNCODBA__previewthumb/img/J6yPBpSnA3LlFqtmNnyVnu0oSyQ=/fit-in/300x320/filters:strip_icc()/pic394356.jpg",
+  "30549": "https://cf.geekdo-images.com/S3ybV1LAp-8SnHIXLLjVqA__previewthumb/img/89tAMBmsLsaHj5LKFmyXWxQxiZs=/fit-in/300x320/filters:strip_icc()/pic1534148.jpg",
+  "295947": "https://cf.geekdo-images.com/MjeJZfulbsM1DSV3DrGJYA__previewthumb/img/z9ZxaoEx4iVzO2nhExNSdvmmoy4=/fit-in/300x320/filters:strip_icc()/pic5100691.jpg",
+  "291453": "https://cf.geekdo-images.com/cf0xxkevbwTGF3VUZymKjg__previewthumb/img/USenU2_UMlsoZNFHl3t9xG2moPs=/fit-in/300x320/filters:strip_icc()/pic6398727.png",
+  "366013": "https://cf.geekdo-images.com/-vOrd4bOspibyohYExLqWg__previewthumb/img/vGs4Y2KmoONz4CohfwRGyNuGIhU=/fit-in/300x320/filters:strip_icc()/pic6940449.png",
+  "224517": "https://cf.geekdo-images.com/x3zxjr-Vw5iU4yDPg70Jgw__previewthumb/img/Y9apAdg80y0-RV1Oxze6ZwzZe18=/fit-in/300x320/filters:strip_icc()/pic3490053.jpg",
+  "84876": "https://cf.geekdo-images.com/sH2YTQ10dHj1ibfS-KKtGA__previewthumb/img/eFgG2gnFIKXvHlBnijOx8Q-IFMU=/fit-in/300x320/filters:strip_icc()/pic8745814.jpg"
+};

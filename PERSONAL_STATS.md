@@ -21,3 +21,9 @@ Settings provides the active-board self selector, manual roster saving, and up t
 ## Simplified interface
 
 Game statistics now show the game summary, personal metrics, score trend, recent plays and player-count results. The opponent card and all match-analysis panels have been removed. Recent plays and the personal-best link open the record directly. Calculation details are in one collapsed section. History cards show scores and an optional “개인 기록 갱신” label at the bottom, only for a personal score exceeding the prior-date best in the same game and winning rule; initial records, ties, missing scores and cooperative games do not get a label. Restore, deletion and self assignment are grouped under Record management. Settings groups recent rosters and BGG integration in disclosures; explanatory copy and repeated titles have been shortened.
+
+## Removed roster controls and BGG covers
+
+The player card and all roster saving/restoring UI have been removed from Settings. Name linking remains in the selected-game player editor, and self selection remains in game finish/history. Game finish no longer writes roster memory. Previously saved roster keys are left untouched but unused. Game-level self assignment and record-name linking remain available. The game title appears once with a BGG cover when known; the separate overall play/highest metrics are shown only if no personal summary can be displayed, avoiding duplicate score summaries.
+
+BGG cover URLs were verified from public BGG metadata for all 22 starter-catalog games. Artwork also accepts image metadata in BG Stats imports, cached separately from Firestore play documents. Only HTTPS cf.geekdo-images.com URLs are accepted. Covers appear in the selected-game header, search choices and saved-game preview; a failed image hides its reserved area. Arbitrary BGG IDs without known image metadata have no image: the full BGG API server remains unconnected, so no universal live image lookup is claimed.

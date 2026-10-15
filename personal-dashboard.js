@@ -1,4 +1,5 @@
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js';
+import {renderGameArtwork} from './game-artwork.js?v=22';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=22';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';
@@ -19,14 +20,14 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  container.replaceChildren();
  const profile=readIdentity(scope),game=records[0]?.game;
  const overview=el('section',undefined,'insight-hero game-overview');
- overview.append(el('h2',game?.name||'게임 통계'));
+ const title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',game.name+' · BGG에서 보기');}renderGameArtwork(art,game);title.append(art,el('h2',game?.name||'게임 통계'));overview.append(title);
  const scores=records.flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
  const best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null;
  const metrics=el('div',undefined,'insight-metrics');
  for(const [value,label]of[[num(records.length)+'회','전체 플레이'],[num(best),'전체 최고점']]){
   const metric=el('div');metric.append(el('strong',value),el('span',label));metrics.append(metric);
  }
- overview.append(metrics);container.append(overview);
+ const personal=personalGame(records,profile,previousRule);if(!personal.total)overview.append(metrics);container.append(overview);
  const configured=Boolean(profile?.primary||records.some(p=>p.players.filter(x=>x.isSelf===true).length===1));
  const identity=el('details',undefined,'identity-editor');
  identity.append(el('summary',configured?'내 플레이어 변경':'내 플레이어 선택'));
@@ -34,7 +35,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  renderIdentitySettings(body,allRecords,scope,()=>{onIdentityChange();renderPersonalGame(container,records,onOpen,{scope,allRecords,onIdentityChange});});
  container.append(identity);
  if(!configured){identity.open=true;note(container,'내 이름을 선택하거나 기록에서 내 플레이어를 지정해주세요.');return;}
- const initial=personalGame(records,profile,previousRule);
+ const initial=personal;
  const display=namesIn(allRecords).find(([key])=>key===profile?.primary)?.[1]||profile?.primary||'나';
  const heading=el('div',undefined,'personal-game-heading');heading.append(el('h2',display==='나'?'내 기록':display+'의 기록'));container.append(heading);
  const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','승리 조건'),rule=el('select',undefined,'personal-rule');

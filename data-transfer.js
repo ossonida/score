@@ -1,4 +1,5 @@
-import {createPlay,isPlay} from './records-core.js';
+import {safeGameImage} from './game-artwork.js?v=22';
+import {createPlay,isPlay} from './records-core.js?v=22';
 export const MAX_IMPORT_BYTES=20*1024*1024,MAX_IMPORT_RECORDS=10000;
 const colors=['#52c7ef','#ffcc00','#b44cdb','#45d9a0','#ff9461','#b19be6','#087fff','#ff2496'];
 const yes=v=>v===true||v===1;
@@ -16,7 +17,7 @@ export async function parseImport(raw){
  const bg=Array.isArray(data.games)&&Array.isArray(data.players)&&Array.isArray(data.plays);
  if(!score&&!bg)throw Error('Score 백업 또는 Board Game Stats JSON 파일을 선택해주세요.');
  const source=score?data.records:data.plays;if(!Array.isArray(source)||source.length>MAX_IMPORT_RECORDS)throw Error('한 번에 기록 10,000개까지 가져올 수 있습니다.');
- const records=[],reasons=new Map(),occurrences=new Map();let skipped=0;
+ const gameImages={},records=[],reasons=new Map(),occurrences=new Map();let skipped=0;
  const reject=reason=>{skipped++;reasons.set(reason,(reasons.get(reason)||0)+1);};
  if(score){for(const p of source){if(!isPlay(p)){reject('잘못된 Score 기록');continue;}records.push({...createPlay(p,p.id),createdAt:p.createdAt});}}
  else{
@@ -29,7 +30,7 @@ export async function parseImport(raw){
     if(yes(p.ignored))throw Error('통계 제외 표시된 기록');
     const g=games.get(ref(p.gameRefId));if(!g)throw Error('게임 정보 없음');
     const name=text(g.name)||text(g.bggName);if(!name||name.length>120)throw Error('게임명 없음 또는 길이 초과');
-    const bggId=Number(g.bggId)>0?String(g.bggId):'';
+    const bggId=Number(g.bggId)>0?String(g.bggId):'';const image=[g.bggImageUrl,g.bggThumbnailUrl,g.imageUrl,g.thumbnailUrl,g.image,g.thumbnail].map(safeGameImage).find(Boolean);if(image&&/^[1-9][0-9]{0,9}$/.test(bggId))gameImages[bggId]=image;
     const scores=p.playerScores;if(!Array.isArray(scores)||!scores.length||scores.length>100)throw Error('플레이어 정보 없음 또는 인원 초과');
     const players=scores.map((s,i)=>{
      const person=people.get(ref(s?.playerRefId));if(!person)throw Error('플레이어 참조 없음');
@@ -53,6 +54,6 @@ export async function parseImport(raw){
    }catch(error){reject(error.message||'읽을 수 없는 기록');}
   }
  }
- return {format:score?'Score':'Board Game Stats',records,total:source.length,skipped,reasons:[...reasons].map(([reason,count])=>({reason,count})),scope:score?'Score 게임 기록':'게임명·날짜·플레이어·점수·승자 (메모·장소·사진·컬렉션·도전과제 제외)'};
+ return {format:score?'Score':'Board Game Stats',gameImages,records,total:source.length,skipped,reasons:[...reasons].map(([reason,count])=>({reason,count})),scope:score?'Score 게임 기록':'게임명·날짜·플레이어·점수·승자 (메모·장소·사진·컬렉션·도전과제 제외)'};
 }
 export function exportBackup(records){if(records.some(p=>!isPlay(p)))throw Error('백업할 기록을 확인해주세요.');return JSON.stringify({format:'score-backup',version:1,exportedAt:new Date().toISOString(),records:records.map(p=>({...createPlay(p,p.id),createdAt:p.createdAt}))},null,2);}
