@@ -27,3 +27,17 @@ export function summarizeStats(records,today){
  const rivals=[...pairs.values()].filter(p=>p.count>=2).sort((a,b)=>b.count-a.count||b.lastDate.localeCompare(a.lastDate));
  return {total:records.length,todayCount:todayPlays.length,day,dayCount:dayPlays.length,gameCount:new Set(dayPlays.map(p=>gameKey(p.game))).size,playerCount:players.size,leaders,closest:closeGames[0]||null,improved:improved.slice(0,3),personalBests:personalBests.slice(0,3),rival:rivals[0]||null};
 }
+
+export function summarizeGame(records){
+ const ordered=[...records].sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt.localeCompare(b.createdAt)||a.id.localeCompare(b.id));
+ const rows=new Map(),people=new Set();
+ for(const play of ordered){const winners=winnerIds(play),known=play.rule!=='cooperative'&&winners.length>0;
+  for(const p of play.players){const person=identity(p.name);people.add(person);const key=JSON.stringify([person,play.rule]);
+   const row=rows.get(key)||{key,name:p.name,rule:play.rule,count:0,known:0,wins:0,scores:[],recent:[]};row.count++;if(known){row.known++;if(winners.includes(p.id))row.wins++;}
+   if(typeof p.score==='number'&&Number.isFinite(p.score))row.scores.push(p.score);
+   row.recent.push({id:play.id,date:play.date,score:p.score,won:known&&winners.includes(p.id),known});rows.set(key,row);
+  }
+ }
+ return {game:ordered[0]?.game,total:ordered.length,people:people.size,days:new Set(ordered.map(p=>p.date)).size,first:ordered[0]?.date,last:ordered.at(-1)?.date,
+  players:[...rows.values()].map(r=>({...r,average:r.scores.length?r.scores.reduce((a,b)=>a+b,0)/r.scores.length:null,best:r.scores.length?(r.rule==='lowest'?Math.min(...r.scores):Math.max(...r.scores)):null,rate:r.known?r.wins/r.known:null,recent:r.recent.slice(-8)})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name))};
+}

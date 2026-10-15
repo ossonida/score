@@ -1,8 +1,8 @@
 'use strict';
-const CACHE='score-counter-shell-v17-import-only';
+const CACHE='score-counter-shell-v18-game-growth';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
-const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=16','bgg-account.js','native-auth-flow.js','app-analytics.js?v=16','app-analytics.js','analytics-policy.js','settings.js?v=17','settings.js','data-transfer.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=16','records-core.js','records-core.js?v=16','bgg-validation.js','cloud-records.js','cloud-records.js?v=16','firebase-config.js','modal-ui.css?v=16','modal-ui.css','records.css','records.css?v=16','game-catalog.js'].map(path=>new URL(path,BASE).href);
+const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=18','bgg-account.js','native-auth-flow.js','app-analytics.js?v=18','app-analytics.js','analytics-policy.js','settings.js?v=18','settings.js','data-transfer.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=18','records-core.js','records-core.js?v=18','bgg-validation.js','cloud-records.js','cloud-records.js?v=18','firebase-config.js','modal-ui.css?v=18','modal-ui.css','records.css','records.css?v=18','game-catalog.js'].map(path=>new URL(path,BASE).href);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('score-counter-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{

@@ -1,4 +1,4 @@
-import './records.js?v=16';
+import './records.js?v=18';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false;
 function status(message){$('transferStatus').textContent=message;}
