@@ -1,8 +1,8 @@
-import {fillSelfSelect,rememberIdentity} from './player-memory.js?v=25';
-import {renderIdentitySettings} from './personal-dashboard.js?v=25';
-import {rememberGameImages} from './game-artwork.js?v=25';
-import './records.js?v=25';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=25';
+import {fillSelfSelect,rememberIdentity} from './player-memory.js?v=26';
+import {renderIdentitySettings} from './personal-dashboard.js?v=26';
+import {rememberGameImages} from './game-artwork.js?v=26';
+import './records.js?v=26';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=26';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
