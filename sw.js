@@ -1,5 +1,5 @@
 'use strict';
-const CACHE='score-counter-shell-v50-home-copy';
+const CACHE='score-counter-shell-v51-home-icon';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
 const ASSETS=[...new Set(['ui-system.css','ui-system.css?v=50','game-picker.js','jquery-3.7.1.min.js','select2-4.0.13.min.js','select2-4.0.13.min.css','./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png','bgg-account.js?v=49','bgg-account.js','native-auth-flow.js','app-analytics.js?v=49','app-analytics.js','analytics-policy.js','settings.js?v=49','settings.js','data-transfer.js','social-insights.js','bgg-metadata.js','bgg-details-client.js','record-edit.js','stats-overview.js','overview-dashboard.js','game-types.js','game-artwork.js','game-images.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','records.js','records.js?v=49','records-core.js','records-core.js?v=49','bgg-validation.js','cloud-records.js','cloud-records.js?v=49','firebase-config.js','modal-ui.css?v=49','modal-ui.css','records.css','records.css?v=49','game-catalog.js'].flatMap(path=>path.endsWith('.js')?[path,path+'?v=49']:[path]).map(path=>new URL(path,BASE).href))];
