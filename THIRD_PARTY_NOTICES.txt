@@ -74,3 +74,10 @@ Official usage guidance: https://boardgamegeek.com/using_the_xml_api
 Standard small PNG matches the design supplied by the app owner. Retrieved from this public mirror because the BGG download host rejects this environment:
 https://raw.githubusercontent.com/ablanco/boardgamegeek-telegram-bot/7e623ba6cce7c36317596f60b6a7c0314dd0380e/powered_by_BGG_01_SM.png
 No rights to the BGG trademarks are claimed.
+
+Korean board game name index
+Wikidata Korean labels/aliases and BoardGameGeek IDs (P2339), snapshot 2026-10-16.
+Source: https://query.wikidata.org/ ; https://www.wikidata.org/wiki/Property:P2339
+Structured Wikidata data is provided under CC0: https://www.wikidata.org/wiki/Wikidata:Licensing
+Game titles and IDs are factual names; additional curated Korean aliases are maintained in korean-game-names.js.
+Only explicit IDs and names are used. The list is not a complete translation of the BGG database.
