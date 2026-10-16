@@ -155,7 +155,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .rank-drag-handle:active,.rank-drag-handle[aria-pressed=true]{background:transparent;cursor:grabbing;transform:scale(.92);box-shadow:none;opacity:1}
 .rank-drag-handle[aria-pressed=true] svg{opacity:1;transform:scale(1.08)}
 .scoreless-result-card{transition:transform .16s cubic-bezier(.22,1,.36,1),box-shadow .16s ease,filter .16s ease,outline-color .16s ease}
-.scoreless-result-card.rank-dragging{position:relative;z-index:5;opacity:1;transform:translateY(-2px) scale(1.015);outline:3px solid var(--ink);outline-color:color-mix(in srgb,var(--ink) 58%,transparent);outline-offset:-3px;filter:brightness(1.035) saturate(1.06);box-shadow:0 14px 34px #0008}
+.scoreless-result-card.rank-dragging{position:relative;z-index:5;opacity:1;transform:translateY(var(--rank-drag-y,0));transition:box-shadow .16s ease,filter .16s ease,outline-color .16s ease;outline:3px solid var(--ink);outline-color:color-mix(in srgb,var(--ink) 58%,transparent);outline-offset:-3px;filter:brightness(1.045) saturate(1.07);box-shadow:0 16px 38px #0009;will-change:transform}
 .rank-drag-active,.rank-drag-active body{overscroll-behavior:none}
 .scoreless-live-rank{display:block;margin-bottom:3px;font-size:13px;font-weight:800;opacity:.68}
 .scoreless-result-choice.draw[aria-pressed=true]::before{content:none}

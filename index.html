@@ -157,7 +157,7 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=85">
+<link rel="stylesheet" href="./records.css?v=86">
 <link rel="stylesheet" href="./modal-ui.css?v=65">
 <link rel="stylesheet" href="./ui-system.css?v=71">
 </head>
@@ -232,15 +232,18 @@ function normalizeResultRanks(){const groups=[...new Set(players.filter(p=>Numbe
 function assignRanksByOrder(){players.forEach((player,index)=>{player.rank=index+1;player.winner=index===0;delete player.draw;});}
 function moveRankPlayer(id,delta){const from=players.findIndex(player=>player.id===id),to=Math.max(0,Math.min(players.length-1,from+delta));if(from<0||from===to)return;const [player]=players.splice(from,1);players.splice(to,0,player);assignRanksByOrder();save();requestAnimationFrame(()=>$('cards').querySelector(`[data-player-id="${id}"] .rank-drag-handle`)?.focus({preventScroll:true}));}
 function setupRankDrag(card,handle,id,container){
- let pointerId=null,touchId=null,dragging=false,moved=false,lastY=0;
+ let pointerId=null,touchId=null,dragging=false,moved=false,lastY=0,dragY=0,grabOffset=0;
  const refreshLabels=()=>[...container.querySelectorAll('.scoreless-result-card')].forEach((item,index)=>{const label=item.querySelector('.scoreless-live-rank'),drag=item.querySelector('.rank-drag-handle'),person=players.find(player=>player.id===item.dataset.playerId);if(label)label.textContent=`${index+1}위`;if(drag&&person)drag.setAttribute('aria-label',`${person.name} 현재 ${index+1}위, 순서 이동`);});
  const settleAnimations=()=>[...container.querySelectorAll('.scoreless-result-card')].forEach(item=>item.getAnimations?.().filter(animation=>animation.id==='rank-reorder').forEach(animation=>animation.finish()));
- const detach=()=>{window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerStop);window.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('touchmove',touchMove);window.removeEventListener('touchend',touchStop);window.removeEventListener('touchcancel',touchCancel);settleAnimations();handle.setAttribute('aria-pressed','false');card.classList.remove('rank-dragging');document.documentElement.classList.remove('rank-drag-active');};
- const begin=y=>{if(dragging)return;dragging=true;moved=false;lastY=y;handle.setAttribute('aria-pressed','true');card.classList.add('rank-dragging');document.documentElement.classList.add('rank-drag-active');};
- const reorder=before=>{if(card.nextElementSibling===before)return false;const items=[...container.querySelectorAll('.scoreless-result-card')];settleAnimations();const previous=new Map(items.map(item=>[item,item.getBoundingClientRect().top]));container.insertBefore(card,before);for(const item of items){const shift=previous.get(item)-item.getBoundingClientRect().top;if(Math.abs(shift)<1)continue;const selected=item===card,start=selected?`translateY(${shift-2}px) scale(1.015)`:`translateY(${shift}px)`,end=selected?'translateY(-2px) scale(1.015)':'translateY(0)';const animation=item.animate([{transform:start},{transform:end}],{duration:220,easing:'cubic-bezier(.22,1,.36,1)'});animation.id='rank-reorder';}return true;};
- const moveTo=y=>{if(!dragging)return;lastY=y;const siblings=[...container.querySelectorAll('.scoreless-result-card')].filter(item=>item!==card),before=siblings.find(item=>{const rect=item.getBoundingClientRect();return y<rect.top+rect.height/2;})||null;if(reorder(before)){moved=true;refreshLabels();}const edge=56;if(lastY<edge)window.scrollBy({top:-12,behavior:'auto'});else if(lastY>innerHeight-edge)window.scrollBy({top:12,behavior:'auto'});};
- const finish=()=>{if(!dragging)return;dragging=false;detach();const order=[...container.querySelectorAll('.scoreless-result-card')].map(item=>item.dataset.playerId),byId=new Map(players.map(player=>[player.id,player]));players=order.map(playerId=>byId.get(playerId)).filter(Boolean);assignRanksByOrder();pointerId=null;touchId=null;$('scorelessBoardError').textContent='';};
- const abort=()=>{if(!dragging)return;dragging=false;detach();pointerId=null;touchId=null;render();};
+ const detachEvents=()=>{window.removeEventListener('pointermove',pointerMove);window.removeEventListener('pointerup',pointerStop);window.removeEventListener('pointercancel',pointerCancel);window.removeEventListener('touchmove',touchMove);window.removeEventListener('touchend',touchStop);window.removeEventListener('touchcancel',touchCancel);document.documentElement.classList.remove('rank-drag-active');};
+ const clearSelection=()=>{handle.setAttribute('aria-pressed','false');card.classList.remove('rank-dragging');card.style.removeProperty('--rank-drag-y');};
+ const begin=y=>{if(dragging)return;settleAnimations();dragging=true;moved=false;lastY=y;dragY=0;grabOffset=y-card.getBoundingClientRect().top;card.style.setProperty('--rank-drag-y','0px');handle.setAttribute('aria-pressed','true');card.classList.add('rank-dragging');document.documentElement.classList.add('rank-drag-active');};
+ const findBefore=center=>[...container.querySelectorAll('.scoreless-result-card')].filter(item=>item!==card).find(item=>{const rect=item.getBoundingClientRect();return center<rect.top+rect.height/2;})||null;
+ const follow=desiredTop=>{const layoutTop=card.getBoundingClientRect().top-dragY;dragY=desiredTop-layoutTop;card.style.setProperty('--rank-drag-y',`${dragY}px`);};
+ const reorder=(before,desiredTop)=>{if(card.nextElementSibling===before){follow(desiredTop);return false;}settleAnimations();const siblings=[...container.querySelectorAll('.scoreless-result-card')].filter(item=>item!==card),previous=new Map(siblings.map(item=>[item,item.getBoundingClientRect().top]));container.insertBefore(card,before);follow(desiredTop);for(const item of siblings){const shift=previous.get(item)-item.getBoundingClientRect().top;if(Math.abs(shift)<1)continue;const animation=item.animate([{transform:`translateY(${shift}px)`},{transform:'translateY(0)'}],{duration:240,easing:'cubic-bezier(.2,.8,.2,1)'});animation.id='rank-reorder';}return true;};
+ const moveTo=y=>{if(!dragging)return;lastY=y;const desiredTop=y-grabOffset,center=desiredTop+card.offsetHeight/2;let before=findBefore(center);if(card.nextElementSibling!==before){settleAnimations();before=findBefore(center);}if(reorder(before,desiredTop)){moved=true;refreshLabels();}const edge=56;if(lastY<edge)window.scrollBy({top:-12,behavior:'auto'});else if(lastY>innerHeight-edge)window.scrollBy({top:12,behavior:'auto'});};
+ const finish=()=>{if(!dragging)return;dragging=false;detachEvents();const order=[...container.querySelectorAll('.scoreless-result-card')].map(item=>item.dataset.playerId),byId=new Map(players.map(player=>[player.id,player]));players=order.map(playerId=>byId.get(playerId)).filter(Boolean);assignRanksByOrder();pointerId=null;touchId=null;$('scorelessBoardError').textContent='';const releaseY=dragY;card.style.setProperty('--rank-drag-y','0px');if(Math.abs(releaseY)<1){clearSelection();return;}const drop=card.animate([{transform:`translateY(${releaseY}px)`},{transform:'translateY(0)'}],{duration:190,easing:'cubic-bezier(.2,.9,.25,1)'});drop.id='rank-drop';drop.addEventListener('finish',clearSelection,{once:true});};
+ const abort=()=>{if(!dragging)return;dragging=false;detachEvents();pointerId=null;touchId=null;clearSelection();render();};
  const pointerMove=event=>{if(!dragging||event.pointerId!==pointerId)return;if(event.cancelable)event.preventDefault();moveTo(event.clientY);};
  const pointerStop=event=>{if(event.pointerId===pointerId)finish();};
  const pointerCancel=event=>{if(event.pointerId===pointerId&&touchId===null)abort();};
@@ -433,10 +436,10 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=85"></script>
+<script type="module" src="./records.js?v=86"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
-<script type="module" src="./bgg-link.js?v=85"></script>
+<script type="module" src="./bgg-link.js?v=86"></script>
 <script type="module" src="./settings.js?v=71"></script>
-<script type="module" src="./games-screen.js?v=85"></script>
+<script type="module" src="./games-screen.js?v=86"></script>
 </body>
 </html>
