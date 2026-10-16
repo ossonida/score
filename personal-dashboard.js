@@ -9,7 +9,7 @@ function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderIdentitySettings(container,records,scope,onChange){
  if(!container)return;container.replaceChildren();const names=namesIn(records);let profile=readIdentity(scope);const form=el('form',undefined,'identity-form');
  if(!names.length){note(container,'기록을 저장하거나 가져오면 내 이름을 선택할 수 있습니다.');return;}
- const label=el('label','기록에서 사용하는 내 이름'),select=el('select');select.setAttribute('aria-label','기록 속 내 이름');const empty=el('option','이름 선택');empty.value='';select.append(empty);
+ const label=el('label','기존 기록에서 사용된 내 닉네임을 지정할 수 있습니다. 닉네임이 여러 개라면 다른 닉네임도 지정할 수 있습니다.'),select=el('select');select.setAttribute('aria-label','기록 속 내 닉네임');const empty=el('option','닉네임 선택');empty.value='';select.append(empty);
  for(const [key,name]of names){const option=el('option',name);option.value=key;select.append(option);}if(profile&&names.some(([key])=>key===profile.primary))select.value=profile.primary;
  label.append(select);form.append(label);const selected=el('div',undefined,'identity-selected'),details=el('details',undefined,'identity-more'),summary=el('summary','다른 이름도 사용하나요? 닉네임 연결'),choices=el('div',undefined,'identity-chips'),feedback=el('p',undefined,'insight-footnote');feedback.setAttribute('role','status');details.append(summary,choices);form.append(selected,details,feedback);
  function save(next){try{saveIdentity(scope,next);profile=readIdentity(scope);onChange();feedback.textContent='저장되었습니다.';return true;}catch{feedback.textContent='저장하지 못했습니다. 다시 시도해주세요.';return false;}}
