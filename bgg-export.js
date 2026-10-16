@@ -1,12 +1,13 @@
+import {bggPlayFingerprint} from './bgg-play-format.js?v=72';
 const uncertain=new Set(['pending','unknown']);
 
-export function planBggExport(records,uploads={},limit=20){
+export async function planBggExport(records,uploads={},limit=20,username=''){
  const ready=[];let already=0,missingGame=0,needsReview=0;
  for(const play of Array.isArray(records)?records:[]){
   if(!play?.game?.bggId){missingGame++;continue;}
   const prior=uploads?.[play.id];
-  if(prior?.bggPlayId){already++;continue;}
-  if(uncertain.has(prior?.status)){needsReview++;continue;}
+  if(uncertain.has(prior?.status))needsReview++;
+  if(prior?.bggPlayId&&prior.fingerprint===await bggPlayFingerprint(play,username)){already++;continue;}
   ready.push(play);
  }
  const batch=ready.slice(0,Math.max(1,Number(limit)||20));

@@ -10,7 +10,7 @@ const ORIGINS=new Set(['https://ossonida.github.io','https://localhost','capacit
 export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
  return async function handle(request,env){
   const origin=request.headers.get('Origin');
-  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'3'};
+  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'4'};
   if(origin&&ORIGINS.has(origin))headers['Access-Control-Allow-Origin']=origin;
   const reply=(status,data,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
   if(origin&&!ORIGINS.has(origin))return reply(403,{error:'Origin not allowed'});

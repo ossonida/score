@@ -1,19 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {planBggExport,sendBggExport} from '../bgg-export.js';
+import {bggPlayFingerprint} from '../bgg-play-format.js';
 
-const play=(id,bggId='13')=>({id,game:{name:'Game',bggId}});
+const play=(id,bggId='13',score=10)=>({id,game:{name:'Game',bggId},date:'2026-10-16',rule:'highest',players:[{name:'Me',score,color:'#52c7ef',isSelf:true},{name:'Other',score:5,color:'#ffcc00'}]});
 
-test('bulk export sends only new records with BGG game IDs',()=>{
+test('bulk export sends new, changed and uncertain records but skips unchanged records',async()=>{
  const records=[play('new'),play('sent'),play('unknown'),play('pending'),play('missing','')];
- const uploads={sent:{status:'sent',bggPlayId:'99'},unknown:{status:'unknown'},pending:{status:'pending'}};
- const plan=planBggExport(records,uploads);
- assert.deepEqual(plan.records.map(item=>item.id),['new']);
+ const uploads={sent:{status:'sent',bggPlayId:'99',fingerprint:await bggPlayFingerprint(records[1],'alice')},unknown:{status:'unknown'},pending:{status:'pending'}};
+ const plan=await planBggExport(records,uploads,20,'alice');
+ assert.deepEqual(plan.records.map(item=>item.id),['new','unknown','pending']);
  assert.deepEqual({already:plan.already,missingGame:plan.missingGame,needsReview:plan.needsReview},{already:1,missingGame:1,needsReview:2});
 });
 
-test('bulk export limits each confirmed batch and reports remaining records',()=>{
- const plan=planBggExport(Array.from({length:23},(_,index)=>play(String(index))),{},20);
+test('bulk export includes a previously sent record after its score changes',async()=>{
+ const original=play('changed'),changed=play('changed','13',20),uploads={changed:{status:'sent',bggPlayId:'99',fingerprint:await bggPlayFingerprint(original,'alice')}};
+ const plan=await planBggExport([changed],uploads,20,'alice');assert.deepEqual(plan.records.map(item=>item.id),['changed']);
+});
+
+test('bulk export limits each confirmed batch and reports remaining records',async()=>{
+ const plan=await planBggExport(Array.from({length:23},(_,index)=>play(String(index))),{},20,'alice');
  assert.equal(plan.records.length,20);
  assert.equal(plan.remaining,3);
 });

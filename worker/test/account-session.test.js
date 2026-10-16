@@ -42,6 +42,14 @@ test('uncertain submissions are retained and cannot silently duplicate on retry'
  for(let i=0;i<2;i++){const r=await s.session.fetch(req('/post',{play}));assert.equal(r.status,409);assert.equal((await r.json()).code,'BGG_POST_UNCERTAIN');}assert.equal(posts,1);
  await s.session.fetch(req('/logout',{}));await login(s.session);assert.equal((await(await s.session.fetch(req('/status'))).json()).uploads[play.id].status,'unknown');
 });
+test('an uncertain new submission is recovered from BGG before any retry can duplicate it',async()=>{
+ let posts=0,lookups=0;const s=setup(async url=>{url=String(url);if(url.includes('/login/'))return loginResponse();if(url.includes('/geekplay.php')){posts++;throw Error('timeout after send');}lookups++;if(lookups===1)return new Response('',{status:202});return new Response(`<plays><play id="321"><item objecttype="thing" objectid="13"/><comments>Recorded with Score Counter [ScoreCounter:${play.id}]</comments></play></plays>`,{headers:{'Content-Type':'application/xml'}});});s.env.BGG_API_TOKEN='application-token';await login(s.session);
+ const first=await s.session.fetch(req('/post',{play}));assert.equal(first.status,409);assert.equal((await first.json()).code,'BGG_POST_UNCERTAIN');
+ const second=await s.session.fetch(req('/post',{play})),data=await second.json();assert.equal(second.status,200);assert.equal(data.recovered,true);assert.equal(data.bggPlayId,'321');assert.equal(posts,1);assert.equal(lookups,2);
+});
+test('a valid play ID is accepted as success even when BGG omits its success flag',async()=>{
+ const s=setup(async url=>String(url).includes('/login/')?loginResponse():Response.json({playid:654}));await login(s.session);const response=await s.session.fetch(req('/post',{play})),data=await response.json();assert.equal(response.status,200);assert.equal(data.bggPlayId,'654');
+});
 test('upstream auth errors clear session, explicit rejects allow retry, response bodies never leak',async()=>{
  const s=setup(async url=>url.includes('/login/')?loginResponse():Response.json({success:false,error:'You must login to save plays. PRIVATE'}));await login(s.session);const r=await s.session.fetch(req('/post',{play}));const text=await r.text();assert.ok(text.includes('BGG_LOGIN_REQUIRED'));assert.ok(!text.includes('PRIVATE'));assert.equal(s.data.has('session'),false);
 });

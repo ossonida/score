@@ -1,6 +1,8 @@
 import {checkedPlay,playForm,playFingerprint} from './play-upload.js';
-import {rateWindow} from '../functions/request-security.js';
+import {rateWindow,boundedXml} from '../functions/request-security.js';
+import {XMLParser} from 'fast-xml-parser';
 const utf8=new TextEncoder(),day=86400000;
+const idPattern=/^[1-9][0-9]{0,9}$/;
 const json=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const fail=(code,status=400)=>json(status,{code,error:'BGG account operation failed'});
 const aad=(owner,username,expiresAt)=>utf8.encode('score-bgg-session-v1|'+owner+'|'+username+'|'+expiresAt);
@@ -14,6 +16,23 @@ export async function readSmallJson(request,max=65536){
  const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
 export function sessionReady(env){try{return env.BGG_ACCOUNT_LINK_ENABLED==='true'&&unb64(env.BGG_SESSION_KEY).length===32;}catch{return false;}}
+async function readSmallText(response,max=65536){
+ if(Number(response.headers.get('content-length'))>max||!response.body)throw Error('INVALID_RESPONSE');
+ const reader=response.body.getReader(),chunks=[];let size=0;
+ try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>max)throw Error('INVALID_RESPONSE');chunks.push(value);}}finally{await reader.cancel();}
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+}
+async function findScorePlay(fetcher,env,session,play){
+ if(!env.BGG_API_TOKEN)return {checked:false,id:''};
+ try{
+  const url=new URL('https://boardgamegeek.com/xmlapi2/plays');url.searchParams.set('username',session.username);url.searchParams.set('mindate',play.date);url.searchParams.set('maxdate',play.date);url.searchParams.set('page','1');
+  const response=await fetcher(url,{redirect:'manual',headers:{Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml',Cookie:session.cookie,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},signal:AbortSignal.timeout(12000)});
+  if(!response.ok)return {checked:false,id:''};const xml=await boundedXml(response);if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return {checked:false,id:''};
+  const parser=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>['play','item'].includes(name)}),parsed=parser.parse(xml),rows=Array.isArray(parsed?.plays?.play)?parsed.plays.play:[];
+  const marker='[ScoreCounter:'+play.id+']';for(const row of rows){const item=Array.isArray(row.item)?row.item[0]:row.item,id=String(row?.['@_id']||'');if(String(item?.['@_objectid']||'')===play.game.bggId&&String(row.comments||'').includes(marker)&&idPattern.test(id))return {checked:true,id};}
+  return {checked:true,id:''};
+ }catch{return {checked:false,id:''};}
+}
 function authCookie(response,username,now){
  const headers=response.headers,all=typeof headers.getSetCookie==='function'?headers.getSetCookie():typeof headers.getAll==='function'?headers.getAll('Set-Cookie'):[headers.get('Set-Cookie')||''];
  let auth='',expiry=now+day;
@@ -59,20 +78,21 @@ export class BggSessions{
   // Bind the user's explicit action to the account shown on their device.
   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
   let play;try{play=checkedPlay(body.play);}catch{return fail('BGG_INVALID_PLAY');}
-  const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id,previous=await this.state.storage.get(key),fingerprint=await playFingerprint(play,session.username);
-  if(previous?.status==='pending'||previous?.status==='unknown')return fail('BGG_POST_UNCERTAIN',409);
+  const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id;let previous=await this.state.storage.get(key);const fingerprint=await playFingerprint(play,session.username);
+  if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}previous={status:'failed',fingerprint:'',bggPlayId:''};}
   if(previous?.status==='sent'&&previous.fingerprint===fingerprint)return json(200,{posted:true,unchanged:true,status:'sent',bggPlayId:previous.bggPlayId,fingerprint});
   if(previous?.bggPlayId&&body.update!==true)return fail('BGG_UPDATE_REQUIRED',409);
   const bggPlayId=previous?.bggPlayId||'';await this.state.storage.put(key,{status:'pending',fingerprint,bggPlayId});
   try{
-   const response=await fetcher('https://boardgamegeek.com/geekplay.php',{method:'POST',redirect:'manual',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json',Cookie:session.cookie},body:playForm(play,session.username,bggPlayId).toString(),signal:AbortSignal.timeout(12000)});
+   const response=await fetcher('https://boardgamegeek.com/geekplay.php',{method:'POST',redirect:'manual',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json, text/plain, */*',Cookie:session.cookie,Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/boardgame/'+play.game.bggId,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},body:playForm(play,session.username,bggPlayId).toString(),signal:AbortSignal.timeout(12000)});
    if(response.status===401||response.status===403){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}
+   if(response.status===429){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});return fail('BGG_LOGIN_RATE_LIMIT',429);}
    if(!response.ok)throw Error('UNCERTAIN');
    // Never return raw upstream HTML, cookies or error messages to the browser.
-   const data=await readSmallJson(new Request('https://internal/response',{method:'POST',headers:{'Content-Type':'application/json'},body:response.body,duplex:'half'}));
-   if(data.success!==true){if(typeof data.error==='string'&&data.error){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});if(/login|not permitted|cannot edit|can't.*play/i.test(data.error)){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}return fail('BGG_POST_REJECTED',422);}throw Error('UNCERTAIN');}
+   const raw=await readSmallText(response);let data;try{data=JSON.parse(raw);}catch{if(/must\s+login|not\s+permitted|cannot\s+edit|can't.*play/i.test(raw)){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}if(/messagebox\s+error/i.test(raw)){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});return fail('BGG_POST_REJECTED',422);}throw Error('UNCERTAIN');}
+   if(typeof data.error==='string'&&data.error){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});if(/login|not permitted|cannot edit|can't.*play/i.test(data.error)){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}return fail('BGG_POST_REJECTED',422);}
    const id=String(data.playid||'');if(!/^[1-9][0-9]{0,9}$/.test(id)||(bggPlayId&&id!==String(bggPlayId)))throw Error('UNCERTAIN');
    await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:id});return json(200,{posted:true,status:'sent',bggPlayId:id,fingerprint});
-  }catch{await this.state.storage.put(key,{status:'unknown',fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
+  }catch{if(!bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}}await this.state.storage.put(key,{status:'unknown',fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
  }
 }

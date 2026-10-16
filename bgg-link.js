@@ -1,7 +1,7 @@
 import './records.js?v=64';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=64';
 import {bggLinkRequest} from './bgg-link-client.js?v=64';
-import {planBggExport,sendBggExport} from './bgg-export.js?v=70';
+import {planBggExport,sendBggExport} from './bgg-export.js?v=72';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});
@@ -23,13 +23,16 @@ $('bggLinkLogout').onclick=async()=>{if(!user||busy)return;const owner=user.uid,
 async function postPlay(play,context){
  if(!user||!state.connected)throw Error('설정에서 BGG에 먼저 로그인해주세요.');const owner=user.uid,version=epoch,key=owner+':'+play.id,expectedUsername=state.username;if(posting.has(key))return;
  const now=api.context();if(now.key!==context.key||now.epoch!==context.epoch)throw Error('계정이 변경됐습니다. 다시 선택해주세요.');
- posting.add(key);notify();try{const result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:Boolean(state.uploads?.[play.id]?.bggPlayId)}});if(version!==epoch)return;state.uploads={...state.uploads,[play.id]:result};notify();return result;}catch(error){if(version===epoch&&error.code==='BGG_POST_UNCERTAIN'){state.uploads={...state.uploads,[play.id]:{status:'unknown'}};notify();}if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}finally{posting.delete(key);if(version===epoch)notify();}
+ posting.add(key);notify();try{const result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:Boolean(state.uploads?.[play.id]?.bggPlayId)}});if(version!==epoch)return;state.uploads={...state.uploads,[play.id]:result};notify();return result;}catch(error){if(version===epoch&&error.code==='BGG_POST_UNCERTAIN'){state.uploads={...state.uploads,[play.id]:{...state.uploads?.[play.id],status:'unknown'}};notify();}if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}finally{posting.delete(key);if(version===epoch)notify();}
 }
-$('bggExport').onclick=()=>{
- if(!user||!state.connected||busy)return;const context=api.context(),plan=planBggExport(api.bggRecords(),state.uploads,20),notes=[];
- if(plan.already)notes.push(`이미 등록 ${plan.already}개`);if(plan.missingGame)notes.push(`BGG 게임 정보 없음 ${plan.missingGame}개`);if(plan.needsReview)notes.push(`BGG 확인 필요 ${plan.needsReview}개`);
- if(!plan.records.length){$('bggLinkMessage').textContent=plan.total?`내보낼 새 기록이 없습니다.${notes.length?' '+notes.join(' · '):''}`:'Score에 저장된 기록이 없습니다.';return;}
- const suffix=notes.length?' '+notes.join(' · ')+'는 제외됩니다.':'';window.ScoreCounter.confirm('BGG로 기록 내보내기',`Score 기록 ${plan.records.length}개를 BGG에 등록할까요? 한 번에 최대 20개를 전송합니다.${suffix}`,async()=>{
+$('bggExport').onclick=async()=>{
+ if(!user||!state.connected||busy)return;const context=api.context(),version=epoch;busy=true;render();let plan;
+ try{plan=await planBggExport(api.bggRecords(),state.uploads,20,state.username);}catch{$('bggLinkMessage').textContent='내보낼 기록을 확인하지 못했습니다. 다시 시도해주세요.';}finally{if(version===epoch){busy=false;render();}}
+ if(!plan||version!==epoch||!user||!state.connected)return;const excluded=[];
+ if(plan.already)excluded.push(`변경 없음 ${plan.already}개`);if(plan.missingGame)excluded.push(`BGG 게임 정보 없음 ${plan.missingGame}개`);
+ if(!plan.records.length){$('bggLinkMessage').textContent=plan.total?`내보낼 새 기록이나 수정된 기록이 없습니다.${excluded.length?' '+excluded.join(' · '):''}`:'Score에 저장된 기록이 없습니다.';return;}
+ const review=plan.needsReview?` 이전 전송 결과가 불확실한 ${plan.needsReview}개는 BGG 등록 여부를 먼저 확인합니다.`:'';
+ const suffix=excluded.length?' '+excluded.join(' · ')+'는 제외됩니다.':'';window.ScoreCounter.confirm('BGG로 기록 내보내기',`Score의 신규·수정 기록 ${plan.records.length}개를 BGG에 반영할까요? 한 번에 최대 20개를 전송합니다.${review}${suffix}`,async()=>{
   if(!user||!state.connected||busy)return;busy=true;render();$('bggExport').setAttribute('aria-busy','true');let result={sent:0,unchanged:0,failed:0,lastError:''};
   try{result=await sendBggExport(plan.records,play=>postPlay(play,context),(current,total)=>{$('bggLinkMessage').textContent=`BGG로 기록 내보내는 중 · ${current}/${total}`;});}
   finally{busy=false;$('bggExport').setAttribute('aria-busy','false');render();const done=result.sent+result.unchanged,left=plan.remaining+plan.records.length-done,parts=[`BGG 기록 내보내기 완료 · ${done}개`];if(result.failed)parts.push(`실패 ${result.failed}개`);if(left)parts.push(`미전송 기록 ${left}개`);$('bggLinkMessage').textContent=parts.join(' · ')+(result.lastError?' · '+result.lastError:'');}
