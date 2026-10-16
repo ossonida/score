@@ -1,7 +1,7 @@
-import './records.js?v=64';
+import './records.js?v=76';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=64';
 import {bggLinkRequest} from './bgg-link-client.js?v=64';
-import {planBggExport,sendBggExport} from './bgg-export.js?v=72';
+import {planBggExport,sendBggExport} from './bgg-export.js?v=76';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});
@@ -29,7 +29,7 @@ $('bggExport').onclick=async()=>{
  if(!user||!state.connected||busy)return;const context=api.context(),version=epoch;busy=true;render();let plan;
  try{plan=await planBggExport(api.bggRecords(),state.uploads,20,state.username);}catch{$('bggLinkMessage').textContent='내보낼 기록을 확인하지 못했습니다. 다시 시도해주세요.';}finally{if(version===epoch){busy=false;render();}}
  if(!plan||version!==epoch||!user||!state.connected)return;const excluded=[];
- if(plan.already)excluded.push(`변경 없음 ${plan.already}개`);if(plan.missingGame)excluded.push(`BGG 게임 정보 없음 ${plan.missingGame}개`);
+ if(plan.already)excluded.push(`변경 없음 ${plan.already}개`);if(plan.scoreGame)excluded.push(`Score 자체 게임 ${plan.scoreGame}개`);if(plan.missingGame)excluded.push(`BGG 게임 정보 없음 ${plan.missingGame}개`);
  if(!plan.records.length){$('bggLinkMessage').textContent=plan.total?`내보낼 새 기록이나 수정된 기록이 없습니다.${excluded.length?' '+excluded.join(' · '):''}`:'Score에 저장된 기록이 없습니다.';return;}
  const review=plan.needsReview?` 이전 전송 결과가 불확실한 ${plan.needsReview}개는 BGG 등록 여부를 먼저 확인합니다.`:'';
  const suffix=excluded.length?' '+excluded.join(' · ')+'는 제외됩니다.':'';window.ScoreCounter.confirm('BGG로 기록 내보내기',`Score의 신규·수정 기록 ${plan.records.length}개를 BGG에 반영할까요? 한 번에 최대 20개를 전송합니다.${review}${suffix}`,async()=>{

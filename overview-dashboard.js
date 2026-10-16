@@ -1,6 +1,6 @@
 import {recentHighlights,rivalStats} from './social-insights.js?v=64';
 import {gameKey} from './records-core.js?v=64';
-import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=64';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=76';
 import {readIdentity,meIn} from './personal-stats.js?v=64';
 import {renderGameArtwork} from './game-artwork.js?v=64';
 import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=74';

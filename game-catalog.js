@@ -1,4 +1,5 @@
 import {koreanAliases,wikidataGames} from './korean-game-names.js?v=64';
+import {scoreGames,searchScoreGames,isScoreGame} from './score-games.js?v=76';
 // Curated public game names and exact aliases, not the complete live BGG database.
 const bundledGames = [
   {
@@ -1262,7 +1263,8 @@ export function searchLocalGames(query,plays=[]){
  const q=normalizeGameQuery(query);if(!q)return [];
  const map=new Map();
  for(const play of plays){const game=play.game;if(!normalizeGameQuery(game.name).includes(q))continue;const key=game.bggId?`bgg:${game.bggId}`:`name:${normalizeGameQuery(game.name)}`;map.set(key,{id:game.bggId||'',name:game.name,source:'저장 게임'});}
- for(const game of searchCatalog){if(![game.name,...game.aliases].some(name=>normalizeGameQuery(name).includes(q)))continue;const key=`bgg:${game.id}`;if(!map.has(key))map.set(key,{...game,source:game.source||'기본 목록'});}
+ const ownGames=searchScoreGames(query);for(const game of ownGames){const key=`name:${normalizeGameQuery(game.name)}`;map.set(key,{...game,id:'',scoreGame:true,source:'Score 자체 게임'});}
+ if(!ownGames.length)for(const game of searchCatalog){if(![game.name,...game.aliases].some(name=>normalizeGameQuery(name).includes(q)))continue;const key=`bgg:${game.id}`;if(!map.has(key))map.set(key,{...game,source:game.source||'기본 목록'});}
  return [...map.values()].slice(0,40);
 }
 
@@ -1273,7 +1275,7 @@ for(const game of starterGames)for(const name of [game.name,...game.aliases])add
 export function gameResolver(plays=[]){
  const index=new Map([...exactGameIds].map(([name,ids])=>[name,new Set(ids)]));
  for(const play of plays)if(play.game?.bggId)addExactGame(index,play.game.name,play.game.bggId);
- return game=>{if(game.bggId)return game;const ids=index.get(normalizeGameQuery(game.name));return ids?.size===1?{...game,bggId:[...ids][0]}:game;};
+ return game=>{if(isScoreGame(game))return game.bggId?{...game,bggId:''}:game;if(game.bggId)return game;const ids=index.get(normalizeGameQuery(game.name));return ids?.size===1?{...game,bggId:[...ids][0]}:game;};
 }
 const resolveCatalogGame=gameResolver();
 export function resolveGame(game,plays=[]){return plays.length?gameResolver(plays)(game):resolveCatalogGame(game);}
@@ -1283,7 +1285,7 @@ const alphabeticalNames=new Intl.Collator('ko',{numeric:true,sensitivity:'base'}
 const titleBucket=name=>/^[a-z]/i.test(name.trim())?0:/^[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(name.trim())?1:2;
 export function searchableGameGroups(groups,query=''){
  const q=normalizeGameQuery(query);
- return groups.filter(group=>{if(!q)return true;const known=searchCatalog.find(game=>game.id===group.game.bggId);return [group.game.name,...(known?[known.name,...known.aliases]:[])].some(name=>normalizeGameQuery(name).includes(q));}).sort((a,b)=>titleBucket(a.game.name)-titleBucket(b.game.name)||alphabeticalNames.compare(a.game.name,b.game.name));
+ return groups.filter(group=>{if(!q)return true;const known=searchCatalog.find(game=>game.id===group.game.bggId),own=!group.game.bggId&&scoreGames.find(game=>normalizeGameQuery(game.name)===normalizeGameQuery(group.game.name));return [group.game.name,...(known?[known.name,...known.aliases]:[]),...(own?own.aliases:[])].some(name=>normalizeGameQuery(name).includes(q));}).sort((a,b)=>titleBucket(a.game.name)-titleBucket(b.game.name)||alphabeticalNames.compare(a.game.name,b.game.name));
 }
 
 // Translate only unambiguous exact catalog aliases; never guess unknown titles.

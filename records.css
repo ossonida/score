@@ -73,6 +73,7 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 #settingsAccountCard .account-actions button{font-size:14px}#settingsIdentityCard .identity-aliases{max-height:260px;overflow:auto}
 @media(min-width:760px){.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#settingsAccountCard{grid-column:1 / -1}#settingsAccountCard .account-actions{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}}
+.type-sports{background:#67c7a4}
 
 .transfer-actions button small{font-size:13px;line-height:1.5}
 

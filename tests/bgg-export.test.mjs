@@ -30,3 +30,4 @@ test('bulk export continues record errors but stops when the session or result i
  assert.deepEqual(calls,['bad','ok','limit']);
  assert.deepEqual(result,{sent:1,unchanged:0,failed:2,lastError:'wait'});
 });
+test('Score native games are explicitly excluded from BGG export',async()=>{const native=play('native','');native.game.name='홀덤';const plan=await planBggExport([native,play('bgg')],{},20,'alice');assert.deepEqual(plan.records.map(item=>item.id),['bgg']);assert.equal(plan.scoreGame,1);assert.equal(plan.missingGame,0);});
