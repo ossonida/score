@@ -146,9 +146,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .scoreless-board-mode .scoreless-result-card .scoreless-card-content{height:auto}
 .scoreless-board-mode .footer-guide,.scoreless-board-mode #installApp{display:none}
 .scoreless-card-actions.win-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
-.scoreless-card-actions.rank-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
-.scoreless-card-actions.rank-actions>:only-child{grid-column:1/-1}
+.scoreless-board-mode .scoreless-card-content:has(.rank-actions){grid-template-columns:minmax(0,1fr) 58px}
+.scoreless-card-actions.rank-actions{display:flex;align-items:center;justify-content:center;padding:3px;background:transparent}
+.rank-drag-handle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:52px;min-width:52px;height:52px;padding:0;border:0;border-radius:14px;background:var(--shade);color:var(--ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;transition:background .15s ease,transform .15s ease,box-shadow .15s ease}
+.rank-drag-handle span{display:block;width:24px;height:3px;border-radius:99px;background:currentColor;opacity:.78;pointer-events:none}
+.rank-drag-handle:hover{background:color-mix(in srgb,var(--shade) 72%,var(--ink) 28%)}
+.rank-drag-handle:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.rank-drag-handle:active,.rank-dragging .rank-drag-handle{cursor:grabbing;transform:scale(.96);box-shadow:0 3px 10px #0004}
+.scoreless-result-card.rank-dragging{position:relative;z-index:5;opacity:.88;transform:scale(.985);box-shadow:0 12px 30px #0007}
+.rank-drag-active,.rank-drag-active body{overscroll-behavior:none}
+.scoreless-live-rank{display:block;margin-bottom:3px;font-size:13px;font-weight:800;opacity:.68}
 .scoreless-result-choice.draw[aria-pressed=true]::before{content:none}
 .scoreless-board-actions button:disabled{opacity:.5;cursor:default}
 #playBggAttribution[hidden],#playBggAdvanced[hidden],#openBggWebsite[hidden]{display:none!important}
-@media(max-width:380px){.scoreless-board-mode .scoreless-card-content{grid-template-columns:minmax(0,.8fr) minmax(156px,1.2fr)}.scoreless-card-actions.win-actions{gap:2px;padding:3px}.scoreless-card-actions.win-actions .scoreless-result-choice{padding-inline:4px;font-size:12px}}
+@media(max-width:380px){.scoreless-board-mode .scoreless-card-content{grid-template-columns:minmax(0,.8fr) minmax(156px,1.2fr)}.scoreless-board-mode .scoreless-card-content:has(.rank-actions){grid-template-columns:minmax(0,1fr) 54px}.scoreless-card-actions.win-actions{gap:2px;padding:3px}.scoreless-card-actions.win-actions .scoreless-result-choice{padding-inline:4px;font-size:12px}.rank-drag-handle{width:48px;min-width:48px;height:48px}}
