@@ -48,12 +48,10 @@ dialog .record-actions button,dialog .actions button{padding:10px 16px;border-ra
 #accountDialog button[hidden],#bggAccountSection[hidden]{display:none}
 #bggAccountSection{margin-top:16px;padding-top:16px;border-top:1px solid var(--popup-line)}
 #bggAccountSection h3{font-size:15px;font-weight:600;margin:0 0 8px}
-#bggAccountSection #bggImport{width:100%;margin-top:10px;padding:10px 12px;border-radius:10px;font-size:14px}
+#bggAccountSection #bggImport{padding:9px 12px;border-radius:10px;font-size:13px}
 .bgg-explanation{margin-top:12px;font-size:12px;color:#96a6be;line-height:1.6}
 .bgg-explanation summary{cursor:pointer}
-#bggAccountData{max-height:200px}
-#bggAccountData details{padding:0 10px;border:1px solid var(--popup-line);border-radius:10px;margin-top:8px;background:#0b111c}
-#bggAccountData p{margin:8px 0;overflow-wrap:anywhere}
+#bggAccountData{max-height:none}
 #playerDialog,#scoreDialog{padding:16px;max-width:420px;border-radius:20px}
 #playerDialog h2,#scoreDialog h2{font-size:19px;font-weight:600}
 #playerDialog .player-entry,#scoreDialog .score-entry{display:grid;grid-template-columns:minmax(0,1fr) 72px;gap:8px}

@@ -13,11 +13,9 @@ function render(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  $('bggRegister').disabled=!user||busy;$('bggImport').disabled=!user||busy||!$('bggUsername').value.trim()||!bggSearchUrl;
  $('bggServerHint').hidden=!!bggSearchUrl;
  const box=$('bggAccountData');box.replaceChildren();
- for(const [title,items] of [['보유 게임',collection],['BGG 플레이 기록',plays]]){
-  const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent=`${title} · ${items.length}개`;details.append(summary);
-  for(const item of items){const row=document.createElement('p'),link=document.createElement('a');link.textContent=item.name;link.href=`https://boardgamegeek.com/boardgame/${item.gameId}`;link.target='_blank';link.rel='noopener noreferrer';row.append(link);
-   if(item.date){const text=document.createElement('span');text.textContent=` · ${item.date} · ${item.quantity}회${item.players?.length?' · '+item.players.map(p=>`${p.name}${p.score!==null?' '+p.score+'점':''}`).join(', '):''}`;row.append(text);}details.append(row);
-  }box.append(details);
+ for(const [title,items] of [['보유 게임',collection],['플레이 기록',plays]]){
+  const item=document.createElement('div'),label=document.createElement('span'),count=document.createElement('strong');
+  item.className='bgg-data-count';label.textContent=title;count.textContent=`${items.length}개`;item.append(label,count);box.append(item);
  }
 }
 $('bggUsername').addEventListener('input',render);
