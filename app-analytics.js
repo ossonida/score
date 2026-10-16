@@ -1,5 +1,5 @@
-import {cloudConfigured,connectCloud} from './cloud-records.js?v=54';
-import {createAnalyticsGate} from './analytics-policy.js?v=54';
+import {cloudConfigured,connectCloud} from './cloud-records.js?v=57';
+import {createAnalyticsGate} from './analytics-policy.js?v=57';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
 const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
 window[disableKey]=true;

@@ -67,3 +67,10 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+Powered by BGG logo
+BoardGameGeek trademark/attribution artwork, displayed unmodified with a link to BGG as required for XML API use.
+Official usage guidance: https://boardgamegeek.com/using_the_xml_api
+Standard small PNG matches the design supplied by the app owner. Retrieved from this public mirror because the BGG download host rejects this environment:
+https://raw.githubusercontent.com/ablanco/boardgamegeek-telegram-bot/7e623ba6cce7c36317596f60b6a7c0314dd0380e/powered_by_BGG_01_SM.png
+No rights to the BGG trademarks are claimed.

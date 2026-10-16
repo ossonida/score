@@ -27,7 +27,7 @@ Paste the newly issued BGG token only into the secret prompt. Do not paste it in
 Copy the public `https://score-bgg.<subdomain>.workers.dev` URL from deployment output. This URL is safe to share. After configuring the official Powered by BGG logo, set `bggSearchUrl` in `firebase-config.js` to that URL and deploy the frontend with a new service-worker cache version. Until these steps are complete, the current local search remains active.
 
 ## Required BGG attribution
-Use the official **Powered by BGG** artwork from https://boardgamegeek.com/using_the_xml_api, with a link to BGG, in the search UI and BGG import section. Approval requires this logo. Do not substitute a text credit or a redrawn logo. Artwork has not yet been provided; keep live frontend API access disabled until it is installed.
+Use the official **Powered by BGG** artwork from https://boardgamegeek.com/using_the_xml_api, with a link to BGG, in the search UI and BGG import section. Approval requires this logo. Do not substitute a text credit or a redrawn logo. The standard small logo is now packaged as powered-by-bgg.png and linked in both interfaces.
 
 ## Safety and validation
 - Firebase JWTs require RS256 signatures from Google's fixed securetoken JWK endpoint, the correct project audience/issuer, expiration, subject, issue and authentication times. Signing out/revoking a session cannot immediately revoke already-issued JWTs at this stateless gateway; Firebase ID tokens expire normally (typically within one hour).
@@ -40,3 +40,6 @@ Use the official **Powered by BGG** artwork from https://boardgamegeek.com/using
 Local checks: `npm.cmd test`, `npm.cmd run build` from `worker`. The build is a dry run and does not publish. No token is needed for these checks. After deployment verify Google login → game search → select/save, cover/type refresh, and public collection/play import. Existing score/cloud records must remain intact.
 
 To disconnect, clear `bggSearchUrl` and publish the frontend. This leaves existing Firebase records untouched.
+
+## Live connection (2026-10-16)
+Worker endpoint: https://score-bgg.score-bgg.workers.dev. The owner deployed the Worker and confirmed BGG_API_TOKEN was registered as a Cloudflare secret. The frontend now uses this endpoint, with the standard Powered by BGG logo linked in game search and BGG account import. Preflight, unauthenticated denial and origin rejection were verified live. Authenticated BGG search/import still requires verification by a signed-in user; no user's login token or BGG secret was accessed from this environment.

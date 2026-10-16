@@ -10,4 +10,4 @@ export const firebaseConfig = {
 };
 // Google Analytics is initialized by app-analytics.js after checking exclusions.
 // Do not call getAnalytics here to avoid adding a second analytics destination.
-export const bggSearchUrl = '';
+export const bggSearchUrl = 'https://score-bgg.score-bgg.workers.dev';

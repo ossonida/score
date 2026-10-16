@@ -31,4 +31,7 @@ Manual type overrides are no longer used. Types can overlap; totals can exceed p
 ## Approval received
 The public, non-commercial application has been approved by BGG. Approval does not configure the token or deploy the server. Obtain the API token from the approved application at https://boardgamegeek.com/applications and store it only using Firebase Secret Manager (command above). Never paste it into chat, frontend configuration, or GitHub.
 
-Before enabling live API access, display the official “Powered by BGG” logo in the app according to https://boardgamegeek.com/using_the_xml_api. A text credit is not a substitute for the required logo. Download the official artwork from BGG; do not redraw their logo. The official page/artwork could not be retrieved from this execution environment, so logo placement remains a prerequisite.
+Before enabling live API access, display the official “Powered by BGG” logo in the app according to https://boardgamegeek.com/using_the_xml_api. A text credit is not a substitute for the required logo. Download the official artwork from BGG; do not redraw their logo. The standard artwork is now packaged as powered-by-bgg.png; see THIRD_PARTY_NOTICES.txt for its source.
+
+## Live connection (2026-10-16)
+Worker endpoint: https://score-bgg.score-bgg.workers.dev. The owner deployed the Worker and confirmed BGG_API_TOKEN was registered as a Cloudflare secret. The frontend now uses this endpoint, with the standard Powered by BGG logo linked in game search and BGG account import. Preflight, unauthenticated denial and origin rejection were verified live. Authenticated BGG search/import still requires verification by a signed-in user; no user's login token or BGG secret was accessed from this environment.

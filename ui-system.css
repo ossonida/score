@@ -145,3 +145,6 @@ dialog .actions .danger{margin-right:0}
 .identity-chip[aria-pressed=true]::before{content:'✓ ';color:#80b7ff}
 .identity-form [hidden]{display:none!important}
 .identity-form .insight-footnote:empty{display:none}
+
+.bgg-attribution{display:flex;align-items:center;justify-content:center;width:200px;max-width:100%;min-height:64px;margin:12px 0;background:#fff;border-radius:8px;padding:5px 8px;box-sizing:border-box}
+.bgg-attribution img{display:block;width:184px;max-width:100%;height:auto;object-fit:contain}
