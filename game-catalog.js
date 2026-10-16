@@ -621,7 +621,7 @@ export const starterGames = [
   {
     "id": "102794",
     "name": "Caverna: The Cave Farmers",
-    "aliases": []
+    "aliases": ["카베르나", "카베르나: 동굴 속 농부들", "카베르나 동굴 속 농부들"]
   },
   {
     "id": "306735",
@@ -1279,4 +1279,10 @@ const titleBucket=name=>/^[a-z]/i.test(name.trim())?0:/^[가-힣ㄱ-ㅎㅏ-ㅣ]/
 export function searchableGameGroups(groups,query=''){
  const q=normalizeGameQuery(query);
  return groups.filter(group=>{if(!q)return true;const known=starterGames.find(game=>game.id===group.game.bggId);return [group.game.name,...(known?[known.name,...known.aliases]:[])].some(name=>normalizeGameQuery(name).includes(q));}).sort((a,b)=>titleBucket(a.game.name)-titleBucket(b.game.name)||alphabeticalNames.compare(a.game.name,b.game.name));
+}
+
+// Translate only unambiguous exact catalog aliases; never guess unknown titles.
+export function bggSearchQuery(query){
+ const q=normalizeGameQuery(query),matches=starterGames.filter(g=>[g.name,...g.aliases].some(name=>normalizeGameQuery(name)===q));
+ return matches.length===1?matches[0].name:String(query).trim();
 }

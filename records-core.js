@@ -1,4 +1,4 @@
-import {resolveGame,matchGameRecords} from './game-catalog.js?v=57';
+import {resolveGame,matchGameRecords} from './game-catalog.js?v=58';
 export function gameKey(game) {
   return game.bggId ? `bgg:${game.bggId}` : `name:${game.name.trim().normalize('NFKC').toLocaleLowerCase()}`;
 }
