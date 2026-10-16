@@ -1,5 +1,7 @@
 # BGG public-data integration
 
+**Preferred deployment: Cloudflare Workers Free.** See [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md). Firebase Authentication and Firestore stay on Spark; the Firebase Functions instructions below are an optional Blaze-only alternative.
+
 The account dialog supports registering a BGG username, importing owned board games, and saving public plays separately from Score Counter score records. This is not BGG account authentication. No BGG password is collected and the app does not write records to BGG.
 
 BGG approval, an API token, Firebase deployment access, and a project with Functions billing enabled are required for live imports. The frontend must not contain the API token.

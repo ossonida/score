@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "score-bgg",
+  "main": "index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "vars": {
+    "FIREBASE_PROJECT_ID": "score-1948e"
+  },
+  "durable_objects": {
+    "bindings": [{"name": "BGG_LIMITS", "class_name": "BggLimits"}]
+  },
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["BggLimits"]}]
+}
