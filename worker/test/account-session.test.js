@@ -6,7 +6,7 @@ function setup(fetcher,owner='owner-one'){
  const data=new Map();let chain=Promise.resolve();const state={id:{toString:()=>owner},storage:{get:async k=>data.get(k),put:async(k,v)=>{data.set(k,v);},delete:async k=>data.delete(k),setAlarm:async()=>{},list:async({prefix})=>new Map([...data].filter(([k])=>k.startsWith(prefix)).sort())},blockConcurrencyWhile:fn=>{const task=chain.then(fn);chain=task.catch(()=>{});return task;}};
  const env={BGG_ACCOUNT_LINK_ENABLED:'true',BGG_SESSION_KEY:key,TEST_FETCH:fetcher};return {session:new BggSessions(state,env),data,state,env};
 }
-const req=(path,body)=>new Request('https://internal'+path,{method:body===undefined?'GET':'POST',...(body===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})});
+const req=(path,body)=>new Request('https://internal'+path,{method:body===undefined?'GET':'POST',...(body===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(path==='/post'?{expectedUsername:'alice',...body}:body)})});
 const credentials={username:'alice',password:'actual-password-never-store'};
 const play={id:'score-one',game:{name:'CATAN',bggId:'13'},date:'2026-10-16',rule:'highest',players:[{name:'Me',score:10,color:'#52c7ef',isSelf:true},{name:'Other',score:5,color:'#ffcc00'}]};
 const loginResponse=()=>new Response('{}',{headers:{'Set-Cookie':'bggpassword=opaque-auth-cookie; Path=/; Secure; HttpOnly; Max-Age=86400'}});
@@ -52,3 +52,10 @@ test('invalid and oversized credential bodies are rejected before upstream login
 test('tampered session account metadata is rejected and scalar JSON cannot reach BGG login',async()=>{const s=setup(async()=>loginResponse());await login(s.session);s.data.get('session').username='other';assert.equal((await(await s.session.fetch(req('/status'))).json()).connected,false);assert.equal((await s.session.fetch(req('/login',null))).status,400);});
 
 test('a stale expiration alarm cannot delete a newer valid session',async()=>{const s=setup(async()=>loginResponse());await login(s.session);await s.session.alarm();assert.equal((await(await s.session.fetch(req('/status'))).json()).connected,true);s.data.get('session').expiresAt=Date.now()-1;await s.session.alarm();assert.equal(s.data.has('session'),false);});
+
+test('a stale device cannot post to a different linked BGG account',async()=>{
+ let posts=0;const s=setup(async url=>{if(url.includes('/login/'))return loginResponse();posts++;return Response.json({success:true,playid:999});});await login(s.session);
+ const response=await s.session.fetch(req('/post',{play,expectedUsername:'old-account'}));assert.equal(response.status,409);assert.equal((await response.json()).code,'BGG_ACCOUNT_CHANGED');assert.equal(posts,0);assert.equal([...s.data.keys()].some(k=>k.startsWith('post:')),false);
+ const missing=await s.session.fetch(req('/post',{play,expectedUsername:null}));assert.equal((await missing.json()).code,'BGG_ACCOUNT_CHANGED');assert.equal(posts,0);
+ assert.equal((await s.session.fetch(req('/post',{play,expectedUsername:'ALICE'}))).status,200);assert.equal(posts,1);
+});

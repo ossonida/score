@@ -33,3 +33,7 @@ After deployment refresh Score Counter → Settings → BoardGameGeek → 상태
 
 ## Verification performed
 Unit tests cover token/owner isolation, encryption at rest, expired and disconnected sessions, malformed/oversized inputs, blocked/unconfirmed logins, score/winner mapping, concurrent duplicate suppression, explicit update IDs, and uncertain writes. A local real Workers runtime test exercises SQLite Durable Objects, WebCrypto, streaming JSON and form-post response handling using mock BGG responses. Chromium/WebKit tests cover settings/login, cleared password field, manual posting/updating, and disconnect at 320/375/768 px with mock account/server responses. These are not a real BGG credential or remote-write acceptance test.
+
+## 계정 변경 시 전송 보호
+
+기록 전송은 화면에서 확인한 BGG 사용자명과 서버 세션의 사용자명이 일치할 때만 허용합니다. 다른 기기에서 연결 계정을 변경했다면 `BGG_ACCOUNT_CHANGED`로 중단하며 설정에서 상태를 다시 확인해야 합니다. 클라이언트 요청은 리디렉션을 거부하고 브라우저 쿠키를 보내지 않습니다.

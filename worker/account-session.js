@@ -56,6 +56,8 @@ export class BggSessions{
   }
   if(path!=='/post')return fail('INVALID_ACTION');
   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
+  // Bind the user's explicit action to the account shown on their device.
+  if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
   let play;try{play=checkedPlay(body.play);}catch{return fail('BGG_INVALID_PLAY');}
   const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id,previous=await this.state.storage.get(key),fingerprint=await playFingerprint(play,session.username);
   if(previous?.status==='pending'||previous?.status==='unknown')return fail('BGG_POST_UNCERTAIN',409);

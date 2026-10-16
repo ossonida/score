@@ -1,4 +1,4 @@
-import {nameKey,readIdentity,saveIdentity} from './personal-stats.js?v=63';
+import {nameKey,readIdentity,saveIdentity} from './personal-stats.js?v=64';
 export const isAutomatic=p=>Boolean(p.anonymous===true||(typeof p.autoName==='string'&&p.autoName&&p.name===p.autoName));
 export function savingPlayers(players,selfId){return players.map(p=>({ ...p,name:isAutomatic(p)?'익명의 플레이어':p.name,anonymous:isAutomatic(p),isSelf:p.id===selfId}));}
 export function withSelf(play,playerId){if(playerId&&!play.players.some(p=>p.id===playerId))throw Error('플레이어를 확인해주세요.');return {...play,players:play.players.map(p=>({...p,isSelf:p.id===playerId}))};}
