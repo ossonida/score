@@ -157,9 +157,9 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=77">
+<link rel="stylesheet" href="./records.css?v=78">
 <link rel="stylesheet" href="./modal-ui.css?v=65">
-<link rel="stylesheet" href="./ui-system.css?v=70">
+<link rel="stylesheet" href="./ui-system.css?v=71">
 </head>
 <body>
 <main id="homeScreen">
@@ -200,7 +200,7 @@ dialog .swatch{width:28px;height:28px}
 <dialog id="scorelessSetupDialog" class="record-dialog scoreless-setup-dialog"><form id="scorelessSetupForm">
 <div class="record-head"><h2 id="scorelessSetupTitle">함께한 플레이 인원</h2><button class="score-close" type="button" data-record-close="scorelessSetupDialog" aria-label="닫기">×</button></div>
 <p id="scorelessSetupGame" class="finish-note"></p>
-<section id="scorelessCountStep"><label for="scorelessCount">함께한 인원</label><input id="scorelessCount" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="3" autocomplete="off" enterkeyhint="done" value="2" required><p class="record-note">1~100명 · 이름은 저장 후 기록에서 수정할 수 있습니다.</p><div class="record-actions"><button type="button" class="secondary" data-record-close="scorelessSetupDialog">취소</button><button class="primary" type="submit">기록 방식 선택</button></div></section>
+<section id="scorelessCountStep"><label class="field" for="scorelessCount">함께한 인원</label><div class="bulk-count-stepper" role="group" aria-label="함께한 플레이 인원"><button id="scorelessCountMinus" type="button" aria-label="플레이 인원 한 명 줄이기">−</button><div class="bulk-count-number"><output id="scorelessCount" aria-live="polite">2</output><span>명</span></div><button id="scorelessCountPlus" type="button" aria-label="플레이 인원 한 명 늘리기">＋</button></div><p class="record-note">1~100명 · 이름은 저장 후 기록에서 수정할 수 있습니다.</p><div class="record-actions"><button type="button" class="secondary" data-record-close="scorelessSetupDialog">취소</button><button class="primary" type="submit">기록 방식 선택</button></div></section>
 <section id="scorelessModeStep" hidden><h3>어떻게 기록할까요?</h3><div class="scoreless-mode-options"><button id="scorelessWinMode" class="scoreless-mode-option" type="button"><strong>승패 기록</strong><span>각 플레이어의 승리·패배 선택</span></button><button id="scorelessRankMode" class="scoreless-mode-option" type="button"><strong>순위 기록</strong><span>플레이어를 순서대로 선택</span></button></div><div class="record-actions"><button id="scorelessModeBack" type="button" class="secondary">인원 다시 선택</button></div></section>
 <section id="scorelessResultStep" hidden><h3 id="scorelessResultTitle">결과 선택</h3><p id="scorelessResultHint" class="record-note"></p><div id="scorelessPlayers" class="scoreless-player-list" role="group" aria-label="함께한 플레이어 결과 선택"></div><div class="record-actions"><button id="scorelessResultBack" type="button" class="secondary">기록 방식 변경</button><button id="saveScorelessPlay" type="button" class="primary">기록 저장</button></div></section>
 <p id="scorelessSetupError" class="record-error" role="alert"></p>
@@ -389,10 +389,10 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=77"></script>
+<script type="module" src="./records.js?v=78"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
-<script type="module" src="./bgg-link.js?v=77"></script>
+<script type="module" src="./bgg-link.js?v=78"></script>
 <script type="module" src="./settings.js?v=71"></script>
-<script type="module" src="./games-screen.js?v=77"></script>
+<script type="module" src="./games-screen.js?v=78"></script>
 </body>
 </html>
