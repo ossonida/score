@@ -61,3 +61,12 @@ test('BGG username errors and non-XML responses are explicit',async()=>{
  const r=await handler(async()=>new Response('<errors><error message="Invalid username"/></errors>'))(request('action=collection&username=nobody'),env);assert.equal(r.status,400);assert.equal((await r.json()).code,'BGG_USER_NOT_FOUND');
  const page=await handler(async()=>new Response('<html>private challenge</html>'))(request(),env);assert.equal((await page.json()).code,'BGG_NON_XML_RESPONSE');
 });
+
+test('account routes are authenticated, method-bound and scoped only to the verified Firebase UID',async()=>{
+ let scope='',path='';const linked={...env,BGG_ACCOUNT_LINK_ENABLED:'true',BGG_SESSION_KEY:Buffer.alloc(32,7).toString('base64'),BGG_SESSIONS:{idFromName:uid=>{scope=uid;return uid;},get:()=>({fetch:async req=>{path=new URL(req.url).pathname;return Response.json({ready:true,connected:false});}})}};
+ const r=await handler()(request('action=link-status'),linked);assert.equal(r.status,200);assert.equal(scope,'user1');assert.equal(path,'/status');
+ assert.equal((await handler()(request('action=link-login'),linked)).status,405);
+ const invalid=await handler()(request('action=cookie'),linked);assert.equal(invalid.status,400);assert.equal(path,'/status');
+ const unready=await handler()(request('action=link-status'),env);assert.deepEqual(await unready.json(),{ready:false,connected:false,code:'BGG_LINK_NOT_READY'});
+ const denied=createHandler({verify:async()=>{throw Error();},upstream:async()=>{throw Error('should not fetch');}});assert.equal((await denied(request('action=link-login',{method:'POST'}),linked)).status,401);
+});

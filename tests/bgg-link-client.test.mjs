@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {bggLinkRequest} from '../bgg-link-client.js';
+test('BGG login credentials use POST JSON and never appear in request URL',async()=>{
+ const opts={uid:'user',endpoint:'https://worker.example',tokenProvider:async uid=>{assert.equal(uid,'user');return 'firebase-test';},body:{username:'alice',password:'private-test'},fetcher:async(url,init)=>{assert.equal(url.searchParams.get('action'),'link-login');assert.ok(!url.href.includes('private-test'));assert.equal(init.method,'POST');assert.equal(init.headers.Authorization,'Bearer firebase-test');assert.equal(JSON.parse(init.body).password,'private-test');return {ok:true,json:async()=>({connected:true,username:'alice'})};}};
+ assert.equal((await bggLinkRequest('link-login',opts)).connected,true);
+});
+test('BGG session errors are safe, actionable and keep their code',async()=>{await assert.rejects(bggLinkRequest('link-post',{endpoint:'https://worker.example',tokenProvider:async()=> 'test',body:{},fetcher:async()=>({status:409,ok:false,json:async()=>({code:'BGG_POST_UNCERTAIN',error:'do not show private upstream body'})})}),e=>e.code==='BGG_POST_UNCERTAIN'&&e.message.includes('중복')&&!e.message.includes('private upstream'));});

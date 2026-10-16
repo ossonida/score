@@ -1,3 +1,5 @@
+import {sessionReady} from './account-session.js';
+export {BggSessions} from './account-session.js';
 import {XMLParser} from 'fast-xml-parser';
 import {verifyFirebaseToken} from './auth.js';
 import {bearerToken,boundedXml} from '../functions/request-security.js';
@@ -8,16 +10,28 @@ const ORIGINS=new Set(['https://ossonida.github.io','https://localhost','capacit
 export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
  return async function handle(request,env){
   const origin=request.headers.get('Origin');
-  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'2'};
+  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'3'};
   if(origin&&ORIGINS.has(origin))headers['Access-Control-Allow-Origin']=origin;
   const reply=(status,data,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
   if(origin&&!ORIGINS.has(origin))return reply(403,{error:'Origin not allowed'});
-  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Authorization','Access-Control-Max-Age':'3600'}});
-  if(request.method!=='GET')return reply(405,{error:'GET only'},{Allow:'GET, OPTIONS'});
+  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'3600'}});
+  if(!['GET','POST'].includes(request.method))return reply(405,{error:'GET or POST only'},{Allow:'GET, POST, OPTIONS'});
   const token=bearerToken(request.headers.get('Authorization'));let uid;
   try{if(!token)throw Error();uid=await verify(token,env.FIREBASE_PROJECT_ID);}catch{return reply(401,{error:'Sign in required'});}
   if(!env.BGG_API_TOKEN||!env.BGG_LIMITS)return reply(503,{error:'BGG service is not configured'});
   const input=new URL(request.url),action=input.searchParams.get('action')||'search';
+  const accountRoutes={'link-status':['GET','/status'],'link-login':['POST','/login'],'link-logout':['POST','/logout'],'link-post':['POST','/post']};
+  if(Object.hasOwn(accountRoutes,action)){
+   const [method,path]=accountRoutes[action];if(request.method!==method)return reply(405,{error:'Invalid method'});
+   if(!sessionReady(env)||!env.BGG_SESSIONS)return reply(action==='link-status'?200:503,{ready:false,connected:false,code:'BGG_LINK_NOT_READY'});
+   if(['link-login','link-post'].includes(action)){
+    try{for(const [name,path]of [['user:'+uid,'/user'],['global','/global']]){const limiter=env.BGG_LIMITS.get(env.BGG_LIMITS.idFromName(name)),limited=await limiter.fetch('https://limits.internal'+path);if(limited.status===429)return reply(429,{code:'BGG_LOGIN_RATE_LIMIT'});if(!limited.ok)throw Error();}}catch{return reply(503,{code:'BGG_LINK_UNAVAILABLE'});}
+   }
+   const stub=env.BGG_SESSIONS.get(env.BGG_SESSIONS.idFromName(uid));
+   const forwarded=new Request('https://session.internal'+path,{method,headers:{'Content-Type':request.headers.get('Content-Type')||''},...(method==='POST'?{body:request.body,duplex:'half'}:{})});
+   try{const result=await stub.fetch(forwarded);return new Response(result.body,{status:result.status,headers:{...headers,'Content-Type':'application/json'}});}catch{return reply(503,{code:'BGG_LINK_UNAVAILABLE',error:'Account service unavailable'});}
+  }
+  if(request.method!=='GET')return reply(405,{error:'GET only'},{Allow:'GET, OPTIONS'});
   if(!['search','details','collection','plays'].includes(action))return reply(400,{error:'Invalid action'});
   const url=new URL('https://boardgamegeek.com/xmlapi2/'+(action==='details'?'thing':action));
   if(action==='search'){
@@ -45,6 +59,10 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
   const failure=(code,status=502)=>reply(status,{error:'BGG request failed',code,...(upstreamStatus?{upstreamStatus}:{})});
   try{
    const options={redirect:'manual',headers:{Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml','User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},signal:AbortSignal.timeout(12000)};
+   if(['collection','plays'].includes(action)&&sessionReady(env)&&env.BGG_SESSIONS){
+    const stub=env.BGG_SESSIONS.get(env.BGG_SESSIONS.idFromName(uid)),cookieUrl=new URL('https://session.internal/cookie');cookieUrl.searchParams.set('username',input.searchParams.get('username')||'');
+    const cookieResponse=await stub.fetch(cookieUrl),saved=await cookieResponse.json();if(saved.cookie)options.headers.Cookie=saved.cookie;
+   }
    let response=await upstream(url,options);
    // Forward credentials only across a single redirect within official XML API hosts.
    if([301,302,303,307,308].includes(response.status)){

@@ -2,7 +2,7 @@
 
 **Preferred deployment: Cloudflare Workers Free.** See [CLOUDFLARE_SETUP.md](CLOUDFLARE_SETUP.md). Firebase Authentication and Firestore stay on Spark; the Firebase Functions instructions below are an optional Blaze-only alternative.
 
-The account dialog supports registering a BGG username, importing owned board games, and saving public plays separately from Score Counter score records. This is not BGG account authentication. No BGG password is collected and the app does not write records to BGG.
+The app has a username-only public-data import mode and a separate experimental BGG login/manual-posting adapter. See [BGG_ACCOUNT_LINK.md](BGG_ACCOUNT_LINK.md) for account linking, session storage, manual play upload/update, and its required Worker deployment. The public XML-import instructions below describe the read-only mode and do not themselves authenticate a BGG user or enable writes.
 
 BGG approval, an API token, Firebase deployment access, and a project with Functions billing enabled are required for live imports. The frontend must not contain the API token.
 
@@ -35,3 +35,6 @@ Before enabling live API access, display the official “Powered by BGG” logo 
 
 ## Live connection (2026-10-16)
 Worker endpoint: https://score-bgg.score-bgg.workers.dev. The owner deployed the Worker and confirmed BGG_API_TOKEN was registered as a Cloudflare secret. The frontend now uses this endpoint, with the standard Powered by BGG logo linked in game search and BGG account import. Preflight, unauthenticated denial and origin rejection were verified live. Authenticated BGG search/import still requires verification by a signed-in user; no user's login token or BGG secret was accessed from this environment.
+
+## BGG account link adapter
+See [BGG_ACCOUNT_LINK.md](BGG_ACCOUNT_LINK.md) for the experimental login/manual-write adapter and its separate Worker deployment. The original public-import limitations above describe the pre-account-link implementation. Actual BGG website login/write compatibility still requires owner acceptance testing.

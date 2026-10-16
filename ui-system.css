@@ -169,3 +169,8 @@ dialog .actions .danger{margin-right:0}
 /* Keep the required attribution legible without dominating the form. */
 .bgg-attribution,#addGameDialog .bgg-attribution{width:132px;min-height:42px;padding:3px 6px;border-radius:6px;margin:10px 0}
 .bgg-attribution img,#addGameDialog .bgg-attribution img{width:120px;height:auto}
+
+.bgg-section-title{font-size:15px;font-weight:500;margin:22px 0 10px}.bgg-link-actions{display:flex;flex-wrap:wrap;gap:8px}.bgg-link-actions button{min-height:40px;padding:9px 12px;border-radius:10px;font-size:13px;background:#203149;color:#d9e8fb}#bggPublicFallback{margin:14px 0}#bggPublicFallback>summary{font-size:13px;color:#a5bedb;cursor:pointer;min-height:40px;padding:10px 0}#bggPublicFallback[hidden],.bgg-link-actions [hidden]{display:none!important}#bggLoginSubmit{width:100%;margin-top:10px;min-height:44px;border-radius:10px}#bggLoginDialog{max-width:400px}.record-delete-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.record-delete-row .bgg-post-button{min-height:40px;padding:9px 12px;border-radius:9px;background:#1d3550;color:#afd5ff;font-size:12px}.record-delete-row .bgg-post-button:disabled{opacity:.5}
+#bggLoginDialog #bggLoginSubmit{position:sticky;bottom:0;z-index:1;background:#237bff}#bggLoginError:empty{display:none}
+
+#bggLoginDialog label{display:block;margin:10px 0 6px}#bggLoginDialog .record-head{margin-bottom:4px}

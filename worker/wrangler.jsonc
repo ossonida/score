@@ -5,10 +5,33 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "vars": {
-    "FIREBASE_PROJECT_ID": "score-1948e"
+    "FIREBASE_PROJECT_ID": "score-1948e",
+    "BGG_ACCOUNT_LINK_ENABLED": "true"
   },
   "durable_objects": {
-    "bindings": [{"name": "BGG_LIMITS", "class_name": "BggLimits"}]
+    "bindings": [
+      {
+        "name": "BGG_LIMITS",
+        "class_name": "BggLimits"
+      },
+      {
+        "name": "BGG_SESSIONS",
+        "class_name": "BggSessions"
+      }
+    ]
   },
-  "migrations": [{"tag": "v1", "new_sqlite_classes": ["BggLimits"]}]
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "BggLimits"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "BggSessions"
+      ]
+    }
+  ]
 }

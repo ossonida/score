@@ -10,3 +10,12 @@ android/**/build/
 
 # Generated prototype platform; regenerate via npm run android:setup.
 android/
+
+# Native Firebase configuration stays on the developer machine.
+google-services.json
+
+# Cloudflare local secrets and build state.
+.dev.vars*
+.wrangler/
+
+.bgg-link-backup/

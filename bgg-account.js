@@ -1,7 +1,7 @@
-import {fetchBggPublicPage} from './bgg-public-client.js?v=62';
-import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=62';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=62';
-import {bggSearchUrl} from './firebase-config.js?v=62';
+import {fetchBggPublicPage} from './bgg-public-client.js?v=63';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=63';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=63';
+import {bggSearchUrl} from './firebase-config.js?v=63';
 const $=id=>document.getElementById(id);
 let user=null,epoch=0,busy=false,collection=[],plays=[];
 function key(part){return `score.bgg.${user.uid}.${part}`;}
@@ -21,6 +21,7 @@ function render(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  }
 }
 $('bggUsername').addEventListener('input',render);
+window.addEventListener('score-bgg:linked',event=>{if(!user||busy)return;const name=event.detail?.username;if(!validUsername(name))return;$('bggUsername').value=name;void $('bggRegister').onclick();});
 $('bggRegister').onclick=async()=>{
  if(!user||busy)return;const username=$('bggUsername').value.trim();if(!validUsername(username)){status('BGG 사용자명을 64자 이내로 입력해주세요.');return;}
  const uid=user.uid,version=++epoch;busy=true;let localSaved=false;status('BGG 계정 저장 중…');render();try{

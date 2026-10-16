@@ -1,10 +1,10 @@
-import './records.js?v=62';
-import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=62';
-import {gameKey} from './records-core.js?v=62';
-import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=62';
-import {renderGameArtwork} from './game-artwork.js?v=62';
-import {idToken} from './cloud-records.js?v=62';
-import {bggSearchUrl} from './firebase-config.js?v=62';
+import './records.js?v=63';
+import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=63';
+import {gameKey} from './records-core.js?v=63';
+import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=63';
+import {renderGameArtwork} from './game-artwork.js?v=63';
+import {idToken} from './cloud-records.js?v=63';
+import {bggSearchUrl} from './firebase-config.js?v=63';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='';
