@@ -11,7 +11,7 @@ The existing Worker must be updated by the Windows user whose Wrangler OAuth ses
 
 From PowerShell:
 ```powershell
-cd D:\dev\score-main\worker
+cd D:\dev\score\worker
 Invoke-WebRequest -UseBasicParsing "https://raw.githubusercontent.com/ossonida/score/main/scripts/setup-bgg-link.mjs" -OutFile ".\setup-bgg-link.mjs"
 node .\setup-bgg-link.mjs
 ```

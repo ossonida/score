@@ -4,7 +4,7 @@ import {resolve,dirname} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {randomBytes} from 'node:crypto';
 const cwd=process.cwd(),pkg=JSON.parse(await readFile(resolve(cwd,'package.json'),'utf8'));
-if(pkg.name!=='score-bgg-worker')throw Error('Run this script from D:\\dev\\score-main\\worker.');
+if(pkg.name!=='score-bgg-worker')throw Error('Run this script from D:\\dev\\score\\worker.');
 const cli=resolve(cwd,'node_modules/wrangler/bin/wrangler.js');await access(cli);
 function run(args,{capture=false,input}={}){const r=spawnSync(process.execPath,[cli,...args],{cwd,encoding:'utf8',input,stdio:capture?['pipe','pipe','inherit']:input===undefined?'inherit':['pipe','inherit','inherit']});if(r.error)throw r.error;if(r.status!==0)throw Error('Cloudflare command failed. Check the message above.');return r.stdout;}
 // Download one immutable commit snapshot, then replace the reviewed server files together.
