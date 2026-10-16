@@ -19,6 +19,12 @@ test('no or invalid login rejected before BGG call',async()=>{
  let fetched=false;const h=createHandler({verify:async()=>{throw Error();},upstream:async()=>{fetched=true;}});
  assert.equal((await h(request(),env)).status,401);assert.equal((await h(request('',{headers:{}}),env)).status,401);assert.equal(fetched,false);
 });
+test('cover proxy is origin-bound, authentication-free and restricted to BGG images',async()=>{
+ const cover='https://cf.geekdo-images.com/test/path.jpg',h=handler(async(url,options)=>{assert.equal(url.href,cover);assert.equal(options.redirect,'manual');return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'image/jpeg','Content-Length':'3'}});});
+ let r=await h(request('action=cover&url='+encodeURIComponent(cover),{headers:{Origin:'https://ossonida.github.io'}}),{});assert.equal(r.status,200);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://ossonida.github.io');assert.equal(r.headers.get('Content-Type'),'image/jpeg');assert.deepEqual([...new Uint8Array(await r.arrayBuffer())],[1,2,3]);
+ r=await h(new Request('https://score.example/?action=cover&url='+encodeURIComponent(cover)),{});assert.equal(r.status,403);
+ for(const url of ['https://evil.test/a.jpg','http://cf.geekdo-images.com/a.jpg','https://x@cf.geekdo-images.com/a.jpg'])assert.equal((await h(request('action=cover&url='+encodeURIComponent(url)),{})).status,400);
+});
 test('input validation prevents malformed queries and arbitrary targets',async()=>{
  for(const q of ['action=unknown','query=a','action=details&ids=1,0','action=details&ids='+Array(21).fill('13').join(','),'action=plays&username=a&page=11','action=collection&username='])assert.equal((await handler()(request(q),env)).status,400);
 });

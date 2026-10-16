@@ -7,19 +7,40 @@ import {gameDetails} from '../functions/game-details.js';
 import {collectionData,playsData} from '../functions/bgg-data.js';
 export {BggLimits} from './limits.js';
 const ORIGINS=new Set(['https://ossonida.github.io','https://localhost','capacitor://localhost']);
+const MAX_COVER_BYTES=5*1024*1024;
+function safeCoverUrl(value){try{if(typeof value!=='string'||value.length>2048)return null;const url=new URL(value);return url.protocol==='https:'&&url.hostname==='cf.geekdo-images.com'&&!url.port&&!url.username&&!url.password?url:null;}catch{return null;}}
+async function boundedImage(response){
+ const declared=Number(response.headers.get('Content-Length')||0);if(declared>MAX_COVER_BYTES)throw Error('Cover too large');
+ const reader=response.body?.getReader();if(!reader)return new Uint8Array();const chunks=[];let size=0;
+ for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_COVER_BYTES){await reader.cancel();throw Error('Cover too large');}chunks.push(value);}
+ const result=new Uint8Array(size);let offset=0;for(const chunk of chunks){result.set(chunk,offset);offset+=chunk.byteLength;}return result;
+}
 export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
  return async function handle(request,env){
   const origin=request.headers.get('Origin');
-  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'4'};
+  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'5'};
   if(origin&&ORIGINS.has(origin))headers['Access-Control-Allow-Origin']=origin;
   const reply=(status,data,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
   if(origin&&!ORIGINS.has(origin))return reply(403,{error:'Origin not allowed'});
   if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, POST, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type','Access-Control-Max-Age':'3600'}});
   if(!['GET','POST'].includes(request.method))return reply(405,{error:'GET or POST only'},{Allow:'GET, POST, OPTIONS'});
+  const input=new URL(request.url),action=input.searchParams.get('action')||'search';
+  if(action==='cover'){
+   if(request.method!=='GET')return reply(405,{error:'GET only'},{Allow:'GET, OPTIONS'});
+   if(!origin)return reply(403,{error:'Origin required'});
+   const url=safeCoverUrl(input.searchParams.get('url'));
+   if(!url)return reply(400,{error:'Invalid cover URL'});
+   try{
+    const response=await upstream(url,{redirect:'manual',headers:{Accept:'image/avif,image/webp,image/png,image/jpeg','User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},signal:AbortSignal.timeout(12000)});
+    const type=(response.headers.get('Content-Type')||'').split(';')[0].trim().toLowerCase();
+    if(!response.ok||!['image/jpeg','image/png','image/webp','image/avif'].includes(type))return reply(502,{error:'Cover request failed'});
+    const bytes=await boundedImage(response);
+    return new Response(bytes,{status:200,headers:{...headers,'Content-Type':type,'Content-Length':String(bytes.byteLength),'Cache-Control':'public, max-age=2592000, immutable','Cross-Origin-Resource-Policy':'cross-origin'}});
+   }catch{return reply(502,{error:'Cover request failed'});}
+  }
   const token=bearerToken(request.headers.get('Authorization'));let uid;
   try{if(!token)throw Error();uid=await verify(token,env.FIREBASE_PROJECT_ID);}catch{return reply(401,{error:'Sign in required'});}
   if(!env.BGG_API_TOKEN||!env.BGG_LIMITS)return reply(503,{error:'BGG service is not configured'});
-  const input=new URL(request.url),action=input.searchParams.get('action')||'search';
   const accountRoutes={'link-status':['GET','/status'],'link-login':['POST','/login'],'link-logout':['POST','/logout'],'link-post':['POST','/post']};
   if(Object.hasOwn(accountRoutes,action)){
    const [method,path]=accountRoutes[action];if(request.method!==method)return reply(405,{error:'Invalid method'});
