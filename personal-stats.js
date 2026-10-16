@@ -17,7 +17,7 @@ export function personalRank(play,person){
 export function personalGame(records,profile,rule){
  const all=ordered(records),keys=new Set(profile?[profile.primary,...profile.aliases].map(nameKey):[]),ambiguous=all.filter(p=>!p.players.some(x=>typeof x.isSelf==='boolean')&&p.players.filter(x=>x.anonymous!==true&&keys.has(nameKey(x.name))).length>1).length;
  const own=all.flatMap(play=>{const person=meIn(play,profile);return person?[{play,person}]:[];}),rules=[...new Set(own.map(x=>x.play.rule))];
- const active=rules.includes(rule)?rule:rules[0]||'highest',entries=own.filter(x=>x.play.rule===active).map(({play,person})=>{const wins=winnerIds(play);return {play,person,rank:personalRank(play,person),known:active!=='cooperative'&&wins.length>0,won:active!=='cooperative'&&wins.includes(person.id)};});
+ const active=rules.includes(rule)?rule:rules[0]||'highest',entries=own.filter(x=>x.play.rule===active).map(({play,person})=>{const wins=winnerIds(play);return {play,person,rank:personalRank(play,person),known:active!=='cooperative'&&(wins.length>0||person.draw===true),won:active!=='cooperative'&&wins.includes(person.id)};});
  const scored=entries.filter(x=>numeric(x.person.score)),scores=scored.map(x=>x.person.score),bestEntry=scored.reduce((best,x)=>!best||better(x.person.score,best.person.score,active)?x:best,null),known=entries.filter(x=>x.known),wins=known.filter(x=>x.won).length;
  const latest5=entries.slice(-5),previous5=entries.slice(-10,-5),recentScores=latest5.filter(x=>numeric(x.person.score)),previousScores=previous5.filter(x=>numeric(x.person.score));
  // Do not invent chronology from the IDs assigned to imported same-day records.
@@ -28,7 +28,7 @@ export function personalGame(records,profile,rule){
   const seen=new Map();for(const p of play.players)seen.set(nameKey(p.name),(seen.get(nameKey(p.name))||0)+1);
   for(const opponent of play.players){const key=nameKey(opponent.name);if(opponent.anonymous===true||opponent.id===person.id||keys.has(key)||seen.get(key)!==1)continue;
    const row=opponents.get(key)||{key,name:opponent.name,count:0,ahead:0,behind:0,tied:0,compared:0};row.count++;
-   if(active!=='cooperative'){let result=null;if(Number.isInteger(person.rank)&&Number.isInteger(opponent.rank)){result=person.rank===opponent.rank?0:person.rank<opponent.rank?1:-1;}else if(numeric(person.score)&&numeric(opponent.score))result=person.score===opponent.score?0:better(person.score,opponent.score,active)?1:-1;
+   if(active!=='cooperative'){let result=null;if(person.draw===true&&opponent.draw===true)result=0;else if(Number.isInteger(person.rank)&&Number.isInteger(opponent.rank)){result=person.rank===opponent.rank?0:person.rank<opponent.rank?1:-1;}else if(numeric(person.score)&&numeric(opponent.score))result=person.score===opponent.score?0:better(person.score,opponent.score,active)?1:-1;
     if(result!==null){row.compared++;row[result===0?'tied':result>0?'ahead':'behind']++;}
    }opponents.set(key,row);
   }
@@ -42,7 +42,7 @@ export function matchInsight(records,play,profile){
  const consistent=play.players.every(p=>numeric(p.score))&&winning.length>0&&winning.every(p=>!play.players.some(other=>better(other.score,p.score,play.rule)));
  const others=play.players.filter(p=>p.id!==person.id),gap=play.rule!=='cooperative'&&consistent&&numeric(score)?wins.includes(person.id)?(others.length?Math.min(...others.map(x=>Math.abs(score-x.score))):null):Math.min(...winning.map(x=>Math.abs(score-x.score))):null;
  const meetings=others.filter(p=>p.anonymous!==true).map(p=>({name:p.name,count:own.filter(x=>x.play.players.some(o=>nameKey(o.name)===nameKey(p.name))).length}));
- return {person,rank:personalRank(play,person),won:wins.includes(person.id),known:play.rule!=='cooperative'&&wins.length>0,scoreRank:numeric(score)?1+scored.filter(x=>better(x.person.score,score,play.rule)).length:null,scoreTotal:scored.length,previousAverage,delta:numeric(score)&&previousAverage!==null?score-previousAverage:null,newBest:play.rule!=='cooperative'&&numeric(score)&&bestBefore!==null&&better(score,bestBefore,play.rule),bestBefore,gap,meetings,cooperative:play.rule==='cooperative'};
+ return {person,rank:personalRank(play,person),won:wins.includes(person.id),known:play.rule!=='cooperative'&&(wins.length>0||person.draw===true),scoreRank:numeric(score)?1+scored.filter(x=>better(x.person.score,score,play.rule)).length:null,scoreTotal:scored.length,previousAverage,delta:numeric(score)&&previousAverage!==null?score-previousAverage:null,newBest:play.rule!=='cooperative'&&numeric(score)&&bestBefore!==null&&better(score,bestBefore,play.rule),bestBefore,gap,meetings,cooperative:play.rule==='cooperative'};
 }
 
 export function personalRecordIds(records,profile){

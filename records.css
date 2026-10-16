@@ -139,3 +139,16 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
  .scoreless-card-actions{gap:3px;padding:3px;border-radius:12px}
  .scoreless-result-choice{min-height:42px;padding:7px 8px;font-size:13px}
 }
+
+/* Result entry must size to its content instead of inheriting the score board's stretched rows. */
+.scoreless-board-mode.fit-players #homeScreen .cards{flex:0 0 auto;min-height:0;grid-template-rows:none;align-content:start}
+.scoreless-board-mode .scoreless-result-card{height:auto;min-height:0;container-type:normal}
+.scoreless-board-mode .scoreless-result-card .scoreless-card-content{height:auto}
+.scoreless-board-mode .footer-guide,.scoreless-board-mode #installApp{display:none}
+.scoreless-card-actions.win-actions{grid-template-columns:repeat(3,minmax(0,1fr))}
+.scoreless-card-actions.rank-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.scoreless-card-actions.rank-actions>:only-child{grid-column:1/-1}
+.scoreless-result-choice.draw[aria-pressed=true]::before{content:none}
+.scoreless-board-actions button:disabled{opacity:.5;cursor:default}
+#playBggAttribution[hidden],#playBggAdvanced[hidden],#openBggWebsite[hidden]{display:none!important}
+@media(max-width:380px){.scoreless-board-mode .scoreless-card-content{grid-template-columns:minmax(0,.8fr) minmax(156px,1.2fr)}.scoreless-card-actions.win-actions{gap:2px;padding:3px}.scoreless-card-actions.win-actions .scoreless-result-choice{padding-inline:4px;font-size:12px}}
