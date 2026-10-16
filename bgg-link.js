@@ -6,11 +6,12 @@ let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});
 function notify(){window.dispatchEvent(new Event('score-bgg:changed'));api.renderHistory();}
 function render(){
+ $('bggAccountSection').setAttribute('data-connected',String(state.connected));
  $('bggLinkedStatus').setAttribute('aria-busy',String(busy));$('bggLinkLogin').disabled=!user||busy||!state.ready;$('bggLinkLogin').textContent=state.connected?'계정 변경':'BGG 로그인';$('bggLinkLogout').hidden=!state.connected;$('bggLinkLogout').disabled=busy;
  $('bggLinkRefresh').hidden=!user;$('bggLinkRefresh').disabled=busy;$('bggPublicFallback').hidden=state.connected;
  $('bggLinkSetup').hidden=!user||state.ready||busy;
  if(state.connected)$('bggLinkedStatus').textContent=state.username+' · 연결됨';else if(!busy)$('bggLinkedStatus').textContent=state.ready?'BGG에 로그인하면 내 정보를 가져오고 경기 기록을 전송할 수 있습니다.':'BGG 로그인 연결을 준비 중입니다.';
- $('bggImport').textContent=state.connected?'내 정보 가져오기 · 저장':'공개 정보 가져오기 · 저장';
+ $('bggImport').textContent=state.connected?'내 정보 가져오기':'공개 정보 가져오기';
 }
 async function refresh({silent=false}={}){const owner=user?.uid,version=epoch;if(!owner)return;busy=true;if(!silent)$('bggLinkMessage').textContent='';$('bggLinkedStatus').textContent='BGG 연결 확인 중…';render();try{const result=await bggLinkRequest('link-status',{uid:owner});if(version!==epoch)return;state={...result,uploads:result.uploads||{}};if(state.connected)$('bggUsername').value=state.username;notify();}catch(error){if(version===epoch){state={ready:false,connected:false,uploads:{}};$('bggLinkMessage').textContent=error.message;notify();}}finally{if(version===epoch){busy=false;render();}}}
 function closeLogin(){$('bggLoginPassword').value='';$('bggLoginDialog').close();}
