@@ -10,15 +10,13 @@ function cloudFailure(error){return String(error?.code||error?.message||'').incl
 function status(text){$('bggAccountStatus').textContent=text;}
 function render(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  $('bggAccountSection').hidden=!user;
- const username=$('bggUsername').value.trim();$('bggRegister').disabled=!user||busy||!username||!bggSearchUrl;$('bggImport').disabled=!user||busy||!username||!bggSearchUrl;
- $('bggServerHint').hidden=!!bggSearchUrl;
+ const username=$('bggUsername').value.trim();$('bggImport').disabled=!user||busy||!username||!bggSearchUrl;
  const box=$('bggAccountData');box.replaceChildren();
  for(const [title,items] of [['보유 게임',collection],['플레이 기록',plays]]){
   const item=document.createElement('div'),label=document.createElement('span'),count=document.createElement('strong');
   item.className='bgg-data-count';label.textContent=title;count.textContent=`${items.length}개`;item.append(label,count);box.append(item);
  }
 }
-$('bggUsername').addEventListener('input',render);
 window.addEventListener('score-bgg:changed',render);
 window.addEventListener('score-bgg:linked',event=>{if(!user||busy)return;const name=event.detail?.username;if(!validUsername(name))return;$('bggUsername').value=name;void saveUsername({announce:false});});
 async function saveUsername({announce=true}={}){
@@ -33,7 +31,7 @@ async function saveUsername({announce=true}={}){
 async function importPublic(){
  if(!user||busy||!bggSearchUrl)return;
  const username=$('bggUsername').value.trim(),uid=user.uid,version=epoch;
- if(username!==cached('profile',{}).username){status('먼저 변경한 사용자명을 등록해주세요.');return;}
+ if(username!==cached('profile',{}).username){status('BGG 연결 정보를 다시 확인해주세요.');return;}
  busy=true;render();let imported=0,cloudFailed=false;
  try{
   for(const action of ['collection','plays']){
@@ -55,7 +53,6 @@ async function importPublic(){
   status(cloudFailed?`공개 정보 ${imported}개를 이 기기에 저장했습니다. 클라우드 저장에 실패했습니다. Firebase 보안 규칙과 연결 상태를 확인해주세요.`:imported?`공개 정보 ${imported}개를 계정에 저장했습니다. 플레이 기록은 최대 1,000개까지 가져옵니다.`:'공개 보유 게임과 플레이 기록이 없습니다. BGG 사용자명과 정보 공개 여부를 확인해주세요.');
  }catch(e){if(version===epoch)status(e.message);}finally{if(version===epoch){busy=false;render();}}
 }
-$('bggRegister').onclick=async()=>{if(!bggSearchUrl)return;if(await saveUsername({announce:false}))await importPublic();};
 $('bggImport').onclick=importPublic;
 render();
 if(cloudConfigured())connectCloud(async next=>{

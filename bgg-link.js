@@ -8,9 +8,9 @@ function notify(){window.dispatchEvent(new Event('score-bgg:changed'));api.rende
 function render(){
  const connected=Boolean(user&&state.connected);$('bggAccountSection').setAttribute('data-connected',String(connected));
  $('bggLinkedStatus').setAttribute('aria-busy',String(busy));$('bggLinkLogin').disabled=!user||busy||!state.ready;$('bggLinkLogin').textContent=connected?'계정 변경':'BGG 로그인';$('bggLinkLogout').hidden=!connected;$('bggLinkLogout').disabled=busy;
- $('bggSyncActions').hidden=!connected;$('bggLinkRefresh').hidden=!connected;$('bggLinkRefresh').disabled=busy;$('bggImport').hidden=!connected;$('bggImport').disabled=busy;$('bggExport').hidden=!connected;$('bggExport').disabled=busy;$('bggPublicFallback').hidden=connected;
+ $('bggSyncActions').hidden=!connected;$('bggLinkRefresh').hidden=!connected;$('bggLinkRefresh').disabled=busy;$('bggImport').hidden=!connected;$('bggImport').disabled=busy;$('bggExport').hidden=!connected;$('bggExport').disabled=busy;
  $('bggLinkSetup').hidden=!user||state.ready||busy;
- if(connected)$('bggLinkedStatus').textContent=state.username+' · 연결됨';else if(!busy)$('bggLinkedStatus').textContent=state.ready?'BGG에 로그인하면 내 정보를 가져오고 경기 기록을 전송할 수 있습니다.':'BGG 로그인 연결을 준비 중입니다.';
+ if(connected)$('bggLinkedStatus').textContent=state.username+' · 연결됨';else if(!busy)$('bggLinkedStatus').textContent='BGG에 로그인하면 BGG에 등록된 내 정보를 가져오거나 플레이 기록을 내보낼 수 있습니다.';
 }
 async function refresh({silent=false}={}){const owner=user?.uid,version=epoch;if(!owner)return;busy=true;if(!silent)$('bggLinkMessage').textContent='';$('bggLinkedStatus').textContent='BGG 연결 확인 중…';render();try{const result=await bggLinkRequest('link-status',{uid:owner});if(version!==epoch)return;state={...result,uploads:result.uploads||{}};if(state.connected)$('bggUsername').value=state.username;notify();}catch(error){if(version===epoch){state={ready:false,connected:false,uploads:{}};$('bggLinkMessage').textContent=error.message;notify();}}finally{if(version===epoch){busy=false;render();}}}
 function closeLogin(){$('bggLoginPassword').value='';$('bggLoginDialog').close();}

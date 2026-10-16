@@ -18,7 +18,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 #settingsScreen .account-actions>button,
 #settingsScreen .transfer-actions>button,
 #settingsScreen .identity-form>button,
-#settingsAccountCard #bggRegister,
 #settingsAccountCard #bggImport,
 #settingsAccountCard #bggExport,
 #playerDialog .random,
@@ -176,6 +175,8 @@ dialog .actions .danger{margin-right:0}
 
 #bggLoginDialog label{display:block;margin:10px 0 6px}#bggLoginDialog .record-head{margin-bottom:4px}
 
-/* The public username action stays readable on narrow phone screens. */
-#bggPublicFallback .record-row{grid-template-columns:minmax(0,1fr)}
-#bggPublicFallback .record-row>button{width:100%}
+/* Match the native disclosure used by the other settings menus. */
+.bgg-section-summary{display:list-item;list-style:disclosure-closed;list-style-position:inside}
+.bgg-section-summary::-webkit-details-marker{display:inline}
+.bgg-section-summary::after{content:none}
+#bggAccountSection[open]>.bgg-section-summary{list-style:disclosure-open}
