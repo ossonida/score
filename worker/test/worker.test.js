@@ -9,7 +9,7 @@ const xml='<items><item id="420087"><name type="primary" value="Flip 7"/><yearpu
 const request=(query='query=flip',options={})=>new Request('https://score.example/?'+query,{headers:{Origin:'https://ossonida.github.io',Authorization:'Bearer test'},...options});
 const handler=(upstream=async()=>new Response(xml))=>createHandler({verify:async()=> 'user1',upstream});
 test('search response and secret are restricted to fixed BGG upstream',async()=>{
- let count=0;const res=await handler(async(url,init)=>{count++;assert.equal(url.origin,'https://boardgamegeek.com');assert.equal(url.pathname,'/xmlapi2/search');assert.equal(init.headers.Authorization,'Bearer fake-test-secret');assert.equal(init.redirect,'error');return new Response(xml);})(request(),env);
+ let count=0;const res=await handler(async(url,init)=>{count++;assert.equal(url.origin,'https://boardgamegeek.com');assert.equal(url.pathname,'/xmlapi2/search');assert.equal(init.headers.Authorization,'Bearer fake-test-secret');assert.equal(init.redirect,'manual');return new Response(xml);})(request(),env);
  assert.equal(res.status,200);assert.deepEqual(await res.json(),{games:[{id:'420087',name:'Flip 7',year:'2024'}]});assert.equal(count,1);assert.equal(res.headers.get('Access-Control-Allow-Origin'),'https://ossonida.github.io');
 });
 test('preflight, untrusted origins and write requests',async()=>{
@@ -46,4 +46,18 @@ test('Firebase JWT validates signature, project, expiration and required claims'
 test('durable counter persists limits and cleanup alarm',async()=>{
  const data=new Map();let alarm=0;const storage={get:async k=>data.get(k),put:async(k,v)=>data.set(k,v),setAlarm:async t=>{alarm=t;},deleteAll:async()=>data.clear()};storage.transaction=async fn=>fn(storage);
  const obj=new BggLimits({storage});for(let i=0;i<30;i++)assert.equal((await obj.fetch(new Request('https://limits/user'))).status,204);assert.equal((await obj.fetch(new Request('https://limits/user'))).status,429);assert.ok(alarm>Date.now());await obj.alarm();assert.equal(data.size,0);
+});
+
+test('upstream authorization, denial and transport failures have safe distinct codes',async()=>{
+ for(const [status,code]of [[401,'BGG_TOKEN_REJECTED'],[403,'BGG_ACCESS_DENIED'],[500,'BGG_HTTP_ERROR']]){const r=await handler(async()=>new Response('SECRET private body',{status}))(request(),env);const d=await r.json();assert.equal(r.status,502);assert.equal(d.code,code);assert.equal(d.upstreamStatus,status);assert.ok(!JSON.stringify(d).includes('SECRET'));assert.ok(!JSON.stringify(d).includes(env.BGG_API_TOKEN));}
+ const r=await handler(async()=>{throw Error('network with private data');})(request(),env);assert.equal((await r.json()).code,'BGG_NETWORK_ERROR');
+ const timeout=await handler(async()=>{throw new DOMException('timed out','TimeoutError');})(request(),env);assert.equal(timeout.status,504);assert.equal((await timeout.json()).code,'BGG_TIMEOUT');
+});
+test('canonical BGG redirects are followed once, other targets never receive the token',async()=>{
+ let calls=0;const r=await handler(async(url,options)=>{calls++;if(calls===1)return new Response(null,{status:301,headers:{Location:'https://www.boardgamegeek.com/xmlapi2/search?query=flip'}});assert.equal(url.hostname,'www.boardgamegeek.com');assert.equal(options.headers.Authorization,'Bearer fake-test-secret');return new Response(xml);})(request(),env);assert.equal(r.status,200);assert.equal(calls,2);
+ for(const target of ['https://evil.test/xmlapi2/search','http://boardgamegeek.com/xmlapi2/search','https://boardgamegeek.com/login','https://x@boardgamegeek.com/xmlapi2/search']){let n=0;const response=await handler(async()=>{n++;return new Response(null,{status:302,headers:{Location:target}});})(request(),env);assert.equal((await response.json()).code,'BGG_REDIRECT_REJECTED');assert.equal(n,1);}
+});
+test('BGG username errors and non-XML responses are explicit',async()=>{
+ const r=await handler(async()=>new Response('<errors><error message="Invalid username"/></errors>'))(request('action=collection&username=nobody'),env);assert.equal(r.status,400);assert.equal((await r.json()).code,'BGG_USER_NOT_FOUND');
+ const page=await handler(async()=>new Response('<html>private challenge</html>'))(request(),env);assert.equal((await page.json()).code,'BGG_NON_XML_RESPONSE');
 });

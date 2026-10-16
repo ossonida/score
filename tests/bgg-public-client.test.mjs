@@ -3,3 +3,7 @@ const base={endpoint:'https://example.com',action:'collection',username:'alice',
 test('queued collections retry before accepting actual data',async()=>{let calls=0,waiting=0;const data=await fetchBggPublicPage({...base,onWaiting:()=>waiting++,fetcher:async()=>++calls<3?{status:202,ok:true}:{status:200,ok:true,json:async()=>({items:[{id:'13'}]})}});assert.equal(calls,3);assert.equal(waiting,2);assert.equal(data.items[0].id,'13');});
 test('persistent queue and HTTP failures are distinct and never treated as empty collections',async()=>{await assert.rejects(fetchBggPublicPage({...base,fetcher:async()=>({status:202,ok:true})}),/202/);for(const status of [401,429,502,503])await assert.rejects(fetchBggPublicPage({...base,fetcher:async()=>({status,ok:false})}),new RegExp(String(status)));});
 test('account changes during queue retry cancel the old account import',async()=>{let active=true,calls=0;await assert.rejects(fetchBggPublicPage({...base,isCurrent:()=>active,wait:async()=>{active=false;},fetcher:async()=>{calls++;return {status:202,ok:true};}}),e=>e.name==='AbortError');assert.equal(calls,1);});
+
+test('upstream diagnostic codes are translated without exposing upstream error text',async()=>{
+ await assert.rejects(fetchBggPublicPage({...base,fetcher:async()=>({status:502,ok:false,json:async()=>({code:'BGG_TOKEN_REJECTED',upstreamStatus:401,error:'secret raw message'})})}),e=>e.message.includes('BGG_TOKEN_REJECTED')&&e.message.includes('토큰')&&!e.message.includes('secret raw'));
+});

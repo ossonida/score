@@ -8,7 +8,7 @@ const ORIGINS=new Set(['https://ossonida.github.io','https://localhost','capacit
 export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
  return async function handle(request,env){
   const origin=request.headers.get('Origin');
-  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin'};
+  const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Vary':'Origin','X-Score-BGG-Version':'2'};
   if(origin&&ORIGINS.has(origin))headers['Access-Control-Allow-Origin']=origin;
   const reply=(status,data,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
   if(origin&&!ORIGINS.has(origin))return reply(403,{error:'Origin not allowed'});
@@ -41,14 +41,29 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
     if(!result.ok)throw Error();
    }
   }catch{return reply(503,{error:'Request limit service unavailable'});}
+  let phase='network',upstreamStatus;
+  const failure=(code,status=502)=>reply(status,{error:'BGG request failed',code,...(upstreamStatus?{upstreamStatus}:{})});
   try{
-   const response=await upstream(url,{redirect:'error',headers:{Authorization:'Bearer '+env.BGG_API_TOKEN},signal:AbortSignal.timeout(12000)});
+   const options={redirect:'manual',headers:{Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml','User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},signal:AbortSignal.timeout(12000)};
+   let response=await upstream(url,options);
+   // Forward credentials only across a single redirect within official XML API hosts.
+   if([301,302,303,307,308].includes(response.status)){
+    const location=response.headers.get('Location');if(!location)return failure('BGG_REDIRECT_REJECTED');
+    const next=new URL(location,url);
+    if(next.protocol!=='https:'||!['boardgamegeek.com','www.boardgamegeek.com'].includes(next.hostname)||next.port||next.username||next.password||!next.pathname.startsWith('/xmlapi2/'))return failure('BGG_REDIRECT_REJECTED');
+    response=await upstream(next,options);
+   }
+   upstreamStatus=response.status;
+   if(response.status===401)return failure('BGG_TOKEN_REJECTED');
+   if(response.status===403)return failure('BGG_ACCESS_DENIED');
    if(response.status===202||response.status===429)return reply(response.status,{error:'BGG temporarily busy'},{'Retry-After':'60'});
-   if(!response.ok)throw Error();
-   const xml=await boundedXml(response);
+   if(!response.ok)return failure('BGG_HTTP_ERROR');
+   phase='body';const xml=await boundedXml(response);
+   if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return failure('BGG_NON_XML_RESPONSE');
+   phase='parse';
    const parser=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>['item','name','link','rank','play','player'].includes(name)});
    const parsed=parser.parse(xml);
-   if(parsed.errors||parsed.error)throw Error();
+   if(parsed.errors||parsed.error){const internal=JSON.stringify(parsed.errors||parsed.error);if(/invalid username|user(?:name)? not found|invalid user|unknown user/i.test(internal))return failure('BGG_USER_NOT_FOUND',400);return failure('BGG_API_ERROR');}
    if(action==='details'){if(!parsed.items)throw Error();return reply(200,{games:gameDetails(parsed)});}
    if(action==='collection'){if(!parsed.items)throw Error();for(const item of parsed.items.item||[])if(Array.isArray(item.name))item.name=item.name[0];return reply(200,collectionData(parsed));}
    if(action==='plays'){
@@ -58,7 +73,7 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
    if(!parsed.items)throw Error();
    const games=(parsed.items.item||[]).slice(0,40).map(item=>{const names=item.name||[],name=names.find(n=>n?.['@_type']==='primary')||names[0];return {id:String(item['@_id']),name:String(name?.['@_value']||''),year:String(item.yearpublished?.['@_value']||'')};}).filter(g=>/^[1-9][0-9]{0,9}$/.test(g.id)&&g.name);
    return reply(200,{games});
-  }catch{return reply(502,{error:'BGG data unavailable'});}
+  }catch(error){if(error?.name==='TimeoutError'||error?.name==='AbortError')return failure('BGG_TIMEOUT',504);if(error?.message==='Response too large')return failure('BGG_RESPONSE_TOO_LARGE');return failure(phase==='network'?'BGG_NETWORK_ERROR':phase==='body'?'BGG_BODY_REJECTED':'BGG_INVALID_XML');}
  };
 }
 export default {fetch:createHandler()};
