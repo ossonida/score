@@ -149,11 +149,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .scoreless-board-mode .scoreless-card-content:has(.rank-actions){grid-template-columns:minmax(0,1fr) 58px}
 .scoreless-card-actions.rank-actions{display:flex;align-items:center;justify-content:center;padding:3px;background:transparent}
 .rank-drag-handle{display:flex;align-items:center;justify-content:center;width:52px;min-width:52px;height:52px;padding:0;border:0;border-radius:0;background:transparent;color:var(--ink);box-shadow:none;cursor:grab;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .15s ease,opacity .15s ease}
-.rank-drag-handle svg{width:24px;height:32px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.72;pointer-events:none}
+.rank-drag-handle svg{width:26px;height:28px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.68;pointer-events:none;transition:opacity .14s ease,transform .14s ease}
 .rank-drag-handle:hover{background:transparent;opacity:.82}
 .rank-drag-handle:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-.rank-drag-handle:active,.rank-dragging .rank-drag-handle{background:transparent;cursor:grabbing;transform:scale(.94);box-shadow:none;opacity:1}
-.scoreless-result-card.rank-dragging{position:relative;z-index:5;opacity:.88;transform:scale(.985);box-shadow:0 12px 30px #0007}
+.rank-drag-handle:active,.rank-drag-handle[aria-pressed=true]{background:transparent;cursor:grabbing;transform:scale(.92);box-shadow:none;opacity:1}
+.rank-drag-handle[aria-pressed=true] svg{opacity:1;transform:scale(1.08)}
+.scoreless-result-card{transition:transform .16s cubic-bezier(.22,1,.36,1),box-shadow .16s ease,filter .16s ease,outline-color .16s ease}
+.scoreless-result-card.rank-dragging{position:relative;z-index:5;opacity:1;transform:translateY(-2px) scale(1.015);outline:3px solid var(--ink);outline-color:color-mix(in srgb,var(--ink) 58%,transparent);outline-offset:-3px;filter:brightness(1.035) saturate(1.06);box-shadow:0 14px 34px #0008}
 .rank-drag-active,.rank-drag-active body{overscroll-behavior:none}
 .scoreless-live-rank{display:block;margin-bottom:3px;font-size:13px;font-weight:800;opacity:.68}
 .scoreless-result-choice.draw[aria-pressed=true]::before{content:none}
