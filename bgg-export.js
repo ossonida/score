@@ -1,0 +1,26 @@
+const uncertain=new Set(['pending','unknown']);
+
+export function planBggExport(records,uploads={},limit=20){
+ const ready=[];let already=0,missingGame=0,needsReview=0;
+ for(const play of Array.isArray(records)?records:[]){
+  if(!play?.game?.bggId){missingGame++;continue;}
+  const prior=uploads?.[play.id];
+  if(prior?.bggPlayId){already++;continue;}
+  if(uncertain.has(prior?.status)){needsReview++;continue;}
+  ready.push(play);
+ }
+ const batch=ready.slice(0,Math.max(1,Number(limit)||20));
+ return {records:batch,remaining:ready.length-batch.length,already,missingGame,needsReview,total:Array.isArray(records)?records.length:0};
+}
+
+const stopCodes=new Set(['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED','BGG_POST_UNCERTAIN','BGG_LOGIN_RATE_LIMIT','BGG_LINK_UNAVAILABLE']);
+
+export async function sendBggExport(records,send,onProgress=()=>{}){
+ let sent=0,unchanged=0,failed=0,lastError='';
+ for(const [index,play]of records.entries()){
+  onProgress(index+1,records.length);
+  try{const result=await send(play);if(result?.unchanged)unchanged++;else if(result)sent++;}
+  catch(error){failed++;lastError=error.message;if(stopCodes.has(error.code))break;}
+ }
+ return {sent,unchanged,failed,lastError};
+}

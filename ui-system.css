@@ -180,3 +180,4 @@ dialog .actions .danger{margin-right:0}
 .bgg-section-summary::-webkit-details-marker{display:inline}
 .bgg-section-summary::after{content:none}
 #bggAccountSection[open]>.bgg-section-summary{list-style:disclosure-open}
+.bgg-sync-actions #bggExport{grid-column:auto}

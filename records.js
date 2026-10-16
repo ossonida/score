@@ -231,6 +231,7 @@ $('recoverRecords').onclick=()=>{const context={key:key(),epoch:accountEpoch},it
 $('guestUpload').onclick=()=>api.confirm('기기 기록을 계정에 저장','비로그인 상태에서 저장한 이 기기의 기록을 현재 계정에 복사할까요?',async()=>{const guest=read(guestKey).records;const old=records,oldPending=new Set(pending);try{const known=new Set(records.map(p=>p.id));for(const p of guest)if(!known.has(p.id)){records.push(p);pending.add(p.id);}persist();updateButtons();await sync();renderHistory();}catch(e){records=old;pending=oldPending;message('accountError',e);}});
 window.ScoreRecords={
  playerChoices:()=>({scope:key()+':'+accountEpoch,players:savedPlayerChoices(records)}),
+ bggRecords:()=>{const profile=readIdentity(key());return records.map(play=>{const me=meIn(play,profile);return {...play,game:{...play.game},players:play.players.map(person=>({...person,isSelf:person.id===me?.id}))};});},
  renderHistory,
  openSave,
  openFinish:()=>openSave({finish:true}),
