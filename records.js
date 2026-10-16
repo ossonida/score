@@ -1,18 +1,19 @@
-import {metadata} from './bgg-metadata.js?v=59';
-import {enhanceGamePicker} from './game-picker.js?v=59';
-import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=59';
-import {enrichGames} from './bgg-details-client.js?v=59';
-import {renderOverview} from './overview-dashboard.js?v=59';
-import {latestPlayDate} from './stats-overview.js?v=59';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=59';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=59';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=59';
-import {renderStatsDashboard} from './stats-dashboard.js?v=59';
-import {mergeImported} from './data-transfer.js?v=59';
-import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=59';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=59';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=59';
-import {bggSearchUrl} from './firebase-config.js?v=59';
+import {readGameLibrary} from './game-library.js?v=60';
+import {metadata} from './bgg-metadata.js?v=60';
+import {enhanceGamePicker} from './game-picker.js?v=60';
+import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=60';
+import {enrichGames} from './bgg-details-client.js?v=60';
+import {renderOverview} from './overview-dashboard.js?v=60';
+import {latestPlayDate} from './stats-overview.js?v=60';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=60';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=60';
+import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=60';
+import {renderStatsDashboard} from './stats-dashboard.js?v=60';
+import {mergeImported} from './data-transfer.js?v=60';
+import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=60';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=60';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=60';
+import {bggSearchUrl} from './firebase-config.js?v=60';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let statsGameTarget='';
@@ -52,6 +53,7 @@ function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{
 function rememberGame(){try{localStorage.setItem(draftKey(),JSON.stringify({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim(),rule:$('playRule').value}));}catch{}}
 function showSelectedGame(name,bggId,image){if(image&&bggId)try{rememberGameImages({[bggId]:image});}catch{}const box=$('selectedGameInfo');box.replaceChildren();if(!name)return;const art=node('span',undefined,'selected-game-art');renderGameArtwork(art,{name,bggId});box.append(art,node('span',name));}
 function chooseGame(game){$('searchBgg').disabled=false;$('playGame').value=game.name;$('playBggId').value=String(game.bggId||game.id||'');showSelectedGame(game.name,game.bggId||game.id,gameImageUrl(game));$('bggResults').replaceChildren();$('gameSearchStatus').textContent='게임을 선택했습니다. 참여자와 결과를 확인하세요.';rememberGame();}
+function gameSearchRecords(){return [...records,...readGameLibrary(key()).map(game=>({game}))];}
 function renderRecentGames(){const games=new Map();for(const play of [...records].sort((a,b)=>b.createdAt.localeCompare(a.createdAt))){const key=gameKey(play.game);if(!games.has(key))games.set(key,play.game);if(games.size===5)break;}$('recentGames').replaceChildren(...[...games.values()].map(game=>{const button=node('button',game.name,'recent-game');button.type='button';button.onclick=()=>{searchController?.abort();clearTimeout(searchTimer);searchSerial++;chooseGame(game);};return button;}));$('recentGamesSection').hidden=!games.size;}
 function renderSnapshot(){
  const visible=recordFlow==='finish';$('playSnapshot').hidden=!visible;$('recordAnonymousHint').hidden=!visible||!snapshot.some(isAutomatic);$('playSnapshot').replaceChildren();
@@ -83,7 +85,7 @@ $('gamePlayersForm').onsubmit=event=>{
  if(api.getPlayers().length){close('gamePlayersDialog');api.confirm('새 게임 시작','현재 점수판을 새 플레이어와 0점으로 바꿀까요? 저장한 경기 기록은 유지됩니다.',start);}else start();
 };
 function selectedGame(){return resolveGame({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim()},records);}
-$('playGame').addEventListener('input',()=>{$('playBggId').value='';$('selectedGameInfo').textContent='';searchSerial++;searchController?.abort();clearTimeout(searchTimer);$('searchBgg').disabled=false;rememberGame();renderGameResults(searchLocalGames($('playGame').value,records));if(bggSearchUrl)searchTimer=setTimeout(searchGames,500);});
+$('playGame').addEventListener('input',()=>{$('playBggId').value='';$('selectedGameInfo').textContent='';searchSerial++;searchController?.abort();clearTimeout(searchTimer);$('searchBgg').disabled=false;rememberGame();renderGameResults(searchLocalGames($('playGame').value,gameSearchRecords()));if(bggSearchUrl)searchTimer=setTimeout(searchGames,500);});
 $('savePlayForm').onsubmit=async event=>{event.preventDefault();const button=$('commitPlay');button.disabled=true;button.setAttribute('aria-busy','true');try{
  if(snapshotScope!==key())throw Error('계정이 변경됐습니다. 저장 창을 다시 열어주세요.');
  if(recordFlow==='setup'){pendingGame=checkedGame({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,noScores:$('playWithoutScores').checked});rememberGame();close('savePlayDialog');$('gamePlayerCount').value=String(api.getPlayers().length||2);$('gamePlayersError').textContent='';show('gamePlayersDialog');$('gamePlayerCount').focus();return;}
@@ -115,7 +117,7 @@ function renderGameResults(games){
 async function searchGames(){
  clearTimeout(searchTimer);
  const query=$('playGame').value.trim();if(!query){$('bggResults').replaceChildren();$('gameSearchStatus').textContent='검색할 게임명을 입력해주세요.';return;}
- $('playError').textContent='';const local=searchLocalGames(query,records);renderGameResults(local);
+ $('playError').textContent='';const local=searchLocalGames(query,gameSearchRecords());renderGameResults(local);
  if(!bggSearchUrl){$('gameSearchStatus').textContent=local.length?local.length+'개 결과 · 저장 게임 / 기본 목록':'기본 목록에 없는 게임입니다. 이름을 직접 입력해 저장하거나 BGG 웹 검색을 이용해주세요.';return;}
  if(query.length<2){$('gameSearchStatus').textContent='게임명을 두 글자 이상 입력해주세요.';return;}
  if(!currentUser){$('gameSearchStatus').textContent=local.length?local.length+'개 결과 · BGG 전체 검색은 Google 로그인 후 이용할 수 있습니다.':'BGG 전체 검색은 Google 로그인 후 이용할 수 있습니다.';return;}
@@ -242,7 +244,7 @@ window.ScoreRecords={
   try{rememberIdentity(key(),updated.players.find(p=>p.isSelf));}catch{}
   renderHistory();updateButtons();notify('이 경기의 내 플레이어 지정을 저장했습니다.');if(currentUser)void sync();return updated;
  },
- context:()=>({key:key(),epoch:accountEpoch,records:records.map(p=>({...p,game:{...p.game},players:p.players.map(person=>({...person}))}))}),
+ context:()=>({ready:authReady,key:key(),epoch:accountEpoch,records:records.map(p=>({...p,game:{...p.game},players:p.players.map(person=>({...person}))}))}),
  merge:(incoming,context)=>{
   if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 파일을 다시 선택해주세요.');
   if(!Array.isArray(incoming)||incoming.some(p=>!isPlay(p)))throw Error('기록 형식을 확인해주세요.');

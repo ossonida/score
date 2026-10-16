@@ -157,9 +157,9 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=59">
-<link rel="stylesheet" href="./modal-ui.css?v=59">
-<link rel="stylesheet" href="./ui-system.css?v=59">
+<link rel="stylesheet" href="./records.css?v=60">
+<link rel="stylesheet" href="./modal-ui.css?v=60">
+<link rel="stylesheet" href="./ui-system.css?v=60">
 </head>
 <body>
 <main id="homeScreen">
@@ -174,16 +174,18 @@ dialog .swatch{width:28px;height:28px}
 <section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록과 합치고 중복은 제외합니다. 점수판은 유지됩니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
 <div id="importPreview" class="import-preview" hidden><h3>가져오기 미리보기</h3><p id="importSummary"></p><p id="importScope" class="settings-note"></p><div id="importWarnings" class="import-warnings"></div><div id="importExamples"></div><div class="transfer-actions"><button id="cancelImport" type="button">취소</button><button id="confirmImport" type="button" class="primary" disabled>기록 가져오기</button></div></div>
 </section></div></main>
+<main id="gamesScreen" hidden><header class="settings-heading"><div><h1>게임</h1><p id="gamesCount" class="record-note"></p></div></header><p id="gamesMessage" class="record-message" role="status"></p><div id="gamesList" class="library-list"></div><p id="gamesEmpty" class="record-note">아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.</p><button id="addLibraryGame" class="library-fab" type="button" aria-label="게임 추가" title="게임 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></main>
 <main id="statsScreen" class="record-dialog" hidden><header class="settings-heading"><div><h1>통계</h1></div></header>
 <div id="statsViewTabs" class="stats-view-tabs" role="tablist" aria-label="통계 보기"><button id="statsRecent" type="button" role="tab" aria-selected="true" aria-controls="statsPanel">최근 기록</button><button id="statsAll" type="button" role="tab" aria-selected="false" aria-controls="statsPanel" tabindex="-1">전체</button><button id="statsGames" type="button" role="tab" aria-selected="false" aria-controls="statsPanel" tabindex="-1">게임별 통계</button></div>
 <div id="statsPanel" role="tabpanel" aria-labelledby="statsRecent"><p id="statsStatus" class="record-message" role="status" aria-live="polite"></p><div id="gameFilterSection" hidden><label for="recordFilter">게임 선택</label><select id="recordFilter" class="record-select"><option value="">게임 선택</option></select></div><div id="statsInsights" class="stats-insights"></div><details id="statsDetails" class="stats-details"><summary><span id="statsDetailsTitle">최근 기록 보기</span><small id="statsDetailCount"></small></summary><div id="gameDetailTabs" class="record-tabs" hidden><button id="statsTab" type="button" class="active">플레이어 성적</button><button id="historyTab" type="button">기록</button></div><div id="recordList" class="record-list"></div></details></div></main>
 <div id="cloudProgress" class="cloud-progress" role="status" aria-live="polite" hidden></div>
-<nav class="bottom-nav" aria-label="주 메뉴"><button id="navHome" type="button" aria-label="홈" title="홈" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H15v-7H9v7H3Z"/></svg></button><button id="navStats" type="button" aria-label="통계" title="통계" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 17V9" />
+<nav class="bottom-nav" aria-label="주 메뉴"><button id="navHome" type="button" aria-label="홈" title="홈" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H15v-7H9v7H3Z"/></svg></button><button id="navGames" type="button" aria-label="게임" title="게임" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8" cy="8" r=".8"/><circle cx="16" cy="8" r=".8"/><circle cx="12" cy="12" r=".8"/><circle cx="8" cy="16" r=".8"/><circle cx="16" cy="16" r=".8"/></svg></button><button id="navStats" type="button" aria-label="통계" title="통계" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 17V9" />
   <path d="M18 17V5" />
   <path d="M3 3v16a2 2 0 0 0 2 2h16" />
   <path d="M8 17v-3" /></svg></button><button id="navSettings" type="button" aria-label="설정" title="설정" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
   <circle cx="12" cy="12" r="3" /></svg></button></nav>
 <dialog id="recordEditDialog" class="record-dialog"><form id="recordEditForm"><div class="record-head"><h2 id="recordEditTitle">기록 수정</h2><button type="button" class="score-close" data-record-close="recordEditDialog" aria-label="닫기">×</button></div><label id="recordEditLabel" for="recordEditValue">값</label><input id="recordEditValue" autocomplete="off"><p id="recordEditHint" class="record-note"></p><p id="recordEditError" class="record-error" role="alert"></p><div class="record-actions"><button id="recordDeletePlayer" type="button" class="record-danger">플레이어 삭제</button><button type="button" class="secondary" data-record-close="recordEditDialog">취소</button><button type="submit" class="primary">저장</button></div></form></dialog>
+<dialog id="addGameDialog" aria-labelledby="addGameTitle"><div class="record-head"><h2 id="addGameTitle">게임 추가</h2><button id="closeAddGame" type="button" class="score-close" aria-label="닫기">×</button></div><form id="librarySearchForm"><label for="librarySearch">게임 검색</label><div class="library-search-row"><input id="librarySearch" type="search" maxlength="120" placeholder="한글 또는 영문 게임명" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"><button id="librarySearchButton" class="primary" type="submit">검색</button></div></form><p id="librarySearchStatus" class="record-note" role="status" aria-live="polite"></p><div id="librarySearchResults"></div><a class="bgg-attribution" href="https://boardgamegeek.com/" target="_blank" rel="noopener noreferrer"><img src="./powered-by-bgg.png" width="184" height="54" alt="Powered by BGG"></a></dialog>
 <dialog id="savePlayDialog" class="record-dialog"><form id="savePlayForm">
 <div class="record-head"><h2 id="recordFormTitle">게임 기록하기</h2><button class="score-close" type="button" data-record-close="savePlayDialog" aria-label="닫기">×</button></div>
 <p id="recordFormHint" class="finish-note">게임과 날짜, 승리 조건을 선택한 뒤 플레이어를 추가하세요.</p><div class="save-layout"><section class="save-game"><label for="playGame">게임명</label><div class="record-row"><div><input id="playGame" type="text" list="savedGames" maxlength="120" required autocomplete="off" placeholder="게임명을 입력하세요"></div><button id="searchBgg" class="secondary" type="button">검색</button></div><datalist id="savedGames"></datalist><details id="recentGamesSection" class="recent-games-disclosure" hidden><summary>최근 게임</summary><div id="recentGames" class="recent-games"></div></details><p id="gameSearchStatus" class="record-note" role="status"></p><div id="bggResults" class="record-results" aria-label="게임 검색 결과"></div><p id="selectedGameInfo" class="selected-game" role="status"></p><a class="bgg-attribution" href="https://boardgamegeek.com/" target="_blank" rel="noopener noreferrer"><img src="./powered-by-bgg.png" width="184" height="54" alt="Powered by BGG"></a><button id="openBggWebsite" class="bgg-web-link" type="button">BGG 웹 검색 ↗</button>
@@ -376,9 +378,10 @@ render();
 </script>
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
-<script type="module" src="./app-analytics.js?v=59"></script>
-<script type="module" src="./records.js?v=59"></script>
-<script type="module" src="./bgg-account.js?v=59"></script>
-<script type="module" src="./settings.js?v=59"></script>
+<script type="module" src="./app-analytics.js?v=60"></script>
+<script type="module" src="./records.js?v=60"></script>
+<script type="module" src="./bgg-account.js?v=60"></script>
+<script type="module" src="./settings.js?v=60"></script>
+<script type="module" src="./games-screen.js?v=60"></script>
 </body>
 </html>
