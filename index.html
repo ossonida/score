@@ -159,7 +159,7 @@ dialog .swatch{width:28px;height:28px}
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
 <link rel="stylesheet" href="./records.css?v=88">
 <link rel="stylesheet" href="./modal-ui.css?v=65">
-<link rel="stylesheet" href="./ui-system.css?v=89">
+<link rel="stylesheet" href="./ui-system.css?v=90">
 </head>
 <body>
 <main id="homeScreen">
@@ -412,7 +412,12 @@ $('installHelp').textContent=/iPad|iPhone|iPod/.test(agent)?'Safari에서 공유
 $('installDialog').showModal();
 };
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
-window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(error=>console.warn('앱 오프라인 설정을 완료하지 못했습니다.',error));});
+let appUpdatePending=false,appUpdateReloading=false;
+const applyAppUpdate=()=>{if(!appUpdatePending||appUpdateReloading||players.length||document.querySelector('dialog[open]'))return;appUpdateReloading=true;location.reload();};
+navigator.serviceWorker.addEventListener('controllerchange',()=>{appUpdatePending=true;applyAppUpdate();});
+window.addEventListener('scorecounter:changed',applyAppUpdate);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')navigator.serviceWorker.getRegistration('./').then(registration=>registration?.update()).catch(()=>{});});
+window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('앱 오프라인 설정을 완료하지 못했습니다.',error));});
 }
 window.ScoreCounter={
 getPlayers:()=>players.map(p=>({...p})),
@@ -432,7 +437,7 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=89"></script>
+<script type="module" src="./records.js?v=90"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
 <script type="module" src="./bgg-link.js?v=86"></script>
 <script type="module" src="./settings.js?v=71"></script>
