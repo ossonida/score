@@ -11,7 +11,7 @@ export function winnerIds(play) {
   const best = (play.rule === 'lowest' ? Math.min : Math.max)(...scored.map(p => p.score));
   return scored.filter(p => p.score === best).map(p => p.id);
 }
-export function createPlay({game, date, rule, players}, id = crypto.randomUUID()) {
+export function createPlay({game, date, rule, players, location}, id = crypto.randomUUID()) {
   if(!game||typeof game.name!=='string'||typeof id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(id))throw Error('기록 형식을 확인해주세요.');
   const name = game.name.trim();
   if (!name || name.length > 120) throw Error('게임명을 120자 이내로 입력해주세요.');
@@ -20,8 +20,10 @@ export function createPlay({game, date, rule, players}, id = crypto.randomUUID()
   if (bggId && !/^[1-9][0-9]{0,9}$/.test(bggId)) throw Error('BGG 게임 ID는 양의 정수여야 합니다.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || new Date(date + 'T00:00:00Z').toISOString().slice(0,10) !== date) throw Error('날짜를 확인해주세요.');
   if (!['highest','lowest','cooperative'].includes(rule)) throw Error('승리 조건을 선택해주세요.');
+  location=typeof location==='string'?location.trim():'';
+  if(location.length>120)throw Error('장소를 120자 이내로 입력해주세요.');
   if (!Array.isArray(players) || !players.length || players.length > 100 || players.some(p => !p||typeof p.id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>120 || !(p.score===null||typeof p.score==='number'&&Number.isFinite(p.score)&&Math.abs(p.score)<=Number.MAX_SAFE_INTEGER) || !/^#[0-9a-f]{6}$/i.test(p.color))) throw Error('플레이어와 점수를 확인해주세요.');
-  return {id, game:{name, bggId}, date, rule, createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{})}))};
+  return {id, game:{name, bggId}, date, rule,...(location?{location}:{}),createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{})}))};
 }
 export function isPlay(p) {
   try { return typeof p.id==='string' && p.id.length<=100 && typeof p.createdAt==='string' && p.createdAt.length<=40 && Number.isFinite(Date.parse(p.createdAt)) && !!createPlay(p,p.id); } catch { return false; }

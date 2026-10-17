@@ -189,3 +189,46 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .scoreless-board-actions button:disabled{opacity:.5;cursor:default}
 #playBggAttribution[hidden],#playBggAdvanced[hidden],#openBggWebsite[hidden]{display:none!important}
 @media(max-width:380px){.scoreless-board-mode .scoreless-card-content{grid-template-columns:minmax(0,.8fr) minmax(156px,1.2fr)}.scoreless-board-mode .scoreless-card-content:has(.rank-actions){grid-template-columns:minmax(0,1fr) 54px}.scoreless-card-actions.win-actions{gap:2px;padding:3px}.scoreless-card-actions.win-actions .scoreless-result-choice{padding-inline:4px;font-size:12px}.rank-drag-handle{width:48px;min-width:48px;height:48px}}
+
+/* Scoreless record picker — matches the compact, single-column design handoff. */
+#savePlayDialog.scoreless-record-dialog{width:min(calc(100vw - 24px),460px);max-width:460px;max-height:calc(100svh - 24px);padding:22px;border-color:#32445f;border-radius:18px;background:#101827}
+#savePlayDialog.scoreless-record-dialog:focus{outline:none}
+#savePlayDialog.scoreless-record-dialog .record-head{align-items:center;margin-bottom:22px}
+#savePlayDialog.scoreless-record-dialog .record-head h2{font-size:25px;line-height:1.25;font-weight:700;letter-spacing:-.5px}
+#savePlayDialog.scoreless-record-dialog .score-close{width:46px;height:46px;min-width:46px;padding:0;font-size:31px;line-height:1;color:#aebdd1;background:transparent}
+#savePlayDialog.scoreless-record-dialog .save-layout{display:grid;grid-template-columns:1fr;gap:0}
+#savePlayDialog.scoreless-record-dialog .save-game>label,#savePlayDialog.scoreless-record-dialog #recordResultHeading,#savePlayDialog.scoreless-record-dialog #gameSearchStatus{display:none}
+#savePlayDialog.scoreless-record-dialog .save-game>.record-row{align-items:stretch;gap:8px}
+#savePlayDialog.scoreless-record-dialog #playGame{height:56px;padding:12px 14px;border-color:#34455e;border-radius:13px;background:#09111f;font-size:16px}
+#savePlayDialog.scoreless-record-dialog #searchBgg{height:56px;min-width:72px;padding-inline:16px;border-radius:13px;background:#213550;font-size:15px;font-weight:600}
+#savePlayDialog.scoreless-record-dialog .recent-games-disclosure{margin:14px 0 0;padding:0}
+#savePlayDialog.scoreless-record-dialog .recent-games-disclosure summary{min-height:38px;padding:6px 2px;color:#b8c6d9;font-size:15px}
+#savePlayDialog.scoreless-record-dialog .recent-games{gap:7px;margin:7px 0 16px}
+#savePlayDialog.scoreless-record-dialog .recent-game{min-height:42px!important;padding:8px 12px;border-radius:11px;background:#203450;color:#eef4ff;font-size:13px}
+#savePlayDialog.scoreless-record-dialog .record-results{margin-top:8px}
+#savePlayDialog.scoreless-record-dialog .selected-game-section{margin:4px 0 0;padding:18px 0;border-top:1px solid #2c3e58;border-bottom:1px solid #2c3e58}
+#savePlayDialog.scoreless-record-dialog .selected-game-section[hidden]{display:none}
+#savePlayDialog.scoreless-record-dialog .selected-game-section>p{margin:0 0 12px;color:#aebdd1;font-size:13px}
+#savePlayDialog.scoreless-record-dialog .selected-game{gap:12px;margin:0;color:#9bc7ff}
+#savePlayDialog.scoreless-record-dialog .selected-game-art{width:42px;height:52px;flex-basis:42px;border-radius:5px;overflow:hidden;background:#2e5c90}
+#savePlayDialog.scoreless-record-dialog .selected-game-art img{object-fit:cover}
+#savePlayDialog.scoreless-record-dialog .selected-game-fallback{display:grid;place-items:center;color:#80d0a3;font-size:25px;line-height:1;background:#315e90}
+#savePlayDialog.scoreless-record-dialog .selected-game-copy{display:grid;gap:4px;min-width:0}
+#savePlayDialog.scoreless-record-dialog .selected-game-copy strong{font-size:20px;line-height:1.25;font-weight:500;overflow-wrap:anywhere}
+#savePlayDialog.scoreless-record-dialog .selected-game-copy small{font-size:13px;color:#8ebaff}
+#savePlayDialog.scoreless-record-dialog .save-result{padding:18px 0 0;border:0}
+#savePlayDialog.scoreless-record-dialog .scoreless-meta-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:10px}
+#savePlayDialog.scoreless-record-dialog .scoreless-meta-row>div{min-width:0}
+#savePlayDialog.scoreless-record-dialog .scoreless-meta-row label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#savePlayDialog.scoreless-record-dialog #playDate,#savePlayDialog.scoreless-record-dialog #playLocation{height:56px;padding:12px 14px;border-color:#34455e;border-radius:13px;background:#09111f;font-size:16px}
+#savePlayDialog.scoreless-record-dialog #playDate{color-scheme:dark}
+#savePlayDialog.scoreless-record-dialog #playLocation{padding:12px 34px 12px 12px;font-size:13px}
+#savePlayDialog.scoreless-record-dialog .record-location-input{position:relative}
+#savePlayDialog.scoreless-record-dialog .record-location-input>span{position:absolute;top:50%;right:15px;width:13px;height:13px;border-right:3px solid #e8eef7;border-bottom:3px solid #e8eef7;transform:translateY(-65%) rotate(45deg);pointer-events:none}
+#savePlayDialog.scoreless-record-dialog #scorelessHint{margin:15px 0 0;font-size:13px;line-height:1.6;color:#aab9cc}
+#savePlayDialog.scoreless-record-dialog #playError{margin:10px 0 0}
+#savePlayDialog.scoreless-record-dialog .record-actions{position:static;display:grid;grid-template-columns:1fr 1.15fr;gap:10px;margin-top:18px;padding:0;background:transparent}
+#savePlayDialog.scoreless-record-dialog .record-actions button{min-height:56px;border-radius:13px;font-size:16px;font-weight:600}
+#savePlayDialog.scoreless-record-dialog .record-actions .secondary{background:#21344f}
+#savePlayDialog.scoreless-record-dialog .record-actions .primary{background:#2f80ed}
+@media(max-width:390px){#savePlayDialog.scoreless-record-dialog{width:calc(100vw - 16px);padding:18px 16px}#savePlayDialog.scoreless-record-dialog .record-head h2{font-size:22px}#savePlayDialog.scoreless-record-dialog #playGame,#savePlayDialog.scoreless-record-dialog #searchBgg,#savePlayDialog.scoreless-record-dialog #playDate,#savePlayDialog.scoreless-record-dialog #playLocation{height:52px}#savePlayDialog.scoreless-record-dialog .record-actions button{min-height:52px}#savePlayDialog.scoreless-record-dialog .scoreless-meta-row{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px}}
