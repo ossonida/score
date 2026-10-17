@@ -11,6 +11,7 @@ function update(){$('transferStatus').setAttribute('aria-busy',String(busy));con
 function route(){const view=location.hash==='#games'?'games':location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['games','gamesScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
+ delete document.documentElement.dataset.initialView;
  document.documentElement.classList.toggle('settings-view',view==='settings');document.documentElement.classList.toggle('stats-view',view==='stats');
  for(const [name,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).setAttribute('aria-current',view===name?'page':'false');
  if(view==='settings')update();if(view==='stats')api.renderHistory();
