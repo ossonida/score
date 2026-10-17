@@ -424,6 +424,7 @@ getPlayers:()=>players.map(p=>({...p})),
 getResultEntry:()=>resultEntry?{mode:resultEntry.mode,players:players.map(p=>({...p}))}:null,
 createAutoPlayers:(count,names=[])=>{if(!Number.isInteger(count)||count<1||count>100)throw Error('플레이어는 1~100명으로 지정해주세요.');return generatedPlayers(count,null,names).map(p=>({...p}));},
 startResultEntry:(next,mode)=>{if(resultEntry||!Array.isArray(next)||!next.length||next.length>100||!['win','rank'].includes(mode))throw Error('결과 기록 화면을 시작할 수 없습니다.');const previousPlayers=players.map(p=>({...p}));resultEntry={mode,previousPlayers};players=next.map(({winner,draw,rank,...p},index)=>mode==='rank'?({...p,score:null,rank:index+1,winner:index===0}):({...p,score:null}));editing=null;scoring=null;swipedId=null;render();},
+restoreResultEntry:(next,mode)=>{if(resultEntry||!Array.isArray(next)||!next.length||next.length>100||!['win','rank'].includes(mode))throw Error('임시 결과 기록을 복원할 수 없습니다.');const previousPlayers=players.map(p=>({...p}));resultEntry={mode,previousPlayers};players=next.map(p=>({...p,score:null}));editing=null;scoring=null;swipedId=null;render();},
 endResultEntry:()=>{if(!resultEntry)return;players=resultEntry.previousPlayers.map(p=>({...p}));resultEntry=null;editing=null;scoring=null;swipedId=null;render();},
 clearPlayers:()=>{localStorage.setItem(KEY,'[]');players=[];swipedId=null;render();},
 startPlayers:count=>{if(!Number.isInteger(count)||count<1||count>100)throw Error('플레이어는 1~100명으로 지정해주세요.');const before=players;try{players=generatedPlayers(count);localStorage.setItem(KEY,JSON.stringify(players));}catch(error){players=before;throw error;}swipedId=null;render();},
@@ -437,7 +438,7 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=90"></script>
+<script type="module" src="./records.js?v=92"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
 <script type="module" src="./bgg-link.js?v=86"></script>
 <script type="module" src="./settings.js?v=71"></script>
