@@ -221,7 +221,7 @@ let savedNoticeTimer;
 function savedNotice(text='점수가 기록되었습니다.'){notify(text);$('recordSavedNotice').textContent=text;$('recordSavedNotice').hidden=false;clearTimeout(savedNoticeTimer);savedNoticeTimer=setTimeout(()=>{$('recordSavedNotice').hidden=true;},3500);}
 $('savePlay').onclick=()=>{if(scorelessBoardActive){$('saveScorelessPlay').click();return;}message('endGameError','');$('endGameName').textContent=activeSession?.game.name||'현재 점수판';show('endGameDialog');};
 const defaultBoardAdd=$('add').onclick,defaultBoardResetPlayers=$('resetPlayers').onclick;
-$('add').onclick=()=>{if(scorelessBoardActive){$('scorelessResultBack').onclick();$('scorelessModeBack').onclick();return;}defaultBoardAdd?.();};
+$('add').onclick=()=>defaultBoardAdd?.();
 $('resetPlayers').onclick=()=>{if(scorelessBoardActive){$('scorelessBoardCancel').click();return;}defaultBoardResetPlayers?.();};
 $('scorelessQuickRecord').onclick=()=>openSave({withoutScores:true});
 $('endGameSave').onclick=async()=>{const button=$('endGameSave');button.disabled=true;button.setAttribute('aria-busy','true');try{if(!activeSession){close('endGameDialog');openSave({finish:true});return;}openSave({finish:true,showDialog:false});const saved=await $('savePlayForm').onsubmit({preventDefault(){}});if(saved)close('endGameDialog');else message('endGameError',$('playError').textContent);}catch(error){message('endGameError',error);}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
