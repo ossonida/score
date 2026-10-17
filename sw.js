@@ -7,6 +7,7 @@ for(const path of ['score-games.js','score-games.js?v=76','game-catalog.js?v=76'
 for(const path of ['record-edit.js?v=77','bgg-link.js?v=77','records.js?v=77','games-screen.js?v=77','records.css?v=77'])ASSETS.push(new URL(path,BASE).href);
 for(const path of ['ui-system.css?v=71','bgg-link.js?v=78','records.js?v=78','games-screen.js?v=78','records.css?v=78'])ASSETS.push(new URL(path,BASE).href);
 for(const path of ['bgg-link.js?v=86','records.js?v=86','games-screen.js?v=86','records.css?v=86'])ASSETS.push(new URL(path,BASE).href);
+for(const path of ['records.js?v=87','records.css?v=87'])ASSETS.push(new URL(path,BASE).href);
 for(const path of ['ui-system.css?v=87'])ASSETS.push(new URL(path,BASE).href);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS.map(url=>new Request(url,{cache:'reload'})))).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('score-counter-shell-')&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim()));});
