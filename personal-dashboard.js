@@ -1,5 +1,5 @@
 import {metadata,domainLabels} from './bgg-metadata.js?v=64';
-import {renderGameArtwork} from './game-artwork.js?v=64';
+import {renderGameArtwork} from './game-artwork.js?v=95';
 import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=64';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});

@@ -1,16 +1,16 @@
-import {readGameLibrary} from './game-library.js?v=64';
+import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=77';
 import {enrichGames} from './bgg-details-client.js?v=64';
-import {renderOverview} from './overview-dashboard.js?v=76';
+import {renderOverview} from './overview-dashboard.js?v=95';
 import {latestPlayDate} from './stats-overview.js?v=64';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=64';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=64';
 import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=64';
-import {renderStatsDashboard} from './stats-dashboard.js?v=64';
+import {renderStatsDashboard} from './stats-dashboard.js?v=95';
 import {mergeImported} from './data-transfer.js?v=64';
-import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=76';
-import {isScoreGame,scoreGameType} from './score-games.js?v=76';
+import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=95';
+import {isScoreGame,scoreGameType} from './score-games.js?v=95';
 import {metadata,domainLabels} from './bgg-metadata.js?v=88';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=88';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=64';
@@ -60,7 +60,7 @@ function updateButtons(){
  $('scorelessQuickRecord').hidden=!!resultEntry||!onBoard;
  const caption=$('boardCaption');caption.classList.toggle('scoreless-session-caption',!!resultEntry);caption.replaceChildren();if(resultEntry&&pendingScoreless){const title=node('span',pendingScoreless.game.name);title.className='scoreless-session-title';const date=node('time',pendingScoreless.date);date.dateTime=pendingScoreless.date;caption.append(title,date);}else caption.textContent='점수는 이 기기에 자동 저장됩니다.';$('recordingStatus').hidden=!!resultEntry||!onBoard||!activeSession;$('recordingStatus').textContent=!resultEntry&&onBoard&&activeSession?activeSession.game.name+' 점수 기록을 시작했습니다.':'';$('recordingStatus').title=$('recordingStatus').textContent;
  const saveLabel=resultEntry?'점수 없는 게임 기록 저장':'게임 기록 저장';$('savePlay').textContent='SAVE';$('savePlay').setAttribute('aria-label',saveLabel);$('savePlay').title=saveLabel;
- $('savePlay').hidden=false;$('recordLoginHint').hidden=!!resultEntry||!authReady||!!currentUser||!api.getPlayers().length;$('savePlay').disabled=!onBoard||!!resultEntry;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
+ $('savePlay').hidden=!onBoard;$('recordLoginHint').hidden=!!resultEntry||!authReady||!!currentUser||!onBoard;$('savePlay').disabled=!onBoard||!!resultEntry;$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 다른 기기에 기록이 표시되지 않을 수 있습니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 클라우드 저장 대기 중입니다.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'클라우드 연결을 확인하고 있습니다.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}

@@ -1,9 +1,9 @@
 import {gameKey,winnerIds} from './records-core.js?v=64';
-import {gameImageUrl} from './game-artwork.js?v=64';
+import {gameImageUrl} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
 import {nameKey} from './personal-stats.js?v=64';
 import {bggSearchUrl} from './firebase-config.js';
-import {starterGames} from './game-catalog.js?v=64';
+import {starterGames} from './game-catalog.js?v=95';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
