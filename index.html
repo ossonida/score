@@ -305,10 +305,10 @@ dragging=false;
 if(!horizontal)return;
 suppressUntil=Date.now()+400;
 const distance=e.clientX-startX;
-const open=cancelled?startOffset<0:distance>18?false:distance<-18?true:startOffset<0;
-if(open){document.querySelectorAll('.swipe-open').forEach(other=>{if(other!==card){other.classList.remove('swipe-open');const button=other.querySelector('.swipe-delete');button.tabIndex=-1;button.setAttribute('aria-hidden','true');}});swipedId=id;}
-else if(swipedId===id)swipedId=null;
-settle(open);
+const shouldDelete=!cancelled&&distance<-48;
+if(swipedId===id)swipedId=null;
+settle(false);
+if(shouldDelete)deletePlayer(id,{confirm:false});
 }
 card.addEventListener('pointerup',e=>finish(e,false));
 card.addEventListener('pointercancel',e=>finish(e,true));
@@ -340,7 +340,7 @@ function openPlayer(id=null){editing=id;const p=players.find(p=>p.id===id);$('pl
 $('playerForm').onsubmit=e=>{e.preventDefault();const name=$('nickname').value.trim(),color=$('color').value.toLowerCase();if(!name){$('playerError').textContent='닉네임을 입력해주세요.';return;}if(used(color)){$('playerError').textContent='이미 사용 중인 컬러예요. 다른 컬러를 선택해주세요.';return;}const p=players.find(p=>p.id===editing);if(p){if(p.name!==name){p.autoName='';p.anonymous=false;}p.name=name;p.color=color;}else{if(players.length>=100){$('playerError').textContent='플레이어는 100명까지 추가할 수 있습니다.';return;}const added={id:crypto.randomUUID(),name,color,score:resultEntry?null:0,autoName:name===suggestedName?suggestedName:''};if(resultEntry?.mode==='rank'){added.rank=players.length+1;added.winner=false;}players.push(added);}save();$('playerDialog').close();};
 $('random').onclick=()=>{$('color').value=randomColor();palette();};$('color').oninput=palette;$('add').onclick=()=>openPlayer();
 function confirmation(title,message,callback){$('confirmTitle').textContent=title;$('confirmText').textContent=message;pending=callback;$('confirmDialog').showModal();}
-function deletePlayer(id){const p=players.find(p=>p.id===id);if(!p)return;if(resultEntry&&players.length<=1){const target=$('playerDialog').open?$('playerError'):$('scorelessBoardError');target.textContent='게임 기록에는 플레이어가 한 명 이상 필요합니다.';return;}confirmation('플레이어 삭제',`${p.name} 플레이어와 ${resultEntry?'결과':'점수'}를 삭제할까요?`,()=>{players=players.filter(x=>x.id!==id);if(resultEntry)normalizeResultRanks();if(swipedId===id)swipedId=null;save();if($('playerDialog').open)$('playerDialog').close();});}
+function deletePlayer(id,{confirm=true}={}){const p=players.find(p=>p.id===id);if(!p)return;if(resultEntry&&players.length<=1){const target=$('playerDialog').open?$('playerError'):$('scorelessBoardError');target.textContent='게임 기록에는 플레이어가 한 명 이상 필요합니다.';return;}const removePlayer=()=>{players=players.filter(x=>x.id!==id);if(resultEntry)normalizeResultRanks();if(swipedId===id)swipedId=null;save();if($('playerDialog').open)$('playerDialog').close();};if(confirm)confirmation('플레이어 삭제',`${p.name} 플레이어와 ${resultEntry?'결과':'점수'}를 삭제할까요?`,removePlayer);else removePlayer();}
 $('remove').onclick=()=>deletePlayer(editing);
 $('reset').onclick=()=>confirmation('점수 초기화','모든 플레이어의 점수를 0으로 초기화할까요?',()=>{players.forEach(p=>p.score=0);save();});
 $('resetPlayers').onclick=()=>confirmation('플레이어 리셋','추가된 플레이어와 점수를 모두 삭제할까요?',()=>{players=[];editing=null;scoring=null;swipedId=null;save();});
