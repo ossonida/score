@@ -263,7 +263,7 @@ function setupRankDrag(card,handle,id,container){
 }
 function renderResultBoard(container){
  const completed=resultEntry.mode==='win'?players.filter(p=>typeof p.winner==='boolean'||p.draw===true).length:players.filter(p=>Number.isSafeInteger(p.rank)&&p.rank>0).length,remaining=players.length-completed,modeLabel=resultEntry.mode==='win'?'승패 기록':'순위 기록';
- $('stats').textContent=`${modeLabel} · ${completed}/${players.length}`;$('scorelessBoardMode').textContent=`${modeLabel} · ${completed}/${players.length}`;$('boardGuide').textContent=resultEntry.mode==='win'?'이름을 누르면 수정·삭제 · 승리·무승부·패배 선택':'이름을 누르면 수정·삭제 · 오른쪽 손잡이로 순서 변경';$('saveScorelessPlay').disabled=remaining>0;$('savePlay').disabled=remaining>0;$('saveScorelessPlay').textContent=remaining?`${remaining}명 결과 남음`:'기록 저장';
+  $('stats').textContent=`${modeLabel} · ${completed}/${players.length}`;$('scorelessBoardMode').textContent=`${modeLabel} · ${completed}/${players.length}`;$('boardGuide').textContent=resultEntry.mode==='win'?'이름을 누르면 수정·삭제 · 승리·무승부·패배 선택':'이름을 누르면 수정·삭제 · 오른쪽 손잡이로 순서 변경';$('saveScorelessPlay').disabled=remaining>0;$('savePlay').disabled=remaining>0;$('saveScorelessPlay').textContent=remaining?`${remaining}명 결과 남음`:'다음';
  for(const p of players){
   const card=document.createElement('article');card.className='card scoreless-result-card';card.dataset.playerId=p.id;card.style.setProperty('--color',p.color);const fg=ink(p.color);card.style.setProperty('--ink',fg);card.style.setProperty('--shade',fg==='#ffffff'?'#ffffff30':'#00000022');
   const name=document.createElement('button');name.className='name';name.setAttribute('aria-label',`${p.name} 수정 또는 삭제`);if(resultEntry.mode==='rank'){const rank=document.createElement('span');rank.className='rank scoreless-live-rank';rank.textContent=`${p.rank}위`;name.append(rank);}const strong=document.createElement('strong');strong.textContent=p.name;name.append(strong);name.onclick=()=>openPlayer(p.id);
@@ -447,7 +447,7 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=95"></script>
+<script type="module" src="./records.js?v=98"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
 <script type="module" src="./bgg-link.js?v=95"></script>
 <script type="module" src="./settings.js?v=95"></script>
