@@ -1,4 +1,4 @@
-import './records.js?v=95';
+import './records.js?v=112';
 import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=95';
 import {gameKey} from './records-core.js?v=64';
 import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=95';
@@ -36,4 +36,4 @@ $('librarySearchForm').onsubmit=e=>{e.preventDefault();void search();};
 $('librarySearch').addEventListener('input',()=>{cancel();if(!opened)return;showResults(searchLocalGames($('librarySearch').value,searchRecords(opened)),opened);timer=setTimeout(search,600);});
 window.addEventListener('score-records:changed',()=>{if(opened&&!current(opened))close();render();});
 window.addEventListener('hashchange',()=>{if(location.hash!=='#games'&&opened)close();if(location.hash==='#games')render();});
-window.addEventListener('storage',e=>{if(e.key?.startsWith('score.games.v1.'))render();});render();
+window.addEventListener('storage',e=>{if(e.key?.startsWith('score.games.v1.'))render();});render();window.ScoreStartup?.ready('games');

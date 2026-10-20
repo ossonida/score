@@ -6,7 +6,20 @@
 <meta name="theme-color" content="#080a10">
 <title>Score Counter · 점수 계산기</title>
 <script>
-(()=>{const view=location.hash.slice(1);if(['settings','games','stats'].includes(view))document.documentElement.dataset.initialView=view;})();
+(()=>{
+ const root=document.documentElement,ready=new Set();
+ root.dataset.bootPending='true';
+ const initialRoute=()=>{const view=location.hash.slice(1);if(['settings','games','stats'].includes(view))root.dataset.initialView=view;else delete root.dataset.initialView;};
+ initialRoute();
+ const timer=setTimeout(()=>{if(root.dataset.bootPending)root.dataset.bootSlow='true';},12000);
+ const reveal=()=>{
+  if(!ready.has('records')||!ready.has('route')||(location.hash==='#games'&&!ready.has('games')))return;
+  clearTimeout(timer);delete root.dataset.bootPending;delete root.dataset.bootSlow;
+  window.removeEventListener('hashchange',initialRoute);
+ };
+ window.ScoreStartup={ready(part){ready.add(part);reveal();}};
+ window.addEventListener('hashchange',initialRoute);
+})();
 </script>
 <style>
 :root{color-scheme:dark;font-family:Arial,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#080a10;color:#f6f7fb}*{box-sizing:border-box}body{margin:0}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #80caff;outline-offset:4px}button{border:0}main{max-width:960px;margin:auto;padding:32px 20px 48px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:30px}.brand{font-size:25px;font-weight:800;letter-spacing:-1px}.brand span{color:#398fff}.caption{color:#929bad;font-size:13px;margin-top:7px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}header{flex-wrap:wrap}.rank{display:block;font-size:12px;font-weight:700;margin-bottom:8px;opacity:.7}@media(max-width:600px){.toolbar{width:100%;display:grid;grid-template-columns:1fr 1fr}.tool{min-height:44px}}.tool{background:#141d2c;border:1px solid #253553;border-radius:14px;color:#72adff;padding:12px 16px}.primary{background:#237bff;color:white;border:0}.stats{font-size:12px;letter-spacing:2px;color:#7a8497;margin-bottom:14px}.cards{display:grid;gap:14px}.card{border-radius:26px;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) 76px minmax(100px,160px) 76px;align-items:center;gap:12px;min-height:140px;color:var(--ink);background:var(--color)}.name{background:none;color:inherit;padding:8px 0;text-align:left;min-width:0}.name strong{display:block;font-size:27px;overflow-wrap:anywhere}.name small{display:block;opacity:.6;font-size:11px;margin-top:8px}.step{border-radius:50%;width:76px;height:76px;background:var(--shade);color:inherit;font-size:40px;font-weight:300;line-height:1;touch-action:manipulation}.score{background:none;color:inherit;font-size:48px;font-weight:800;padding:10px 0;overflow-wrap:anywhere;min-width:0}.empty{border:1px dashed #29344b;border-radius:26px;text-align:center;padding:90px 24px;background:radial-gradient(ellipse at top,#15233d,transparent 70%)}.empty-icon{color:#70aaff;font-size:44px;margin-bottom:20px}.empty h1{font-size:26px;margin:0 0 12px}.empty p{color:#939eb1;line-height:1.8;margin-bottom:26px}.empty button{padding:15px 24px;border-radius:14px}footer{text-align:center;color:#717c90;font-size:12px;margin-top:26px}dialog{border:1px solid #303c52;background:#111722;color:white;border-radius:24px;padding:28px;width:calc(100% - 32px);max-width:440px}dialog::backdrop{background:#000a;backdrop-filter:blur(6px)}h2{font-size:24px;margin:0 0 24px}.field{display:block;color:#aab6ca;font-size:13px;margin:20px 0 9px}input[type=text],input[type=number]{width:100%;padding:15px;background:#080d16;border:1px solid #344158;border-radius:12px;color:white;font-size:20px}input[type=color]{width:54px;height:44px;border:0;background:none;cursor:pointer}.color-row{display:flex;align-items:center;gap:12px}.palette{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.swatch{width:32px;height:32px;border-radius:50%;background:var(--swatch);border:2px solid transparent}.swatch.selected{outline:2px solid white;outline-offset:3px}.swatch:disabled{opacity:.18;cursor:not-allowed}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:26px}.actions button,.random{padding:12px 16px;border-radius:12px;background:#243047;color:white}.actions .primary{background:#237bff}.actions .danger{color:#ff8b99;background:#341d29;margin-right:auto}.error{color:#ff9eaa;min-height:18px;font-size:13px;margin-top:12px}.signs{display:grid;grid-template-columns:1fr 1fr;gap:10px}.signs button{padding:14px;background:#202b3e;color:#aab6ca;border-radius:12px;border:1px solid transparent}.signs button.active{background:#163a6a;border-color:#4b9cff;color:#fff}.hint{font-size:13px;color:#98a6bd;line-height:1.7}.preview{font-size:19px;color:#c9deff;margin-top:18px} @media(max-width:600px){main{padding:24px 12px}header{margin-bottom:24px}.brand{font-size:22px}.tool{padding:11px 12px;font-size:13px}.card{grid-template-columns:minmax(0,1fr) 52px minmax(64px,100px) 52px;padding:22px 18px;gap:6px;min-height:124px;border-radius:23px}.step{width:52px;height:52px;font-size:32px}.name strong{font-size:22px}.score{font-size:38px}.caption{font-size:11px}.empty{padding:65px 15px}}@media(prefers-reduced-motion:no-preference){.card{animation:appear .2s ease-out}.step:active{transform:scale(.92)}@keyframes appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -189,12 +202,19 @@ dialog .swatch{width:28px;height:28px}
 <link rel="stylesheet" href="./ui-system.css?v=101">
 <style>
 html[data-initial-view] #homeScreen{display:none!important}
+html[data-boot-pending] body>main,html[data-boot-pending] dialog{visibility:hidden;pointer-events:none}
+#startupStatus{display:none}
+html[data-boot-pending] #startupStatus{display:grid;position:fixed;inset:0 0 var(--bottom-nav-height,64px);place-content:center;gap:12px;text-align:center;color:#a9bdd7;font-size:14px;padding:24px}
+#startupRetry,#startupSlow{display:none}
+html[data-boot-slow] #startupRetry,html[data-boot-slow] #startupSlow{display:block}
+#startupRetry{padding:12px 20px;border-radius:12px;background:#203553;color:#e8f1ff}
 html[data-initial-view=settings] #settingsScreen[hidden],html[data-initial-view=games] #gamesScreen[hidden],html[data-initial-view=stats] #statsScreen[hidden]{display:block!important}
 html[data-initial-view] #navHome{color:#9fb0c5!important}
 html[data-initial-view=settings] #navSettings,html[data-initial-view=games] #navGames,html[data-initial-view=stats] #navStats{color:#2d7ff9!important}
 </style>
 </head>
 <body>
+<div id="startupStatus" role="status" aria-live="polite"><span>화면을 불러오고 있습니다…</span><span id="startupSlow">연결이 지연되고 있습니다. 다시 불러와도 저장된 기록은 유지됩니다.</span><button id="startupRetry" type="button" onclick="location.reload()">다시 불러오기</button></div>
 <main id="homeScreen">
  <header><div><div class="brand">Score Counter</div><div class="caption" id="boardCaption" role="status">점수는 이 기기에 자동 저장됩니다.</div></div><div class="toolbar"><button id="savePlay" class="tool game-end-tool" type="button" aria-label="기록 저장" title="기록 저장">SAVE</button><button class="tool" id="reset" aria-label="점수 초기화" title="점수 초기화"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 2 8"/><path d="M3 4v6h6"/><path d="M12 8v4l3 2"/></svg></button><button class="tool" id="resetPlayers" aria-label="플레이어 전체 리셋" title="플레이어 전체 리셋"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4"/><path d="m16 15 5 6m0-6-5 6"/></svg></button><button class="tool" id="bulk" aria-label="여러 명 추가" title="여러 명 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><path d="M2 21v-2a6 6 0 0 1 12 0v2M15 4a3 3 0 0 1 0 6m3 4v6m-3-3h6"/></svg></button><button class="tool primary" id="add" aria-label="플레이어 추가" title="플레이어 추가"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><path d="M3 21v-2a6 6 0 0 1 10-4m5-3v8m-4-4h8"/></svg></button></div></header>
  <div class="board-status"><div class="stats" id="stats"></div><p id="recordingStatus" class="recording-status" role="status" hidden></p></div><section class="cards" id="cards" aria-label="플레이어 점수"></section>
@@ -265,7 +285,12 @@ function resultTeamDefinitions(){const teams=new Map();for(const player of playe
 function syncResultRosterPlayer(player){if(!resultEntry)return;const index=resultEntry.previousPlayers.findIndex(person=>person.id===player.id),previous=index>=0?resultEntry.previousPlayers[index]:null,next={...player,score:previous?.score??0};delete next.winner;delete next.draw;delete next.rank;delete next.teamId;delete next.teamName;if(index>=0)resultEntry.previousPlayers[index]=next;else resultEntry.previousPlayers.push(next);}
 function moveTeamPlayer(playerId,targetTeamId){const player=players.find(person=>person.id===playerId),sourceTeamId=player?.teamId,target=resultTeamDefinitions().find(team=>team.id===targetTeamId);if(!player||!target||sourceTeamId===targetTeamId)return false;if(players.filter(person=>person.teamId===sourceTeamId).length<=1){$('scorelessBoardError').textContent='각 팀에는 플레이어가 한 명 이상 있어야 합니다.';return false;}for(const member of players.filter(person=>person.teamId===sourceTeamId||person.teamId===targetTeamId)){delete member.winner;delete member.draw;}player.teamId=target.id;player.teamName=target.name;$('scorelessBoardError').textContent='';save();return true;}
 function setupTeamMemberDrag(chip,playerId){
- let timer=null,pointerId=null,dragging=false,startX=0,startY=0,suppressUntil=0,targetCard=null,preview=null;
+ let timer=null,pointerId=null,dragging=false,startX=0,startY=0,suppressUntil=0,targetCard=null,preview=null,hapticPending=false;
+ const vibrateSelection=()=>{
+  if(typeof navigator.vibrate!=='function')return false;
+  if(navigator.userActivation?.hasBeenActive===false)return true;
+  try{return navigator.vibrate(60)===false;}catch{return false;}
+ };
  const cards=()=>[...$('cards').querySelectorAll('.team-result-card')];
  const clearTarget=()=>{for(const card of cards())card.classList.remove('team-drop-target');targetCard=null;};
  const reset=()=>{clearTimeout(timer);timer=null;preview?.remove();preview=null;chip.classList.remove('team-player-dragging');chip.setAttribute('aria-grabbed','false');clearTarget();const captured=pointerId;pointerId=null;dragging=false;if(captured!==null&&chip.hasPointerCapture?.(captured))chip.releasePointerCapture(captured);};
@@ -276,13 +301,13 @@ function setupTeamMemberDrag(chip,playerId){
   Object.assign(preview.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',background:surface.backgroundColor,color:style.color});
   document.body.append(preview);chip.classList.add('team-player-dragging');chip.setAttribute('aria-grabbed','true');chip.setPointerCapture?.(pointerId);
   // Haptics are optional: blocked or unsupported vibration must not interrupt dragging.
-  try{navigator.vibrate?.(45);}catch{}
+  hapticPending=vibrateSelection();
  };
  const locate=(x,y)=>{const sourceTeamId=players.find(player=>player.id===playerId)?.teamId,card=document.elementFromPoint(x,y)?.closest?.('.team-result-card');clearTarget();if(card&&card.dataset.teamId!==sourceTeamId){targetCard=card;card.classList.add('team-drop-target');}};
  chip.title='길게 눌러 팀 이동';chip.setAttribute('aria-grabbed','false');
  chip.addEventListener('pointerdown',event=>{if(event.isPrimary===false||(event.pointerType==='mouse'&&event.button!==0))return;suppressUntil=0;pointerId=event.pointerId;startX=event.clientX;startY=event.clientY;clearTimeout(timer);timer=setTimeout(activate,350);});
  chip.addEventListener('pointermove',event=>{if(event.pointerId!==pointerId)return;if(!dragging){if(Math.hypot(event.clientX-startX,event.clientY-startY)>8){clearTimeout(timer);timer=null;suppressUntil=Date.now()+500;}return;}event.preventDefault();preview.style.setProperty('--team-drag-x',`${event.clientX-startX}px`);preview.style.setProperty('--team-drag-y',`${event.clientY-startY}px`);locate(event.clientX,event.clientY);});
- const finish=event=>{if(event.pointerId!==pointerId)return;const wasDragging=dragging;if(wasDragging){event.preventDefault();locate(event.clientX,event.clientY);suppressUntil=Date.now()+500;}const targetId=targetCard?.dataset.teamId;reset();if(wasDragging&&targetId)moveTeamPlayer(playerId,targetId);};
+ const finish=event=>{if(event.pointerId!==pointerId)return;const wasDragging=dragging;if(wasDragging){if(hapticPending)vibrateSelection();hapticPending=false;event.preventDefault();locate(event.clientX,event.clientY);suppressUntil=Date.now()+500;}const targetId=targetCard?.dataset.teamId;reset();if(wasDragging&&targetId)moveTeamPlayer(playerId,targetId);};
  chip.addEventListener('pointerup',finish);
  chip.addEventListener('pointercancel',event=>{if(event.pointerId===pointerId){suppressUntil=Date.now()+500;reset();}});
  // Capturing the chip transfers the initial touch capture from its child button.
@@ -517,10 +542,10 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=64"></script>
-<script type="module" src="./records.js?v=105"></script>
+<script type="module" src="./records.js?v=112"></script>
 <script type="module" src="./bgg-account.js?v=69"></script>
-<script type="module" src="./bgg-link.js?v=95"></script>
-<script type="module" src="./settings.js?v=95"></script>
-<script type="module" src="./games-screen.js?v=95"></script>
+<script type="module" src="./bgg-link.js?v=112"></script>
+<script type="module" src="./settings.js?v=112"></script>
+<script type="module" src="./games-screen.js?v=112"></script>
 </body>
 </html>

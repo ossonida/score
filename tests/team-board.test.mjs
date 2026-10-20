@@ -39,7 +39,7 @@ function fixture(mode='team'){
  ];
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},body=new Element(),timers=new Map();
  let timerId=0,hit=null;
- const context={players,resultEntry:{mode,previousPlayers:players.map(p=>({...p,score:12}))},swipedId:null,vibrations:[],navigator:{vibrate(duration){context.vibrations.push(duration);}},
+ const context={players,resultEntry:{mode,previousPlayers:players.map(p=>({...p,score:12}))},swipedId:null,vibrations:[],navigator:{vibrate(duration){context.vibrations.push(duration);return true;}},
   $:get,document:{createElement:()=>new Element(),body,elementFromPoint:()=>hit},
   getComputedStyle:()=>({color:'#10131a',backgroundColor:'#ffcc00'}),
   setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),Date,
@@ -96,7 +96,7 @@ test('long press shows a detached preview, highlights target, moves once and sup
  const a=fixture(),team=a.teams()[0],chip=chips(team)[0],target=a.teams()[1];
  // The same pointer bubbles to the card, but a chip must never start its deletion swipe.
  chip.emit('pointerdown');team.emit('pointerdown',{target:chip});a.hold();
- assert.equal(chip.attributes['aria-grabbed'],'true');assert.equal(a.body.children.length,1);assert.deepEqual(a.context.vibrations,[45]);
+ assert.equal(chip.attributes['aria-grabbed'],'true');assert.equal(a.body.children.length,1);assert.deepEqual(a.context.vibrations,[60]);
  chip.emit('lostpointercapture',{target:chip.children[0]});
  assert.equal(chip.attributes['aria-grabbed'],'true');
  a.hit(target);chip.emit('pointermove',{clientX:110,clientY:260});team.emit('pointermove',{clientX:110,clientY:260,target:chip});
@@ -110,6 +110,23 @@ test('long press shows a detached preview, highlights target, moves once and sup
  assert.equal(chips(a.teams().find(t=>t.dataset.teamId==='b')).length,2);
 });
 
+test('first mobile touch defers haptics until release activates the page, without requiring another tap',()=>{
+ const a=fixture(),chip=chips(a.teams()[0])[0];
+ a.context.navigator.userActivation={hasBeenActive:false};
+ chip.emit('pointerdown');a.hold();
+ assert.equal(chip.attributes['aria-grabbed'],'true');assert.deepEqual(a.context.vibrations,[]);
+ a.hit(a.teams()[1]);chip.emit('pointermove',{clientY:260});
+ a.context.navigator.userActivation.hasBeenActive=true;chip.emit('pointerup',{clientY:260});
+ assert.deepEqual(a.context.vibrations,[60]);assert.equal(a.context.players[0].teamId,'b');
+});
+test('rejected haptic call retries once on release; accepted haptics do not repeat',()=>{
+ for(const rejected of [true,false]){
+  const a=fixture(),chip=chips(a.teams()[0])[0];let attempts=0;
+  a.context.navigator.vibrate=()=>{attempts++;return rejected?attempts>1:true;};
+  chip.emit('pointerdown');a.hold();chip.emit('pointerup');
+  assert.equal(attempts,rejected?2:1);
+ }
+});
 test('unsupported or blocked haptics never interrupt visual selection or dropping',()=>{
  for(const vibrate of [undefined,()=>false,()=>{throw new Error('blocked');}]){
   const a=fixture(),chip=chips(a.teams()[0])[0];

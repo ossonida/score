@@ -1,7 +1,7 @@
 import {readIdentity} from './personal-stats.js?v=64';
 import {renderIdentitySettings} from './personal-dashboard.js?v=71';
 import {rememberGameImages} from './game-artwork.js?v=95';
-import './records.js?v=95';
+import './records.js?v=112';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=64';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
@@ -44,4 +44,4 @@ let identityStamp='';
 function identityVersion(context){return JSON.stringify([context.key,context.epoch,readIdentity(context.key),context.records.map(p=>[p.id,p.players.map(x=>[x.name,x.anonymous])])]);}
 function renderSelf(context){const stamp=identityVersion(context);if(stamp===identityStamp)return;identityStamp=stamp;renderIdentitySettings($('identityEditor'),context.records,context.key,()=>{identityStamp=identityVersion(api.context());window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();});}
 
-update();route();
+update();route();window.ScoreStartup?.ready('route');
