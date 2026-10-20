@@ -20,6 +20,7 @@ import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let statsGameTarget='';
+let statsGameTargetGame=null;
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
 function recoveryKey(){return key()+'.recovery';}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
@@ -248,7 +249,8 @@ $('recordDeletePlayer').onclick=()=>{if(!recordEditing)return;const editing=reco
 $('recordEditForm').onsubmit=event=>{event.preventDefault();if(!recordEditing)return;const {playId,personId,field,context,original}=recordEditing;try{updateRecordedPlayer(playId,personId,field,$(['result','cooperativeResult'].includes(field)?'recordEditResult':'recordEditValue').value,context,original);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}};
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
-function chooseStatsGame(game){statsView='games';mode='stats';statsGameTarget=game;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
+function chooseStatsGame(game){statsView='games';mode='stats';statsGameTarget=game;statsGameTargetGame=null;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
+function openGameStats(game){const resolved=resolveGame(game,records);statsView='games';mode='stats';statsGameTarget=gameKey(resolved);statsGameTargetGame=resolved;$('statsDetails').open=false;renderHistory();if(location.hash!=='#stats')location.hash='stats';}
 let enriching=false;
 async function enrichRecordGames(){if(enriching||!currentUser||!bggSearchUrl)return;enriching=true;const uid=currentUser.uid,epoch=accountEpoch;try{const token=await idToken(uid);if(epoch!==accountEpoch)return;await enrichGames(records.map(p=>p.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(epoch===accountEpoch)renderHistory();}});}catch{}finally{enriching=false;}}
 function renderHistory(){
@@ -257,7 +259,9 @@ function renderHistory(){
  const allGroups=gameStats(records),groups=searchableGameGroups(allGroups),select=$('recordFilter'),selected=statsGameTarget||select.value;statsGameTarget='';
  select.replaceChildren(node('option','게임 선택'));select.firstChild.textContent='게임 선택';select.firstChild.value='';select.firstChild.disabled=groups.length>0;
  for(const g of groups){const o=node('option',`${g.game.name} (${g.count}회)`);o.value=g.key;select.append(o);}
+ if(statsGameTargetGame&&statsGameTargetGame.name&&!groups.some(g=>g.key===selected)){const o=node('option',`${statsGameTargetGame.name} (0회)`);o.value=gameKey(statsGameTargetGame);select.append(o);}
  select.value=groups.some(g=>g.key===selected)?selected:(statsView==='games'?allGroups[0]?.key||'':'');
+ if(statsGameTargetGame&&gameKey(statsGameTargetGame)===selected)select.value=selected;
  enhanceGamePicker(select,groups);
  const recentDate=latestPlayDate(records);
  const filtered=records.filter(p=>statsView==='recent'?p.date===recentDate:statsView==='games'?gameKey(p.game)===select.value:true).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
@@ -273,7 +277,7 @@ function renderHistory(){
 if(!filtered.length){box.append(node('p','저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
 if(statsView==='games'&&mode==='stats'){for(const g of gameStats(filtered)){const article=node('article',undefined,'record-item');article.append(node('h3',g.game.name),node('p',g.count+'회 플레이'));renderModeStats(article,filtered.filter(p=>gameKey(p.game)===g.key));box.append(article);}return;}
 for(const p of filtered){const article=node('article',undefined,'record-item');article.id='record-'+p.id;article.append(node('h3',p.game.name),node('p',`${p.date} · ${p.players.length}인 · ${modeLabels[recordMode(p)]}${currentUser&&pending.has(p.id)?' · 저장 대기':''}`));const list=renderRecordParticipants(p,meIn(p,profile),openRecordEditor);article.append(list);const actions=node('div',undefined,'record-delete-row'),remove=node('button','기록 삭제','record-danger');remove.type='button';remove.setAttribute('aria-label',p.game.name+' '+p.date+' 기록 삭제');remove.onclick=()=>{const context={key:key(),epoch:accountEpoch};api.confirm('기록 삭제',p.game.name+'의 '+p.date+' 기록을 삭제할까요?',()=>{try{deleteRecordedPlay(p.id,context);}catch(error){notify(error.message);}});};const link=window.ScoreBggLink,bgg=link?.state();if(bgg?.connected&&!isScoreGame(p.game)){const prior=bgg.uploads?.[p.id],uncertain=['unknown','pending'].includes(prior?.status),upload=node('button',uncertain?'BGG에서 확인 필요':prior?.bggPlayId?'BGG 기록 업데이트':'BGG에 등록','bgg-post-button');upload.type='button';upload.disabled=uncertain||!p.game.bggId||link.isPosting(p.id);if(link.isPosting(p.id)){upload.textContent='전송 중…';upload.setAttribute('aria-busy','true');}if(!p.game.bggId)upload.textContent='BGG 게임 연결 필요';upload.onclick=async()=>{const context={key:key(),epoch:accountEpoch};try{checkRecordContext(context);const result=await link.postPlay({...p,players:p.players.map(person=>({...person,isSelf:person.id===me?.id}))},context);if(context.key!==key()||context.epoch!==accountEpoch)return;if(result)notify(result.unchanged?'이미 BGG에 등록된 동일한 기록입니다.':'BGG에 경기 기록을 저장했습니다.');}catch(error){if(context.key===key()&&context.epoch===accountEpoch)notify(error.message);}};actions.append(upload);}actions.append(remove);article.append(actions);if(personalBests.has(p.id))article.append(node('p','개인 기록 갱신','record-best-badge'));box.append(article);}}
-$('recordFilter').onchange=()=>{mode='stats';renderHistory();};
+$('recordFilter').onchange=()=>{mode='stats';if(!statsGameTargetGame||gameKey(statsGameTargetGame)!==$('recordFilter').value)statsGameTargetGame=null;renderHistory();};
 for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
 let savedNoticeTimer;
@@ -323,6 +327,7 @@ window.ScoreRecords={
  playerChoices:()=>({scope:key()+':'+accountEpoch,players:savedPlayerChoices(records)}),
  bggRecords:()=>{const profile=readIdentity(key());return records.map(play=>{const me=meIn(play,profile);return {...play,game:{...play.game},players:play.players.map(person=>({...person,isSelf:person.id===me?.id}))};});},
  renderHistory,
+ openGameStats,
  openSave,
  openFinish:()=>openSave({finish:true}),
  updatePlayer:updateRecordedPlayer,
