@@ -113,7 +113,79 @@ test('nickname download completed after account change does not affect either ac
 async function beginScoreless(a,name='점수 없는 게임',count='2',mode='win'){
  a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});a.get('scorelessCount').value=count;a.get('scorelessSetupForm').onsubmit({preventDefault(){}});if(mode==='win'){a.get('scorelessWinMode').onclick();a.get('scorelessSoloWinMode').onclick();}if(mode==='rank')a.get('scorelessRankMode').onclick();a.scorelessGame={name,date:'2026-10-16'};
 }
-async function finishScoreless(a,name=a.scorelessGame?.name||'점수 없는 게임',date=a.scorelessGame?.date||'2026-10-16'){a.get('savePlay').onclick();assert.equal(a.get('savePlayDialog').open,true);assert.equal(a.get('recordFormTitle').textContent,'기록 정보 입력');assert.equal(a.get('commitPlay').textContent,'기록 저장');a.get('playGame').value=name;a.get('playDate').value=date;await a.get('savePlayForm').onsubmit({preventDefault(){}});}
+async function finishScoreless(a,name=a.scorelessGame?.name||'점수 없는 게임',date=a.scorelessGame?.date||'2026-10-16'){a.get('savePlay').onclick();assert.equal(a.get('savePlayDialog').open,true);assert.equal(a.get('recordFormTitle').textContent,'기록 정보 입력');assert.equal(a.get('commitPlay').textContent,'이 기기에 저장');a.get('playGame').value=name;a.get('playDate').value=date;await a.get('savePlayForm').onsubmit({preventDefault(){}});}
+test('saving results keeps the selected mode, participants and results across reload until explicit reset',async()=>{
+ for(const mode of ['team','win','rank']){
+  for(const count of [0,1,4]){
+   if(mode==='team'&&count===1)continue;
+   const a=await app(),draftKey='score.scorelessDraft.v1.score.plays.v1.guest';
+   a.vm.window.ScoreCounter.restorePlayers(Array.from({length:count},(_,i)=>({id:'existing-'+i,name:'참가자'+i,color:'#52c7ef',score:10+i})));
+   a.get('recordModeChange').onclick();
+   if(!count){a.get('scorelessCount').value='4';a.get('scorelessSetupForm').onsubmit({preventDefault(){}});}
+   if(mode==='rank')a.get('scorelessRankMode').onclick();
+   else{
+    a.get('scorelessWinMode').onclick();
+    if(mode==='team'){a.get('scorelessTeamWinMode').onclick();a.get('startTeamResult').onclick();}
+    else a.get('scorelessSoloWinMode').onclick();
+   }
+   if(mode==='rank')a.players().forEach((p,i,all)=>{p.rank=all.length-i;p.winner=p.rank===1;});
+   else a.players().forEach((p,i)=>{p.winner=mode==='team'?p.teamId==='team-1':i===0;});
+   a.vm.window.dispatchEvent(new a.vm.Event('scorecounter:changed'));
+   const entered=JSON.stringify(a.players());
+   await finishScoreless(a,'유지할 게임');
+   assert.equal(a.get('savePlayDialog').open,false);
+   assert.equal(a.get('scorelessBoardPanel').hidden,false);
+   assert.equal(a.get('savePlay').disabled,false);
+   assert.equal(a.get('savePlay').textContent,'SAVE');
+   assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,mode);
+   assert.deepEqual(JSON.parse(JSON.stringify(a.players())),JSON.parse(entered));
+   assert.equal(JSON.parse(a.store.get(draftKey)).config.game.name,'유지할 게임');
+   const saved=JSON.stringify(a.bridge.context().records);
+   const b=await app(a.store);
+   assert.equal(b.vm.window.ScoreCounter.getResultEntry().mode,mode);
+   assert.equal(b.get('scorelessBoardPanel').hidden,false);
+   assert.deepEqual(JSON.parse(JSON.stringify(b.players())),JSON.parse(entered));
+   b.get('savePlay').onclick();
+   assert.equal(b.get('savePlayDialog').open,true);
+   assert.equal(b.get('playGame').value,'유지할 게임');
+   b.get('savePlayDialog').close();
+   assert.deepEqual(JSON.parse(JSON.stringify(b.players())),JSON.parse(entered));
+   b.players()[0].name='화면에서만 수정';
+   b.vm.window.dispatchEvent(new b.vm.Event('scorecounter:changed'));
+   assert.equal(JSON.stringify(b.bridge.context().records),saved);
+   b.get('resetPlayers').onclick();
+   assert.equal(b.players().length,0);
+   assert.equal(b.vm.window.ScoreCounter.getResultEntry(),null);
+   assert.equal(b.store.get(draftKey),'null');
+   assert.equal(JSON.stringify(b.bridge.context().records),saved);
+   const c=await app(b.store);
+   assert.equal(c.vm.window.ScoreCounter.getResultEntry(),null);
+   assert.equal(JSON.stringify(c.bridge.context().records),saved);
+  }
+ }
+});
+test('failed team result save preserves the current board, draft and existing history',async()=>{
+ const a=await app();await save(a,'이전 기록');
+ a.get('recordModeChange').onclick();a.get('scorelessWinMode').onclick();a.get('scorelessTeamWinMode').onclick();a.get('startTeamResult').onclick();
+ a.players().forEach(p=>{p.winner=p.teamId==='team-1';});
+ a.vm.window.dispatchEvent(new a.vm.Event('scorecounter:changed'));
+ const before=JSON.stringify(a.players()),history=JSON.stringify(a.bridge.context().records),draftKey='score.scorelessDraft.v1.score.plays.v1.guest',draft=a.store.get(draftKey);
+ const write=a.vm.localStorage.setItem;
+ a.vm.localStorage.setItem=(key,value)=>{if(key==='score.plays.v1.guest')throw Error('quota');return write(key,value);};
+ await finishScoreless(a,'팀 경기');
+ assert.equal(a.get('savePlayDialog').open,true);
+ assert.equal(a.get('scorelessBoardPanel').hidden,false);
+ assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'team');
+ assert.equal(JSON.stringify(a.players()),before);
+ assert.equal(a.store.get(draftKey),draft);
+ assert.equal(JSON.stringify(a.bridge.context().records),history);
+ assert.match(a.get('playError').textContent,/저장 공간/);
+ a.vm.localStorage.setItem=write;
+ await a.get('savePlayForm').onsubmit({preventDefault(){}});
+ assert.equal(a.bridge.context().records.length,2);
+ assert.equal(JSON.stringify(a.players()),before);
+ assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'team');
+});
 test('save, reload and stats work without Firebase; record management is absent',async()=>{
  const a=await app();await save(a);assert.match(a.get('recordMessage').textContent,/기록되었습니다/);assert.equal(JSON.parse(a.store.get('score.plays.v1.guest')).records.length,1);
  const b=await app(a.store);b.bridge.renderHistory();assert.equal(b.get('recordList').children.length,1);
@@ -137,7 +209,7 @@ test('routed refresh paints the requested tab before modules load',async()=>{con
 test('installed app checks for updates and reloads only after active work is safe',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8');assert.ok(html.includes("navigator.serviceWorker.addEventListener('controllerchange'"));assert.ok(html.includes('registration=>registration.update()'));assert.ok(html.includes("document.visibilityState==='visible'"));assert.ok(html.includes("players.length||document.querySelector('dialog[open]')"));assert.ok(html.includes("window.addEventListener('scorecounter:changed',applyAppUpdate)"));});
 
 test('a fresh recording clears the previous game but offers recent games and preserves scores',async()=>{const a=await app();const before=JSON.stringify(a.players());await save(a,'카탄');assert.equal(JSON.stringify(a.players()),before);a.bridge.openFinish();assert.equal(a.get('playGame').value,'');assert.equal(a.get('playBggId').value,'');assert.equal(a.get('recentGames').children.length,1);a.get('searchBgg').disabled=true;a.get('recentGames').children[0].onclick();assert.equal(a.get('searchBgg').disabled,false);a.get('savePlayDialog').close();assert.equal(JSON.stringify(a.players()),before);const b=await app(a.store);b.bridge.openFinish();assert.equal(b.get('playGame').value,'');assert.equal(b.get('playBggId').value,'');assert.equal(JSON.stringify(b.players()),before);});
-test('changing the winning rule updates the preview without altering current scores',async()=>{const a=await app();a.bridge.openFinish();assert.equal(a.get('playSnapshot').children[0].children[0].textContent,'하늘');a.get('playRule').value='lowest';a.get('playRule').listeners.change();assert.equal(a.get('playSnapshot').children[0].children[0].textContent,'바다');assert.equal(a.get('playSnapshot').children[0].children[2].textContent,'승리');a.get('playRule').value='cooperative';a.get('playRule').listeners.change();assert.ok(a.get('playSnapshot').children.every(row=>row.children[2].textContent===''));assert.equal(a.players()[0].score,20);});
+test('finished score records show only the requested fields and keep current scores',async()=>{for(const signedIn of [false,true]){const a=await app(new Map(),signedIn);if(signedIn)await a.changeAuth({uid:'owner'});a.bridge.openFinish();assert.equal(a.get('recordFormTitle').textContent,'경기 기록 저장');assert.equal(a.get('playLocationField').hidden,false);assert.equal(a.get('playRuleField').hidden,false);assert.equal(a.get('scoreModeField').hidden,true);assert.equal(a.get('playSnapshot').hidden,true);assert.equal(a.get('recordAnonymousHint').hidden,true);assert.equal(a.get('playBggAttribution').hidden,false);assert.equal(a.get('playBggAdvanced').hidden,false);assert.equal(a.get('recordStorageHint').hidden,true);assert.equal(a.get('recordLogin').hidden,true);assert.equal(a.get('commitPlay').textContent,'이 기기에 저장');a.get('playRule').value='lowest';a.get('playRule').listeners.change();assert.equal(a.players()[0].score,20);}const html=await fs.readFile(resolve(root,'index.html'),'utf8');assert.equal(html.includes('<option value="cooperative">협력</option>'),false);});
 
 test('import merges without replacing live scores or existing records, and rejects stale accounts',async()=>{const a=await app(new Map(),true);await a.changeAuth({uid:'one'});const context=a.bridge.context();const play={id:'bgstats:test',game:{name:'이전 게임',bggId:'13'},date:'2026-10-15',createdAt:'2026-10-15T12:00:00.000Z',rule:'highest',players:[{id:'p',name:'이전 플레이어',score:null,color:'#52c7ef',winner:true}]};const before=JSON.stringify(a.players());assert.equal(a.bridge.merge([play],context).added,1);assert.equal(a.bridge.merge([play],context).duplicates,1);assert.equal(a.bridge.context().records.length,1);assert.equal(JSON.stringify(a.players()),before);const stale=a.bridge.context();await a.changeAuth({uid:'two'});assert.throws(()=>a.bridge.merge([play],stale),/계정이 변경/);assert.equal(a.bridge.context().records.length,0);});
 
@@ -159,6 +231,112 @@ test('saving without scores preserves live points and never invents a winner',as
 test('login from recording preserves the draft and saves it into the selected account',async()=>{const source=`export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;}export async function login(){await globalThis.changeAuth({uid:'draft-account'});}export async function logout(){}export async function loadCloud(){return [];}export async function saveCloud(){}export async function deleteCloud(){}export async function idToken(){return '';}`;const a=await app(new Map(),true,source);a.bridge.openFinish();a.get('playGame').value='로그인 도중 유지';a.get('playDate').value='2026-10-15';await a.get('recordLogin').onclick();assert.ok(a.bridge.context().key.endsWith('.draft-account'));assert.equal(a.bridge.context().records[0].game.name,'로그인 도중 유지');assert.equal(a.get('savePlayDialog').open,false);});
 const syncMock=`export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;}export async function login(){}export async function logout(){}export async function loadCloud(uid){if(globalThis.readError)throw Object.assign(Error('denied'),{code:'permission-denied'});return globalThis.remote||[];}export async function saveCloud(play,uid){if(globalThis.writeError)throw Error('offline');globalThis.uploads.push({uid,play});}export async function deleteCloud(){}export async function idToken(){return '';}`;
 const storedPlay={id:'existing',game:{name:'카탄',bggId:'13'},date:'2026-10-15',createdAt:'2026-10-15T12:00:00Z',rule:'highest',players:[{id:'a',name:'나',score:20,color:'#52c7ef'}]};
+const guestScope='score.plays.v1.guest',ownerScope='score.plays.v1.user.owner';
+function assertGuestActions(a,visible,enabled=visible){
+ for(const id of ['guestUpload','guestDelete']){
+  assert.equal(a.get(id).hidden,!visible,id+' visibility');
+  assert.equal(a.get(id).disabled,!enabled,id+' availability');
+ }
+}
+test('guest actions share visibility for empty, populated and scoreless boards only after login',async()=>{
+ const html=await fs.readFile(resolve(root,'index.html'),'utf8');
+ assert.match(html,/id="guestDelete" class="secondary" type="button" hidden>로그인 전 기록 삭제/);
+ for(const mode of ['empty','score','rank']){
+  const a=await app(new Map([[guestScope,JSON.stringify({records:[storedPlay],pending:[]})]]),true);
+  assertGuestActions(a,false);await a.changeAuth(null);assertGuestActions(a,false);
+  await a.changeAuth({uid:'owner'});
+  if(mode==='empty')a.vm.window.ScoreCounter.restorePlayers([]);
+  if(mode==='rank'){a.get('recordModeChange').onclick();a.get('scorelessRankMode').onclick();}
+  a.vm.window.dispatchEvent(new a.vm.Event('scorecounter:changed'));
+  assertGuestActions(a,true);
+ }
+ const empty=await app(new Map(),true);await empty.changeAuth({uid:'owner'});assertGuestActions(empty,false);
+});
+test('guest merge consumes the guest list only after local account save and waits for explicit cloud sync',async()=>{
+ const store=new Map([[guestScope,JSON.stringify({records:[storedPlay],pending:[]})]]);
+ const a=await app(store,true,syncMock);a.vm.uploads=[];await a.changeAuth({uid:'owner'});
+ const board=JSON.stringify(a.players());await a.get('guestUpload').onclick();
+ assertGuestActions(a,false);assert.equal(JSON.parse(store.get(guestScope)).records.length,0);
+ assert.equal(JSON.parse(store.get(ownerScope)).pending[0],storedPlay.id);
+ assert.equal(a.bridge.context().records.length,1);assert.equal(a.vm.uploads.length,0);
+ assert.equal(JSON.stringify(a.players()),board);
+ await a.get('guestUpload').onclick();await a.get('guestDelete').onclick();
+ assert.equal(a.bridge.context().records.length,1);
+ const b=await app(store,true,syncMock);b.vm.uploads=[];await b.changeAuth({uid:'owner'});assertGuestActions(b,false);
+ await b.get('cloudSync').onclick();assert.equal(b.vm.uploads.length,1);
+ await b.changeAuth(null);await save(b,'새 비로그인 게임');assertGuestActions(b,false);
+ await b.changeAuth({uid:'owner'});assertGuestActions(b,true);
+});
+test('guest delete affects only saved guest records and stays hidden until new guest records exist',async()=>{
+ const draftKey='score.scorelessDraft.v1.'+guestScope,store=new Map([
+  [guestScope,JSON.stringify({records:[storedPlay],pending:[]})],
+  [ownerScope,JSON.stringify({records:[{...storedPlay,id:'account'}],pending:['account']})],
+  [ownerScope+'.recovery','{"records":[],"pending":[]}'],[draftKey,'{"untouched":true}']
+ ]);
+ const a=await app(store,true,syncMock);a.vm.uploads=[];await a.changeAuth({uid:'owner'});
+ const account=store.get(ownerScope),draft=store.get(draftKey),board=JSON.stringify(a.players());
+ await a.get('guestDelete').onclick();assertGuestActions(a,false);
+ assert.equal(store.get(ownerScope),account);assert.equal(store.get(draftKey),draft);
+ assert.equal(JSON.stringify(a.players()),board);assert.equal(a.vm.uploads.length,0);
+ assert.equal(a.bridge.context().records[0].id,'account');
+ const b=await app(store,true,syncMock);await b.changeAuth({uid:'owner'});assertGuestActions(b,false);
+ await b.changeAuth(null);await save(b,'새 게임');await b.changeAuth({uid:'owner'});assertGuestActions(b,true);
+});
+test('guest merge keeps existing account edits and never revives pending deletions or duplicate IDs',async()=>{
+ const existing={...storedPlay,players:[{...storedPlay.players[0],score:99}]};
+ const store=new Map([[guestScope,JSON.stringify({records:[storedPlay,{...storedPlay,id:'deleted'},{...storedPlay,id:'new'},{...storedPlay,id:'new'}],pending:[]})],
+  [ownerScope,JSON.stringify({records:[existing],pending:['deleted']})]]);
+ const a=await app(store,true);await a.changeAuth({uid:'owner'});await a.get('guestUpload').onclick();
+ const account=JSON.parse(store.get(ownerScope));
+ assert.deepEqual(account.records.map(p=>p.id),['existing','new']);
+ assert.equal(account.records[0].players[0].score,99);
+ assert.deepEqual(account.pending,['deleted','new']);assertGuestActions(a,false);
+});
+test('guest confirmations cancel safely and reject changed accounts or guest data',async()=>{
+ for(const action of ['guestUpload','guestDelete']){
+  const raw=JSON.stringify({records:[storedPlay],pending:[]}),store=new Map([[guestScope,raw]]);
+  const a=await app(store,true);await a.changeAuth({uid:'owner'});
+  let confirm;a.vm.window.ScoreCounter.confirm=(_title,_message,callback)=>{confirm=callback;};
+  a.get(action).onclick();assert.equal(store.get(guestScope),raw);assert.equal(store.has(ownerScope),false);
+  // Not invoking the confirmation callback is cancel; a new click captures fresh context.
+  a.get(action).onclick();await a.changeAuth({uid:'other'});confirm();
+  assert.equal(store.get(guestScope),raw);assert.equal(a.bridge.context().records.length,0);
+  assert.match(a.get('accountError').textContent,/계정이 변경/);
+  a.get(action).onclick();const changed=JSON.stringify({records:[storedPlay,{...storedPlay,id:'later'}],pending:[]});
+  store.set(guestScope,changed);confirm();
+  assert.equal(store.get(guestScope),changed);assert.equal(a.bridge.context().records.length,0);
+  assert.match(a.get('accountError').textContent,/기록이 변경/);assertGuestActions(a,true);
+ }
+});
+test('failed guest action writes preserve source data and safely retry a partially completed merge',async()=>{
+ for(const action of ['guestUpload','guestDelete']){
+  const raw=JSON.stringify({records:[storedPlay],pending:[]}),store=new Map([[guestScope,raw]]);
+  const a=await app(store,true);await a.changeAuth({uid:'owner'});
+  const write=a.vm.localStorage.setItem;a.vm.localStorage.setItem=()=>{throw Error('quota');};
+  await a.get(action).onclick();assert.equal(store.get(guestScope),raw);
+  assert.equal(a.bridge.context().records.length,0);assertGuestActions(a,true);
+  a.vm.localStorage.setItem=write;
+ }
+ const raw=JSON.stringify({records:[storedPlay],pending:[]}),store=new Map([[guestScope,raw]]);
+ const a=await app(store,true);await a.changeAuth({uid:'owner'});
+ const write=a.vm.localStorage.setItem;
+ a.vm.localStorage.setItem=(key,value)=>{if(key===guestScope)throw Error('quota');return write(key,value);};
+ await a.get('guestUpload').onclick();
+ assert.equal(store.get(guestScope),raw);assert.equal(a.bridge.context().records.length,1);
+ assert.equal(JSON.parse(store.get(ownerScope)).pending[0],storedPlay.id);
+ assert.match(a.get('accountError').textContent,/저장했지만/);assertGuestActions(a,true);
+ a.vm.localStorage.setItem=write;await a.get('guestUpload').onclick();
+ assert.equal(a.bridge.context().records.length,1);assertGuestActions(a,false);
+});
+test('cloud loading disables both guest actions including direct action invocation',async()=>{
+ const source=syncMock.replace('return globalThis.remote||[];','await new Promise(resolve=>globalThis.releaseRead=resolve);return [];');
+ const a=await app(new Map([[guestScope,JSON.stringify({records:[storedPlay],pending:[]})]]),true,source);
+ a.vm.uploads=[];await a.changeAuth({uid:'owner'});
+ const task=a.get('cloudSync').onclick();assertGuestActions(a,true,false);
+ await a.get('guestUpload').onclick();await a.get('guestDelete').onclick();
+ assert.equal(JSON.parse(a.store.get(guestScope)).records.length,1);
+ a.vm.releaseRead();await task;assertGuestActions(a,true,true);
+});
 test('login waits for the cloud sync CTA before loading account records',async()=>{const a=await app(new Map(),true,syncMock);a.vm.remote=[storedPlay];a.vm.uploads=[];await a.changeAuth({uid:'same'});assert.equal(a.bridge.context().records.length,0);assert.match(a.get('accountStorage').textContent,/클라우드 동기화를 눌러/);await a.get('cloudSync').onclick();assert.equal(a.bridge.context().records.length,1);assert.match(a.get('accountStorage').textContent,/동기화됨.*1개/);assert.equal(a.vm.uploads.length,0);});
 test('manual failed reads retain local games and show a persistent account error',async()=>{const store=new Map([['score.plays.v1.user.same',JSON.stringify({records:[storedPlay],pending:[]})]]);const a=await app(store,true,syncMock);a.vm.readError=true;a.vm.uploads=[];await a.changeAuth({uid:'same'});assert.equal(a.get('accountError').textContent,'');await a.get('cloudSync').onclick();assert.equal(a.bridge.context().records.length,1);assert.match(a.get('accountError').textContent,/접근 권한/);assert.match(a.get('accountStorage').textContent,/실패/);});
 test('manual sync backs up remote removals and restores only into the owning account',async()=>{const store=new Map([['score.plays.v1.user.same',JSON.stringify({records:[storedPlay],pending:[]})]]);const a=await app(store,true,syncMock);a.vm.uploads=[];await a.changeAuth({uid:'same'});assert.equal(a.bridge.context().records.length,1);await a.get('cloudSync').onclick();assert.equal(a.bridge.context().records.length,0);assert.equal(a.vm.uploads.length,0);assert.equal(a.get('recoverRecords').hidden,false);assert.equal(JSON.parse(store.get('score.plays.v1.user.same.recovery')).records[0].id,'existing');a.get('recoverRecords').onclick();await new Promise(r=>setTimeout(r,0));assert.equal(a.bridge.context().records.length,1);assert.equal(a.vm.uploads[0].uid,'same');await a.changeAuth({uid:'other'});assert.equal(a.get('recoverRecords').hidden,true);});
@@ -177,7 +355,7 @@ test('legacy unlinked records join a unique saved game without losing either pla
 test('new game setup rejects invalid counts and restores the session after reload',async()=>{const a=await app();a.bridge.openSave();a.get('playGame').value='카탄';a.get('playDate').value='2026-10-15';a.get('playRule').value='lowest';a.get('playWithoutScores').checked=true;await a.get('savePlayForm').onsubmit({preventDefault(){}});const before=JSON.stringify(a.players());for(const n of ['0','101','2.5','']){a.get('gamePlayerCount').value=n;a.get('gamePlayersForm').onsubmit({preventDefault(){}});assert.equal(JSON.stringify(a.players()),before);assert.equal(a.bridge.context().records.length,0);}a.get('gamePlayerCount').value='2';a.get('gamePlayersForm').onsubmit({preventDefault(){}});const b=await app(a.store);assert.match(b.get('recordingStatus').textContent,/카탄 점수 기록을 시작했습니다/);b.bridge.openFinish();assert.equal(b.get('playGame').value,'카탄');assert.equal(b.get('playRule').value,'lowest');assert.equal(b.get('playWithoutScores').checked,true);await b.get('savePlayForm').onsubmit({preventDefault(){}});assert.equal(b.bridge.context().records.length,1);assert.ok(b.bridge.context().records[0].players.every(p=>p.score===null));b.bridge.openFinish();await b.get('savePlayForm').onsubmit({preventDefault(){}});assert.equal(b.bridge.context().records.length,1);});
 test('setup does not render removed participant or self controls',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8');for(const id of ['recentParticipants','recordParticipantName','addRecordParticipant','playSelf'])assert.equal(html.includes('id="'+id+'"'),false);const form=html.slice(html.indexOf('id="savePlayForm"'),html.indexOf('id="gamePlayersDialog"'));assert.ok(form.indexOf('id="playRule"')<form.indexOf('id="playWithoutScores"'));});
 test('scoreless participant count reuses the multiple-player minus and plus stepper',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),styles=await fs.readFile(resolve(root,'ui-system.css'),'utf8');const step=html.slice(html.indexOf('id="scorelessCountStep"'),html.indexOf('id="scorelessModeStep"'));assert.ok(step.includes('class="bulk-count-stepper"'));assert.ok(step.includes('id="scorelessCountMinus"'));assert.ok(step.includes('id="scorelessCountPlus"'));assert.ok(step.includes('<output id="scorelessCount"'));assert.ok(styles.includes('.bulk-count-stepper>button'));const a=await app();a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});assert.equal(a.get('scorelessCount').value,'2');a.get('scorelessCountPlus').onclick();assert.equal(a.get('scorelessCount').value,'3');a.get('scorelessCountMinus').onclick();assert.equal(a.get('scorelessCount').value,'2');});
-test('scoreless setup reuses saved-player chips and keeps BGG advanced controls out of the final details flow',async()=>{const a=await app();await save(a);a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});assert.equal(a.get('scorelessSavedPlayers').hidden,false);assert.equal(a.get('scorelessPlayerChips').children.length,2);const chosen=a.get('scorelessPlayerChips').children[0].textContent;a.get('scorelessPlayerChips').children[0].onclick();a.get('scorelessSetupForm').onsubmit({preventDefault(){}});a.get('scorelessWinMode').onclick();a.get('scorelessSoloWinMode').onclick();assert.equal(a.players()[0].name,chosen);assert.equal(a.players()[0].anonymous,false);a.players().forEach((player,index)=>player.winner=index===0);a.get('savePlay').onclick();assert.equal(a.get('playBggAttribution').hidden,true);assert.equal(a.get('playBggAdvanced').hidden,true);assert.equal(a.get('openBggWebsite').hidden,true);});
+test('scoreless setup reuses saved-player chips and final details show the requested common fields',async()=>{const a=await app();await save(a);a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});assert.equal(a.get('scorelessSavedPlayers').hidden,false);assert.equal(a.get('scorelessPlayerChips').children.length,2);const chosen=a.get('scorelessPlayerChips').children[0].textContent;a.get('scorelessPlayerChips').children[0].onclick();a.get('scorelessSetupForm').onsubmit({preventDefault(){}});a.get('scorelessWinMode').onclick();a.get('scorelessSoloWinMode').onclick();assert.equal(a.players()[0].name,chosen);assert.equal(a.players()[0].anonymous,false);a.players().forEach((player,index)=>player.winner=index===0);a.get('savePlay').onclick();assert.equal(a.get('playLocationField').hidden,false);assert.equal(a.get('playRuleField').hidden,true);assert.equal(a.get('scoreModeField').hidden,true);assert.equal(a.get('playSnapshot').hidden,true);assert.equal(a.get('playBggAttribution').hidden,false);assert.equal(a.get('playBggAdvanced').hidden,false);assert.equal(a.get('openBggWebsite').hidden,false);assert.equal(a.get('recordStorageHint').hidden,true);assert.equal(a.get('recordLogin').hidden,true);assert.equal(a.get('commitPlay').textContent,'이 기기에 저장');});
 test('scoreless result modes reuse player cards, random names and name editing while changing only result controls',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),styles=await fs.readFile(resolve(root,'records.css'),'utf8'),recordsSource=await fs.readFile(resolve(root,'records.js'),'utf8');assert.ok(html.includes('id="scorelessBoardPanel"'));assert.ok(html.includes('function renderResultBoard'));assert.ok(html.includes("resultEntry.mode==='win'"));assert.ok(html.includes("className='rank-drag-handle'"));assert.ok(html.includes('M4 5.5h20M4 11h20M4 17h20M4 22.5h20'));assert.ok(html.includes("animation.id='rank-reorder'"));assert.ok(html.includes("drop.id='rank-drop'"));assert.ok(html.includes("--rank-drag-y"));assert.ok(html.includes("addEventListener('touchmove',touchMove,{passive:false})"));assert.ok(html.includes('function setupRankDrag'));assert.ok(html.includes('createAutoPlayers:(count,names=[]'));assert.ok(html.includes("setupSwipe(card,content,remove,p.id)"));assert.ok(html.includes('score:resultEntry?null:0'));assert.ok(html.includes("if(resultEntry?.mode==='rank'){added.rank=players.length+1;added.winner=false;}"));assert.ok(recordsSource.includes("$('add').onclick=()=>defaultBoardAdd?.();"));assert.ok(!recordsSource.includes("$('scorelessResultBack').onclick();$('scorelessModeBack').onclick();"));assert.ok(!html.includes("small.textContent='이름 수정'"));assert.ok(styles.includes('.scoreless-card-actions.win-actions'));assert.ok(styles.includes('.rank-drag-handle{'));assert.ok(styles.includes('background:transparent'));assert.ok(styles.includes('translateY(var(--rank-drag-y,0))'));assert.ok(styles.includes('.scoreless-board-mode .scoreless-result-card{height:auto'));const a=await app();a.vm.window.ScoreCounter.restorePlayers([]);const before=JSON.stringify(a.players());await beginScoreless(a,'테니스','2','win');assert.equal(a.get('scorelessBoardMode').textContent,'개인전 승패 기록 · 0/2');assert.deepEqual(a.players().map(p=>p.name),['랜덤0','랜덤1']);a.players()[0].name='수정한 이름';a.players()[0].anonymous=false;a.get('scorelessResultBack').onclick();assert.equal(a.players()[0].name,'수정한 이름');assert.equal(a.get('scorelessSetupDialog').open,true);assert.equal(a.get('scorelessWinMode').hidden,false);assert.equal(a.get('scoreModeOption').hidden,false);assert.equal(a.get('scorelessRankMode').hidden,false);assert.equal(a.get('scorelessCoopMode').hidden,false);a.get('scorelessRankMode').onclick();assert.equal(a.get('scorelessBoardMode').textContent,'순위 기록 · 2/2');assert.deepEqual(a.players().map(p=>p.rank),[1,2]);assert.equal(a.players()[0].name,'수정한 이름');a.get('scorelessBoardCancel').onclick();assert.equal(JSON.stringify(a.players()),before);assert.equal(a.get('scorelessBoardPanel').hidden,true);});
 test('record mode changes keep the top toolbar and direct SAVE action',async()=>{const styles=await fs.readFile(resolve(root,'records.css'),'utf8'),ui=await fs.readFile(resolve(root,'ui-system.css'),'utf8'),html=await fs.readFile(resolve(root,'index.html'),'utf8'),recordsSource=await fs.readFile(resolve(root,'records.js'),'utf8');assert.match(styles,/html\.scoreless-board-mode body #homeScreen \.toolbar #savePlay\{display:grid!important\}/);assert.match(styles,/html\.scoreless-board-mode body #homeScreen \.toolbar #reset\{display:none!important\}/);assert.doesNotMatch(styles,/scoreless-board-mode #homeScreen \.toolbar #savePlay[^}]*display:none/);assert.match(styles,/html\.scoreless-board-mode body #scorelessBoardPanel #saveScorelessPlay\{display:none!important\}/);assert.match(styles,/html\.scoreless-board-mode body #scorelessBoardPanel \.scoreless-board-actions\{[^}]*position:static!important/);assert.match(ui,/\.toolbar \.game-end-tool\{[^}]*background:var\(--ui-secondary\);border-color:var\(--ui-line\)/);assert.ok(html.includes('id="savePlay" class="tool game-end-tool"'));assert.ok(html.includes("$('savePlay').disabled=isCoop||remaining>0"));assert.ok(recordsSource.includes("$('savePlay').textContent='SAVE'"));assert.ok(recordsSource.includes('if(scorelessBoardActive){openScorelessDetails();return;}'));assert.ok(!recordsSource.includes("$('saveScorelessPlay').click()"));});
 test('record mode changes keep applicable toolbar actions consistent',async()=>{const a=await app();await beginScoreless(a,'테니스','2','rank');for(const id of ['savePlay','resetPlayers','add'])assert.notEqual(a.get(id).hidden,true,id);assert.equal(a.get('savePlay').textContent,'SAVE');a.get('savePlay').onclick();assert.equal(a.get('savePlayDialog').open,true);const b=await app();await beginScoreless(b,'테니스','2','rank');b.get('resetPlayers').onclick();assert.equal(b.players().length,0);assert.equal(b.vm.window.ScoreCounter.getResultEntry(),null);assert.equal(b.get('scorelessBoardPanel').hidden,true);});
@@ -185,13 +363,13 @@ test('left swipe reveals the full delete surface and deletes immediately while e
 test('players added or edited in a result mode stay in the base score roster across mode changes',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),sync=html.slice(html.indexOf('function syncResultRosterPlayer'),html.indexOf('function setTeamResult')),form=html.slice(html.indexOf("$('playerForm').onsubmit"),html.indexOf("$('random').onclick")),resultEntry={previousPlayers:[{id:'a',name:'기존',color:'#52c7ef',score:12}]};vm.runInNewContext(`${sync};syncResultRosterPlayer(player)`,{resultEntry,player:{id:'new',name:'추가',color:'#ffcc00',score:null,rank:3,winner:false,teamId:'team-2',teamName:'B팀'}});assert.deepEqual(JSON.parse(JSON.stringify(resultEntry.previousPlayers[1])),{id:'new',name:'추가',color:'#ffcc00',score:0});vm.runInNewContext(`${sync};syncResultRosterPlayer(player)`,{resultEntry,player:{id:'a',name:'수정',color:'#b44cdb',score:null,winner:true}});assert.deepEqual(JSON.parse(JSON.stringify(resultEntry.previousPlayers[0])),{id:'a',name:'수정',color:'#b44cdb',score:12});assert.equal(form.match(/syncResultRosterPlayer\(/g)?.length,2);assert.ok(form.includes('players.push(added);syncResultRosterPlayer(added)'));});
 test('emptying a result board clears its draft and returns to the empty home state',async()=>{const source=await fs.readFile(resolve(root,'records.js'),'utf8'),handler=source.slice(source.indexOf("window.addEventListener('scorecounter:result-empty'"),source.indexOf('loadLocal();updateButtons();'));assert.ok(handler.includes('scorelessBoardActive=false'));assert.ok(handler.includes("$('scorelessBoardPanel').hidden=true"));assert.ok(handler.includes('clearScorelessDraft()'));assert.ok(handler.includes("location.hash='home'"));});
 test('rank drag announces its final order so the scoreless draft can persist it',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),drag=html.slice(html.indexOf('function setupRankDrag'),html.indexOf('function renderResultBoard'));assert.ok(drag.includes("if(moved)window.dispatchEvent(new Event('scorecounter:changed'))"));});
-test('scoreless player additions and reordered results survive reload and the draft clears only after saving',async()=>{const a=await app();await beginScoreless(a,'볼링','3','rank');const players=a.players();players.push({id:'result-new',name:'추가한 이름',color:'#45d9a0',score:null,rank:4,winner:false});const moved=players.pop();players.unshift(moved);players.forEach((player,index)=>{player.rank=index+1;player.winner=index===0;});a.vm.window.dispatchEvent(new a.vm.Event('scorecounter:changed'));const draftKey='score.scorelessDraft.v1.score.plays.v1.guest',draft=JSON.parse(a.store.get(draftKey));assert.equal(draft.step,'board');assert.equal(draft.count,4);assert.deepEqual(draft.players.map(player=>player.name),players.map(player=>player.name));const b=await app(a.store);assert.equal(b.get('scorelessBoardPanel').hidden,false);assert.equal(b.get('scorelessBoardTitle').textContent,'순위 기록');assert.deepEqual(b.players().map(player=>player.name),players.map(player=>player.name));assert.deepEqual(b.players().map(player=>player.rank),[1,2,3,4]);await finishScoreless(b,'볼링');assert.equal(b.bridge.context().records.length,1);assert.equal(b.store.get(draftKey),'null');const c=await app(b.store);assert.equal(c.get('scorelessBoardPanel').hidden,undefined);assert.equal(c.bridge.context().records.length,1);});
+test('scoreless player additions and reordered results survive saving and reload until explicit reset',async()=>{const a=await app();await beginScoreless(a,'볼링','3','rank');const players=a.players();players.push({id:'result-new',name:'추가한 이름',color:'#45d9a0',score:null,rank:4,winner:false});const moved=players.pop();players.unshift(moved);players.forEach((player,index)=>{player.rank=index+1;player.winner=index===0;});a.vm.window.dispatchEvent(new a.vm.Event('scorecounter:changed'));const draftKey='score.scorelessDraft.v1.score.plays.v1.guest',draft=JSON.parse(a.store.get(draftKey));assert.equal(draft.step,'board');assert.equal(draft.count,4);assert.deepEqual(draft.players.map(player=>player.name),players.map(player=>player.name));const b=await app(a.store);assert.equal(b.get('scorelessBoardPanel').hidden,false);assert.equal(b.get('scorelessBoardTitle').textContent,'순위 기록');assert.deepEqual(b.players().map(player=>player.name),players.map(player=>player.name));assert.deepEqual(b.players().map(player=>player.rank),[1,2,3,4]);await finishScoreless(b,'볼링');assert.equal(b.bridge.context().records.length,1);assert.equal(JSON.parse(b.store.get(draftKey)).config.game.name,'볼링');const c=await app(b.store);assert.equal(c.get('scorelessBoardPanel').hidden,false);assert.equal(c.vm.window.ScoreCounter.getResultEntry().mode,'rank');assert.deepEqual(c.players().map(player=>player.rank),[1,2,3,4]);assert.equal(c.bridge.context().records.length,1);c.get('resetPlayers').onclick();assert.equal(c.store.get(draftKey),'null');assert.equal(c.players().length,0);assert.equal(c.bridge.context().records.length,1);});
 
 async function startSession(a){a.bridge.openSave();a.get('playGame').value='카탄';a.get('playDate').value='2026-10-15';a.get('playRule').value='highest';await a.get('savePlayForm').onsubmit({preventDefault(){}});a.get('gamePlayerCount').value='2';a.get('gamePlayersForm').onsubmit({preventDefault(){}});}
 test('end game offers save or home; save closes the popup and keeps completed records when returning home',async()=>{const a=await app();await startSession(a);a.get('savePlay').onclick();assert.equal(a.get('endGameDialog').open,true);assert.equal(a.get('savePlayDialog').open,false);await a.get('endGameSave').onclick();assert.equal(a.get('endGameDialog').open,false);assert.equal(a.get('recordSavedNotice').hidden,false);assert.equal(a.get('recordSavedNotice').textContent,'점수가 기록되었습니다.');assert.equal(a.bridge.context().records.length,1);assert.equal(a.players().length,2);a.get('savePlay').onclick();a.get('endGameHome').onclick();assert.equal(a.players().length,0);assert.equal(a.get('endGameDialog').open,false);assert.equal(a.bridge.context().records.length,1);assert.equal(a.vm.location.hash,'home');assert.equal(JSON.parse(a.store.get('score.activeGame.v1')),null);});
 test('a failed end-game save leaves the popup and current points intact',async()=>{const a=await app();await startSession(a);const before=JSON.stringify(a.players());a.get('savePlay').onclick();a.vm.localStorage.setItem=()=>{throw Error('quota');};await a.get('endGameSave').onclick();assert.equal(a.get('endGameDialog').open,true);assert.equal(a.bridge.context().records.length,0);assert.equal(JSON.stringify(a.players()),before);assert.match(a.get('endGameError').textContent,/저장 공간/);});
 
-test('scoreless entry reuses current players and skips participant selection without replacing a running game',async()=>{const a=await app();await startSession(a);a.get('savePlay').onclick();await a.get('endGameSave').onclick();const id=a.bridge.context().records[0].id,before=JSON.stringify(a.players()),session=a.store.get('score.activeGame.v1');a.bridge.openSave({withoutScores:true});assert.equal(a.get('scorelessSetupDialog').open,true);assert.equal(a.get('scorelessCountStep').hidden,true);assert.equal(a.get('scorelessModeStep').hidden,false);assert.equal(a.get('scorelessModeBack').hidden,true);a.get('scorelessRankMode').onclick();assert.equal(a.get('scorelessSetupDialog').open,false);assert.equal(a.get('scorelessBoardMode').textContent,'순위 기록 · 2/2');assert.deepEqual(a.players().map(p=>p.name),JSON.parse(before).map(p=>p.name));assert.deepEqual(a.players().map(p=>p.rank),[1,2]);a.players()[0].rank=2;a.players()[0].winner=false;a.players()[1].rank=1;a.players()[1].winner=true;await finishScoreless(a,'점수 없는 모임');assert.equal(a.bridge.context().records.length,2);const added=a.bridge.context().records.find(p=>p.id!==id);assert.equal(added.players.length,2);assert.ok(added.players.every(p=>p.score===null));assert.equal(added.players.map(p=>p.rank).join(','),'2,1');assert.equal(added.players.map(p=>p.winner).join(','),'false,true');assert.equal(JSON.stringify(a.players()),before);assert.equal(a.store.get('score.activeGame.v1'),session);assert.equal(a.get('gamePlayersDialog').open,false);assert.equal(a.get('scorelessBoardPanel').hidden,true);});
+test('scoreless entry reuses current players and skips participant selection without replacing a running game',async()=>{const a=await app();await startSession(a);a.get('savePlay').onclick();await a.get('endGameSave').onclick();const id=a.bridge.context().records[0].id,before=JSON.stringify(a.players()),session=a.store.get('score.activeGame.v1');a.bridge.openSave({withoutScores:true});assert.equal(a.get('scorelessSetupDialog').open,true);assert.equal(a.get('scorelessCountStep').hidden,true);assert.equal(a.get('scorelessModeStep').hidden,false);assert.equal(a.get('scorelessModeBack').hidden,true);a.get('scorelessRankMode').onclick();assert.equal(a.get('scorelessSetupDialog').open,false);assert.equal(a.get('scorelessBoardMode').textContent,'순위 기록 · 2/2');assert.deepEqual(a.players().map(p=>p.name),JSON.parse(before).map(p=>p.name));assert.deepEqual(a.players().map(p=>p.rank),[1,2]);a.players()[0].rank=2;a.players()[0].winner=false;a.players()[1].rank=1;a.players()[1].winner=true;await finishScoreless(a,'점수 없는 모임');assert.equal(a.bridge.context().records.length,2);const added=a.bridge.context().records.find(p=>p.id!==id);assert.equal(added.players.length,2);assert.ok(added.players.every(p=>p.score===null));assert.equal(added.players.map(p=>p.rank).join(','),'2,1');assert.equal(added.players.map(p=>p.winner).join(','),'false,true');assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'rank');assert.deepEqual(a.players().map(p=>p.rank),[2,1]);assert.equal(a.store.get('score.activeGame.v1'),session);assert.equal(a.get('gamePlayersDialog').open,false);assert.equal(a.get('scorelessBoardPanel').hidden,false);a.get('scorelessResultBack').onclick();a.get('scoreModeOption').onclick();assert.equal(JSON.stringify(a.players()),before);});
 test('scoreless entry validates participant count and requires complete results before opening record details',async()=>{const a=await app();a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});for(const count of ['0','101','1.5']){a.get('scorelessCount').value=count;a.get('scorelessSetupForm').onsubmit({preventDefault(){}});assert.equal(a.bridge.context().records.length,0);assert.equal(a.get('scorelessCountStep').hidden,false);}a.get('scorelessCount').value='2';a.get('scorelessSetupForm').onsubmit({preventDefault(){}});assert.equal(a.get('scorelessModeStep').hidden,false);a.get('scorelessRankMode').onclick();delete a.players()[1].rank;delete a.players()[1].winner;a.get('savePlay').onclick();assert.equal(a.get('savePlayDialog').open,false);assert.equal(a.bridge.context().records.length,0);assert.match(a.get('scorelessBoardError').textContent,/모든 플레이어/);a.players()[1].rank=2;a.players()[1].winner=false;await finishScoreless(a,'Pandemic');assert.equal(a.bridge.context().records[0].players[0].score,null);assert.equal(a.bridge.context().records[0].rule,'highest');});
 test('scoreless win mode saves draws and rank mode accepts competition-style shared ranks',async()=>{const draw=await app();await beginScoreless(draw,'축구','2','win');draw.players()[0].draw=true;draw.players()[1].draw=true;await finishScoreless(draw);assert.ok(draw.bridge.context().records[0].players.every(p=>p.draw===true&&p.score===null));draw.bridge.renderHistory();assert.ok(draw.get('recordList').children[0].children[2].children.every(row=>row.children[2].textContent==='무승부'));const rank=await app();await beginScoreless(rank,'볼링','3','rank');rank.players()[0].rank=1;rank.players()[0].winner=true;rank.players()[1].rank=1;rank.players()[1].winner=true;rank.players()[2].rank=3;rank.players()[2].winner=false;await finishScoreless(rank);assert.deepEqual(rank.bridge.context().records[0].players.map(p=>p.rank),[1,1,3]);});
 test('team result cards keep team actions on the first row and show removable player chips',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),teamRender=html.slice(html.indexOf("if(isTeam){for(const team"),html.indexOf('for(const p of players){'));assert.ok(html.includes('.team-result-head{display:grid;grid-template-columns:minmax(0,1fr) auto'));assert.ok(html.includes('.team-result-head .win-actions{display:flex'));assert.ok(html.includes('.team-member-list{display:flex;flex-wrap:wrap'));assert.ok(html.includes('.team-result-player{position:relative;display:inline-flex'));assert.ok(teamRender.includes("chip.className='team-result-player'"));assert.ok(teamRender.includes("name.className='team-player-name'"));assert.ok(teamRender.includes("remove.className='team-player-remove'"));assert.ok(teamRender.includes("remove.textContent='×'"));assert.ok(teamRender.includes('deletePlayer(member.id,{confirm:false})'));assert.ok(teamRender.includes('setupSwipe(section,content,removeTeam'));});
