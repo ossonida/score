@@ -170,7 +170,9 @@ dialog .swatch{width:28px;height:28px}
 .team-result-card.swipe-open .team-result-content{transform:translateX(-84px)}
 .team-result-card .swipe-delete{z-index:0}
 .team-result-head{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px 14px}.team-result-head h3{margin:0;color:inherit;font-size:19px}.team-result-head .win-actions{display:flex;gap:2px}.team-result-head .scoreless-result-choice{min-height:38px;padding:6px 9px;border:0;background:transparent;color:inherit;font-size:14px}.team-result-head .scoreless-result-choice[aria-pressed=true]{outline:0;background:var(--team-ink);color:var(--team-color)}.team-result-head .scoreless-result-choice[aria-pressed=true]::before{content:none}.team-member-list{display:flex;flex-wrap:wrap;gap:7px;min-height:58px;padding:9px 14px 14px;border-top:1px solid var(--team-shade);background:transparent}.team-result-player{position:relative;display:inline-flex;align-items:center;overflow:hidden;border-radius:9px;background:var(--team-shade);color:inherit;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease}.team-result-player.team-player-dragging{opacity:.35}
-.team-player-drag-preview{position:fixed;z-index:10000;pointer-events:none;border-radius:9px;box-shadow:0 12px 28px #0008;transform:translate3d(var(--team-drag-x,0),var(--team-drag-y,0),0) scale(1.05);transition:none}
+.team-player-drag-preview{position:fixed;z-index:10000;pointer-events:none;border-radius:9px;box-shadow:0 0 0 2px #fff,0 0 0 4px #10131acc,0 16px 32px #000a;transform:translate3d(var(--team-drag-x,0px),calc(var(--team-drag-y,0px) - 4px),0) scale(1.1);animation:team-member-pickup .16s ease-out;transition:none}
+@keyframes team-member-pickup{from{transform:translate3d(var(--team-drag-x,0px),var(--team-drag-y,0px),0) scale(1)}to{transform:translate3d(var(--team-drag-x,0px),calc(var(--team-drag-y,0px) - 4px),0) scale(1.1)}}
+@media(prefers-reduced-motion:reduce){.team-player-drag-preview{animation:none}}
 .team-player-drag-preview *{pointer-events:none}
 .team-result-card.team-drop-target{border-color:#67aaff;outline:3px solid #67aaff;outline-offset:2px}.team-result-player .team-player-name{min-height:36px;padding:7px 4px 7px 10px;background:transparent;color:inherit;font-size:13px}.team-result-player .team-player-remove{width:30px;min-height:36px;padding:7px 8px 7px 4px;background:transparent;color:inherit;font-size:15px}.team-result-player .team-player-remove:active{color:#fff;background:#a62a42}@media(max-width:360px){.team-result-head{gap:4px;padding-inline:10px}.team-result-head .scoreless-result-choice{padding-inline:6px}.team-member-list{padding-inline:10px}}
 </style>
@@ -272,7 +274,9 @@ function setupTeamMemberDrag(chip,playerId){
   dragging=true;suppressUntil=Date.now()+500;const rect=chip.getBoundingClientRect(),style=getComputedStyle(chip),surface=getComputedStyle(chip.closest('.team-result-content'));
   preview=chip.cloneNode(true);preview.classList.add('team-player-drag-preview');preview.setAttribute('aria-hidden','true');
   Object.assign(preview.style,{left:rect.left+'px',top:rect.top+'px',width:rect.width+'px',height:rect.height+'px',background:surface.backgroundColor,color:style.color});
-  document.body.append(preview);chip.classList.add('team-player-dragging');chip.setAttribute('aria-grabbed','true');chip.setPointerCapture?.(pointerId);navigator.vibrate?.(20);
+  document.body.append(preview);chip.classList.add('team-player-dragging');chip.setAttribute('aria-grabbed','true');chip.setPointerCapture?.(pointerId);
+  // Haptics are optional: blocked or unsupported vibration must not interrupt dragging.
+  try{navigator.vibrate?.(45);}catch{}
  };
  const locate=(x,y)=>{const sourceTeamId=players.find(player=>player.id===playerId)?.teamId,card=document.elementFromPoint(x,y)?.closest?.('.team-result-card');clearTarget();if(card&&card.dataset.teamId!==sourceTeamId){targetCard=card;card.classList.add('team-drop-target');}};
  chip.title='길게 눌러 팀 이동';chip.setAttribute('aria-grabbed','false');

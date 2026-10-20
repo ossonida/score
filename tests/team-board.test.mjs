@@ -39,7 +39,7 @@ function fixture(mode='team'){
  ];
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);},body=new Element(),timers=new Map();
  let timerId=0,hit=null;
- const context={players,resultEntry:{mode,previousPlayers:players.map(p=>({...p,score:12}))},swipedId:null,navigator:{vibrate(){}},
+ const context={players,resultEntry:{mode,previousPlayers:players.map(p=>({...p,score:12}))},swipedId:null,vibrations:[],navigator:{vibrate(duration){context.vibrations.push(duration);}},
   $:get,document:{createElement:()=>new Element(),body,elementFromPoint:()=>hit},
   getComputedStyle:()=>({color:'#10131a',backgroundColor:'#ffcc00'}),
   setTimeout:fn=>{const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),Date,
@@ -89,14 +89,14 @@ test('short taps keep name editing and chip deletion without activating drag',()
  assert.equal(chip.emit('click').prevented,undefined);
  chip.children[0].onclick();chip.children[1].onclick();
  assert.deepEqual(a.context.opened,['a1']);assert.equal(a.context.deleted[0][0],'a1');assert.equal(a.context.deleted[0][1].confirm,false);
- assert.equal(a.body.children.length,0);assert.equal(a.context.saves,0);
+ assert.equal(a.body.children.length,0);assert.equal(a.context.saves,0);assert.deepEqual(a.context.vibrations,[]);
 });
 
 test('long press shows a detached preview, highlights target, moves once and suppresses the tap',()=>{
  const a=fixture(),team=a.teams()[0],chip=chips(team)[0],target=a.teams()[1];
  // The same pointer bubbles to the card, but a chip must never start its deletion swipe.
  chip.emit('pointerdown');team.emit('pointerdown',{target:chip});a.hold();
- assert.equal(chip.attributes['aria-grabbed'],'true');assert.equal(a.body.children.length,1);
+ assert.equal(chip.attributes['aria-grabbed'],'true');assert.equal(a.body.children.length,1);assert.deepEqual(a.context.vibrations,[45]);
  chip.emit('lostpointercapture',{target:chip.children[0]});
  assert.equal(chip.attributes['aria-grabbed'],'true');
  a.hit(target);chip.emit('pointermove',{clientX:110,clientY:260});team.emit('pointermove',{clientX:110,clientY:260,target:chip});
@@ -108,6 +108,17 @@ test('long press shows a detached preview, highlights target, moves once and sup
  assert.equal(a.context.snapshot.players.find(p=>p.id==='a1').teamId,'b');
  a.context.players=JSON.parse(JSON.stringify(a.context.snapshot.players));a.context.render();
  assert.equal(chips(a.teams().find(t=>t.dataset.teamId==='b')).length,2);
+});
+
+test('unsupported or blocked haptics never interrupt visual selection or dropping',()=>{
+ for(const vibrate of [undefined,()=>false,()=>{throw new Error('blocked');}]){
+  const a=fixture(),chip=chips(a.teams()[0])[0];
+  a.context.navigator.vibrate=vibrate;
+  chip.emit('pointerdown');a.hold();
+  assert.equal(chip.attributes['aria-grabbed'],'true');assert.equal(a.body.children.length,1);
+  a.hit(a.teams()[1]);chip.emit('pointermove',{clientY:260});chip.emit('pointerup',{clientY:260});
+  assert.equal(a.context.players.find(p=>p.id==='a1').teamId,'b');assert.equal(a.context.saves,1);assert.equal(a.body.children.length,0);
+ }
 });
 
 test('cancelled, outside and last-member drops preserve membership',()=>{
