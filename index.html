@@ -74,7 +74,7 @@ dialog .swatch{width:28px;height:28px}
 .card-content{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(80px,130px) 48px;gap:10px;align-items:center;min-height:82px;padding:12px 18px;background:var(--color);border-radius:inherit;touch-action:pan-y;transition:transform .2s ease}
 .swipe-open .card-content{transform:translateX(-84px)}
 .swipe-dragging .card-content{transition:none;user-select:none}
-.swipe-delete{position:absolute;right:0;top:0;bottom:0;width:84px;color:#fff;background:#b92542;font-weight:700;font-size:15px}
+.swipe-delete{position:absolute;inset:0;width:100%;padding:0 24px;text-align:right;color:#fff;background:#b92542;font-weight:700;font-size:15px}
 @media(max-width:600px){.card{padding:0;min-height:0}.card-content{min-height:72px;padding:10px 12px;grid-template-columns:minmax(0,1fr) 44px minmax(60px,88px) 44px;gap:6px}}
 @media(prefers-reduced-motion:reduce){.card-content{transition:none}}
 
@@ -297,7 +297,7 @@ if(Math.abs(dx)<(startedOnDelete?14:8)||Math.abs(dx)<Math.abs(dy))return;
 horizontal=true;card.classList.add('swipe-dragging');card.setPointerCapture(e.pointerId);
 }
 if(e.cancelable)e.preventDefault();
-offset=Math.max(-84,Math.min(0,startOffset+dx));content.style.transform=`translateX(${offset}px)`;
+offset=Math.max(-card.clientWidth,Math.min(0,startOffset+dx));content.style.transform=`translateX(${offset}px)`;
 });
 function finish(e,cancelled){
 if(!dragging||e.pointerId!==pointerId)return;
@@ -340,7 +340,7 @@ function openPlayer(id=null){editing=id;const p=players.find(p=>p.id===id);$('pl
 $('playerForm').onsubmit=e=>{e.preventDefault();const name=$('nickname').value.trim(),color=$('color').value.toLowerCase();if(!name){$('playerError').textContent='닉네임을 입력해주세요.';return;}if(used(color)){$('playerError').textContent='이미 사용 중인 컬러예요. 다른 컬러를 선택해주세요.';return;}const p=players.find(p=>p.id===editing);if(p){if(p.name!==name){p.autoName='';p.anonymous=false;}p.name=name;p.color=color;}else{if(players.length>=100){$('playerError').textContent='플레이어는 100명까지 추가할 수 있습니다.';return;}const added={id:crypto.randomUUID(),name,color,score:resultEntry?null:0,autoName:name===suggestedName?suggestedName:''};if(resultEntry?.mode==='rank'){added.rank=players.length+1;added.winner=false;}players.push(added);}save();$('playerDialog').close();};
 $('random').onclick=()=>{$('color').value=randomColor();palette();};$('color').oninput=palette;$('add').onclick=()=>openPlayer();
 function confirmation(title,message,callback){$('confirmTitle').textContent=title;$('confirmText').textContent=message;pending=callback;$('confirmDialog').showModal();}
-function deletePlayer(id,{confirm=true}={}){const p=players.find(p=>p.id===id);if(!p)return;if(resultEntry&&players.length<=1){const target=$('playerDialog').open?$('playerError'):$('scorelessBoardError');target.textContent='게임 기록에는 플레이어가 한 명 이상 필요합니다.';return;}const removePlayer=()=>{players=players.filter(x=>x.id!==id);if(resultEntry)normalizeResultRanks();if(swipedId===id)swipedId=null;save();if($('playerDialog').open)$('playerDialog').close();};if(confirm)confirmation('플레이어 삭제',`${p.name} 플레이어와 ${resultEntry?'결과':'점수'}를 삭제할까요?`,removePlayer);else removePlayer();}
+function deletePlayer(id,{confirm=true}={}){const p=players.find(p=>p.id===id);if(!p)return;const removePlayer=()=>{players=players.filter(x=>x.id!==id);if(resultEntry){resultEntry.previousPlayers=resultEntry.previousPlayers.filter(x=>x.id!==id);if(players.length)normalizeResultRanks();else{resultEntry=null;window.dispatchEvent(new Event('scorecounter:result-empty'));}}if(swipedId===id)swipedId=null;save();if($('playerDialog').open)$('playerDialog').close();};if(confirm)confirmation('플레이어 삭제',`${p.name} 플레이어와 ${resultEntry?'결과':'점수'}를 삭제할까요?`,removePlayer);else removePlayer();}
 $('remove').onclick=()=>deletePlayer(editing);
 $('reset').onclick=()=>confirmation('점수 초기화','모든 플레이어의 점수를 0으로 초기화할까요?',()=>{players.forEach(p=>p.score=0);save();});
 $('resetPlayers').onclick=()=>confirmation('플레이어 리셋','추가된 플레이어와 점수를 모두 삭제할까요?',()=>{players=[];editing=null;scoring=null;swipedId=null;save();});
