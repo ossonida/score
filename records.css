@@ -244,3 +244,19 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog.scoreless-record-dialog .record-actions .secondary{background:#21344f}
 #savePlayDialog.scoreless-record-dialog .record-actions .primary{background:#2f80ed}
 @media(max-width:390px){#savePlayDialog.scoreless-record-dialog{width:calc(100vw - 16px);padding:18px 16px}#savePlayDialog.scoreless-record-dialog .record-head h2{font-size:22px}#savePlayDialog.scoreless-record-dialog #playGame,#savePlayDialog.scoreless-record-dialog #searchBgg,#savePlayDialog.scoreless-record-dialog #playDate,#savePlayDialog.scoreless-record-dialog #playLocation{height:52px}#savePlayDialog.scoreless-record-dialog .record-actions button{min-height:52px}#savePlayDialog.scoreless-record-dialog .scoreless-meta-row{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:8px}}
+
+/* Result records share the existing card typography and spacing. */
+.record-scores li.record-team{display:block}
+.record-team-heading,.record-team-members{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.record-team-members{justify-content:flex-start;margin-top:8px}
+.record-team-members .record-edit-name{max-width:100%;overflow-wrap:anywhere}
+.record-mode-cooperative li,.record-mode-rank li,.record-mode-win li{display:flex;justify-content:space-between;gap:12px}
+.record-mode-stats{margin-top:16px}
+.record-mode-stats h3{font-size:1rem}
+.record-mode-stats td{white-space:normal;min-width:56px}
+.coop-result-controls{grid-column:1/-1;display:grid;gap:12px;padding:16px;border:1px solid var(--line,#304763);border-radius:16px}
+.coop-result-actions{display:flex;gap:8px}
+.coop-result-actions button{flex:1;min-height:44px}
+.coop-result-actions button[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:-3px}
+.coop-result-controls label{display:grid;gap:8px}
+.coop-result-controls input{width:100%;box-sizing:border-box;min-height:44px}

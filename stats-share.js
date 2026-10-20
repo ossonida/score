@@ -1,7 +1,7 @@
-import {gameKey,winnerIds} from './records-core.js?v=64';
+import {gameKey,winnerIds} from './records-core.js?v=113';
 import {gameImageUrl} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
-import {nameKey} from './personal-stats.js?v=64';
+import {nameKey} from './personal-stats.js?v=113';
 import {bggSearchUrl} from './firebase-config.js';
 import {starterGames} from './game-catalog.js?v=95';
 

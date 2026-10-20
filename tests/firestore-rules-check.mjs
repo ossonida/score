@@ -6,6 +6,13 @@ try{
  const alice=env.authenticatedContext('alice').firestore(),bob=env.authenticatedContext('bob').firestore(),guest=env.unauthenticatedContext().firestore();
  const record={id:'one',game:{name:'Catan',bggId:'13'},date:'2026-10-12',rule:'highest',createdAt:'2026-10-12T00:00:00.000Z',players:[{id:'a',name:'A',score:1,color:'#ffffff'}]};
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),record));
+ await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success',sharedScore:0}));
+ await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'failure',sharedScore:-12.5}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,cooperativeResult:'success'}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'maybe'}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',sharedScore:'10'}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',sharedScore:Infinity}));
+ await assertFails(setDoc(doc(bob,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success'}));
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,location:'Board game cafe'}));
  await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,location:'x'.repeat(121)}));
  await assertFails(getDoc(doc(bob,'users/alice/plays/one')));await assertFails(setDoc(doc(bob,'users/alice/plays/one'),record));await assertFails(getDoc(doc(guest,'users/alice/plays/one')));
@@ -17,5 +24,5 @@ try{
  await assertFails(setDoc(doc(alice,'users/alice/bggCollection/13'),{...game,id:'13',gameId:'99'}));
  await assertFails(setDoc(doc(alice,'users/alice/bggPlays/99'),{id:'99',gameId:'13',name:'Catan',username:'alice-bgg',date:'2026-10-12',quantity:-1,players:[]}));
  await assertFails(getDoc(doc(alice,'_bggLimits/alice')));await assertFails(setDoc(doc(alice,'_bggLimits/alice'),{count:0,start:0}));
- console.log('Firestore rules: 15 access/validation checks passed');
+ console.log('Firestore rules: 22 access/validation checks passed');
 }finally{await env.cleanup();}

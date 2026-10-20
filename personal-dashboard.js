@@ -1,9 +1,11 @@
+import {recordMode,modeLabels,resultLabel} from './records-core.js?v=113';
+import {renderModeStats} from './record-view.js?v=113';
 import {metadata,domainLabels} from './bgg-metadata.js?v=64';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=64';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=113';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
-const ruleName=rule=>rule==='lowest'?'낮은 점수 승리':rule==='cooperative'?'협력 게임':'높은 점수 승리';
+const ruleName=rule=>modeLabels[rule]||rule;
 function section(title,cls=''){const box=el('section',undefined,'insight-card '+cls);box.append(el('h3',title));return box;}
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
 export function renderIdentitySettings(container,records,scope,onChange){
@@ -26,7 +28,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  const profile=readIdentity(scope),game=records[0]?.game;
  const overview=el('section',undefined,'insight-hero game-overview');
  const title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',game.name+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',game?.name||'게임 통계'),el('p',types.join(' · '),'game-type-label'));title.append(art,copy);overview.append(title);
- const scores=records.flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
+ const scores=records.filter(p=>['highest','lowest'].includes(recordMode(p))).flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
  const best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null;
  const metrics=el('div',undefined,'insight-metrics');
  for(const [value,label]of[[num(records.length)+'회','전체 플레이'],[num(best),'전체 최고점']]){
@@ -35,9 +37,9 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  const personal=personalGame(records,profile,previousRule);if(!personal.total)overview.append(metrics);container.append(overview);
  const configured=Boolean(profile?.primary||records.some(p=>p.players.filter(x=>x.isSelf===true).length===1));
  const heading=el('div',undefined,'personal-game-heading');heading.append(el('h2','나의 기록'));container.append(heading);
- if(!configured){note(container,'설정에서 내 이름·닉네임을 연결하면 나의 기록을 볼 수 있습니다.');return;}
+ if(!configured){renderModeStats(container,records);note(container,'설정에서 내 이름·닉네임을 연결하면 나의 기록을 볼 수 있습니다.');return;}
  const initial=personal;
- const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','승리 조건'),rule=el('select',undefined,'personal-rule');
+ const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','기록 방식'),rule=el('select',undefined,'personal-rule');
  for(const value of initial.rules){const option=el('option',ruleName(value));option.value=value;rule.append(option);}
  rule.value=initial.rule;ruleLabel.append(rule);controls.append(ruleLabel);controls.hidden=initial.rules.length<2;container.append(controls);
  const content=el('div');container.append(content);
@@ -46,29 +48,31 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   if(s.ambiguous)note(content,`이름이 중복된 ${s.ambiguous}개 기록은 제외했습니다. 내 플레이어 지정을 확인해주세요.`);
   if(!s.total){note(content,'이 게임에 내 기록이 없습니다. 내 플레이어 지정을 확인해주세요.');return;}
   const hero=el('section',undefined,'insight-hero personal-hero'),metrics=el('div',undefined,'insight-metrics personal-metrics');
-  for(const [value,label]of[[num(s.total)+'회','플레이'],[s.rule==='cooperative'?'—':num(s.wins)+'회','우승'],[s.rate===null?'—':num(s.rate*100)+'%','승률'],[num(s.best?.person.score),s.rule==='lowest'?'개인 최저점':s.rule==='cooperative'?'가장 높은 점수':'개인 최고점']]){
+  const scored=['highest','lowest'].includes(s.rule),coop=s.rule==='cooperative',ranked=s.rule==='rank';
+  const values=[[num(s.total)+'회','플레이'],[num(s.wins)+'회',coop?'성공':ranked?'1위':s.rule==='team'?'팀 승리':'승리'],[s.rate===null?'—':num(s.rate*100)+'%',coop?'성공률':ranked?'1위 비율':s.rule==='team'?'팀전 승률':'승률'],...(scored?[[num(s.best?.person.score),s.rule==='lowest'?'개인 최저점':'개인 최고점']]:coop?[[num(s.losses)+'회','실패']]:ranked?[]:[[num(s.draws)+'회','무승부']])];
+  for(const [value,label]of values){
    const box=el('div');box.append(el('strong',value),el('span',label));metrics.append(box);
   }
-  hero.append(metrics);note(hero,`평균 ${num(s.average)}점 · ${ruleName(s.rule)}`);
+  hero.append(metrics);note(hero,scored?`평균 ${num(s.average)}점 · ${ruleName(s.rule)}`:`${ruleName(s.rule)} · 결과 확인 ${s.known}회 · 미입력 ${s.total-s.known}회`);
   if(s.best){const button=el('button',`${s.best.play.date} · 개인 기록 보기 ↗`,'insight-link');button.type='button';button.onclick=()=>onOpen(s.best.play.id);hero.append(button);}
   content.append(hero);
   const layout=el('div',undefined,'personal-sections');
-  const growth=section('점수 추이','personal-growth');
+  if(scored){const growth=section('점수 추이','personal-growth');
   if(s.comparable){growth.append(el('p',s.delta===0?'최근 5경기 평균 변화 없음':`최근 5경기 평균 ${s.delta>0?'+':'−'}${num(Math.abs(s.delta))}점`,'growth-summary'));note(growth,`이전 5경기 ${num(s.previousAverage)}점 → 최근 5경기 ${num(s.currentAverage)}점`);}
   else note(growth,`최근 최대 5경기 평균 ${num(s.currentAverage)}점`);
-  drawChart(growth,s.entries,s.best);layout.append(growth);
+  drawChart(growth,s.entries,s.best);layout.append(growth);}
   const recent=section('최근 경기','personal-recent');
   for(const {play,person,rank,won}of s.recent){
-   const button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${play.date} · ${play.players.length}인`),el('strong',person.score===null?'점수 없음':num(person.score)+'점'),el('small',`${won?'우승 · ':''}${rank?rank.value+'위':s.rule==='cooperative'?'협력':'순위 없음'}`));button.onclick=()=>onOpen(play.id);recent.append(button);
+   const button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${play.date} · ${play.players.length}인`),el('strong',scored?(person.score===null?'점수 없음':num(person.score)+'점'):resultLabel(play,person)),el('small',scored?`${won?'우승 · ':''}${rank?rank.value+'위':''}`:s.rule==='team'?person.teamName||'팀전':coop?(play.sharedScore===undefined?'참여자 '+play.players.length+'명':num(play.sharedScore)+'점 · 공동'):''));button.onclick=()=>onOpen(play.id);recent.append(button);
   }
   layout.append(recent);
   const sizes=section('인원별 성적','personal-sizes');
-  for(const row of s.sizes){const line=el('div',undefined,'personal-comparison');line.append(el('strong',`${row.size}인`),el('span',`${row.count}회 · ${s.rule==='cooperative'?'협력':row.known?`${row.wins}승 · ${num(row.wins/row.known*100)}%`:'승자 정보 없음'}`));sizes.append(line);}
+  for(const row of s.sizes){const line=el('div',undefined,'personal-comparison');line.append(el('strong',`${row.size}인`),el('span',`${row.count}회 · ${ranked?`평균 ${num(row.averageRank)}위 · 1위 ${row.wins}회`:row.known?`${row.wins}${coop?'회 성공':'승'} · ${num(row.wins/row.known*100)}%`:'결과 정보 없음'}`));sizes.append(line);}
   layout.append(sizes);content.append(layout);
   const methods=el('details',undefined,'stats-methods');methods.append(el('summary','통계 집계 기준'));
-  note(methods,`점수는 점수가 있는 ${s.scoreCount}경기, 승률은 승자를 확인한 경쟁 ${s.known}경기 기준입니다. 공동 승리는 우승에 포함하며 협력 게임은 개인 승률에서 제외합니다. 인원별 승률도 같은 기준입니다.`);
-  note(methods,'점수 추이는 경기 순서로 표시합니다. 같은 날 가져온 기록의 실제 순서는 다를 수 있으며 빈 점수는 연결하지 않습니다. 최근 10경기 모두에 점수가 있고 두 5경기 묶음의 날짜 경계가 구분될 때 평균을 비교합니다.');
-  note(methods,'개인 기록 갱신은 같은 게임·승리 조건에서 이전 날짜의 개인 최고·최저점을 넘어선 경우에만 표시합니다. 첫 기록과 동점은 갱신으로 표시하지 않습니다.');content.append(methods);
+  if(scored)note(methods,`점수는 점수가 있는 ${s.scoreCount}경기, 승률은 승자를 확인한 경쟁 ${s.known}경기 기준입니다. 공동 승리는 우승에 포함하며 협력 게임은 개인 승률에서 제외합니다. 인원별 승률도 같은 기준입니다.`);
+  if(scored)note(methods,'점수 추이는 경기 순서로 표시합니다. 같은 날 가져온 기록의 실제 순서는 다를 수 있으며 빈 점수는 연결하지 않습니다. 최근 10경기 모두에 점수가 있고 두 5경기 묶음의 날짜 경계가 구분될 때 평균을 비교합니다.');
+  if(!scored)note(methods,'기록 방식을 구분해 집계합니다. 승률·1위 비율·성공률은 결과가 확인된 경기만 기준으로 합니다. 공동 1위는 1위에 포함하고 평균 순위는 참가 인원별로 계산합니다. 팀전은 내 팀의 결과를 사용하며 협력은 경기 전체 결과만 사용합니다.');if(scored)note(methods,'개인 기록 갱신은 같은 게임·승리 조건에서 이전 날짜의 개인 최고·최저점을 넘어선 경우에만 표시합니다. 첫 기록과 동점은 갱신으로 표시하지 않습니다.');content.append(methods);
  }
  rule.onchange=draw;draw();
 }

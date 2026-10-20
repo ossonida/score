@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=64';
+import {gameKey,winnerIds,recordMode,playerOutcome} from './records-core.js?v=113';
 export const nameKey=name=>String(name||'').trim().normalize('NFKC').toLocaleLowerCase();
 const numeric=value=>typeof value==='number'&&Number.isFinite(value);
 const mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
@@ -30,31 +30,31 @@ export async function syncIdentity(scope,{load,save,isCurrent=()=>true,onChange=
 }
 export function meIn(play,profile){const selected=play.players.filter(p=>p.isSelf===true);if(selected.length)return selected.length===1?selected[0]:null;if(!profile)return null;const keys=new Set([profile.primary,...profile.aliases].map(nameKey)),people=play.players.filter(p=>p.anonymous!==true&&keys.has(nameKey(p.name)));return people.length===1?people[0]:null;}
 export function personalRank(play,person){
- if(play.rule==='cooperative')return null;
+ if(['cooperative','team','win','unknown'].includes(recordMode(play)))return null;
  if(Number.isInteger(person.rank)&&person.rank>0)return {value:person.rank,source:'기록 순위'};
  if(!play.players.every(p=>numeric(p.score)))return null;
  return {value:1+play.players.filter(p=>better(p.score,person.score,play.rule)).length,source:'점수 순위'};
 }
 export function personalGame(records,profile,rule){
  const all=ordered(records),keys=new Set(profile?[profile.primary,...profile.aliases].map(nameKey):[]),ambiguous=all.filter(p=>!p.players.some(x=>typeof x.isSelf==='boolean')&&p.players.filter(x=>x.anonymous!==true&&keys.has(nameKey(x.name))).length>1).length;
- const own=all.flatMap(play=>{const person=meIn(play,profile);return person?[{play,person}]:[];}),rules=[...new Set(own.map(x=>x.play.rule))];
- const active=rules.includes(rule)?rule:rules[0]||'highest',entries=own.filter(x=>x.play.rule===active).map(({play,person})=>{const wins=winnerIds(play);return {play,person,rank:personalRank(play,person),known:active!=='cooperative'&&(wins.length>0||person.draw===true),won:active!=='cooperative'&&wins.includes(person.id)};});
- const scored=entries.filter(x=>numeric(x.person.score)),scores=scored.map(x=>x.person.score),bestEntry=scored.reduce((best,x)=>!best||better(x.person.score,best.person.score,active)?x:best,null),known=entries.filter(x=>x.known),wins=known.filter(x=>x.won).length;
+ const own=all.flatMap(play=>{const person=meIn(play,profile);return person?[{play,person}]:[];}),rules=[...new Set(own.map(x=>recordMode(x.play)))];
+ const active=rules.includes(rule)?rule:rules[0]||'highest',entries=own.filter(x=>recordMode(x.play)===active).map(({play,person})=>{const wins=winnerIds(play);return {play,person,rank:personalRank(play,person),outcome:playerOutcome(play,person),known:playerOutcome(play,person)!=='unknown',won:['win','success'].includes(playerOutcome(play,person))};});
+ const scored=entries.filter(x=>['highest','lowest'].includes(active)&&numeric(x.person.score)),scores=scored.map(x=>x.person.score),bestEntry=scored.reduce((best,x)=>!best||better(x.person.score,best.person.score,active)?x:best,null),known=entries.filter(x=>x.known),wins=known.filter(x=>x.won).length;
  const latest5=entries.slice(-5),previous5=entries.slice(-10,-5),recentScores=latest5.filter(x=>numeric(x.person.score)),previousScores=previous5.filter(x=>numeric(x.person.score));
  // Do not invent chronology from the IDs assigned to imported same-day records.
  const comparable=latest5.length===5&&previous5.length===5&&recentScores.length===5&&previousScores.length===5&&previous5.at(-1).play.date<latest5[0].play.date;
  const currentAverage=mean(recentScores.map(x=>x.person.score)),previousAverage=comparable?mean(previousScores.map(x=>x.person.score)):null;
- const sizes=new Map(),opponents=new Map();for(const entry of entries){const {play,person}=entry,size=play.players.length,row=sizes.get(size)||{size,count:0,known:0,wins:0};row.count++;if(entry.known){row.known++;if(entry.won)row.wins++;}sizes.set(size,row);
+ const sizes=new Map(),opponents=new Map();for(const entry of entries){const {play,person}=entry,size=play.players.length,row=sizes.get(size)||{size,count:0,known:0,wins:0,ranks:[]};row.count++;if(entry.rank)row.ranks.push(entry.rank.value);if(entry.known){row.known++;if(entry.won)row.wins++;}sizes.set(size,row);
   // A normalized name repeated in the same game cannot identify a unique opponent.
   const seen=new Map();for(const p of play.players)seen.set(nameKey(p.name),(seen.get(nameKey(p.name))||0)+1);
-  for(const opponent of play.players){const key=nameKey(opponent.name);if(opponent.anonymous===true||opponent.id===person.id||keys.has(key)||seen.get(key)!==1)continue;
+  for(const opponent of play.players){const key=nameKey(opponent.name);if(active==='cooperative'||person.teamId&&person.teamId===opponent.teamId||opponent.anonymous===true||opponent.id===person.id||keys.has(key)||seen.get(key)!==1)continue;
    const row=opponents.get(key)||{key,name:opponent.name,count:0,ahead:0,behind:0,tied:0,compared:0};row.count++;
    if(active!=='cooperative'){let result=null;if(person.draw===true&&opponent.draw===true)result=0;else if(Number.isInteger(person.rank)&&Number.isInteger(opponent.rank)){result=person.rank===opponent.rank?0:person.rank<opponent.rank?1:-1;}else if(numeric(person.score)&&numeric(opponent.score))result=person.score===opponent.score?0:better(person.score,opponent.score,active)?1:-1;
     if(result!==null){row.compared++;row[result===0?'tied':result>0?'ahead':'behind']++;}
    }opponents.set(key,row);
   }
  }
- return {rules,rule:active,ownCount:own.length,ambiguous,entries,total:entries.length,first:entries[0]?.play.date,last:entries.at(-1)?.play.date,wins,known:known.length,rate:known.length?wins/known.length:null,average:mean(scores),best:bestEntry,scoreCount:scores.length,currentAverage,previousAverage,comparable,delta:comparable?currentAverage-previousAverage:null,recent:entries.slice(-5).reverse(),sizes:[...sizes.values()].sort((a,b)=>a.size-b.size),opponents:[...opponents.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name))};
+ return {rules,rule:active,ownCount:own.length,ambiguous,entries,total:entries.length,draws:entries.filter(x=>x.outcome==='draw').length,losses:entries.filter(x=>['loss','failure'].includes(x.outcome)).length,first:entries[0]?.play.date,last:entries.at(-1)?.play.date,wins,known:known.length,rate:known.length?wins/known.length:null,average:mean(scores),best:bestEntry,scoreCount:scores.length,currentAverage,previousAverage,comparable,delta:comparable?currentAverage-previousAverage:null,recent:entries.slice(-5).reverse(),sizes:[...sizes.values()].map(s=>({...s,averageRank:mean(s.ranks)})).sort((a,b)=>a.size-b.size),opponents:[...opponents.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name))};
 }
 export function matchInsight(records,play,profile){
  const person=meIn(play,profile);if(!person)return null;
@@ -69,7 +69,7 @@ export function matchInsight(records,play,profile){
 export function personalRecordIds(records,profile){
  const groups=new Map(),result=new Set();
  for(const play of ordered(records)){
-  const person=meIn(play,profile);if(play.rule==='cooperative'||!person||!numeric(person.score))continue;
+  const person=meIn(play,profile);if(!['highest','lowest'].includes(recordMode(play))||!person||!numeric(person.score))continue;
   const key=JSON.stringify([gameKey(play.game),play.rule]);
   const group=groups.get(key)||{day:null,previous:null,dayBest:null};
   if(group.day!==play.date){if(group.dayBest!==null&&(group.previous===null||better(group.dayBest,group.previous,play.rule)))group.previous=group.dayBest;group.day=play.date;group.dayBest=null;}
