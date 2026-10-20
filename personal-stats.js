@@ -7,6 +7,27 @@ const ordered=records=>[...records].sort((a,b)=>a.date.localeCompare(b.date)||a.
 export function namesIn(records){return [...new Map(records.flatMap(p=>p.players.filter(x=>x.anonymous!==true).map(x=>[nameKey(x.name),x.name]))).entries()].sort((a,b)=>a[1].localeCompare(b[1]));}
 export function readIdentity(scope){try{const p=JSON.parse(localStorage.getItem('score.identity.v1.'+scope)||'null');if(!p||typeof p.primary!=='string'||!Array.isArray(p.aliases))return null;return {primary:nameKey(p.primary),aliases:[...new Set(p.aliases.filter(x=>typeof x==='string').map(nameKey))].slice(0,100)};}catch{return null;}}
 export function saveIdentity(scope,profile){localStorage.setItem('score.identity.v1.'+scope,JSON.stringify({primary:nameKey(profile.primary),aliases:[...new Set(profile.aliases.map(nameKey))].slice(0,100)}));}
+const identitySyncKey=scope=>'score.identity.synced.v1.'+scope;
+export function hasPendingIdentity(scope){
+ const profile=readIdentity(scope);
+ return profile!==null&&JSON.stringify(profile)!==localStorage.getItem(identitySyncKey(scope));
+}
+export function validIdentity(profile){return !!profile&&typeof profile.primary==='string'&&profile.primary.length<=1000&&Array.isArray(profile.aliases)&&profile.aliases.length<=100&&profile.aliases.every(name=>typeof name==='string'&&name.length<=1000);}
+export async function syncIdentity(scope,{load,save,isCurrent=()=>true,onChange=()=>{}}){
+ const remote=await load();if(!isCurrent())return;
+ if(remote!==null&&!validIdentity(remote))throw Error('클라우드 닉네임 설정을 확인하지 못했습니다. 기기 설정을 유지합니다.');
+ // Read after the request: edits made while downloading must win over remote data.
+ const local=readIdentity(scope);
+ if(local&&(hasPendingIdentity(scope)||remote===null)){
+  const uploaded=JSON.stringify(local);await save(local);if(!isCurrent())return;
+  // Keep the uploaded snapshot, so edits made during upload remain pending.
+  localStorage.setItem(identitySyncKey(scope),uploaded);
+ }else if(remote!==null){
+  saveIdentity(scope,remote);
+  localStorage.setItem(identitySyncKey(scope),JSON.stringify(readIdentity(scope)));
+  onChange();
+ }
+}
 export function meIn(play,profile){const selected=play.players.filter(p=>p.isSelf===true);if(selected.length)return selected.length===1?selected[0]:null;if(!profile)return null;const keys=new Set([profile.primary,...profile.aliases].map(nameKey)),people=play.players.filter(p=>p.anonymous!==true&&keys.has(nameKey(p.name)));return people.length===1?people[0]:null;}
 export function personalRank(play,person){
  if(play.rule==='cooperative')return null;

@@ -1,6 +1,7 @@
 import {signInNativeGoogle} from './native-auth-flow.js?v=64';
 import {validUsername,validBggItem} from './bgg-validation.js?v=64';
 import {firebaseConfig} from './firebase-config.js?v=64';
+import {validIdentity} from './personal-stats.js?v=64';
 let connection;
 export function cloudConfigured(){return !!(firebaseConfig?.apiKey && firebaseConfig?.projectId && firebaseConfig?.authDomain);}
 export async function connectCloud(onUser){
@@ -25,6 +26,8 @@ function userId(c,expected){if(!c.session.currentUser)throw Error('로그인이 
 export async function loadCloud(uid){const c=await connectCloud();const result=await c.store.getDocsFromServer(c.store.collection(c.db,'users',userId(c,uid),'plays'));return result.docs.map(d=>({...d.data(),id:d.id}));}
 export async function saveCloud(play,uid){const c=await connectCloud();await c.store.setDoc(c.store.doc(c.db,'users',userId(c,uid),'plays',play.id),play);}
 export async function deleteCloud(id,uid){const c=await connectCloud();await c.store.deleteDoc(c.store.doc(c.db,'users',userId(c,uid),'plays',id));}
+export async function loadCloudIdentity(uid){const c=await connectCloud();const snap=await c.store.getDocFromServer(c.store.doc(c.db,'users',userId(c,uid),'settings','identity'));return snap.exists()?snap.data():null;}
+export async function saveCloudIdentity(profile,uid){if(!validIdentity(profile))throw Error('닉네임 설정을 확인해주세요.');const c=await connectCloud();await c.store.setDoc(c.store.doc(c.db,'users',userId(c,uid),'settings','identity'),{primary:profile.primary,aliases:profile.aliases});}
 export async function idToken(uid){const c=await connectCloud(),owner=userId(c,uid),token=await c.session.currentUser.getIdToken();userId(c,owner);return token;}
 export async function loadBggProfile(uid){const c=await connectCloud();const snap=await c.store.getDoc(c.store.doc(c.db,'users',userId(c,uid),'settings','bgg'));return snap.exists()?snap.data():null;}
 export async function saveBggProfile(profile,uid){if(!validUsername(profile?.username))throw Error('BGG 사용자명을 확인해주세요.');const c=await connectCloud();await c.store.setDoc(c.store.doc(c.db,'users',userId(c,uid),'settings','bgg'),profile);}

@@ -20,8 +20,8 @@ async function app(store=new Map(),mockCloud=false,cloudSource='',search={}){
  const elements=new Map(),get=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
  let players=[{id:'a',name:'하늘',color:'#52c7ef',score:20},{id:'b',name:'바다',color:'#ffcc00',score:10}],resultEntry=null;
  const windowListeners=new Map(),opens=[];const context=vm.createContext({console,location:{hash:search.initialHash||""},setTimeout,clearTimeout,URL,Date,Map,Set,Number,JSON,Error,Event:globalThis.Event,AbortController,AbortSignal,fetch:search.fetch,crypto:globalThis.crypto,localStorage:{getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value)},navigator:{},document:{getElementById:get,createElement:()=>new Element(),querySelectorAll:()=>[]},window:{ScoreStartup:{ready(part){(context.startupEvents??=[]).push({part,hash:context.location.hash,mode:resultEntry?.mode||'score'});}},ScoreCounter:{getPlayers:()=>players.map(p=>({...p})),getResultEntry:()=>resultEntry?{mode:resultEntry.mode,players:players.map(p=>({...p}))}:null,createAutoPlayers:(count,names=[])=>Array.from({length:count},(_,i)=>({id:'result-'+i,name:names[i]||'랜덤'+i,autoName:names[i]?'':'랜덤'+i,anonymous:names[i]?false:undefined,color:['#52c7ef','#ffcc00','#b44cdb'][i]||'#45d9a0',score:null})),startResultEntry:(next,mode)=>{resultEntry={mode,previous:players};players=next.map(({winner,draw,rank,...p},i)=>mode==='rank'?({...p,rank:i+1,winner:i===0}):({...p}));},restoreResultEntry:(next,mode)=>{resultEntry={mode,previous:players};players=next.map(p=>({...p}));},endResultEntry:()=>{if(resultEntry){players=resultEntry.previous;resultEntry=null;}},confirm:(_t,_m,callback)=>callback(),clearPlayers:()=>{players=[];},startPlayers:count=>{players=Array.from({length:count},(_,i)=>({id:'new-'+i,name:'자동'+i,autoName:'자동'+i,color:'#52c7ef',score:0}));},restorePlayers:next=>{players=next;}},open:(...args)=>opens.push(args),addEventListener(name,listener){const list=windowListeners.get(name)||[];list.push(listener);windowListeners.set(name,list);},dispatchEvent(event){for(const listener of windowListeners.get(event.type)||[])listener(event);return true;}}});
- const modules=new Map();async function load(path){if(modules.has(path))return modules.get(path);const modulePath=path.replaceAll('\\','/'),mod=new vm.SourceTextModule(modulePath.endsWith('/firebase-config.js')?`export const firebaseConfig=null; export const bggSearchUrl=${JSON.stringify(search.endpoint||'')};`:mockCloud&&modulePath.endsWith('/cloud-records.js')?cloudSource||"export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;} export async function login(){} export async function logout(){} export async function loadCloud(){return [];} export async function saveCloud(){} export async function deleteCloud(){} export async function idToken(){return '';}":await fs.readFile(path,'utf8'),{context,identifier:path});modules.set(path,mod);return mod;}
- const main=await load(resolve(root,'records.js'));await main.link((specifier,ref)=>load(resolve(dirname(ref.identifier),specifier.split('?')[0])));await main.evaluate();return {vm:context,get,store,opens,players:()=>players,changeAuth:user=>context.changeAuth(user),bridge:context.window.ScoreRecords};
+ const modules=new Map();async function load(path){if(modules.has(path))return modules.get(path);const modulePath=path.replaceAll('\\','/'),identityMock=" export async function loadCloudIdentity(uid){if(globalThis.readIdentityCloud)return globalThis.readIdentityCloud(uid);return globalThis.remoteIdentity||null;} export async function saveCloudIdentity(profile,uid){if(globalThis.writeIdentityCloud)return globalThis.writeIdentityCloud(profile,uid);globalThis.savedIdentity={profile,uid};}",mod=new vm.SourceTextModule(modulePath.endsWith('/firebase-config.js')?`export const firebaseConfig=null; export const bggSearchUrl=${JSON.stringify(search.endpoint||'')};`:mockCloud&&modulePath.endsWith('/cloud-records.js')?(cloudSource||"export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;} export async function login(){} export async function logout(){} export async function loadCloud(){return [];} export async function saveCloud(){} export async function deleteCloud(){} export async function idToken(){return '';}")+identityMock:await fs.readFile(path,'utf8'),{context,identifier:path});modules.set(path,mod);return mod;}
+ const main=await load(resolve(root,'records.js'));await main.link((specifier,ref)=>load(resolve(dirname(ref.identifier),specifier.split('?')[0])));await main.evaluate();return {vm:context,get,store,opens,players:()=>players,changeAuth:user=>context.changeAuth(user),bridge:context.window.ScoreRecords,renderIdentity:()=>modules.get(resolve(root,'personal-dashboard.js')).namespace.renderIdentitySettings(get('identityEditor'),context.window.ScoreRecords.context().records,context.window.ScoreRecords.context().key,()=>context.window.dispatchEvent(new Event('score-identity:changed')))};
 }
 test('draft restoration stays on the requested tab and signals ready only after restoring the exact result mode',async()=>{
  for(const resultMode of ['win','team','rank','coop']){
@@ -62,6 +62,54 @@ test('auth initialization failure releases startup without clearing another acco
 async function save(a,name='카탄',rule='highest'){
  a.bridge.openFinish();a.get('playGame').value=name;a.get('playDate').value='2026-10-09';a.get('playRule').value=rule;await a.get('savePlayForm').onsubmit({preventDefault(){}});
 }
+const identityCloudSource="export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;} export async function login(){} export async function logout(){} export async function loadCloud(){return globalThis.remoteRecords||[];} export async function saveCloud(play){(globalThis.uploadedRecords??=[]).push(play);} export async function deleteCloud(){} export async function idToken(){return '';}";
+test('nickname settings survive login and reload and restore with records on a new device via manual cloud sync',async()=>{
+ const scope='score.plays.v1.user.owner',identityKey='score.identity.v1.'+scope;
+ const a=await app(new Map(),true,identityCloudSource);await a.changeAuth({uid:'owner'});
+ await save(a);a.renderIdentity();
+ const form=a.get('identityEditor').children[0],select=form.children[0].children[0];
+ select.value='하늘';select.onchange();
+ const aliases=form.children[2].children[1];aliases.children[0].onclick();
+ const profile=JSON.parse(a.store.get(identityKey));assert.deepEqual(profile,{primary:'하늘',aliases:['바다']});
+ assert.match(a.get('accountStorage').textContent,/대기/);assert.equal(a.vm.savedIdentity,undefined);
+ await a.changeAuth(null);assert.equal(a.store.has('score.identity.v1.score.plays.v1.guest'),false);
+ await a.changeAuth({uid:'owner'});a.renderIdentity();assert.equal(a.get('identityEditor').children[0].children[0].children[0].value,'하늘');
+ const reloaded=await app(a.store,true,identityCloudSource);await reloaded.changeAuth({uid:'owner'});
+ assert.equal(reloaded.vm.savedIdentity,undefined);await reloaded.get('cloudSync').onclick();
+ assert.deepEqual(JSON.parse(JSON.stringify(reloaded.vm.savedIdentity)),{uid:'owner',profile});
+ const records=JSON.parse(reloaded.store.get(scope)).records;
+ const fresh=await app(new Map(),true,identityCloudSource);fresh.vm.remoteIdentity=profile;fresh.vm.remoteRecords=records;
+ await fresh.changeAuth({uid:'owner'});assert.equal(fresh.store.has(identityKey),false);
+ await fresh.get('cloudSync').onclick();fresh.renderIdentity();
+ assert.deepEqual(JSON.parse(fresh.store.get(identityKey)),profile);
+ const restored=fresh.get('identityEditor').children[0];
+ assert.equal(restored.children[0].children[0].value,'하늘');
+ assert.equal(restored.children[2].hidden,false);
+ assert.equal(restored.children[2].children[1].children[0].attributes['aria-pressed'],'true');
+ assert.deepEqual(JSON.parse(fresh.store.get(scope)).records,records);
+ assert.equal(fresh.vm.savedIdentity,undefined);assert.match(fresh.get('accountStorage').textContent,/동기화됨/);
+ // A second reload retains both the identity and original record payload.
+ const again=await app(fresh.store,true,identityCloudSource);await again.changeAuth({uid:'owner'});again.renderIdentity();
+ assert.equal(again.get('identityEditor').children[0].children[0].children[0].value,'하늘');
+ assert.deepEqual(JSON.parse(again.store.get(scope)).records,records);
+});
+test('nickname cloud errors preserve local settings and retry on the next manual sync',async()=>{
+ const key='score.identity.v1.score.plays.v1.user.owner',profile={primary:'하늘',aliases:['바다']};
+ const a=await app(new Map([[key,JSON.stringify(profile)]]),true,identityCloudSource);await a.changeAuth({uid:'owner'});
+ a.vm.writeIdentityCloud=async()=>{throw Error('offline');};await a.get('cloudSync').onclick();
+ assert.deepEqual(JSON.parse(a.store.get(key)),profile);assert.match(a.get('accountError').textContent,/offline/);
+ assert.equal(a.get('cloudSync').disabled,false);
+ a.vm.writeIdentityCloud=null;await a.get('cloudSync').onclick();
+ assert.equal(a.vm.savedIdentity.profile.primary,'하늘');assert.match(a.get('accountStorage').textContent,/동기화됨/);
+});
+test('nickname download completed after account change does not affect either account',async()=>{
+ const a=await app(new Map(),true,identityCloudSource);await a.changeAuth({uid:'one'});
+ let release;a.vm.readIdentityCloud=()=>new Promise(resolve=>{release=resolve;});
+ const syncing=a.get('cloudSync').onclick();await a.changeAuth({uid:'two'});release({primary:'첫계정',aliases:[]});await syncing;
+ assert.equal(a.store.has('score.identity.v1.score.plays.v1.user.one'),false);
+ assert.equal(a.store.has('score.identity.v1.score.plays.v1.user.two'),false);
+ assert.equal(a.bridge.context().key,'score.plays.v1.user.two');assert.equal(a.vm.savedIdentity,undefined);
+});
 async function beginScoreless(a,name='점수 없는 게임',count='2',mode='win'){
  a.vm.window.ScoreCounter.restorePlayers([]);a.bridge.openSave({withoutScores:true});a.get('scorelessCount').value=count;a.get('scorelessSetupForm').onsubmit({preventDefault(){}});if(mode==='win'){a.get('scorelessWinMode').onclick();a.get('scorelessSoloWinMode').onclick();}if(mode==='rank')a.get('scorelessRankMode').onclick();a.scorelessGame={name,date:'2026-10-16'};
 }

@@ -6,14 +6,14 @@ import {renderOverview} from './overview-dashboard.js?v=95';
 import {latestPlayDate} from './stats-overview.js?v=64';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=64';
-import {readIdentity,meIn,personalRecordIds} from './personal-stats.js?v=64';
+import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity} from './personal-stats.js?v=64';
 import {renderStatsDashboard} from './stats-dashboard.js?v=95';
 import {mergeImported} from './data-transfer.js?v=64';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=95';
 import {isScoreGame,scoreGameType} from './score-games.js?v=95';
 import {metadata,domainLabels} from './bgg-metadata.js?v=88';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats} from './records-core.js?v=105';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken} from './cloud-records.js?v=64';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity} from './cloud-records.js?v=64';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
@@ -60,7 +60,7 @@ function updateButtons(){
  $('recordModeChange').hidden=!!resultEntry||!onBoard;
  const caption=$('boardCaption');caption.classList.toggle('scoreless-session-caption',!!resultEntry);caption.replaceChildren();if(resultEntry&&pendingScoreless){const modeLabel=resultEntry.mode==='win'?'개인전 승패 기록':resultEntry.mode==='team'?'팀전 승패 기록':resultEntry.mode==='rank'?'순위 기록':'협력 기록',title=node('span',pendingScoreless.game?.name||modeLabel);title.className='scoreless-session-title';caption.append(title);if(pendingScoreless.game?.name&&pendingScoreless.date){const date=node('time',pendingScoreless.date);date.dateTime=pendingScoreless.date;caption.append(date);}}else caption.textContent='점수는 이 기기에 자동 저장됩니다.';$('recordingStatus').hidden=!!resultEntry||!onBoard||!activeSession;$('recordingStatus').textContent=!resultEntry&&onBoard&&activeSession?activeSession.game.name+' 점수 기록을 시작했습니다.':'';$('recordingStatus').title=$('recordingStatus').textContent;
  const saveLabel='기록 저장';$('savePlay').textContent='SAVE';$('savePlay').setAttribute('aria-label',saveLabel);$('savePlay').title=saveLabel;
- $('savePlay').hidden=!onBoard;$('savePlay').disabled=!onBoard||(!!resultEntry&&!completeScorelessEntry(resultEntry));$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 기기 기록과 대기 변경은 유지됩니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 동기화 대기 중입니다. 클라우드 동기화를 눌러주세요.`:cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'로그인됨 · 클라우드 동기화를 눌러 기록을 연결하세요.'):'현재 기록은 이 브라우저에 저장됩니다.';}
+ $('savePlay').hidden=!onBoard;$('savePlay').disabled=!onBoard||(!!resultEntry&&!completeScorelessEntry(resultEntry));$('accountName').textContent=currentUser?(currentUser.displayName||currentUser.email||'로그인됨'):'Google 로그인으로 다른 기기에서도 기록을 확인하세요.';$('accountLogin').hidden=!authReady||!!currentUser;$('accountLogout').hidden=!currentUser;$('guestUpload').hidden=!currentUser||!read(guestKey).records.length;$('cloudSync').hidden=!currentUser;$('recoverRecords').hidden=!currentUser||!recoveryRecords().length;$('accountStorage').textContent=currentUser?(cloudState==='error'?'동기화에 실패했습니다. 기기 기록과 대기 변경은 유지됩니다.':cloudState==='loading'?'계정의 기록을 불러오는 중입니다.':cloudState==='saving'?'기록을 클라우드에 저장하는 중입니다.':pending.size?`${pending.size}개 기록이 동기화 대기 중입니다. 클라우드 동기화를 눌러주세요.`:hasPendingIdentity(key())?'내 닉네임 설정이 동기화 대기 중입니다. 클라우드 동기화를 눌러주세요.':cloudState==='ready'?`클라우드와 동기화됨 · ${records.length}개 기록`:'로그인됨 · 클라우드 동기화를 눌러 기록을 연결하세요.'):'현재 기록은 이 브라우저에 저장됩니다.';}
 function updateGameOptions(){const groups=gameStats(records);$('savedGames').replaceChildren(...groups.map(g=>{const o=node('option');o.value=g.game.name;return o;}));}
 function draftKey(){return `score.playDraft.v1.${currentUser?.uid||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}
@@ -263,7 +263,10 @@ async function sync({silent=false}={}){
 async function refreshCloud(){
  if(!currentUser||['loading','saving'].includes(cloudState))return;
  const uid=currentUser.uid,epoch=accountEpoch,revision=recordRevision;cloudState='loading';updateButtons();
- try{const remote=await loadCloud(uid);if(epoch!==accountEpoch)return;
+ try{
+ await syncIdentity(key(),{load:()=>loadCloudIdentity(uid),save:profile=>saveCloudIdentity(profile,uid),isCurrent:()=>epoch===accountEpoch,onChange:()=>{window.dispatchEvent?.(new Event('score-identity:changed'));renderHistory();}});
+ if(epoch!==accountEpoch)return;
+ const remote=await loadCloud(uid);if(epoch!==accountEpoch)return;
  if(!Array.isArray(remote)||remote.some(p=>!isPlay(p)))throw Error('클라우드 기록 형식을 확인하지 못했습니다. 기기 기록을 유지합니다.');
  if(revision!==recordRevision){await sync();return;}
  const matchedRemote=matchGameRecords(remote);const map=new Map(matchedRemote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);
@@ -309,6 +312,7 @@ window.ScoreRecords={
 };
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);
 window.addEventListener('scorecounter:changed',()=>{updateButtons();if(scorelessBoardActive)persistScorelessDraft('board');});
+window.addEventListener('score-identity:changed',updateButtons);
 window.addEventListener('scorecounter:result-empty',()=>{scorelessBoardActive=false;$('scorelessBoardPanel').hidden=true;$('scorelessBoardError').textContent='';clearScorelessDraft();pendingScoreless=null;scorelessMode='';scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';scorelessStep='count';close('scorelessSetupDialog');updateButtons();location.hash='home';});
 loadLocal();updateButtons();
 if(cloudConfigured())connectCloud(async user=>{authReady=true;accountEpoch++;pendingGame=null;scorelessDraftMuted=true;scorelessBoardActive=false;api.endResultEntry?.();$('scorelessBoardPanel').hidden=true;pendingScoreless=null;scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';close('gamePlayersDialog');close('scorelessSetupDialog');scorelessDraftMuted=false;close('endGameDialog');recordEditing=null;close('recordEditDialog');searchSerial++;searchController?.abort();clearTimeout(searchTimer);currentUser=user;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();restoreScorelessDraft();updateButtons();renderHistory();window.ScoreStartup?.ready('records');if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open)await $('savePlayForm').onsubmit({preventDefault(){}});}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));window.ScoreStartup?.ready('records');});else{restoreScorelessDraft();window.ScoreStartup?.ready('records');}
