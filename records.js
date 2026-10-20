@@ -282,7 +282,7 @@ for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','sta
 $('statsViewTabs').addEventListener('keydown',event=>{const ids=['statsRecent','statsAll','statsGames'],index=ids.indexOf(event.target.id);if(index<0)return;let next=index;if(event.key==='ArrowRight')next=(index+1)%3;else if(event.key==='ArrowLeft')next=(index+2)%3;else if(event.key==='Home')next=0;else if(event.key==='End')next=2;else return;event.preventDefault();$(ids[next]).onclick();$(ids[next]).focus();});$('historyTab').onclick=()=>{mode='history';renderHistory();};$('statsTab').onclick=()=>{mode='stats';renderHistory();};
 let savedNoticeTimer;
 function savedNotice(text='점수가 기록되었습니다.'){notify(text);$('recordSavedNotice').textContent=text;$('recordSavedNotice').hidden=false;clearTimeout(savedNoticeTimer);savedNoticeTimer=setTimeout(()=>{$('recordSavedNotice').hidden=true;},3500);}
-$('savePlay').onclick=()=>{if(scorelessBoardActive){openScorelessDetails();return;}message('endGameError','');$('endGameName').textContent=activeSession?.game.name||'현재 점수판';show('endGameDialog');};
+$('savePlay').onclick=()=>{if(scorelessBoardActive){openScorelessDetails();return;}openSave({finish:true});};
 const defaultBoardAdd=$('add').onclick,defaultBoardResetPlayers=$('resetPlayers').onclick;
 $('add').onclick=()=>defaultBoardAdd?.();
 $('resetPlayers').onclick=()=>{if(scorelessBoardActive){api.confirm('플레이어 리셋','추가된 플레이어와 점수를 모두 삭제할까요?',()=>{stopScorelessBoard();clearScorelessDraft();pendingScoreless=null;scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';api.clearPlayers?.();$('recordMessage').textContent='';});return;}defaultBoardResetPlayers?.();};
