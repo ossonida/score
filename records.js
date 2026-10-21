@@ -115,8 +115,7 @@ function updateRecordStorage(){
  $('recordResultHeading').textContent=recordFlow==='setup'?'플레이 설정':'플레이 정보';
  const saving=recordFlow!=='setup';$('playRuleField').hidden=recordFlow==='scoreless';$('scoreModeField').hidden=saving;$('scorelessHint').hidden=true;
  $('recordFormTitle').textContent=recordFlow==='scoreless'?'기록 정보 입력':recordFlow==='setup'?'게임 기록하기':'경기 기록 저장';
- //$('recordFormHint').textContent=recordFlow==='scoreless'?'게임·날짜·장소를 확인한 뒤 기록을 저장하세요.':recordFlow==='setup'?'게임을 선택하고 플레이어를 추가하세요.':'게임·날짜·장소와 승리 조건을 확인한 뒤 기록을 저장하세요.';
- $('recordFormHint').hidden=false;$('recordStorageHint').hidden=true;$('recordStorageHint').textContent='';
+ $('recordStorageHint').hidden=true;$('recordStorageHint').textContent='';
  const scoreless=recordFlow==='scoreless';$('savePlayDialog').classList.toggle('scoreless-record-dialog',scoreless);$('playLocationField').hidden=!saving;$('playBggAttribution').hidden=false;$('playBggAdvanced').hidden=false;$('openBggWebsite').hidden=isScoreGame({name:$('playGame').value,bggId:$('playBggId').value});
  $('recordLogin').hidden=true;$('commitPlay').textContent=saving?'이 기기에 저장':'플레이어 추가';
 }
