@@ -83,6 +83,10 @@ test('cooperative results restore the draft, save, edit and sync without persona
  assert.equal(c.bridge.context().records[0].cooperativeResult,'failure');
  assert.equal(c.bridge.context().records[0].id,saved.id);
 });
+test('SAVE stays available while individual win and cooperative results are incomplete',async()=>{
+ const win=await app();await beginScoreless(win,'승패 테스트','2','win');assert.equal(win.get('savePlay').disabled,false);win.get('savePlay').onclick();assert.match(win.get('scorelessBoardError').textContent,/모든 플레이어/);
+ const coop=await app();await beginScoreless(coop,'협력 테스트','2','coop');coop.get('scorelessCoopMode').onclick();assert.equal(coop.get('savePlay').disabled,false);coop.get('savePlay').onclick();assert.match(coop.get('scorelessBoardError').textContent,/협력 결과/);
+});
 test('mode-specific cards hide absent scores, sort joint ranks and edit whole teams',async()=>{
  const a=await app(),make=(id,players)=>({id,date:'2026-10-20',createdAt:'2026-10-20T00:00:00Z',game:{name:'테스트',bggId:''},rule:'highest',players:players.map((p,i)=>({id:String(i),name:'플레이어'+i,color:'#123456',score:null,...p}))});
  const team=make('team',[{teamId:'team-1',teamName:'A팀',winner:true},{teamId:'team-1',teamName:'A팀',winner:true},{teamId:'team-2',teamName:'B팀',winner:false}]);
