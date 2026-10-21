@@ -225,9 +225,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog.scoreless-record-dialog .selected-game-art{width:42px;height:52px;flex-basis:42px;border-radius:5px;overflow:hidden;background:#2e5c90}
 #savePlayDialog.scoreless-record-dialog .selected-game-art img{object-fit:cover}
 #savePlayDialog.scoreless-record-dialog .selected-game-fallback{display:grid;place-items:center;color:#80d0a3;font-size:25px;line-height:1;background:#315e90}
-#savePlayDialog.scoreless-record-dialog .selected-game-copy{display:grid;gap:4px;min-width:0}
-#savePlayDialog.scoreless-record-dialog .selected-game-copy strong{font-size:20px;line-height:1.25;font-weight:500;overflow-wrap:anywhere}
-#savePlayDialog.scoreless-record-dialog .selected-game-copy small{font-size:13px;color:#8ebaff}
+#savePlayDialog .selected-game-copy{display:grid;gap:4px;min-width:0}
+#savePlayDialog .selected-game-copy strong{font-size:20px;line-height:1.25;font-weight:500;overflow-wrap:anywhere}
+#savePlayDialog .selected-game-copy small{font-size:13px;color:#8ebaff}
 #savePlayDialog.scoreless-record-dialog .save-result{padding:18px 0 0;border:0}
 #savePlayDialog.scoreless-record-dialog .scoreless-meta-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:10px}
 #savePlayDialog.scoreless-record-dialog .scoreless-meta-row>div{min-width:0}
