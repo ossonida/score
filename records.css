@@ -218,7 +218,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog.scoreless-record-dialog .recent-games{gap:7px;margin:7px 0 16px}
 #savePlayDialog.scoreless-record-dialog .recent-game{min-height:42px!important;padding:8px 12px;border-radius:11px;background:#203450;color:#eef4ff;font-size:13px}
 #savePlayDialog.scoreless-record-dialog .record-results{margin-top:8px}
-#savePlayDialog .selected-game-section{margin:4px 0 0;padding:18px 0;border-top:1px solid #2c3e58;border-bottom:1px solid #2c3e58}
+#savePlayDialog .selected-game-section{margin:4px 0 0;padding:18px 0;border: 1px solid #8fc4ff;border-radius: 10px;padding: 5px 10px;}
 #savePlayDialog .selected-game-section[hidden]{display:none}
 #savePlayDialog .selected-game-section>p{margin:0 0 12px;color:#aebdd1;font-size:13px}
 #savePlayDialog .selected-game{gap:12px;margin:0;color:#9bc7ff}
@@ -226,7 +226,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog .selected-game-art img{object-fit:cover}
 #savePlayDialog .selected-game-fallback{display:grid;place-items:center;color:#80d0a3;font-size:25px;line-height:1;background:#315e90}
 #savePlayDialog .selected-game-copy{display:grid;gap:4px;min-width:0}
-#savePlayDialog .selected-game-copy strong{font-size:20px;line-height:1.25;font-weight:500;overflow-wrap:anywhere}
+#savePlayDialog .selected-game-copy strong{font-size:17px;line-height:1;font-weight:500;overflow-wrap:anywhere}
 #savePlayDialog .selected-game-copy small{font-size:13px;color:#8ebaff}
 #savePlayDialog.scoreless-record-dialog .save-result{padding:18px 0 0;border:0}
 #savePlayDialog.scoreless-record-dialog .scoreless-meta-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:10px}
