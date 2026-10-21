@@ -228,10 +228,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog .selected-game-copy{display:grid;gap:4px;min-width:0}
 #savePlayDialog .selected-game-copy strong{font-size:17px;line-height:1;font-weight:500;overflow-wrap:anywhere}
 #savePlayDialog .selected-game-copy small{font-size:13px;color:#8ebaff}
-#savePlayDialog.finish-record-dialog{max-width:460px}
-#savePlayDialog.finish-record-dialog .save-layout{grid-template-columns:minmax(0,1fr)}
-#savePlayDialog.finish-record-dialog .save-result{padding:0;border:0}
-#savePlayDialog.finish-record-dialog .selected-game-section{margin-bottom:16px}
+#savePlayDialog.record-save-dialog{max-width:460px}
+#savePlayDialog.record-save-dialog .save-layout{grid-template-columns:minmax(0,1fr)}
+#savePlayDialog.record-save-dialog .save-result{padding:0;border:0}
+#savePlayDialog.record-save-dialog .selected-game-section{margin-bottom:16px}
 #savePlayDialog.scoreless-record-dialog .save-result{padding:18px 0 0;border:0}
 #savePlayDialog.scoreless-record-dialog .scoreless-meta-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:10px}
 #savePlayDialog.scoreless-record-dialog .scoreless-meta-row>div{min-width:0}
