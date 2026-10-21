@@ -74,7 +74,7 @@ dialog .actions .danger{margin-right:0}
 .toolbar .tool{width:44px;height:44px;min-height:44px;min-width:44px;padding:10px;border-radius:var(--ui-radius)}
 .toolbar .tool svg{width:22px;height:22px}
 .toolbar .tool[hidden]{display:none!important}
-.toolbar .game-end-tool{width:auto;min-width:68px;padding:8px 12px;font-size:12px;line-height:20px;white-space:nowrap;background:var(--ui-secondary);border-color:var(--ui-line);color:#e4edfa}
+.toolbar .game-end-tool{width:auto;min-width:68px;padding:8px 12px;font-size:12px;line-height:20px;white-space:nowrap;}
 .empty-board #savePlay,.empty-board #reset,.empty-board #resetPlayers,.empty-board #bulk{display:none}
 .empty .empty-actions{gap:8px;max-width:280px}
 .empty .empty-actions>button{min-height:48px;padding:12px 16px;border-radius:var(--ui-radius);font-size:14px;line-height:22px;font-weight:500}
