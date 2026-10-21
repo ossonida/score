@@ -53,7 +53,7 @@ dialog .actions .danger{margin-right:0}
 #savePlayDialog .save-layout h3{margin-bottom:12px;color:#b6c6dd}
 #savePlayDialog .game-result-detail{min-width:44px;min-height:44px;display:grid;place-items:center;padding:8px}
 #savePlayDialog .recent-games-disclosure{margin-block:8px;padding:0 12px}
-#savePlayDialog .recent-games-disclosure summary{min-height:44px;display:list-item;align-content:center;padding:10px 0;font-size:13px}
+#savePlayDialog .recent-games-disclosure summary{min-height:34px;display:list-item;align-content:center;padding:10px 0;font-size:13px}
 #savePlayDialog .recent-games{margin:0 0 12px;gap:8px}
 #savePlayDialog .recent-game{min-height:44px!important;border-radius:var(--ui-radius);padding:8px 12px;font-size:13px}
 #playerDialog .player-entry{grid-template-columns:minmax(0,1fr) 72px;align-items:stretch}
