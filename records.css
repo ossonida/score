@@ -209,7 +209,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #savePlayDialog.scoreless-record-dialog .record-head h2{font-size:25px;line-height:1.25;font-weight:700;letter-spacing:-.5px}
 #savePlayDialog.scoreless-record-dialog .score-close{width:46px;height:46px;min-width:46px;padding:0;font-size:31px;line-height:1;color:#aebdd1;background:transparent}
 #savePlayDialog.scoreless-record-dialog .save-layout{display:grid;grid-template-columns:1fr;gap:0}
-#savePlayDialog.scoreless-record-dialog .save-game>label,#savePlayDialog.scoreless-record-dialog #recordResultHeading,#savePlayDialog.scoreless-record-dialog #gameSearchStatus{display:none}
+#savePlayDialog.scoreless-record-dialog .save-game>label,#savePlayDialog.scoreless-record-dialog #gameSearchStatus{display:none}
 #savePlayDialog.scoreless-record-dialog .save-game>.record-row{align-items:stretch;gap:8px}
 #savePlayDialog.scoreless-record-dialog #playGame{height:56px;padding:12px 14px;border-color:#34455e;border-radius:13px;background:#09111f;font-size:16px}
 #savePlayDialog.scoreless-record-dialog #searchBgg{height:56px;min-width:72px;padding-inline:16px;border-radius:13px;background:#213550;font-size:15px;font-weight:600}
