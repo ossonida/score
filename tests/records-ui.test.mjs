@@ -83,9 +83,11 @@ test('cooperative results restore the draft, save, edit and sync without persona
  assert.equal(c.bridge.context().records[0].cooperativeResult,'failure');
  assert.equal(c.bridge.context().records[0].id,saved.id);
 });
-test('SAVE stays available while individual win and cooperative results are incomplete',async()=>{
- const win=await app();await beginScoreless(win,'승패 테스트','2','win');assert.equal(win.get('savePlay').disabled,false);win.get('savePlay').onclick();assert.match(win.get('scorelessBoardError').textContent,/모든 플레이어/);
- const coop=await app();await beginScoreless(coop,'협력 테스트','2','coop');coop.get('scorelessCoopMode').onclick();assert.equal(coop.get('savePlay').disabled,false);coop.get('savePlay').onclick();assert.match(coop.get('scorelessBoardError').textContent,/협력 결과/);
+test('an individual result choice fills every player result and enables SAVE',async()=>{
+ const label=player=>player.draw===true?'무':player.winner===true?'승':'패';
+ const choices=root=>{const found=[];const visit=node=>{if(String(node.className||'').includes('scoreless-result-choice'))found.push(node);for(const child of node.children||[])visit(child);};visit(root);return found;};
+ for(const [choice,expected]of [[0,['승','패','패']],[2,['패','승','승']],[1,['무','무','무']]]){const a=await app();await beginScoreless(a,'승패 테스트','3','win');choices(a.get('cards'))[choice].onclick();assert.deepEqual(a.players().map(label),expected);assert.equal(a.get('scorelessBoardMode').textContent,'개인전 승패 기록 · 3/3');assert.equal(a.get('savePlay').disabled,false);}
+ const changed=await app();await beginScoreless(changed,'승패 변경 테스트','3','win');choices(changed.get('cards'))[0].onclick();choices(changed.get('cards'))[3].onclick();assert.deepEqual(changed.players().map(label),['패','승','패']);assert.equal(changed.get('savePlay').disabled,false);
 });
 test('mode-specific cards hide absent scores, sort joint ranks and edit whole teams',async()=>{
  const a=await app(),make=(id,players)=>({id,date:'2026-10-20',createdAt:'2026-10-20T00:00:00Z',game:{name:'테스트',bggId:''},rule:'highest',players:players.map((p,i)=>({id:String(i),name:'플레이어'+i,color:'#123456',score:null,...p}))});
