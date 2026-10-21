@@ -72,6 +72,9 @@ test('team and individual result buttons render 승 무 패 and update the selec
    assert.equal(a.context.players[2].winner,false);
    assert.equal(head(a.teams()[0]).children[1].children[0].attributes['aria-pressed'],'true');
    assert.equal(a.get('savePlay').disabled,false);
+   head(a.teams()[1]).children[1].children[2].onclick();
+   assert.equal(a.get('savePlay').disabled,false);
+   assert.deepEqual(a.context.players.map(player=>player.winner),[true,true,false,false]);
   }
  }
 });
