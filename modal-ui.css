@@ -77,7 +77,7 @@ dialog .record-actions button,dialog .actions button{padding:10px 16px;border-ra
 #recentGamesSection[hidden]{display:none}.save-result{border-top:1px solid var(--popup-line);padding-top:14px}
 #savePlayDialog .record-snapshot{display:grid;gap:0;max-height:210px;margin:12px 0 0;border:1px solid var(--popup-line);border-radius:12px;overflow:auto;background:#0b111c}
 .finish-player{display:grid;grid-template-columns:minmax(0,1fr) auto 30px;gap:8px;align-items:center;min-height:44px;padding:10px 12px;border-bottom:1px solid var(--popup-line)}.finish-player:last-child{border-bottom:0}.finish-name{font-size:14px;overflow-wrap:anywhere}.finish-score{font-size:17px;font-weight:500;white-space:nowrap}.finish-winner{color:#91c8ff;font-size:11px;text-align:right}
-#savePlay{background:#237bff;border-color:#237bff;color:white;font-weight:500}
+#savePlay{font-weight:500}
 @media(min-width:700px) and (min-height:480px){#savePlayDialog{max-width:740px}.save-layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px}.save-result{border-top:0;border-left:1px solid var(--popup-line);padding:0 0 0 20px}#savePlayDialog .record-snapshot{max-height:280px}}
 @media(max-height:480px){.save-layout{gap:10px}.finish-note{margin-bottom:8px}.save-result{padding-top:10px}#savePlayDialog .record-snapshot{max-height:88px}.finish-player{padding:7px 10px;min-height:36px}}
 
