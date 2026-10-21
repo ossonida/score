@@ -29,6 +29,7 @@ test('rank averages retain player count and joint firsts; unknown results stay o
  assert.equal(personalGame(records,{primary:'a',aliases:[]},'rank').sizes[1].averageRank,2);
 });
 test('legacy BG Stats all-loss flags are removed',()=>{const legacy=play('bgstats:legacy',[person('a',{winner:false}),person('b',{winner:false})]),normalized=normalizePlay(legacy);assert.equal(recordMode(legacy),'win');assert.equal(recordMode(normalized),'unknown');assert.ok(normalized.players.every(person=>!('winner'in person)));});
+test('known cooperative games recover shared results from legacy personal outcomes',()=>{for(const winner of [true,false]){const legacy=play('legacy-coop-'+winner,[person('a',{winner}),person('b',{winner})]),normalized=normalizePlay(legacy,{cooperative:true});assert.equal(recordMode(normalized),'cooperative');assert.equal(normalized.cooperativeResult,winner?'success':'failure');assert.ok(normalized.players.every(person=>!('winner'in person)));}});
 test('cooperative outcomes and optional shared score survive serialization and validation',()=>{
  const success=play('success',[person('a')],{rule:'cooperative',cooperativeResult:'success',sharedScore:0});
  const failure=play('failure',[person('a')],{rule:'cooperative',cooperativeResult:'failure',sharedScore:-10.5});

@@ -39,7 +39,8 @@ export function recordMode(play){
  if(play.players.some(p=>typeof p.winner==='boolean'||p.draw===true))return 'win';
  return 'unknown';
 }
-export function normalizePlay(play){
+export function normalizePlay(play,{cooperative=false}={}){
+ if(cooperative&&play?.rule!=='cooperative'&&Array.isArray(play.players)&&play.players.length&&play.players.every(p=>typeof p.winner==='boolean'&&p.winner===play.players[0].winner)){const success=play.players[0].winner;return {...play,rule:'cooperative',cooperativeResult:success?'success':'failure',players:play.players.map(({winner,draw,rank,...person})=>person)};}
  if(!play?.id?.startsWith('bgstats:')||!Array.isArray(play.players)||!play.players.length||!play.players.every(p=>p.winner===false)||play.players.some(p=>p.draw===true))return play;
  return {...play,players:play.players.map(({winner,...person})=>person)};
 }
