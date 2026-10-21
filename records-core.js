@@ -39,6 +39,10 @@ export function recordMode(play){
  if(play.players.some(p=>typeof p.winner==='boolean'||p.draw===true))return 'win';
  return 'unknown';
 }
+export function normalizePlay(play){
+ if(!play?.id?.startsWith('bgstats:')||!Array.isArray(play.players)||!play.players.length||!play.players.every(p=>p.winner===false)||play.players.some(p=>p.draw===true))return play;
+ return {...play,players:play.players.map(({winner,...person})=>person)};
+}
 export const modeLabels={highest:'점수 · 높은 점수 승리',lowest:'점수 · 낮은 점수 승리',win:'개인 승패',team:'팀전',rank:'순위',cooperative:'협력',unknown:'결과 미입력'};
 export function playerOutcome(play,person){
  const mode=recordMode(play);
@@ -54,7 +58,7 @@ export function playerOutcome(play,person){
 }
 export function resultLabel(play,person){
  const mode=recordMode(play);
- if(mode==='rank'&&person.rank)return `${play.players.filter(p=>p.rank===person.rank).length>1?'공동 ':''}${person.rank}위 / ${play.players.length}명`;
+ if(mode==='rank'&&person.rank)return `${play.players.filter(p=>p.rank===person.rank).length>1?'공동 ':''}${person.rank}위`;
  return {win:'승리',loss:'패배',draw:'무승부',success:'성공',failure:'실패',unknown:'결과 미입력'}[playerOutcome(play,person)];
 }
 export function modeStats(plays){

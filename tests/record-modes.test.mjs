@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome} from '../records-core.js';
+import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome,normalizePlay} from '../records-core.js';
 import {editRecordedPlayer} from '../record-edit.js';
 import {personalGame} from '../personal-stats.js';
 import {rivalStats} from '../social-insights.js';
@@ -25,9 +25,10 @@ test('rank averages retain player count and joint firsts; unknown results stay o
  const records=[play('two',[person('a',{rank:1}),person('b',{rank:1})]),play('four',[person('a',{rank:2}),person('b',{rank:1}),person('c',{rank:3}),person('d',{rank:4})])];
  const row=modeStats(records)[0].players.find(p=>p.name==='a');
  assert.equal(row.rate,.5);assert.deepEqual(row.sizes.map(s=>[s.size,s.average]),[[2,1],[4,2]]);
- assert.equal(resultLabel(records[0],records[0].players[0]),'공동 1위 / 2명');
+ assert.equal(resultLabel(records[0],records[0].players[0]),'공동 1위');
  assert.equal(personalGame(records,{primary:'a',aliases:[]},'rank').sizes[1].averageRank,2);
 });
+test('legacy BG Stats all-loss flags are removed',()=>{const legacy=play('bgstats:legacy',[person('a',{winner:false}),person('b',{winner:false})]),normalized=normalizePlay(legacy);assert.equal(recordMode(legacy),'win');assert.equal(recordMode(normalized),'unknown');assert.ok(normalized.players.every(person=>!('winner'in person)));});
 test('cooperative outcomes and optional shared score survive serialization and validation',()=>{
  const success=play('success',[person('a')],{rule:'cooperative',cooperativeResult:'success',sharedScore:0});
  const failure=play('failure',[person('a')],{rule:'cooperative',cooperativeResult:'failure',sharedScore:-10.5});

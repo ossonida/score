@@ -41,7 +41,7 @@ export async function parseImport(raw){
      if(Number.isSafeInteger(Number(s.rank))&&Number(s.rank)>0&&Number(s.rank)<=100)row.rank=Number(s.rank);
      return row;
     });
-    if(!players.every(row=>typeof row.winner==='boolean'))for(const row of players)row.winner=false;
+    if(players.some(row=>row.winner===true)){for(const row of players)if(row.winner===undefined)row.winner=false;}else for(const row of players)delete row.winner;
     const when=date(p.playDate||p.playDateYmd),cooperative=p.cooperative===undefined?yes(g.cooperative):yes(p.cooperative);
     const highest=p.highestWins??p.highestScoreWins??g.highestWins;
     const rule=cooperative?'cooperative':highest===false||highest===0?'lowest':'highest';
