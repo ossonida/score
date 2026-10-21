@@ -32,7 +32,7 @@ async function importPublic(){
  if(!user||busy||!bggSearchUrl)return;
  const username=$('bggUsername').value.trim(),uid=user.uid,version=epoch;
  if(username!==cached('profile',{}).username){status('BGG 연결 정보를 다시 확인해주세요.');return;}
- busy=true;render();let imported=0,cloudFailed=false;
+ busy=true;render();let updated=0,cloudFailed=false;
  try{
   for(const action of ['collection','plays']){
    let page=1,total=Infinity,items=[];
@@ -45,15 +45,17 @@ async function importPublic(){
     if(action==='collection'||!rows.length)break;
    }while(items.length<total&&page<=10);
    items=[...new Map(items.map(p=>[p.id,p])).values()];
-   if(version!==epoch)return;localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');
-   if(action==='collection')collection=items;else plays=items;imported+=items.length;render();
+   const previous=cached(action,[]),before=new Map(previous.map(item=>[item.id,item])),changed=items.filter(item=>JSON.stringify(before.get(item.id))!==JSON.stringify(item)),removed=previous.filter(item=>!items.some(next=>next.id===item.id)),pendingCloud=cached(action+'Pending',false);
+   if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;}if(action==='collection')collection=items;else plays=items;render();
+   if(!changed.length&&!removed.length&&!pendingCloud)continue;
    try{await saveBggData(action,username,items,uid);if(version===epoch)localStorage.removeItem(key(action+'Pending'));}catch(error){if(version!==epoch)return;cloudFailed=true;status('가져온 정보를 이 기기에 저장했습니다. '+cloudFailure(error));}if(version!==epoch)return;
    if(action==='plays'&&items.length<total)status('최근 플레이 기록 최대 1,000개를 가져왔습니다.');
   }
-  status(cloudFailed?`공개 정보 ${imported}개를 이 기기에 저장했습니다. 클라우드 저장에 실패했습니다. Firebase 보안 규칙과 연결 상태를 확인해주세요.`:imported?`공개 정보 ${imported}개를 계정에 저장했습니다. 플레이 기록은 최대 1,000개까지 가져옵니다.`:'공개 보유 게임과 플레이 기록이 없습니다. BGG 사용자명과 정보 공개 여부를 확인해주세요.');
+  status(cloudFailed?`변경된 공개 정보 ${updated}개를 이 기기에 저장했습니다. 클라우드 저장에 실패했습니다. Firebase 보안 규칙과 연결 상태를 확인해주세요.`:updated?`신규·변경 공개 정보 ${updated}개를 계정에 저장했습니다. 플레이 기록은 최대 1,000개까지 가져옵니다.`:'새로 가져올 공개 정보가 없습니다.');
  }catch(e){if(version===epoch)status(e.message);}finally{if(version===epoch){busy=false;render();}}
 }
 $('bggImport').onclick=importPublic;
+window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))})};
 render();
 if(cloudConfigured())connectCloud(async next=>{
  const version=++epoch;user=next;busy=false;collection=[];plays=[];$('bggUsername').value='';status('');

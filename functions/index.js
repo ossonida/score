@@ -37,7 +37,7 @@ export const bggSearch=onRequest({region:'asia-northeast3',cors:['https://ossoni
     if(!username||username.length>64||/[\u0000-\u001f\u007f]/.test(username)||!Number.isInteger(page)||page<1||page>10){res.status(400).json({error:'Invalid username or page'});return;}
     try{
       const url=new URL('https://boardgamegeek.com/xmlapi2/'+action);url.searchParams.set('username',username);
-      if(action==='collection'){url.searchParams.set('own','1');url.searchParams.set('subtype','boardgame');url.searchParams.set('brief','1');}else url.searchParams.set('page',String(page));
+      if(action==='collection'){url.searchParams.set('subtype','boardgame');url.searchParams.set('brief','1');}else url.searchParams.set('page',String(page));
       const response=await fetch(url,{redirect:'error',headers:{Authorization:`Bearer ${token.value()}`},signal:AbortSignal.timeout(12000)});
       if(response.status===202||response.status===429){res.status(response.status).json({error:'BGG temporarily busy'});return;}
       if(!response.ok){res.status(502).json({error:'BGG request failed'});return;}

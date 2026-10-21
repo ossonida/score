@@ -65,7 +65,7 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
    const username=(input.searchParams.get('username')||'').trim(),page=Number(input.searchParams.get('page')||1);
    if(!username||username.length>64||/[\u0000-\u001f\u007f]/.test(username)||!Number.isInteger(page)||page<1||page>10)return reply(400,{error:'Invalid username or page'});
    url.searchParams.set('username',username);
-   if(action==='collection'){url.searchParams.set('own','1');url.searchParams.set('subtype','boardgame');}else url.searchParams.set('page',String(page));
+   if(action==='collection'){url.searchParams.set('subtype','boardgame');}else url.searchParams.set('page',String(page));
    // Do not use brief=1: it omits status, needed to validate ownership.
   }
   try{

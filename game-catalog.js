@@ -1279,7 +1279,8 @@ export function gameResolver(plays=[]){
 }
 const resolveCatalogGame=gameResolver();
 export function resolveGame(game,plays=[]){return plays.length?gameResolver(plays)(game):resolveCatalogGame(game);}
-export function matchGameRecords(plays){const resolve=gameResolver(plays);return plays.map(play=>{const game=resolve(play.game);return game===play.game?play:{...play,game};});}
+function koreanGameName(game){if(!game?.bggId||/[가-힣]/.test(game.name))return game.name;return (koreanAliases[String(game.bggId)]||[]).find(name=>/[가-힣]/.test(name))||(wikiById.get(String(game.bggId))?.aliases||[]).find(name=>/[가-힣]/.test(name))||game.name;}
+export function matchGameRecords(plays){const resolve=gameResolver(plays);return plays.map(play=>{const resolved=resolve(play.game),name=koreanGameName(resolved),game=name===resolved.name?resolved:{...resolved,name};return game===play.game?play:{...play,game};});}
 
 const alphabeticalNames=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
 const titleBucket=name=>/^[a-z]/i.test(name.trim())?0:/^[가-힣ㄱ-ㅎㅏ-ㅣ]/.test(name.trim())?1:2;

@@ -274,7 +274,7 @@ function renderHistory(){
  if(statsView==='games'){
   if(filtered.length)renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});
   else $('statsInsights').replaceChildren(node('p','저장된 게임 기록이 없습니다.','record-note'));
- }else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord});
+ }else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});
  $('statsDetailCount').textContent=`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p','저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
 if(statsView==='games'&&mode==='stats'){for(const g of gameStats(filtered)){const article=node('article',undefined,'record-item');article.append(node('h3',g.game.name),node('p',g.count+'회 플레이'));renderModeStats(article,filtered.filter(p=>gameKey(p.game)===g.key));box.append(article);}return;}
@@ -314,7 +314,7 @@ async function refreshCloud(){
  // Never automatically resurrect games intentionally deleted on another device.
  const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));
  if(missing.length){const backup=new Map(read(recoveryKey()).records.map(p=>[p.id,p]));for(const p of missing)backup.set(p.id,p);localStorage.setItem(recoveryKey(),JSON.stringify({records:[...backup.values()],pending:[]}));}
- const previous=records;records=[...map.values()];try{persist();}catch(error){records=previous;pending=previousPending;throw error;}
+ const previous=records,next=[...map.values()],current=new Map(records.map(play=>[play.id,play])),changed=next.length!==records.length||next.some(play=>JSON.stringify(current.get(play.id))!==JSON.stringify(play)),pendingChanged=pending.size!==previousPending.size;if(changed)records=next;try{if(changed||pendingChanged)persist();}catch(error){records=previous;pending=previousPending;throw error;}
  await sync();if(epoch===accountEpoch)renderHistory();
  }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 기록을 불러오지 못했습니다. 기기 기록은 유지됩니다. '+friendly(error));}}
  finally{if(epoch===accountEpoch)updateButtons();}
