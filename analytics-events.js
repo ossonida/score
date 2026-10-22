@@ -13,14 +13,19 @@ const allowed={
  game_ended:{mode:['score','win','team','rank','cooperative'],outcome:['saved','discarded']},
  statistics_viewed:{entry_point:['navigation','game_library','record']},
  history_viewed:{entry_point:['navigation','statistics']},
- record_changed:{change_type:['name','score','result','cooperative_result','shared_score','player_removed','identity']},
+ screen_viewed:{screen:['home','games','settings']},
+ record_changed:{change_type:['name','score','result','cooperative_result','shared_score','player_removed']},
  record_deleted:{},
  feature_used:{
-  feature:['scoreboard','record_mode','statistics','history','game_library','data_transfer','account','cloud_sync','bgg','install'],
-  action:['scores_reset','players_reset','mode_selected','result_changed','filter_changed','game_opened','game_added','search_completed','import_previewed','import_completed','import_cancelled','export_completed','login_completed','logout_completed','sync_completed','recovery_completed','guest_records_merged','guest_records_deleted','link_completed','unlink_completed','share_completed','install_accepted']
+  feature:['scoreboard','record_mode','statistics','history','game_library','data_transfer','account','cloud_sync','bgg','install','settings'],
+  action:['scores_reset','players_reset','mode_selected','result_changed','filter_changed','game_opened','game_added','search_completed','import_previewed','import_completed','import_cancelled','export_completed','login_completed','logout_completed','sync_completed','recovery_completed','guest_records_merged','guest_records_deleted','link_completed','unlink_completed','share_completed','install_accepted','identity_changed']
  }
 };
-const required={setup_started:['entry_point'],player_added:['entry_point','player_count'],player_removed:['context'],player_reordered:['context'],player_updated:['change_type'],game_started:['mode','player_count'],first_score_changed:['direction','input_method'],score_changed:['direction','input_method'],game_end_started:['mode'],game_ended:['mode','outcome'],statistics_viewed:['entry_point'],history_viewed:['entry_point'],record_changed:['change_type'],feature_used:['feature','action']};
+const required={setup_started:['entry_point'],player_added:['entry_point','player_count'],player_removed:['context'],player_reordered:['context'],player_updated:['change_type'],game_started:['mode','player_count'],first_score_changed:['direction','input_method'],score_changed:['direction','input_method'],game_end_started:['mode'],game_ended:['mode','outcome'],statistics_viewed:['entry_point'],history_viewed:['entry_point'],screen_viewed:['screen'],record_changed:['change_type'],feature_used:['feature','action']};
+// Saved-record edit fields (records.js recordEditing.field) mapped to record_changed.change_type.
+const recordFields={name:'name',score:'score',result:'result',cooperativeResult:'cooperative_result',sharedScore:'shared_score'};
+export const recordChangeType=field=>recordFields[field];
+export const analyticsMode=mode=>mode==='coop'?'cooperative':mode;
 
 export const ANALYTICS_EVENTS=Object.freeze(Object.fromEntries(Object.keys(allowed).map(name=>[name,name])));
 
@@ -47,8 +52,11 @@ export function createFeatureAnalytics({send,storage}={}){
   playerAdded(entry_point,count){return track('player_added',{entry_point,player_count:playerCountBucket(count)});},
   gameStarted(mode,count){gameEnded=false;markFirstScore(false);return track('game_started',{mode,player_count:playerCountBucket(count)});},
   scoreChanged(direction,input_method){if(!firstScoreChanged){markFirstScore(true);track('first_score_changed',{direction,input_method});}return track('score_changed',{direction,input_method});},
-  gameEndStarted(mode){return track('game_end_started',{mode});},
-  gameEnded(mode,outcome){if(gameEnded)return false;gameEnded=true;return track('game_ended',{mode,outcome});},
+  gameEndStarted(mode){return track('game_end_started',{mode:analyticsMode(mode)});},
+  gameEnded(mode,outcome){if(gameEnded)return false;gameEnded=true;return track('game_ended',{mode:analyticsMode(mode),outcome});},
+  recordChanged(field){return track('record_changed',{change_type:recordChangeType(field)});},
+  recordPlayerRemoved(){const changed=track('record_changed',{change_type:'player_removed'});track('player_removed',{context:'record'});return changed;},
+  feature(feature,action){return track('feature_used',{feature,action});},
   resetGame(){gameEnded=false;markFirstScore(false);}
  };
 }

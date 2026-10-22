@@ -28,3 +28,24 @@ test('record changes keep only documented enum parameters',()=>{
 });
 test('late auth results cannot re-enable collection after an excluded account signs in',async()=>{let release;const a=app({isExcluded:email=>email==='slow@example.invalid'?new Promise(r=>release=r):Promise.resolve(true)});const pending=a.gate.onAuthState({email:'slow@example.invalid'});await a.gate.onAuthState({email:'internal@example.invalid'});release(false);await pending;assert.equal(a.starts,0);assert.equal(a.disabled,true);});
 test('email check failure leaves analytics disabled',async()=>{const a=app({isExcluded:async()=>{throw Error('Unavailable crypto');}});await a.gate.onAuthState({email:'visitor@example.invalid'});assert.equal(a.starts,0);assert.equal(a.disabled,true);assert.equal(await isExcludedEmail(null),false);assert.equal(await isExcludedEmail('visitor@example.invalid'),false);});
+test('record_changed.change_type maps every saved-record edit field and drops unknown fields',()=>{
+ const events=[],analytics=createFeatureAnalytics({send:(name,params)=>events.push([name,params])});
+ for(const field of ['name','score','result','cooperativeResult','sharedScore','memo'])analytics.recordChanged(field);
+ analytics.recordPlayerRemoved();
+ assert.deepEqual(events,[['record_changed',{change_type:'name'}],['record_changed',{change_type:'score'}],['record_changed',{change_type:'result'}],['record_changed',{change_type:'cooperative_result'}],['record_changed',{change_type:'shared_score'}],['record_changed',{change_type:'player_removed'}],['player_removed',{context:'record'}]]);
+});
+test('a game ends once even when save and discard both complete, and coop is normalized',()=>{
+ const events=[],analytics=createFeatureAnalytics({send:(name,params)=>events.push([name,params])});
+ analytics.gameStarted('cooperative',2);analytics.gameEnded('coop','saved');analytics.gameEnded('coop','discarded');
+ analytics.resetGame();analytics.gameEnded('win','discarded');
+ assert.deepEqual(events.slice(1),[['game_ended',{mode:'cooperative',outcome:'saved'}],['game_ended',{mode:'win',outcome:'discarded'}]]);
+});
+test('screen and feature events accept only documented enums',()=>{
+ const events=[],analytics=createFeatureAnalytics({send:name=>events.push(name)});
+ analytics.track('screen_viewed',{screen:'settings'});analytics.track('screen_viewed',{screen:'/private/path'});analytics.feature('settings','identity_changed');analytics.feature('settings','nickname=홍길동');
+ assert.deepEqual(events,['screen_viewed','feature_used']);
+});
+test('a blocked GA sender never breaks the calling feature',()=>{
+ const analytics=createFeatureAnalytics({send:()=>{throw Error('blocked');}});
+ assert.equal(analytics.recordChanged('score'),false);assert.equal(analytics.feature('bgg','import_completed'),false);
+});
