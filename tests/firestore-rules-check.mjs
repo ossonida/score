@@ -13,6 +13,12 @@ try{
  await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',sharedScore:'10'}));
  await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',sharedScore:Infinity}));
  await assertFails(setDoc(doc(bob,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success'}));
+ const missions=[{mission:4,result:'failure'},{mission:4,result:'success'}];
+ await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success',missionAttempts:missions}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,missionAttempts:missions}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',missionAttempts:missions}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success',sharedScore:3,missionAttempts:missions}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success',missionAttempts:[]}));
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,location:'Board game cafe'}));
  await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,location:'x'.repeat(121)}));
  await assertFails(getDoc(doc(bob,'users/alice/plays/one')));await assertFails(setDoc(doc(bob,'users/alice/plays/one'),record));await assertFails(getDoc(doc(guest,'users/alice/plays/one')));

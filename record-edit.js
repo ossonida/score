@@ -1,8 +1,9 @@
-import {isPlay,recordMode} from './records-core.js?v=113';
+import {isPlay,recordMode} from './records-core.js?v=125';
 export function editRecordedPlayer(play,playerId,field,value){
  if(!play.players.some(p=>p.id===playerId))throw Error('플레이어를 찾을 수 없습니다.');
  if(['cooperativeResult','sharedScore'].includes(field)){
   if(play.rule!=='cooperative')throw Error('협력 기록만 수정할 수 있습니다.');
+  if(Array.isArray(play.missionAttempts))throw Error('미션 기록의 결과는 시도 내역으로 정해집니다.');
   const updated={...play};
   if(field==='cooperativeResult'){if(!['','success','failure'].includes(value))throw Error('협력 결과를 선택해주세요.');if(value)updated.cooperativeResult=value;else delete updated.cooperativeResult;}
   else {const raw=String(value??'').trim();if(!raw)delete updated.sharedScore;else{if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw))throw Error('올바른 공동 점수를 입력해주세요.');updated.sharedScore=Number(raw);}}

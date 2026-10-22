@@ -110,3 +110,10 @@ test('share image rendering resolves to a PNG blob for compact and side layouts'
   for(const count of [1,5,8,15]){const blob=await createRecentShareImage({copy:recentShareData([],null,'ko-KR').copy,playCount:count,peopleCount:2,dateLabel:'10월10일',location:count%2?'B1':'',games:games(count),cards:[card,card]});assert.ok(blob instanceof Blob,String(count));assert.equal(blob.type,'image/png');}
  }finally{globalThis.document=previous;}
 });
+
+test('mission sessions show their cleared range on the shared cover instead of winners',()=>{
+ const mission=(id,attempts)=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:'딥씨 크루',bggId:''},rule:'cooperative',cooperativeResult:attempts.some(a=>a.result==='success')?'success':'failure',missionAttempts:attempts,players:[{id:'a',name:'하늘',score:null}]});
+ const data=recentShareData([mission('1',[{mission:4,result:'success'},{mission:5,result:'failure'}]),mission('2',[{mission:5,result:'success'}])],null,'ko-KR');
+ assert.deepEqual(data.games.map(game=>[game.count,game.winners,game.mission]),[[2,[],'미션 4 → 5 클리어']]);
+ assert.equal(recentShareData([mission('3',[{mission:7,result:'failure'}])],null,'en-US').games[0].mission,'Mission 7 in progress');
+});

@@ -1,5 +1,5 @@
-import {recordMode,modeLabels,resultLabel} from './records-core.js?v=113';
-import {renderModeStats} from './record-view.js?v=113';
+import {recordMode,modeLabels,resultLabel} from './records-core.js?v=125';
+import {renderModeStats} from './record-view.js?v=125';
 import {metadata,domainLabels} from './bgg-metadata.js?v=64';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=113';

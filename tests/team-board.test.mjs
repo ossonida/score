@@ -171,3 +171,16 @@ test('short, vertical and cancelled team swipes never delete',()=>{
   assert.equal(a.context.players.length,4);assert.equal(a.context.saves,0);
  }
 });
+
+test('mission board taps log failures and successes, advance missions, undo and update the save CTA',()=>{
+ const a=fixture('coop');a.context.resultEntry.missionAttempts=[];a.context.resultEntry.missionCurrent=1;vm.runInContext(between('function missionNumber','window.ScoreCounter'),a.context);a.context.render();
+ const find=label=>{let hit=null;const visit=n=>{if(hit)return;if(n.attributes?.['aria-label']===label)hit=n;for(const child of n.children||[])visit(child);};visit(a.get('cards'));return hit;};
+ const entry=a.context.resultEntry;assert.equal(a.get('saveScorelessPlay').disabled,true);assert.equal(a.get('saveScorelessPlay').textContent,'미션 결과 선택');assert.equal(find('이전 미션').disabled,true);assert.equal(find('마지막 미션 결과 되돌리기').disabled,true);
+ find('미션 1 실패').onclick();find('미션 1 성공').onclick();assert.equal(entry.missionCurrent,2);assert.equal(entry.cooperativeResult,'success');
+ find('미션 2 실패').onclick();assert.equal(entry.missionCurrent,2);find('마지막 미션 결과 되돌리기').onclick();assert.equal(entry.missionAttempts.length,2);assert.equal(entry.missionCurrent,2);
+ find('다음 미션').onclick();assert.equal(entry.missionCurrent,3);find('미션 3 실패').onclick();
+ assert.deepEqual(JSON.parse(JSON.stringify(entry.missionAttempts)),[{mission:1,result:'failure'},{mission:1,result:'success'},{mission:3,result:'failure'}]);
+ assert.equal(a.get('saveScorelessPlay').disabled,false);assert.equal(a.get('saveScorelessPlay').textContent,'끝내고 저장 · 시도 3 · 클리어 1');assert.equal(a.get('scorelessBoardMode').textContent,'협력 미션 기록 · 미션 3');
+ const texts=[];const visit=n=>{if(String(n.className||'').split(' ').includes('mission-chip'))texts.push(n.textContent);for(const child of n.children||[])visit(child);};visit(a.get('cards'));assert.deepEqual(texts,['미션 1 ✗✓','미션 3 ✗']);
+ for(let i=0;i<3;i++)find('마지막 미션 결과 되돌리기').onclick();assert.equal(entry.cooperativeResult,undefined);assert.equal(entry.missionCurrent,1);assert.equal(a.get('saveScorelessPlay').disabled,true);
+});

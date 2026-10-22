@@ -1,4 +1,4 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds} from './records-core.js?v=113';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionLabel} from './records-core.js?v=125';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const rate=n=>n===null?'—':num(n*100)+'%';
@@ -14,7 +14,9 @@ export function renderRecordParticipants(play,me,onEdit){
   }
   return list;
  }
- if(mode==='cooperative'){
+ if(mode==='cooperative'&&Array.isArray(play.missionAttempts)){
+  const row=el('li',undefined,'record-cooperative-result record-mission-result');row.append(el('strong',resultLabel(play,play.players[0]),'record-mission-outcome'),el('span',missionLabel(play.missionAttempts),'record-mission-summary'));list.append(row);
+ }else if(mode==='cooperative'){
   const row=el('li',undefined,'record-cooperative-result'),first=play.players[0];
   row.append(action(resultLabel(play,first),'협력 전체 결과 수정',()=>onEdit(play,first,'cooperativeResult'),'record-edit-result'),action(play.sharedScore===undefined?'공동 점수 추가':num(play.sharedScore)+'점 · 공동','공동 점수 수정',()=>onEdit(play,first,'sharedScore'),'record-edit-score'));list.append(row);
  }

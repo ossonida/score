@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=113';
+import {gameKey,winnerIds,missionSummary} from './records-core.js?v=125';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
 import {nameKey} from './personal-stats.js?v=113';
@@ -9,8 +9,8 @@ import {summarizeStats} from './stats-insights.js?v=64';
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
 const copy={
- ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
- en:{playedCount:'Games played',peopleCount:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
+ ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:s=>s.lastCleared?`미션 ${s.first}${s.lastCleared!==s.first?' → '+s.lastCleared:''} 클리어`:`미션 ${s.first} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
+ en:{playedCount:'Games played',peopleCount:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
 };
 let current=null;
 
@@ -42,7 +42,7 @@ export function localizedGameName(game,locale){
 export function recentShareData(records,profile,locale){
  const lang=shareLanguage(locale),words=copy[lang],date=latestPlayDate(records),plays=records.filter(play=>play.date===date),games=new Map();
  for(const play of plays){
-  const key=gameKey(play.game),localGame={...play.game,name:localizedGameName(play.game,lang)},entry=games.get(key)||{key,game:localGame,count:0,imageUrl:gameImageUrl(play.game),winners:[]};entry.count++;games.set(key,entry);
+  const key=gameKey(play.game),localGame={...play.game,name:localizedGameName(play.game,lang)},entry=games.get(key)||{key,game:localGame,count:0,imageUrl:gameImageUrl(play.game),winners:[]};entry.count++;games.set(key,entry);if(Array.isArray(play.missionAttempts))(entry.missionAttempts||=[]).push(...play.missionAttempts);
   const ids=new Set(winnerIds(play));
   for(const person of play.players){
    if(!ids.has(person.id))continue;
@@ -51,7 +51,7 @@ export function recentShareData(records,profile,locale){
  }
  const places=new Map();for(const play of plays){const place=typeof play.location==='string'?play.location.trim():'';if(place)places.set(place,(places.get(place)||0)+1);}
  const location=[...places].sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
- return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()],cards:pickDayCards(records,date,lang)};
+ return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts))}:entry),cards:pickDayCards(records,date,lang)};
 }
 
 // 그날 MVP(2승 이상, 동률 2명까지)와 접전(1·2위 CLOSE_GAP점 차 이하, 같은 차이면 최근 판)을 각각 찾아 해당하는 카드만 MVP → 접전 순으로 돌려줍니다.
@@ -85,13 +85,13 @@ function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
 }
 function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.measureText(value).width<=maxWidth)return value;while(value.length>1&&ctx.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);return value+'…';}
 function drawCover(ctx,image,game,x,y,w,h){
- const winners=game.winners||[];fillRound(ctx,x,y,w,h,28,'#17253a');ctx.save();roundRect(ctx,x,y,w,h,28);ctx.clip();
+ const label=game.winners?.length?'🏆 '+game.winners.join(', '):game.mission||'';fillRound(ctx,x,y,w,h,28,'#17253a');ctx.save();roundRect(ctx,x,y,w,h,28);ctx.clip();
  if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale,sx=(image.naturalWidth-sw)/2,sy=(image.naturalHeight-sh)/2;ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
  const shade=ctx.createLinearGradient(0,y+h*.54,0,y+h);shade.addColorStop(0,'transparent');shade.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=shade;ctx.fillRect(x,y,w,h);
- if(winners.length){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}ctx.restore();
+ if(label){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}ctx.restore();
  if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';drawWrapped(ctx,game.game.name,x+w/2,y+h-56,w-44,31,2);}
  if(game.count>1){fillRound(ctx,x+w-88,y+18,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w-53,y+47);}
- if(winners.length){const label='🏆 '+winners.join(', '),room=w-44-(game.count>1?84:0);ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+22,y+47);}
+ if(label){const room=w-44-(game.count>1?84:0);ctx.fillStyle='#fff';ctx.textAlign='left';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+22,y+47);}
 }
 function drawBackground(ctx){
  const gradient=ctx.createLinearGradient(0,0,WIDTH,HEIGHT);gradient.addColorStop(0,'#07111f');gradient.addColorStop(.56,'#10243e');gradient.addColorStop(1,'#0d4a5c');ctx.fillStyle=gradient;ctx.fillRect(0,0,WIDTH,HEIGHT);

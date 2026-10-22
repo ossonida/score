@@ -58,3 +58,21 @@ test('partial and conflicting team outcomes never invent team wins',()=>{
  assert.equal(playerOutcome(p,p.players[0]),'unknown');assert.equal(modeStats([p])[0].players[0].rate,null);
  assert.equal(recordMode(play('old',[person('a')])),'unknown');
 });
+
+test('cooperative mission attempts validate, summarize and stay out of manual result edits',async()=>{
+ const {validMissionAttempts,missionSummary,missionLabel}=await import('../records-core.js');
+ const {bggPlayForm}=await import('../bgg-play-format.js');
+ const attempts=[{mission:4,result:'success'},{mission:5,result:'failure'},{mission:5,result:'failure'},{mission:5,result:'success'},{mission:6,result:'failure'}];
+ const mission=play('mission',[person('a')],{rule:'cooperative',cooperativeResult:'success',missionAttempts:attempts});
+ assert.deepEqual(mission.missionAttempts,attempts);assert.equal(isPlay(JSON.parse(JSON.stringify(mission))),true);
+ assert.deepEqual(missionSummary(attempts),{first:4,last:6,lastCleared:5,cleared:2,attempts:5,next:6,result:'success'});
+ assert.equal(missionSummary([{mission:999,result:'success'}]).next,999);assert.equal(missionSummary([]),null);
+ assert.equal(missionLabel(attempts),'미션 4 → 6 · 클리어 2 · 시도 5');
+ assert.equal(play('fail',[person('a')],{rule:'cooperative',cooperativeResult:'failure',missionAttempts:[{mission:1,result:'failure'}]}).cooperativeResult,'failure');
+ for(const extra of [{cooperativeResult:'failure',missionAttempts:attempts},{cooperativeResult:'success',missionAttempts:[]},{cooperativeResult:'success',missionAttempts:[{mission:0,result:'success'}]},{cooperativeResult:'success',missionAttempts:[{mission:1000,result:'success'}]},{cooperativeResult:'success',missionAttempts:[{mission:1,result:'win'}]},{cooperativeResult:'success',missionAttempts:[{mission:1,result:'success',note:'x'}]},{cooperativeResult:'success',sharedScore:3,missionAttempts:[{mission:1,result:'success'}]},{cooperativeResult:'success',missionAttempts:Array.from({length:301},()=>({mission:1,result:'success'}))}])assert.throws(()=>play('bad',[person('a')],{rule:'cooperative',...extra}),undefined,JSON.stringify(extra).slice(0,80));
+ assert.throws(()=>play('bad',[person('a')],{cooperativeResult:'success',missionAttempts:[{mission:1,result:'success'}]}));
+ assert.equal(validMissionAttempts([{mission:1,result:'success'}]),true);
+ assert.throws(()=>editRecordedPlayer(mission,'a','cooperativeResult','failure'),/시도 내역/);assert.throws(()=>editRecordedPlayer(mission,'a','sharedScore','3'),/시도 내역/);
+ assert.equal(editRecordedPlayer(mission,'a','name','하늘').missionAttempts.length,5);
+ const form=bggPlayForm({...mission,game:{name:'딥씨 크루',bggId:'123'}},'tester');assert.match(form.get('comments'),/Missions 4-6 · cleared 2 · 5 attempts\n\[ScoreCounter:mission\]/);
+});
