@@ -3,7 +3,7 @@ import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=9
 import {gameKey} from './records-core.js?v=113';
 import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=95';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {idToken} from './cloud-records.js?v=116';
+import {idToken} from './cloud-records.js?v=113';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

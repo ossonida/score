@@ -21,6 +21,20 @@
 - CTA 상세 상태와 흐름은 `docs/CTA-FLOWS.md`를 따른다. CTA 추가·흐름 변경 시 구현 전에 해당 문서를 갱신한다.
 - CTA의 노출·문구·활성·액션은 하나의 앱 상태에서 결정하고, 같은 의도는 공통 액션을 호출한다. 숨겨진 버튼의 `.click()`으로 우회하지 않는다.
 
+## 세션과 인수인계
+
+- 한 작업 폴더에는 한 AI 세션만 작업한다. 병행이 필요하면 `git worktree`로 폴더를 나눈다. 다른 세션의 미커밋 변경은 커밋·되돌리기 하지 않는다.
+- 작업 시작 시 `HANDOFF.md`(git 제외 파일)가 있으면 먼저 읽고 이어 간다. 새 작업이면 원문 지시 요약을 적고, 단계가 끝날 때마다 완료·검증·다음 할 일을 갱신한다.
+- 큰 파일 수정 전후로 `git status --short`를 확인해 외부 변경·커밋 여부를 본다.
+
+## 실행 환경
+
+- 테스트: `npm test` 또는 `node --experimental-vm-modules --test tests/*.test.mjs`. 단일 파일은 경로를 지정한다. Bash에서 node가 없으면 `"/c/Program Files/nodejs/node.exe"`, PowerShell에서 git이 없으면 Bash를 쓴다.
+- `npm run build`는 Android `dist/` 패키징이며 GitHub Pages 검증이 아니다. 웹 검증은 테스트로 한다.
+- 소스 대부분이 한 줄이 긴 압축 형태다. 줄 전체를 출력하지 말고 `grep -o ".\{0,80\}키워드.\{0,120\}"`처럼 주변만 자른다. 일괄 치환은 파일명 일부가 겹치는지(예: `records.js`와 `cloud-records.js`) 확인한다.
+- 모듈 `?v=` 버전은 index.html과 모든 import에서 같아야 한다(`tests/asset-versions.test.mjs`). 새 버전 경로는 `sw.js` 캐시 목록에도 추가한다.
+- 알려진 기존 실패: `tests/records-ui.test.mjs`의 "an individual result choice fills every player result and enables SAVE".
+
 ## 검증과 소통
 
 - 수정 중에는 가장 직접적인 관련 테스트만 한 번 실행하고, 실패 원인을 수정한 경우에만 재실행한다.

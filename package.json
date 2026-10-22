@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --experimental-vm-modules --test tests/*.test.mjs",
     "build": "node scripts/build-web.mjs",
     "android:add": "npm run build && cap add android",
     "android:sync": "npm run build && cap sync android",
