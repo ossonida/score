@@ -4,7 +4,7 @@ import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=113';
 import {enrichGames} from './bgg-details-client.js?v=64';
-import {renderOverview} from './overview-dashboard.js?v=118';
+import {renderOverview} from './overview-dashboard.js?v=120';
 import {latestPlayDate} from './stats-overview.js?v=64';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=64';
@@ -14,7 +14,7 @@ import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './peri
 import {renderPeriodDashboard} from './period-dashboard.js?v=2';
 import {mergeImported} from './data-transfer.js?v=64';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=95';
-import {isScoreGame,scoreGameType} from './score-games.js?v=95';
+import {isScoreGame,scoreGameType} from './score-games.js?v=119';
 import {metadata,domainLabels} from './bgg-metadata.js?v=88';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay} from './records-core.js?v=113';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity} from './cloud-records.js?v=113';

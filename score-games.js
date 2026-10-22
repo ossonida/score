@@ -6,7 +6,8 @@ export const scoreGames=[
  {name:'당구',aliases:['Billiards','Pool'],type:'sports',image:'./assets/score-games/billiards.webp'},
  {name:'축구',aliases:['Football','Soccer'],type:'sports',image:'./assets/score-games/football.webp'},
  {name:'야구',aliases:['Baseball'],type:'sports',image:'./assets/score-games/baseball.webp'},
- {name:'배드민턴',aliases:['Badminton'],type:'sports',image:'./assets/score-games/badminton.webp'}
+ {name:'배드민턴',aliases:['Badminton'],type:'sports',image:'./assets/score-games/badminton.webp'},
+ {name:'탁구',aliases:['Table Tennis','Ping Pong','핑퐁'],type:'sports',image:'./assets/score-games/table-tennis.webp'}
 ];
 const normalize=value=>String(value??'').normalize('NFKC').toLocaleLowerCase().replace(/[\s:’'–—-]+/g,'');
 export function scoreGame(game){const name=typeof game==='string'?game:game?.name,key=normalize(name);return scoreGames.find(item=>[item.name,...item.aliases].some(alias=>normalize(alias)===key))||null;}

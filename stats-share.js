@@ -5,7 +5,7 @@ import {nameKey} from './personal-stats.js?v=113';
 import {bggSearchUrl} from './firebase-config.js';
 import {starterGames} from './game-catalog.js?v=95';
 
-const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6;
+const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
 const copy={
  ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',winners:'이날의 승자',noWinner:'승자 기록 없음',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`},
@@ -75,18 +75,34 @@ function drawBackground(ctx){
  const gradient=ctx.createLinearGradient(0,0,WIDTH,HEIGHT);gradient.addColorStop(0,'#07111f');gradient.addColorStop(.56,'#10243e');gradient.addColorStop(1,'#0d4a5c');ctx.fillStyle=gradient;ctx.fillRect(0,0,WIDTH,HEIGHT);
  ctx.save();ctx.globalAlpha=.08;ctx.fillStyle='#72d4ff';for(const [x,y,r]of [[930,70,250],[90,950,300],[990,1110,180],[380,590,120]]){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}ctx.restore();
 }
-function metric(ctx,x,value,label){fillRound(ctx,x,250,448,172,28,'rgba(255,255,255,.10)');ctx.fillStyle='#fff';ctx.font='800 72px system-ui, sans-serif';ctx.textAlign='left';ctx.fillText(String(value),x+34,334);ctx.fillStyle='#9fc8f7';ctx.font='600 26px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(label,x+36,382);}
+function metric(ctx,x,value,label,y=250,w=448,h=172){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.fillStyle='#fff';ctx.font='800 72px system-ui, sans-serif';ctx.textAlign='left';ctx.fillText(String(value),x+34,y+Math.round(h*.49));ctx.fillStyle='#9fc8f7';ctx.font='600 26px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,label,w-70),x+36,y+Math.round(h*.77));}
+// 6개 이하는 상단 지표 + 하단 3열 표지, 7개 이상은 왼쪽 2열 표지 + 오른쪽 지표·승자 열로 배치합니다.
+export function shareCoverLayout(gameCount){
+ if(gameCount>MAX_COVERS){const shown=Math.min(gameCount,SIDE_COVERS),rows=Math.ceil(shown/2),gap=18,cellW=(560-gap)/2,cellH=Math.min(cellW,(986-gap*(rows-1))/rows);return {side:true,max:SIDE_COVERS,cells:Array.from({length:shown},(_,index)=>({x:72+index%2*(cellW+gap),y:274+Math.floor(index/2)*(cellH+gap),w:cellW,h:cellH}))};}
+ const count=Math.max(1,gameCount),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),gap=18,cellW=(936-gap*(cols-1))/cols,cellH=(528-gap*(rows-1))/rows;
+ return {side:false,max:MAX_COVERS,cells:Array.from({length:Math.min(gameCount,MAX_COVERS)},(_,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2;return {x:72+offset+col*(cellW+gap),y:730+row*(cellH+gap),w:cellW,h:cellH};})};
+}
+function sideWinners(ctx,data,words,x,y,w,h){
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.winners,x+34,y+48);
+ if(!data.winners.length){ctx.fillStyle='#fff';fitText(ctx,words.noWinner,w-68,29,22);ctx.fillText(words.noWinner,x+34,y+96);return;}
+ const rowH=80,capacity=Math.max(1,Math.floor((h-84)/rowH)),rows=data.winners.length>capacity?data.winners.slice(0,capacity-1):data.winners;
+ rows.forEach((row,index)=>{const top=y+96+index*rowH,names=row.names.join(' · ');ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,row.gameName,w-68),x+34,top);ctx.fillStyle='#fff';fitText(ctx,names,w-68,28,22);ctx.fillText(clippedText(ctx,names,w-68),x+34,top+36);});
+ if(rows.length<data.winners.length){ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.moreGames(data.winners.length-rows.length),x+34,y+96+rows.length*rowH);}
+}
 
 export async function createRecentShareImage(data){
  const words=data?.copy||shareCopy(data?.locale);if(!data?.playCount)throw Error(words.empty);
  const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;const ctx=canvas.getContext('2d');drawBackground(ctx);
  ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 24px system-ui, sans-serif';ctx.fillText('SCORE COUNTER',72,82);
  ctx.fillStyle='#fff';fitText(ctx,data.title,936,68,48);ctx.fillText(data.title,72,184);
+ const layout=shareCoverLayout(data.games.length),shown=data.games.slice(0,layout.max),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
+ if(layout.side){ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,250);metric(ctx,660,data.playCount,words.playedCount,274,348,150);metric(ctx,660,data.peopleCount,words.peopleCount,442,348,150);sideWinners(ctx,data,words,660,610,348,650);}
+ else{
  metric(ctx,72,data.playCount,words.playedCount);metric(ctx,560,data.peopleCount,words.peopleCount);
  fillRound(ctx,72,452,936,196,28,'rgba(255,255,255,.10)');ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.winners,106,498);ctx.fillStyle='#fff';const winnerLines=data.winners.length?data.winners.slice(0,3).map(row=>`${row.gameName} · ${row.names.join(' · ')}`):[words.noWinner];if(data.winners.length>3)winnerLines[2]=words.moreGames(data.winners.length-2);winnerLines.forEach((line,index)=>{fitText(ctx,line,868,29,22);ctx.fillText(clippedText(ctx,line,868),106,546+index*40);});
  ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,705);
- const shown=data.games.slice(0,MAX_COVERS),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));const count=Math.max(1,shown.length),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),gap=18,areaW=936,areaH=528,cellW=(areaW-gap*(cols-1))/cols,cellH=(areaH-gap*(rows-1))/rows;
- shown.forEach((game,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2,x=72+offset+col*(cellW+gap),y=730+row*(cellH+gap),more=index===MAX_COVERS-1?Math.max(0,data.games.length-MAX_COVERS):0;drawCover(ctx,images[index],game,x,y,cellW,cellH,more);});
+ }
+ shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index],more=index===layout.max-1?Math.max(0,data.games.length-layout.max):0;drawCover(ctx,images[index],game,x,y,w,h,more);});
  ctx.fillStyle='rgba(225,239,255,.68)';ctx.font='500 22px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText('ossonida.github.io/score',WIDTH/2,1315);
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }

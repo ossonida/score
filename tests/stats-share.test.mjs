@@ -25,3 +25,10 @@ test('share covers load app assets directly and only proxy BGG covers',async()=>
  const proxied=new URL(shareImageSource('https://cf.geekdo-images.com/abc/pic1.jpg',base));assert.equal(proxied.searchParams.get('action'),'cover');assert.equal(proxied.searchParams.get('url'),'https://cf.geekdo-images.com/abc/pic1.jpg');
  assert.equal(shareImageSource('https://example.com/a.png',base),'');assert.equal(shareImageSource('',base),'');
 });
+
+test('share layout keeps three columns up to six games and moves seven or more covers into a left two-column list',async()=>{
+ const {shareCoverLayout}=await import('../stats-share.js');
+ const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=730&&c.y+c.h<=1259));
+ for(const count of [7,8,12,15]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,Math.min(count,12));assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=1260.5&&c.w>0&&c.h>0),String(count));}
+ assert.equal(shareCoverLayout(15).max,12);
+});
