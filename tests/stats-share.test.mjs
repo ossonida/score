@@ -32,3 +32,58 @@ test('share layout keeps three columns up to six games and moves seven or more c
  for(const count of [7,8,12,15]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,Math.min(count,12));assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=1260.5&&c.w>0&&c.h>0),String(count));}
  assert.equal(shareCoverLayout(15).max,12);
 });
+
+test('recent share groups repeated games into one winner row with comma-separated unique names',()=>{
+ const first=play('one','2026-10-10','13'),second=play('two','2026-10-10','13'),third=play('three','2026-10-10','13'),other=play('four','2026-10-10','11','보난자');
+ second.players[0].winner=false;second.players[1].winner=true;
+ const data=recentShareData([first,second,third,other],null,'ko-KR');
+ assert.deepEqual(data.winners,[{playId:'one',gameName:'카탄',names:['하늘','바다']},{playId:'four',gameName:'보난자',names:['하늘']}]);
+});
+
+const scoredPlay=(id,game,scores,{date='2026-10-10',createdAt=`${date}T12:00:00Z`,rule='highest',anonymous=[]}={})=>({id,date,createdAt,game:{name:game,bggId:''},rule,players:Object.entries(scores).map(([name,score],index)=>({id:'p'+index,name,score,anonymous:anonymous.includes(name)||undefined}))});
+
+test('day card prefers the closest game within three points, newest first on ties',async()=>{
+ const {pickDayCard}=await import('../stats-share.js');
+ const plays=[scoredPlay('a','카탄',{하늘:10,바다:8},{createdAt:'2026-10-10T10:00:00Z'}),scoredPlay('b','아줄',{하늘:30,바다:28},{createdAt:'2026-10-10T11:00:00Z'}),scoredPlay('c','보난자',{하늘:20,바다:5})];
+ const card=pickDayCard(plays,'2026-10-10','ko-KR');
+ assert.deepEqual({kind:card.kind,playId:card.playId,title:card.title,headline:card.headline,detail:card.detail},{kind:'close',playId:'b',title:'오늘의 접전',headline:'아줄 2점 차',detail:'하늘 30 : 28 바다'});
+ assert.equal(pickDayCard([scoredPlay('x','카탄',{하늘:13,바다:10})],'2026-10-10','ko-KR').gap,3);
+ assert.equal(pickDayCard([scoredPlay('x','카탄',{하늘:14,바다:10})],'2026-10-10','ko-KR'),null);
+ assert.equal(pickDayCard(plays,'2026-10-10','en-US').headline,'아줄 by 2 points');
+});
+
+test('day card falls back to MVP with two or more wins and at most two tied leaders',async()=>{
+ const {pickDayCard}=await import('../stats-share.js');
+ const wide=(id,winner,loser)=>scoredPlay(id,'카탄',{[winner]:20,[loser]:5});
+ const mvp=pickDayCard([wide('1','하늘','바다'),wide('2','하늘','바다'),wide('3','바다','하늘')],'2026-10-10','ko-KR');
+ assert.deepEqual({kind:mvp.kind,names:mvp.names,headline:mvp.headline,detail:mvp.detail},{kind:'mvp',names:['하늘'],headline:'하늘',detail:'2승 · 3판 중'});
+ assert.equal(pickDayCard([wide('1','하늘','바다'),wide('2','바다','하늘')],'2026-10-10','ko-KR'),null);
+ const two=pickDayCard([wide('1','하늘','별'),wide('2','하늘','별'),wide('3','바다','별'),wide('4','바다','별')],'2026-10-10','ko-KR');assert.equal(two.headline,'바다 · 하늘');assert.equal(two.detail,'2승 · 4판 중');
+ assert.equal(pickDayCard([wide('1','하늘','별'),wide('2','하늘','별'),wide('3','바다','별'),wide('4','바다','별'),wide('5','구름','별'),wide('6','구름','별')],'2026-10-10','ko-KR'),null);
+ assert.equal(pickDayCard([],'2026-10-10','ko-KR'),null);
+ assert.equal(pickDayCard([wide('1','하늘','바다'),wide('2','하늘','바다')],'2026-10-10','en-US').detail,'2 wins · 2 games');
+});
+
+test('day card skips anonymous players, cooperative games and score-less games',async()=>{
+ const {pickDayCard}=await import('../stats-share.js');
+ const anonClose=scoredPlay('a','카탄',{익명:10,바다:9},{anonymous:['익명']});
+ assert.equal(pickDayCard([anonClose],'2026-10-10','ko-KR'),null);
+ const anonWins=[scoredPlay('1','카탄',{익명:20,바다:5},{anonymous:['익명']}),scoredPlay('2','카탄',{익명:20,바다:5},{anonymous:['익명']})];
+ assert.equal(pickDayCard(anonWins,'2026-10-10','ko-KR'),null);
+ const coop={...scoredPlay('c','판데믹',{하늘:10,바다:9}),rule:'cooperative',cooperativeResult:'success'};
+ assert.equal(pickDayCard([coop],'2026-10-10','ko-KR'),null);
+ const winOnly=id=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:'할리갈리',bggId:''},rule:'highest',players:[{id:'a',name:'하늘',score:null,winner:true},{id:'b',name:'바다',score:null,winner:false}]});
+ const card=pickDayCard([winOnly('1'),winOnly('2'),coop],'2026-10-10','ko-KR');
+ assert.equal(card.kind,'mvp');assert.equal(card.detail,'2승 · 2판 중');
+ assert.equal(pickDayCard([anonClose,scoredPlay('b','아줄',{하늘:7,바다:5})],'2026-10-10','ko-KR').headline,'아줄 2점 차');
+});
+
+test('day card layout narrows the winner box up to six games and trims covers and winner rows from seven games',async()=>{
+ const {shareCoverLayout}=await import('../stats-share.js');
+ assert.deepEqual([shareCoverLayout(5).winners,shareCoverLayout(5).card],[{x:72,y:452,w:936,h:196},null]);
+ const narrow=shareCoverLayout(5,true);assert.deepEqual(narrow.winners,{x:72,y:452,w:560,h:196});assert.deepEqual(narrow.card,{x:650,y:452,w:358,h:196});assert.equal(narrow.cells.length,5);
+ const plain=shareCoverLayout(8);assert.equal(plain.cells.length,8);assert.deepEqual(plain.winners,{x:660,y:610,w:348,h:650});assert.equal(plain.card,null);
+ const withCard=shareCoverLayout(8,true);assert.deepEqual(withCard.card,{x:72,y:1112,w:936,h:148});assert.equal(withCard.cells.length,6);assert.equal(withCard.winners.h,484);assert.ok(withCard.cells.every(c=>c.y+c.h<=1094.5));
+ assert.deepEqual(withCard.cells.map(c=>c.w),plain.cells.slice(0,6).map(c=>c.w));
+ assert.equal(shareCoverLayout(14,true).cells.length,10);assert.equal(shareCoverLayout(14).cells.length,12);
+});

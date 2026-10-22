@@ -1,4 +1,4 @@
-import './records.js?v=119';
+import './records.js?v=120';
 import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=95';
 import {gameKey} from './records-core.js?v=113';
 import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=95';
