@@ -99,3 +99,14 @@ test('redesigned share header uses a short date, the most common place and a thr
  assert.equal(without.length,2);assert.equal(Math.round(without[1].x+without[1].w),1008);
  assert.deepEqual(shareCoverLayout(8,false,true).metrics,[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}]);
 });
+
+test('share image rendering resolves to a PNG blob for compact and side layouts',async()=>{
+ const {createRecentShareImage}=await import('../stats-share.js');
+ const gradient={addColorStop(){}},ctx=new Proxy({measureText:text=>({width:String(text).length*12}),createLinearGradient:()=>gradient},{get:(target,key)=>key in target?target[key]:()=>{},set:()=>true});
+ const previous=globalThis.document;globalThis.document={createElement:()=>({getContext:()=>ctx,toBlob:callback=>callback(new Blob(['png'],{type:'image/png'}))})};
+ try{
+  const games=count=>Array.from({length:count},(_,index)=>({key:'g'+index,game:{name:'게임'+index},count:1,imageUrl:'',winners:index%2?['하늘']:[]}));
+  const card={title:'오늘의 MVP',headline:'하늘',detail:'2승 · 3판 중'};
+  for(const count of [1,5,8,15]){const blob=await createRecentShareImage({copy:recentShareData([],null,'ko-KR').copy,playCount:count,peopleCount:2,dateLabel:'10월10일',location:count%2?'B1':'',games:games(count),cards:[card,card]});assert.ok(blob instanceof Blob,String(count));assert.equal(blob.type,'image/png');}
+ }finally{globalThis.document=previous;}
+});

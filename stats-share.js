@@ -136,6 +136,7 @@ export async function createRecentShareImage(data){
  shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h);});
  if(layout.others)otherGames(ctx,data.games.slice(shown.length),words,layout.others);
  layout.cards.forEach((box,index)=>dayCard(ctx,cards[index],box));
+ return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
 
 function ensureDialog(){
