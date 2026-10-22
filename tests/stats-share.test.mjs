@@ -28,7 +28,7 @@ test('share covers load app assets directly and only proxy BGG covers',async()=>
 
 test('share layout keeps three columns up to six games and moves seven or more covers into a left two-column list',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
- const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=730&&c.y+c.h<=1259));
+ const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=122&&c.y+c.h<=650.5));
  for(const count of [7,8,12,15]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,Math.min(count,12));assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=1260.5&&c.w>0&&c.h>0),String(count));}
  assert.equal(shareCoverLayout(15).max,12);
 });
@@ -80,10 +80,22 @@ test('day card skips anonymous players, cooperative games and score-less games',
 
 test('day card layout narrows the winner box up to six games and trims covers and winner rows from seven games',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
- assert.deepEqual([shareCoverLayout(5).winners,shareCoverLayout(5).card],[{x:72,y:452,w:936,h:196},null]);
- const narrow=shareCoverLayout(5,true);assert.deepEqual(narrow.winners,{x:72,y:452,w:560,h:196});assert.deepEqual(narrow.card,{x:650,y:452,w:358,h:196});assert.equal(narrow.cells.length,5);
+ assert.deepEqual([shareCoverLayout(5).winners,shareCoverLayout(5).card],[{x:72,y:872,w:936,h:196},null]);
+ const narrow=shareCoverLayout(5,true);assert.deepEqual(narrow.winners,{x:72,y:872,w:560,h:196});assert.deepEqual(narrow.card,{x:650,y:872,w:358,h:196});assert.equal(narrow.cells.length,5);
  const plain=shareCoverLayout(8);assert.equal(plain.cells.length,8);assert.deepEqual(plain.winners,{x:660,y:610,w:348,h:650});assert.equal(plain.card,null);
  const withCard=shareCoverLayout(8,true);assert.deepEqual(withCard.card,{x:72,y:1112,w:936,h:148});assert.equal(withCard.cells.length,6);assert.equal(withCard.winners.h,484);assert.ok(withCard.cells.every(c=>c.y+c.h<=1094.5));
  assert.deepEqual(withCard.cells.map(c=>c.w),plain.cells.slice(0,6).map(c=>c.w));
  assert.equal(shareCoverLayout(14,true).cells.length,10);assert.equal(shareCoverLayout(14).cells.length,12);
+});
+
+test('redesigned share header uses a short date, the most common place and a three-slot metric row only when a place exists',async()=>{
+ const {formatShareDate,shareCoverLayout}=await import('../stats-share.js');
+ assert.equal(formatShareDate('2026-10-22','ko-KR'),'10월22일');assert.equal(formatShareDate('2026-10-22','en-US'),'October 22');assert.equal(formatShareDate('','ko-KR'),'');
+ const at=(id,location)=>({...play(id,'2026-10-10','13'),location});
+ const data=recentShareData([at('1',' B1 '),at('2','B1'),at('3','홍대'),at('4','')],null,'ko-KR');assert.equal(data.location,'B1');assert.equal(data.dateLabel,'10월10일');
+ assert.equal(recentShareData([play('x','2026-10-10','13')],null,'ko-KR').location,'');
+ const withPlace=shareCoverLayout(3,false,true).metrics,without=shareCoverLayout(3).metrics;
+ assert.equal(withPlace.length,3);assert.deepEqual(withPlace.map(m=>Math.round(m.x)),[72,397,722]);assert.ok(withPlace.every(m=>Math.round(m.w)===286&&m.y===670&&m.h===172));
+ assert.equal(without.length,2);assert.equal(Math.round(without[1].x+without[1].w),1008);
+ assert.deepEqual(shareCoverLayout(8,false,true).metrics,[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}]);
 });
