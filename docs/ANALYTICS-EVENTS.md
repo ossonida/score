@@ -61,7 +61,7 @@
 |---|---|---|
 | `scoreboard` | `scores_reset`, `players_reset` | 점수·플레이어 초기화 확정 |
 | `record_mode` | `mode_selected`, `result_changed` | 무점수 기록 모드 선택, 결과 선택·변경 |
-| `statistics` | `filter_changed` | 통계 보기 탭 전환, 게임 필터 변경, 기간 프리셋 변경, 직접 기간 적용(유효한 기간일 때만) |
+| `statistics` | `filter_changed` | 통계 보기 탭 전환, 게임 필터 변경, 기간 단위(월간·연간·전체) 변경, 이전·다음 기간 이동, 직접 기간 적용(유효한 기간일 때만) |
 | `statistics` | `share_completed` | 공유 이미지 저장·전송 |
 | `game_library` | `game_added`, `search_completed` | 게임 추가, 게임 검색 완료 |
 | `data_transfer` | `import_previewed`, `import_cancelled`, `import_completed` | 파일 가져오기 미리보기 표시, 취소, 가져오기 완료 |

@@ -26,6 +26,14 @@ export function periodForPreset(preset,today,records=[]){
  return {label:'',current:range(dates[0]||today,dates.at(-1)||today),previous:null};
 }
 
+export function periodForStep(unit,offset,today){
+ const now=parse(today),year=now.getUTCFullYear(),month=now.getUTCMonth()+1;
+ if(unit==='year'){const target=year+offset,title=`${target}년`;if(!offset)return {...periodForPreset('this-year',today),title};return {...comparison('이전 해',range(`${target}-01-01`,`${target}-12-31`),range(`${target-1}-01-01`,`${target-1}-12-31`)),title};}
+ const index=year*12+month-1+offset,targetYear=Math.floor(index/12),targetMonth=index%12+1,previousYear=Math.floor((index-1)/12),previousMonth=(index-1)%12+1,title=`${targetYear}년 ${targetMonth}월`;
+ if(!offset)return {...periodForPreset('this-month',today),title};
+ return {...comparison('이전 달',range(`${targetYear}-${pad(targetMonth)}-01`,monthEnd(targetYear,targetMonth)),range(`${previousYear}-${pad(previousMonth)}-01`,monthEnd(previousYear,previousMonth))),title};
+}
+
 export function customPeriod(start,end){
  const valid=date=>/^\d{4}-\d{2}-\d{2}$/.test(date)&&format(parse(date))===date;
  if(!valid(start)||!valid(end)||start>end)return null;

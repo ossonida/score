@@ -53,7 +53,7 @@ function installFeatureListeners(){
  };
  document.addEventListener('click',onClick,true);
  // A custom preset only reveals the date form; the applied custom range is recorded by records.js.
- document.addEventListener('change',event=>{const id=event.target?.id;if(id==='recordFilter'||id==='periodPreset'&&event.target.value!=='custom')analytics.feature('statistics','filter_changed');},true);
+ document.addEventListener('change',event=>{const id=event.target?.id;if(id==='recordFilter')analytics.feature('statistics','filter_changed');},true);
  document.getElementById('savePlayDialog')?.addEventListener('input',event=>{if(!event.currentTarget.classList.contains('record-save-dialog'))analytics.setup('game_setup');},true);
  document.getElementById('scorelessSetupDialog')?.addEventListener('input',()=>analytics.setup('scoreless_setup'),true);
  document.addEventListener('input',event=>{if(event.target?.closest?.('.coop-result-controls'))armBoard({type:'result_change'});},true);

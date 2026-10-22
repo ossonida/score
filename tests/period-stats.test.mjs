@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {customPeriod,frequencyBuckets,periodForPreset,recordsInPeriod,summarizePeriod,yearlyCounts} from '../period-stats.js';
+import {customPeriod,frequencyBuckets,periodForPreset,periodForStep,recordsInPeriod,summarizePeriod,yearlyCounts} from '../period-stats.js';
 
 const record=(date,game='게임')=>({date,game:{name:game,bggId:''}});
 
@@ -43,3 +43,13 @@ test('month start, month end, December-January and leap February boundaries',()=
 test('empty periods summarize to zero and exclude records outside the range',()=>{const records=[record('2026-09-30'),record('2026-11-01')],period={start:'2026-10-01',end:'2026-10-31'};assert.deepEqual(summarizePeriod(records,period),{plays:0,days:0,games:0});assert.deepEqual(recordsInPeriod(records,period),[]);assert.deepEqual(periodForPreset('all','2026-10-22',[]),{label:'',current:{start:'2026-10-22',end:'2026-10-22'},previous:null});});
 
 test('all-time periods and yearly counts span multiple years',()=>{const records=[record('2023-05-01'),record('2025-01-01'),record('2025-02-01')];assert.deepEqual(periodForPreset('all','2026-10-22',records).current,{start:'2023-05-01',end:'2025-02-01'});assert.deepEqual(yearlyCounts(records),[{year:'2023',count:1},{year:'2025',count:2}]);});
+
+test('period navigator steps whole months and years across boundaries',()=>{
+ assert.deepEqual(periodForStep('month',0,'2026-10-22'),{...periodForPreset('this-month','2026-10-22'),title:'2026년 10월'});
+ assert.deepEqual(periodForStep('month',-10,'2026-10-22'),{label:'이전 달',current:{start:'2025-12-01',end:'2025-12-31'},previous:{start:'2025-11-01',end:'2025-11-30'},title:'2025년 12월'});
+ assert.deepEqual(periodForStep('month',-1,'2026-01-15'),{label:'이전 달',current:{start:'2025-12-01',end:'2025-12-31'},previous:{start:'2025-11-01',end:'2025-11-30'},title:'2025년 12월'});
+ assert.deepEqual(periodForStep('month',-1,'2026-02-03').previous,{start:'2025-12-01',end:'2025-12-31'});
+ assert.deepEqual(periodForStep('month',-7,'2024-09-10').current,{start:'2024-02-01',end:'2024-02-29'});
+ assert.deepEqual(periodForStep('year',0,'2024-02-29'),{...periodForPreset('this-year','2024-02-29'),title:'2024년'});
+ assert.deepEqual(periodForStep('year',-2,'2026-10-22'),{label:'이전 해',current:{start:'2024-01-01',end:'2024-12-31'},previous:{start:'2023-01-01',end:'2023-12-31'},title:'2024년'});
+});
