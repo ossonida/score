@@ -18,3 +18,10 @@ test('recent share data localizes known games and pairs each winner with a game'
  assert.equal(en.title,'October 10 Game Record');assert.deepEqual(en.games.map(row=>row.game.name),['CATAN','Bohnanza']);assert.deepEqual(en.winners.map(row=>row.gameName),['CATAN','Bohnanza']);assert.equal(en.copy.winners,"Today's winners");
  assert.equal(localizedGameName({name:'직접 입력 게임',bggId:''},'en-US'),'직접 입력 게임');
 });
+
+test('share covers load app assets directly and only proxy BGG covers',async()=>{
+ const {shareImageSource}=await import('../stats-share.js');const base='https://ossonida.github.io/score/';
+ assert.equal(shareImageSource('./assets/score-games/holdem.webp',base),'https://ossonida.github.io/score/assets/score-games/holdem.webp');
+ const proxied=new URL(shareImageSource('https://cf.geekdo-images.com/abc/pic1.jpg',base));assert.equal(proxied.searchParams.get('action'),'cover');assert.equal(proxied.searchParams.get('url'),'https://cf.geekdo-images.com/abc/pic1.jpg');
+ assert.equal(shareImageSource('https://example.com/a.png',base),'');assert.equal(shareImageSource('',base),'');
+});

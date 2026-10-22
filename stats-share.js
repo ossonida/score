@@ -1,5 +1,5 @@
 import {gameKey,winnerIds} from './records-core.js?v=113';
-import {gameImageUrl} from './game-artwork.js?v=95';
+import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
 import {nameKey} from './personal-stats.js?v=113';
 import {bggSearchUrl} from './firebase-config.js';
@@ -52,7 +52,8 @@ function roundRect(ctx,x,y,w,h,r){
 }
 function fillRound(ctx,x,y,w,h,r,fill){roundRect(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();}
 function coverProxy(url){if(!url)return '';const endpoint=new URL(bggSearchUrl);endpoint.searchParams.set('action','cover');endpoint.searchParams.set('url',url);return endpoint.href;}
-function loadImage(url){return new Promise(resolve=>{if(!url){resolve(null);return;}const image=new Image();let done=false;const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value);};const timer=setTimeout(()=>finish(null),12000);image.crossOrigin='anonymous';image.decoding='async';image.referrerPolicy='no-referrer';image.onload=()=>finish(image);image.onerror=()=>finish(null);image.src=coverProxy(url);});}
+export function shareImageSource(url,base=globalThis.location?.href){if(!url)return '';if(safeGameImage(url))return coverProxy(url);try{const local=new URL(url,base);return base&&local.origin===new URL(base).origin?local.href:'';}catch{return '';}}
+function loadImage(url){const source=shareImageSource(url);return new Promise(resolve=>{if(!source){resolve(null);return;}const image=new Image();let done=false;const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value);};const timer=setTimeout(()=>finish(null),12000);image.crossOrigin='anonymous';image.decoding='async';image.referrerPolicy='no-referrer';image.onload=()=>finish(image);image.onerror=()=>finish(null);image.src=source;});}
 function fitText(ctx,text,maxWidth,maxSize,minSize=24){let size=maxSize;for(;size>minSize;size-=2){ctx.font=`700 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=maxWidth)break;}return size;}
 function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
  const words=String(text).split(/\s+/),lines=[];let line='';
@@ -82,10 +83,10 @@ export async function createRecentShareImage(data){
  ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 24px system-ui, sans-serif';ctx.fillText('SCORE COUNTER',72,82);
  ctx.fillStyle='#fff';fitText(ctx,data.title,936,68,48);ctx.fillText(data.title,72,184);
  metric(ctx,72,data.playCount,words.playedCount);metric(ctx,560,data.peopleCount,words.peopleCount);
- fillRound(ctx,72,452,936,176,28,'rgba(255,255,255,.10)');ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.winners,106,500);ctx.fillStyle='#fff';ctx.font='700 29px system-ui, -apple-system, "Noto Sans KR", sans-serif';const winnerLines=data.winners.length?data.winners.slice(0,3).map(row=>`${row.gameName} · ${row.names.join(' · ')}`):[words.noWinner];if(data.winners.length>3)winnerLines[2]=words.moreGames(data.winners.length-2);winnerLines.forEach((line,index)=>ctx.fillText(clippedText(ctx,line,868),106,544+index*37));
- ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,685);
+ fillRound(ctx,72,452,936,196,28,'rgba(255,255,255,.10)');ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.winners,106,498);ctx.fillStyle='#fff';const winnerLines=data.winners.length?data.winners.slice(0,3).map(row=>`${row.gameName} · ${row.names.join(' · ')}`):[words.noWinner];if(data.winners.length>3)winnerLines[2]=words.moreGames(data.winners.length-2);winnerLines.forEach((line,index)=>{fitText(ctx,line,868,29,22);ctx.fillText(clippedText(ctx,line,868),106,546+index*40);});
+ ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,705);
  const shown=data.games.slice(0,MAX_COVERS),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));const count=Math.max(1,shown.length),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),gap=18,areaW=936,areaH=528,cellW=(areaW-gap*(cols-1))/cols,cellH=(areaH-gap*(rows-1))/rows;
- shown.forEach((game,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2,x=72+offset+col*(cellW+gap),y=710+row*(cellH+gap),more=index===MAX_COVERS-1?Math.max(0,data.games.length-MAX_COVERS):0;drawCover(ctx,images[index],game,x,y,cellW,cellH,more);});
+ shown.forEach((game,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2,x=72+offset+col*(cellW+gap),y=730+row*(cellH+gap),more=index===MAX_COVERS-1?Math.max(0,data.games.length-MAX_COVERS):0;drawCover(ctx,images[index],game,x,y,cellW,cellH,more);});
  ctx.fillStyle='rgba(225,239,255,.68)';ctx.font='500 22px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText('ossonida.github.io/score',WIDTH/2,1315);
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
