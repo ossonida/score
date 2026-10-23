@@ -28,7 +28,7 @@ test('share covers load app assets directly and only proxy BGG covers',async()=>
 
 test('share layout keeps three columns up to six games, two columns from seven and an other-games list past twelve',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
- const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=122&&c.y+c.h<=650.5));assert.equal(six.others,null);
+ const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=122&&c.y+c.h<=six.metrics[0].y-19.5));assert.equal(six.metrics[0].y+172,1260);assert.equal(six.others,null);
  for(const count of [7,8,12]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,count);assert.equal(layout.others,null);assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=1260.5&&c.w>0&&c.h>0),String(count));}
  const many=shareCoverLayout(15);assert.equal(many.cells.length,8);assert.equal(many.others.x,72);assert.equal(many.others.w,560);assert.ok(Math.abs(many.others.y+many.others.h-1260)<1);assert.ok(many.cells.every(c=>c.y+c.h<many.others.y));
 });
@@ -82,8 +82,8 @@ test('day cards skip anonymous players, cooperative games and score-less games',
 test('day cards replace the winner box: side by side up to six games and stacked in the right column from seven',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
  assert.deepEqual(shareCoverLayout(5).cards,[]);
- assert.deepEqual(shareCoverLayout(5,1).cards,[{x:72,y:872,w:936,h:196}]);
- assert.deepEqual(shareCoverLayout(5,2).cards,[{x:72,y:872,w:459,h:196},{x:549,y:872,w:459,h:196}]);
+ assert.deepEqual(shareCoverLayout(5,1).cards,[{x:72,y:1064,w:936,h:196}]);
+ assert.deepEqual(shareCoverLayout(5,2).cards,[{x:72,y:1064,w:459,h:196},{x:549,y:1064,w:459,h:196}]);
  assert.deepEqual(shareCoverLayout(8,2).cards,[{x:660,y:610,w:348,h:316},{x:660,y:944,w:348,h:316}]);
  assert.deepEqual(shareCoverLayout(8,2).cells,shareCoverLayout(8).cells);assert.equal(shareCoverLayout(8,1).cards.length,1);
 });
@@ -95,7 +95,7 @@ test('redesigned share header uses a short date, the most common place and a thr
  const data=recentShareData([at('1',' B1 '),at('2','B1'),at('3','홍대'),at('4','')],null,'ko-KR');assert.equal(data.location,'B1');assert.equal(data.dateLabel,'10월10일');
  assert.equal(recentShareData([play('x','2026-10-10','13')],null,'ko-KR').location,'');
  const withPlace=shareCoverLayout(3,false,true).metrics,without=shareCoverLayout(3).metrics;
- assert.equal(withPlace.length,3);assert.deepEqual(withPlace.map(m=>Math.round(m.x)),[72,397,722]);assert.ok(withPlace.every(m=>Math.round(m.w)===286&&m.y===670&&m.h===172));
+ assert.equal(withPlace.length,3);assert.deepEqual(withPlace.map(m=>Math.round(m.x)),[72,397,722]);assert.ok(withPlace.every(m=>Math.round(m.w)===286&&m.y===1088&&m.h===172));
  assert.equal(without.length,2);assert.equal(Math.round(without[1].x+without[1].w),1008);
  assert.deepEqual(shareCoverLayout(8,false,true).metrics,[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}]);
 });
@@ -108,7 +108,18 @@ test('share image rendering resolves to a PNG blob for compact and side layouts'
   const games=count=>Array.from({length:count},(_,index)=>({key:'g'+index,game:{name:'게임'+index},count:1,imageUrl:'',winners:index%2?['하늘']:[]}));
   const card={title:'오늘의 MVP',headline:'하늘',detail:'2승 · 3판 중'};
   for(const count of [1,5,8,15]){const blob=await createRecentShareImage({copy:recentShareData([],null,'ko-KR').copy,playCount:count,peopleCount:2,dateLabel:'10월10일',location:count%2?'B1':'',games:games(count),cards:[card,card]});assert.ok(blob instanceof Blob,String(count));assert.equal(blob.type,'image/png');}
+  const winners={kind:'winners',title:'게임별 우승자',rows:Array.from({length:20},(_,index)=>({game:'게임'+index,winners:['하늘','바다']}))};
+  for(const count of [2,15]){const blob=await createRecentShareImage({copy:recentShareData([],null,'ko-KR').copy,playCount:count,peopleCount:2,dateLabel:'10월10일',games:games(count),cards:[winners]});assert.equal(blob.type,'image/png');}
  }finally{globalThis.document=previous;}
+});
+
+test('days without MVP or a close game show one winners-by-game card instead of an empty slot',()=>{
+ const plays=[scoredPlay('a','카탄',{하늘:20,바다:5}),scoredPlay('b','아줄',{바다:30,하늘:10}),scoredPlay('c','아줄',{구름:40,별:10})];
+ const [card,...rest]=recentShareData(plays,null,'ko-KR').cards;
+ assert.equal(rest.length,0);assert.equal(card.kind,'winners');assert.equal(card.title,'게임별 우승자');
+ assert.deepEqual(JSON.parse(JSON.stringify(card.rows)),[{game:'카탄',winners:['하늘']},{game:'아줄',winners:['바다','구름']}]);
+ assert.equal(recentShareData(plays,null,'en-US').cards[0].title,'Winners by game');
+ assert.deepEqual(recentShareData([...plays,scoredPlay('d','카탄',{하늘:20,바다:5})],null,'ko-KR').cards.map(item=>item.kind),['mvp']);
 });
 
 test('mission sessions show their cleared range on the shared cover instead of winners',()=>{

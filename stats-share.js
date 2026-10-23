@@ -9,8 +9,8 @@ import {summarizeStats} from './stats-insights.js?v=64';
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
 const copy={
- ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:s=>s.lastCleared?`미션 ${s.first}${s.lastCleared!==s.first?' → '+s.lastCleared:''} 클리어`:`미션 ${s.first} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
- en:{playedCount:'Games played',peopleCount:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
+ ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,winnersTitle:'게임별 우승자',closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:s=>s.lastCleared?`미션 ${s.first}${s.lastCleared!==s.first?' → '+s.lastCleared:''} 클리어`:`미션 ${s.first} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
+ en:{playedCount:'Games played',peopleCount:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,winnersTitle:'Winners by game',closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
 };
 let current=null;
 
@@ -51,7 +51,10 @@ export function recentShareData(records,profile,locale){
  }
  const places=new Map();for(const play of plays){const place=typeof play.location==='string'?play.location.trim():'';if(place)places.set(place,(places.get(place)||0)+1);}
  const location=[...places].sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
- return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts))}:entry),cards:pickDayCards(records,date,lang)};
+ // MVP·접전이 없는 날은 빈칸 대신 게임별 우승자 카드 한 장을 넣습니다.
+ const cards=pickDayCards(records,date,lang),winnerRows=[...games.values()].filter(entry=>entry.winners.length).map(entry=>({game:entry.game.name,winners:entry.winners}));
+ if(!cards.length&&winnerRows.length)cards.push({kind:'winners',title:words.winnersTitle,rows:winnerRows});
+ return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts))}:entry),cards};
 }
 
 // 그날 MVP(2승 이상, 동률 2명까지)와 접전(1·2위 CLOSE_GAP점 차 이하, 같은 차이면 최근 판)을 각각 찾아 해당하는 카드만 MVP → 접전 순으로 돌려줍니다.
@@ -109,8 +112,10 @@ export function shareCoverLayout(gameCount,cardCount=0,hasPlace=false){
  if(gameCount>MAX_COVERS){const shown=Math.min(gameCount,SIDE_COVERS),rows=Math.ceil(shown/2),cellW=(560-gap)/2,cellH=Math.min(cellW,(986-gap*(rows-1))/rows),overflow=gameCount>SIDE_COVERS,cardH=(650-gap)/2;
   const cells=Array.from({length:overflow?SIDE_COVERS-4:shown},(_,index)=>({x:72+index%2*(cellW+gap),y:274+Math.floor(index/2)*(cellH+gap),w:cellW,h:cellH}));
   return {side:true,cells,others:overflow?{x:72,y:274+(rows-2)*(cellH+gap),w:560,h:cellH*2+gap}:null,metrics:[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}],cards:Array.from({length:cards},(_,index)=>({x:660,y:610+index*(cardH+gap),w:348,h:cardH}))};}
- const count=Math.max(1,gameCount),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),cellW=(936-gap*(cols-1))/cols,cellH=(528-gap*(rows-1))/rows,slots=hasPlace?3:2,metricGap=39,metricW=(936-metricGap*(slots-1))/slots,cardW=cards>1?(936-gap)/2:936;
- return {side:false,others:null,metrics:Array.from({length:slots},(_,index)=>({x:72+index*(metricW+metricGap),y:670,w:metricW,h:172})),cards:Array.from({length:cards},(_,index)=>({x:72+index*(cardW+gap),y:872,w:cardW,h:196})),cells:Array.from({length:Math.min(gameCount,MAX_COVERS)},(_,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2;return {x:72+offset+col*(cellW+gap),y:122+row*(cellH+gap),w:cellW,h:cellH};})};
+ // 6개 이하는 표지 영역이 남는 세로 공간을 모두 차지해 아래쪽이 측면 레이아웃과 같은 1260에서 끝납니다.
+ const coverH=1260-122-20-172-(cards?30+196:0),metricY=122+coverH+20;
+ const count=Math.max(1,gameCount),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),cellW=(936-gap*(cols-1))/cols,cellH=(coverH-gap*(rows-1))/rows,slots=hasPlace?3:2,metricGap=39,metricW=(936-metricGap*(slots-1))/slots,cardW=cards>1?(936-gap)/2:936;
+ return {side:false,others:null,metrics:Array.from({length:slots},(_,index)=>({x:72+index*(metricW+metricGap),y:metricY,w:metricW,h:172})),cards:Array.from({length:cards},(_,index)=>({x:72+index*(cardW+gap),y:metricY+172+30,w:cardW,h:196})),cells:Array.from({length:Math.min(gameCount,MAX_COVERS)},(_,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2;return {x:72+offset+col*(cellW+gap),y:122+row*(cellH+gap),w:cellW,h:cellH};})};
 }
 function otherGames(ctx,games,words,{x,y,w,h}){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.otherGames,x+28,y+44);
@@ -124,6 +129,13 @@ function dayCard(ctx,card,{x,y,w,h}){
  ctx.fillStyle='#fff';fitText(ctx,card.headline,w-68,40,26);ctx.fillText(clippedText(ctx,card.headline,w-68),x+34,top+104);
  ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.detail,w-68),x+34,top+166);
 }
+function winnersCard(ctx,card,words,{x,y,w,h},columns){
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,y+46);
+ const lineH=38,perColumn=Math.max(1,Math.floor((h-74)/lineH)),capacity=perColumn*columns,rows=card.rows.length>capacity?card.rows.slice(0,capacity-1):card.rows,colW=(w-68-(columns-1)*24)/columns;
+ const at=index=>({cx:x+34+Math.floor(index/perColumn)*(colW+24),cy:y+92+index%perColumn*lineH});
+ rows.forEach((row,index)=>{const {cx,cy}=at(index),text=`${row.game} · 🏆 ${row.winners.join(', ')}`;ctx.fillStyle='#fff';fitText(ctx,text,colW,26,20);ctx.fillText(clippedText(ctx,text,colW),cx,cy);});
+ if(rows.length<card.rows.length){const {cx,cy}=at(rows.length);ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.moreGames(card.rows.length-rows.length),cx,cy);}
+}
 
 export async function createRecentShareImage(data){
  const words=data?.copy||shareCopy(data?.locale);if(!data?.playCount)throw Error(words.empty);
@@ -135,7 +147,7 @@ export async function createRecentShareImage(data){
  else{const values=[...(place?[[place,words.place,true]]:[]),[data.playCount,words.playedCount,false],[data.peopleCount,words.peopleCount,false]];values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted}));}
  shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h);});
  if(layout.others)otherGames(ctx,data.games.slice(shown.length),words,layout.others);
- layout.cards.forEach((box,index)=>dayCard(ctx,cards[index],box));
+ layout.cards.forEach((box,index)=>cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box));
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
 
