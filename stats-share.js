@@ -1,4 +1,4 @@
-import {gameKey,winnerIds,missionSummary} from './records-core.js?v=125';
+import {gameKey,winnerIds,missionSummary} from './records-core.js?v=127';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
 import {nameKey} from './personal-stats.js?v=113';

@@ -16,3 +16,9 @@ test('unknown and partial titles are not invented or rewritten',()=>{
  assert.deepEqual(searchLocalGames('없는게임xyz123'),[]);assert.equal(bggSearchQuery('없는게임xyz123'),'없는게임xyz123');assert.equal(bggSearchQuery('보난'),'보난');
 });
 test('Score native games are searchable without a BGG ID',()=>{for(const [name,type]of [['홀덤','strategy'],['테니스','sports'],['볼링','sports'],['당구','sports'],['축구','sports'],['야구','sports'],['배드민턴','sports'],['탁구','sports']]){const result=searchLocalGames(name).find(game=>game.name===name);assert.ok(result,name);assert.equal(result.id,'');assert.equal(result.scoreGame,true);assert.equal(result.type,type);assert.equal(result.source,'Score 자체 게임');}});
+
+test('Sea Salt & Paper uses its Korean release title and keeps the transliteration searchable',async()=>{
+ const {searchLocalGames}=await import('../game-catalog.js'),{localizedGameName}=await import('../stats-share.js');
+ assert.equal(localizedGameName({name:'Sea Salt & Paper',bggId:'367220'},'ko-KR'),'종이와 바다');
+ for(const query of ['종이와 바다','씨솔트앤페이퍼'])assert.equal(searchLocalGames(query,[])[0]?.id,'367220',query);
+});

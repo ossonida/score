@@ -1,5 +1,5 @@
 import {signInNativeGoogle} from './native-auth-flow.js?v=64';
-import {validUsername,validBggItem} from './bgg-validation.js?v=64';
+import {validUsername,validBggItem} from './bgg-validation.js?v=127';
 import {firebaseConfig} from './firebase-config.js?v=64';
 import {validIdentity} from './personal-stats.js?v=113';
 let connection;

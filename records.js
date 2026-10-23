@@ -1,5 +1,5 @@
 import {renderRecordParticipants,renderModeStats} from './record-view.js?v=125';
-import {recordMode,modeLabels} from './records-core.js?v=125';
+import {recordMode,modeLabels} from './records-core.js?v=127';
 import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=125';
@@ -16,9 +16,10 @@ import {mergeImported} from './data-transfer.js?v=64';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=95';
 import {isScoreGame,scoreGameType} from './score-games.js?v=119';
 import {metadata,domainLabels} from './bgg-metadata.js?v=88';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary} from './records-core.js?v=125';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary} from './records-core.js?v=127';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity} from './cloud-records.js?v=113';
 import {bggSearchUrl} from './firebase-config.js?v=64';
+import {decodeXmlText} from './bgg-validation.js?v=127';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let currentUser=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let activePeriodUnit='month',activePeriodOffset=0,activeCustomPeriod=null,periodFormOpen=false;
@@ -217,7 +218,7 @@ async function searchGames(){
  const token=await idToken(currentUser?.uid);if(serial!==searchSerial)return;const url=new URL(bggSearchUrl);url.searchParams.set('query',bggSearchQuery(query));const response=await fetch(url,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),headers:{Authorization:'Bearer '+token}});
  if(response.status===202||!response.ok){const errors={202:'BGG가 검색을 준비 중입니다. 잠시 후 검색 버튼을 다시 눌러주세요.',401:'로그인 확인이 필요합니다. 다시 로그인한 뒤 검색해주세요.',429:'검색 요청이 많습니다. 1분 뒤 다시 검색해주세요.',502:'BGG에서 검색 결과를 받지 못했습니다. 잠시 후 다시 검색해주세요.',503:'BGG 검색 서버 설정을 확인해야 합니다. 기존 목록은 선택할 수 있습니다.'};throw Error(errors[response.status]||'BGG에 연결하지 못했습니다. 기존 목록을 선택하거나 직접 입력할 수 있습니다.');}
  const data=await response.json();if(serial!==searchSerial)return;const merged=new Map(local.map(g=>[g.id?'bgg:'+g.id:'name:'+g.name,g]));
- for(const game of Array.isArray(data.games)?data.games:[])if(/^[1-9][0-9]{0,9}$/.test(String(game.id))&&typeof game.name==='string')merged.set('bgg:'+game.id,{...game,source:'BGG'});
+ for(const game of Array.isArray(data.games)?data.games:[])if(/^[1-9][0-9]{0,9}$/.test(String(game.id))&&typeof game.name==='string')merged.set('bgg:'+game.id,{...game,name:decodeXmlText(game.name),source:'BGG'});
  const games=[...merged.values()];renderGameResults(games);$('gameSearchStatus').textContent=games.length?games.length+'개 결과 · 원하는 게임을 선택해주세요.':'결과가 없습니다. 게임명을 직접 입력해 저장할 수 있어요.';
  }catch(error){if(error.name!=='AbortError'&&serial===searchSerial)$('gameSearchStatus').textContent=error.name==='TimeoutError'?'검색 응답이 늦습니다. 잠시 후 다시 검색해주세요.':error.message;}
  finally{if(serial===searchSerial){button.disabled=false;button.setAttribute('aria-busy','false');}}

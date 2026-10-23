@@ -1,4 +1,5 @@
 import {resolveGame,matchGameRecords} from './game-catalog.js?v=76';
+import {decodeXmlText} from './bgg-validation.js?v=127';
 export function gameKey(game) {
   return game.bggId ? `bgg:${game.bggId}` : `name:${game.name.trim().normalize('NFKC').toLocaleLowerCase()}`;
 }
@@ -50,6 +51,7 @@ export function recordMode(play){
  return 'unknown';
 }
 export function normalizePlay(play,{cooperative=false}={}){
+ if(typeof play?.game?.name==='string'&&decodeXmlText(play.game.name)!==play.game.name)play={...play,game:{...play.game,name:decodeXmlText(play.game.name)}};
  if(cooperative&&play?.rule!=='cooperative'&&Array.isArray(play.players)&&play.players.length&&play.players.every(p=>typeof p.winner==='boolean'&&p.winner===play.players[0].winner)){const success=play.players[0].winner;return {...play,rule:'cooperative',cooperativeResult:success?'success':'failure',players:play.players.map(({winner,draw,rank,...person})=>person)};}
  if(!play?.id?.startsWith('bgstats:')||!Array.isArray(play.players)||!play.players.length||!play.players.every(p=>p.winner===false)||play.players.some(p=>p.draw===true))return play;
  return {...play,players:play.players.map(({winner,...person})=>person)};

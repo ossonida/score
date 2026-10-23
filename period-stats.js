@@ -1,4 +1,4 @@
-import {gameKey} from './records-core.js?v=125';
+import {gameKey} from './records-core.js?v=127';
 
 const DAY=86400000;
 const pad=value=>String(value).padStart(2,'0');

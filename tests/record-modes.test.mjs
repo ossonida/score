@@ -76,3 +76,13 @@ test('cooperative mission attempts validate, summarize and stay out of manual re
  assert.equal(editRecordedPlayer(mission,'a','name','하늘').missionAttempts.length,5);
  const form=bggPlayForm({...mission,game:{name:'딥씨 크루',bggId:'123'}},'tester');assert.match(form.get('comments'),/Missions 4-6 · cleared 2 · 5 attempts\n\[ScoreCounter:mission\]/);
 });
+
+test('BGG game names with XML entities are shown decoded without touching other fields',async()=>{
+ const {decodeXmlText,safeBggItems}=await import('../bgg-validation.js');
+ assert.equal(decodeXmlText('Dungeons &amp; Dragons &#8211; &quot;Lords&quot; &#x26;amp;'),'Dungeons & Dragons – "Lords" &amp;');
+ assert.equal(decodeXmlText('A &bogus; & B &#0;'),'A &bogus; & B &#0;');
+ const play={id:'x',date:'2026-10-24',createdAt:'2026-10-24T00:00:00Z',rule:'highest',game:{name:'Ticket to Ride &amp; Friends',bggId:'9'},players:[{id:'a',name:'A',score:1}]};
+ const fixed=normalizePlay(play);assert.equal(fixed.game.name,'Ticket to Ride & Friends');assert.equal(fixed.game.bggId,'9');assert.equal(play.game.name,'Ticket to Ride &amp; Friends');
+ const clean={...play,game:{name:'Catan',bggId:'13'}};assert.equal(normalizePlay(clean),clean);
+ const [item]=safeBggItems([{id:'13',gameId:'13',name:'Rock &amp; Roll'}],'collection');assert.equal(item.name,'Rock & Roll');
+});

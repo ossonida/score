@@ -1,4 +1,4 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionLabel} from './records-core.js?v=125';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionLabel} from './records-core.js?v=127';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const rate=n=>n===null?'—':num(n*100)+'%';

@@ -1,5 +1,5 @@
 import {recentHighlights,rivalStats} from './social-insights.js?v=113';
-import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=125';
+import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=127';
 import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=76';
 import {readIdentity,meIn} from './personal-stats.js?v=113';
 import {renderGameArtwork} from './game-artwork.js?v=95';
