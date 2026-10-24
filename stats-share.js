@@ -95,7 +95,7 @@ function drawCover(ctx,image,game,x,y,w,h){
  // ×N 배지는 오른쪽 아래 모서리에 두고, 배지가 있으면 게임명을 배지 위로 올려 겹치지 않게 합니다.
  const repeated=game.count>1;
  if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';drawWrapped(ctx,game.game.name,x+w/2,y+h-(repeated?106:56),w-44,31,2);}
- if(repeated){fillRound(ctx,x+w-88,y+h-60,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w-53,y+h-31);}
+ if(repeated){fillRound(ctx,x+w/2-35,y+h/2-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w/2,y+h/2+8);}
  // 우승자는 표지 위쪽 가운데 정렬.
  if(label){const room=w-44;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+w/2,y+47);}
 }
