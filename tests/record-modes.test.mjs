@@ -100,7 +100,7 @@ test('cooperative game stats summarize team results, shared scores and mission p
  assert.deepEqual([s.count,s.known,s.successes,s.failures,s.rate],[5,4,3,1,.75]);
  assert.deepEqual(s.recent,['failure','success','success','success']);
  assert.deepEqual(s.scores,{best:20,average:16,latest:20});
- assert.deepEqual({...s.missions,hardest:undefined},{next:4,cleared:3,attempts:7,average:7/4,hardest:undefined});
+ assert.deepEqual({...s.missions,hardest:undefined},{next:4,best:3,cleared:3,attempts:7,average:7/4,hardest:undefined});assert.equal(s.missionOnly,false);assert.equal(cooperativeStats(plays.slice(0,2)).missionOnly,true);
  assert.deepEqual(s.missions.hardest,[{mission:3,count:3},{mission:2,count:2}]);
  const other=play('other',[person('a')],{game:{name:'다른 게임'},rule:'cooperative',cooperativeResult:'success',sharedScore:5});
  assert.equal(cooperativeStats([...plays,other]).missions,null);assert.equal(cooperativeStats([...plays,other]).scores,null);
