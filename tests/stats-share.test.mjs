@@ -29,8 +29,8 @@ test('share covers load app assets directly and only proxy BGG covers',async()=>
 test('share layout keeps three columns up to six games, two columns from seven and an other-games list past twelve',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
  const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=122&&c.y+c.h<=six.metrics[0].y-19.5));assert.equal(six.metrics[0].y+172,1260);assert.equal(six.others,null);
- for(const count of [7,8,12]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,count);assert.equal(layout.others,null);assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=1260.5&&c.w>0&&c.h>0),String(count));}
- const many=shareCoverLayout(15);assert.equal(many.cells.length,8);assert.equal(many.others.x,72);assert.equal(many.others.w,560);assert.ok(Math.abs(many.others.y+many.others.h-1260)<1);assert.ok(many.cells.every(c=>c.y+c.h<many.others.y));
+ for(const count of [7,8,11,12]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,count);assert.equal(layout.others,null);assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=(count<12?1260.5:1290.5)&&c.w>0&&c.h>0),String(count));}
+ const many=shareCoverLayout(15);assert.equal(many.cells.length,12);assert.deepEqual(many.others,{x:660,y:440,w:348,h:845});assert.deepEqual(shareCoverLayout(15,2).others,{x:660,y:836,w:348,h:449});
 });
 
 test('recent share puts comma-separated unique winners on each played game',()=>{
@@ -84,7 +84,7 @@ test('day cards replace the winner box: side by side up to six games and stacked
  assert.deepEqual(shareCoverLayout(5).cards,[]);
  assert.deepEqual(shareCoverLayout(5,1).cards,[{x:72,y:1064,w:936,h:196}]);
  assert.deepEqual(shareCoverLayout(5,2).cards,[{x:72,y:1064,w:459,h:196},{x:549,y:1064,w:459,h:196}]);
- assert.deepEqual(shareCoverLayout(8,2).cards,[{x:660,y:610,w:348,h:316},{x:660,y:944,w:348,h:316}]);
+ assert.deepEqual(shareCoverLayout(8,2).cards,[{x:660,y:610,w:348,h:316},{x:660,y:944,w:348,h:316}]);assert.deepEqual(shareCoverLayout(12,2).cards,[{x:660,y:440,w:348,h:413.5},{x:660,y:871.5,w:348,h:413.5}]);assert.deepEqual(shareCoverLayout(15,2).cards,[{x:660,y:440,w:348,h:180},{x:660,y:638,w:348,h:180}]);
  assert.deepEqual(shareCoverLayout(8,2).cells,shareCoverLayout(8).cells);assert.equal(shareCoverLayout(8,1).cards.length,1);
 });
 
@@ -97,7 +97,7 @@ test('redesigned share header uses a short date, the most common place and a thr
  const withPlace=shareCoverLayout(3,false,true).metrics,without=shareCoverLayout(3).metrics;
  assert.equal(withPlace.length,3);assert.deepEqual(withPlace.map(m=>Math.round(m.x)),[72,397,722]);assert.ok(withPlace.every(m=>Math.round(m.w)===286&&m.y===1088&&m.h===172));
  assert.equal(without.length,2);assert.equal(Math.round(without[1].x+without[1].w),1008);
- assert.deepEqual(shareCoverLayout(8,false,true).metrics,[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}]);
+ assert.deepEqual(shareCoverLayout(8,false,true).metrics,[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}]);assert.deepEqual(shareCoverLayout(12).metrics,[{x:660,y:274,w:168,h:148},{x:840,y:274,w:168,h:148}]);
 });
 
 test('share image rendering resolves to a PNG blob for compact and side layouts',async()=>{
