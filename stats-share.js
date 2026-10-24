@@ -92,10 +92,10 @@ function drawCover(ctx,image,game,x,y,w,h){
  if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale,sx=(image.naturalWidth-sw)/2,sy=(image.naturalHeight-sh)/2;ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
  const shade=ctx.createLinearGradient(0,y+h*.54,0,y+h);shade.addColorStop(0,'transparent');shade.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=shade;ctx.fillRect(x,y,w,h);
  if(label){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}ctx.restore();
- // ×N 배지는 오른쪽 아래 모서리에 두고, 배지가 있으면 게임명을 배지 위로 올려 겹치지 않게 합니다.
+ // ×N 배지는 위쪽 우승자와 아래쪽 게임명 사이 가운데에 두고, 게임명은 배지와 상관없이 하단에 둡니다.
  const repeated=game.count>1;
- if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';drawWrapped(ctx,game.game.name,x+w/2,y+h-(repeated?106:56),w-44,31,2);}
- if(repeated){fillRound(ctx,x+w/2-35,y+h/2-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w/2,y+h/2+8);}
+ if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';drawWrapped(ctx,game.game.name,x+w/2,y+h-56,w-44,31,2);}
+ if(repeated){const badgeY=y+h/2-14;fillRound(ctx,x+w/2-35,badgeY-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w/2,badgeY+8);}
  // 우승자는 표지 위쪽 가운데 정렬.
  if(label){const room=w-44;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+w/2,y+47);}
 }
