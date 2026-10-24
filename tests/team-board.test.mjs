@@ -181,6 +181,6 @@ test('mission board taps log failures and successes, advance missions, undo and 
  find('다음 미션').onclick();assert.equal(entry.missionCurrent,3);find('미션 3 실패').onclick();
  assert.deepEqual(JSON.parse(JSON.stringify(entry.missionAttempts)),[{mission:1,result:'failure'},{mission:1,result:'success'},{mission:3,result:'failure'}]);
  assert.equal(a.get('saveScorelessPlay').disabled,false);assert.equal(a.get('saveScorelessPlay').textContent,'끝내고 저장 · 시도 3 · 클리어 1');assert.equal(a.get('scorelessBoardMode').textContent,'협력 미션 기록 · 미션 3');
- const texts=[];const visit=n=>{if(String(n.className||'').split(' ').includes('mission-chip'))texts.push(n.textContent);for(const child of n.children||[])visit(child);};visit(a.get('cards'));assert.deepEqual(texts,['미션 1 ✗✓','미션 3 ✗']);
+ const texts=[];const visit=n=>{if(String(n.className||'').split(' ').includes('mission-chip'))texts.push(n.textContent);for(const child of n.children||[])visit(child);};visit(a.get('cards'));assert.deepEqual(texts,['미션 1 · ✗ ✓','미션 3 · ✗']);
  for(let i=0;i<3;i++)find('마지막 미션 결과 되돌리기').onclick();assert.equal(entry.cooperativeResult,undefined);assert.equal(entry.missionCurrent,1);assert.equal(a.get('saveScorelessPlay').disabled,true);
 });

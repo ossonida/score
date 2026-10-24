@@ -197,7 +197,7 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=119">
+<link rel="stylesheet" href="./records.css?v=120">
 <link rel="stylesheet" href="./modal-ui.css?v=65">
 <link rel="stylesheet" href="./ui-system.css?v=101">
 <style>
@@ -370,7 +370,7 @@ function renderResultBoard(container){
   const trail=document.createElement('div');trail.className='mission-trail';const head=document.createElement('div');head.className='mission-trail-head';const caption=document.createElement('span');caption.textContent='오늘 진행';const undo=document.createElement('button');undo.type='button';undo.textContent='↶ 되돌리기';undo.setAttribute('aria-label','마지막 미션 결과 되돌리기');undo.disabled=!missionLog.length;undo.onclick=()=>{const last=missionLog.pop();if(!last)return;resultEntry.missionCurrent=last.mission;resultEntry.cooperativeResult=missionLog.length?(missionLog.some(item=>item.result==='success')?'success':'failure'):undefined;render();};head.append(caption,undo);trail.append(head);
   const chips=document.createElement('div');chips.className='mission-chips';const groups=[];for(const item of missionLog){const last=groups.at(-1);if(last?.mission===item.mission)last.marks+=item.result==='success'?'✓':'✗';else groups.push({mission:item.mission,marks:item.result==='success'?'✓':'✗'});}
   if(!groups.length){const empty=document.createElement('span');empty.className='mission-empty';empty.textContent='아직 기록한 시도가 없습니다.';chips.append(empty);}
-  for(const group of groups){const chip=document.createElement('span');chip.className='mission-chip'+(group.marks.includes('✓')?' is-cleared':'');chip.textContent=`미션 ${group.mission} ${group.marks}`;chips.append(chip);}trail.append(chips);section.append(trail);container.append(section);
+  for(const group of groups){const chip=document.createElement('span');chip.className='mission-chip'+(group.marks.includes('✓')?' is-cleared':'');chip.textContent=`미션 ${group.mission} · ${[...group.marks].join(' ')}`;chips.append(chip);}trail.append(chips);section.append(trail);container.append(section);
  }else if(isCoop){
   const section=document.createElement('section');section.className='coop-result-controls';
   const title=document.createElement('strong');title.textContent='경기 전체 결과';section.append(title);

@@ -86,3 +86,22 @@ test('BGG game names with XML entities are shown decoded without touching other 
  const clean={...play,game:{name:'Catan',bggId:'13'}};assert.equal(normalizePlay(clean),clean);
  const [item]=safeBggItems([{id:'13',gameId:'13',name:'Rock &amp; Roll'}],'collection');assert.equal(item.name,'Rock & Roll');
 });
+test('cooperative game stats summarize team results, shared scores and mission progress',async()=>{
+ const {cooperativeStats}=await import('../record-view.js');
+ const coop=(id,date,extra)=>play(id,[person('a'),person('b')],{rule:'cooperative',date,...extra});
+ const plays=[
+  coop('m2','2026-10-22',{cooperativeResult:'success',missionAttempts:[{mission:3,result:'failure'},{mission:3,result:'failure'},{mission:3,result:'success'},{mission:4,result:'failure'}]}),
+  coop('m1','2026-10-21',{cooperativeResult:'success',missionAttempts:[{mission:1,result:'success'},{mission:2,result:'failure'},{mission:2,result:'success'}]}),
+  coop('s1','2026-10-20',{cooperativeResult:'failure',sharedScore:12}),
+  coop('s2','2026-10-23',{cooperativeResult:'success',sharedScore:20}),
+  coop('u1','2026-10-19',{})
+ ];
+ const s=cooperativeStats(plays);
+ assert.deepEqual([s.count,s.known,s.successes,s.failures,s.rate],[5,4,3,1,.75]);
+ assert.deepEqual(s.recent,['failure','success','success','success']);
+ assert.deepEqual(s.scores,{best:20,average:16,latest:20});
+ assert.deepEqual({...s.missions,hardest:undefined},{next:4,cleared:3,attempts:7,average:7/4,hardest:undefined});
+ assert.deepEqual(s.missions.hardest,[{mission:3,count:3},{mission:2,count:2}]);
+ const other=play('other',[person('a')],{game:{name:'다른 게임'},rule:'cooperative',cooperativeResult:'success',sharedScore:5});
+ assert.equal(cooperativeStats([...plays,other]).missions,null);assert.equal(cooperativeStats([...plays,other]).scores,null);
+});

@@ -1,4 +1,4 @@
-import {renderRecordParticipants,renderModeStats} from './record-view.js?v=125';
+import {renderRecordParticipants,renderModeStats} from './record-view.js?v=129';
 import {recordMode,modeLabels} from './records-core.js?v=127';
 import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';

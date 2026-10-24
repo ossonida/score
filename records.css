@@ -258,7 +258,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .record-mode-cooperative li,.record-mode-rank li,.record-mode-win li{display:flex;justify-content:space-between;gap:12px}
 .record-mode-stats{margin-top:16px}
 .record-mode-stats h3{font-size:1rem}
-.record-mode-stats td{white-space:normal;min-width:56px}
+.record-mode-stats td{white-space:normal;min-width:56px}.coop-stats{display:grid;gap:10px;margin:10px 0 14px}.coop-stats-rate{display:flex;align-items:baseline;gap:8px}.coop-stats-rate strong{font-size:26px}.coop-stats-rate span,.coop-stats-recent>span{color:#8fa6c3;font-size:12px}.coop-stats-bar{height:8px;border-radius:999px;background:#ff6b6b33;overflow:hidden}.coop-stats-bar span{display:block;height:100%;background:#3dd68c}.coop-stats-counts,.coop-stats-hardest{margin:0;color:#aab6ca;font-size:13px}.coop-stats-recent{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0}.coop-stats-recent b{font-size:14px}.coop-stats-recent .is-success{color:#5fe0a1}.coop-stats-recent .is-failure{color:#ff8a8a}.coop-stats-block{display:grid;gap:8px;padding:12px;border:1px solid #25374d;border-radius:12px}.coop-stats-block h4{margin:0;font-size:13px}.coop-stats-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin:0}.coop-stats-facts div{display:grid;gap:2px}.coop-stats-facts dt{color:#8fa6c3;font-size:11px}.coop-stats-facts dd{margin:0;font-weight:700;font-size:15px}
 .coop-result-controls{grid-column:1/-1;display:grid;gap:12px;padding:16px;border:1px solid var(--line,#304763);border-radius:16px}
 .coop-result-actions{display:flex;gap:8px}
 .coop-result-actions button{flex:1;min-height:44px}
