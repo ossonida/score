@@ -1,4 +1,4 @@
-import {renderPersonalGame} from './personal-dashboard.js?v=113';
+import {renderPersonalGame} from './personal-dashboard.js?v=132';
 import {summarizeStats} from './stats-insights.js?v=64';
 const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const number=n=>n.toLocaleString('ko-KR',{maximumFractionDigits:2});

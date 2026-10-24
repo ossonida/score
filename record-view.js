@@ -1,4 +1,5 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionLabel,missionSummary,gameKey} from './records-core.js?v=127';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey} from './records-core.js?v=127';
+import {missionName,missionRange} from './mission-names.js?v=1';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const rate=n=>n===null?'—':num(n*100)+'%';
@@ -15,7 +16,7 @@ export function renderRecordParticipants(play,me,onEdit){
   return list;
  }
  if(mode==='cooperative'&&Array.isArray(play.missionAttempts)){
-  const row=el('li',undefined,'record-cooperative-result record-mission-result');row.append(el('strong',resultLabel(play,play.players[0]),'record-mission-outcome'),el('span',missionLabel(play.missionAttempts),'record-mission-summary'));list.append(row);
+  const row=el('li',undefined,'record-cooperative-result record-mission-result');row.append(el('strong',resultLabel(play,play.players[0]),'record-mission-outcome'),el('span',(s=>s?`${missionRange(play.game,s.first,s.last)} · 클리어 ${s.cleared} · 시도 ${s.attempts}`:'')(missionSummary(play.missionAttempts)),'record-mission-summary'));list.append(row);
  }else if(mode==='cooperative'){
   const row=el('li',undefined,'record-cooperative-result'),first=play.players[0];
   row.append(action(resultLabel(play,first),'협력 전체 결과 수정',()=>onEdit(play,first,'cooperativeResult'),'record-edit-result'),action(play.sharedScore===undefined?'공동 점수 추가':num(play.sharedScore)+'점 · 공동','공동 점수 수정',()=>onEdit(play,first,'sharedScore'),'record-edit-score'));list.append(row);
@@ -52,7 +53,7 @@ function renderCooperativeSummary(section,group,plays){
  if(!s.missionOnly&&s.recent.length){const recent=el('p',undefined,'coop-stats-recent');recent.append(el('span','최근'));for(const result of s.recent)recent.append(el('b',result==='success'?'✓':'✗',result==='success'?'is-success':'is-failure'));box.append(recent);}
  const facts=(title,items)=>{const wrap=el('div',undefined,'coop-stats-block');wrap.append(el('h4',title));const list=el('dl',undefined,'coop-stats-facts');for(const [label,value] of items){const item=el('div');item.append(el('dt',label),el('dd',value));list.append(item);}wrap.append(list);box.append(wrap);return wrap;};
  if(s.scores)facts('공동 점수',[['최고',num(s.scores.best)+'점'],['평균',num(s.scores.average)+'점'],['최근',num(s.scores.latest)+'점']]);
- if(s.missions){const m=s.missions,wrap=facts('미션 진행',[['다음',`미션 ${m.next}부터`],['최고 클리어',m.best?`미션 ${m.best}`:'—'],['클리어',m.cleared+'개'],['시도',m.attempts+'회'],['미션당 평균',num(m.average)+'회']]);if(m.hardest.length)wrap.append(el('p','어려웠던 미션 · '+m.hardest.map(h=>`미션 ${h.mission} (${h.count}회)`).join(' · '),'coop-stats-hardest'));}
+ if(s.missions){const m=s.missions,game=plays[0]?.game,wrap=facts('미션 진행',[['다음',`${missionName(game,m.next)}부터`],['최고 클리어',m.best?missionName(game,m.best):'—'],['클리어',m.cleared+'개'],['시도',m.attempts+'회'],['미션당 평균',num(m.average)+'회']]);if(m.hardest.length)wrap.append(el('p','어려웠던 미션 · '+m.hardest.map(h=>`${missionName(game,h.mission)} (${h.count}회)`).join(' · '),'coop-stats-hardest'));}
  section.append(box);return s.missionOnly&&!!s.missions;
 }
 export function renderModeStats(container,records){

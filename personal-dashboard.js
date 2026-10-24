@@ -1,5 +1,6 @@
 import {recordMode,modeLabels,resultLabel,missionSummary} from './records-core.js?v=127';
-import {renderModeStats,cooperativeStats} from './record-view.js?v=130';
+import {missionName,missionRange} from './mission-names.js?v=1';
+import {renderModeStats,cooperativeStats} from './record-view.js?v=131';
 import {metadata,domainLabels} from './bgg-metadata.js?v=64';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=113';
@@ -49,12 +50,12 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   if(!s.total){note(content,'이 게임에 내 기록이 없습니다. 내 플레이어 지정을 확인해주세요.');return;}
   const hero=el('section',undefined,'insight-hero personal-hero'),metrics=el('div',undefined,'insight-metrics personal-metrics');
   const scored=['highest','lowest'].includes(s.rule),coop=s.rule==='cooperative',ranked=s.rule==='rank';
-  const hasMissions=play=>Array.isArray(play.missionAttempts)&&play.missionAttempts.length>0,missionPlays=coop?s.entries.map(x=>x.play).filter(hasMissions):[],m=missionPlays.length?cooperativeStats(missionPlays).missions:null;
-  const values=m?[[num(s.total)+'회','플레이'],[m.best?`미션 ${m.best}`:'—','최고 클리어'],[num(m.cleared)+'개','클리어 미션'],[num(m.average)+'회','미션당 평균 시도']]:[[num(s.total)+'회','플레이'],[num(s.wins)+'회',coop?'성공':ranked?'1위':s.rule==='team'?'팀 승리':'승리'],[s.rate===null?'—':num(s.rate*100)+'%',coop?'성공률':ranked?'1위 비율':s.rule==='team'?'팀전 승률':'승률'],...(scored?[[num(s.best?.person.score),s.rule==='lowest'?'개인 최저점':'개인 최고점']]:coop?[[num(s.losses)+'회','실패']]:ranked?[]:[[num(s.draws)+'회','무승부']])];
+  const hasMissions=play=>Array.isArray(play.missionAttempts)&&play.missionAttempts.length>0,missionPlays=coop?s.entries.map(x=>x.play).filter(hasMissions):[],m=missionPlays.length?cooperativeStats(missionPlays).missions:null,missionGame=missionPlays[0]?.game;
+  const values=m?[[num(s.total)+'회','플레이'],[m.best?missionName(missionGame,m.best):'—','최고 클리어'],[num(m.cleared)+'개','클리어 미션'],[num(m.average)+'회','미션당 평균 시도']]:[[num(s.total)+'회','플레이'],[num(s.wins)+'회',coop?'성공':ranked?'1위':s.rule==='team'?'팀 승리':'승리'],[s.rate===null?'—':num(s.rate*100)+'%',coop?'성공률':ranked?'1위 비율':s.rule==='team'?'팀전 승률':'승률'],...(scored?[[num(s.best?.person.score),s.rule==='lowest'?'개인 최저점':'개인 최고점']]:coop?[[num(s.losses)+'회','실패']]:ranked?[]:[[num(s.draws)+'회','무승부']])];
   for(const [value,label]of values){
    const box=el('div');box.append(el('strong',value),el('span',label));metrics.append(box);
   }
-  hero.append(metrics);note(hero,m?`다음 미션 ${m.next}부터 · 총 시도 ${num(m.attempts)}회${missionPlays.length<s.total?` · 미션 없이 기록한 ${s.total-missionPlays.length}회 제외`:''}`:scored?`평균 ${num(s.average)}점 · ${ruleName(s.rule)}`:`${ruleName(s.rule)} · 결과 확인 ${s.known}회 · 미입력 ${s.total-s.known}회`);
+  hero.append(metrics);note(hero,m?`다음 ${missionName(missionGame,m.next)}부터 · 총 시도 ${num(m.attempts)}회${missionPlays.length<s.total?` · 미션 없이 기록한 ${s.total-missionPlays.length}회 제외`:''}`:scored?`평균 ${num(s.average)}점 · ${ruleName(s.rule)}`:`${ruleName(s.rule)} · 결과 확인 ${s.known}회 · 미입력 ${s.total-s.known}회`);
   if(s.best){const button=el('button',`${s.best.play.date} · 개인 기록 보기 ↗`,'insight-link');button.type='button';button.onclick=()=>onOpen(s.best.play.id);hero.append(button);}
   content.append(hero);
   const layout=el('div',undefined,'personal-sections');
@@ -64,10 +65,10 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   drawChart(growth,s.entries,s.best);layout.append(growth);}
   const recent=section('최근 경기','personal-recent');
   for(const {play,person,rank,won}of s.recent){
-   const button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${play.date} · ${play.players.length}인`),...(hasMissions(play)?(sum=>[el('strong',`미션 ${sum.first}${sum.last!==sum.first?' → '+sum.last:''}`),el('small',`클리어 ${sum.cleared} · 시도 ${sum.attempts}`)])(missionSummary(play.missionAttempts)):[el('strong',scored?(person.score===null?'점수 없음':num(person.score)+'점'):resultLabel(play,person)),el('small',scored?`${won?'우승 · ':''}${rank?rank.value+'위':''}`:s.rule==='team'?person.teamName||'팀전':coop?(play.sharedScore===undefined?'참여자 '+play.players.length+'명':num(play.sharedScore)+'점 · 공동'):'')]));button.onclick=()=>onOpen(play.id);recent.append(button);
+   const button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${play.date} · ${play.players.length}인`),...(hasMissions(play)?(sum=>[el('strong',missionRange(play.game,sum.first,sum.last)),el('small',`클리어 ${sum.cleared} · 시도 ${sum.attempts}`)])(missionSummary(play.missionAttempts)):[el('strong',scored?(person.score===null?'점수 없음':num(person.score)+'점'):resultLabel(play,person)),el('small',scored?`${won?'우승 · ':''}${rank?rank.value+'위':''}`:s.rule==='team'?person.teamName||'팀전':coop?(play.sharedScore===undefined?'참여자 '+play.players.length+'명':num(play.sharedScore)+'점 · 공동'):'')]));button.onclick=()=>onOpen(play.id);recent.append(button);
   }
   layout.append(recent);
-  if(m?.hardest.length){const hard=section('어려웠던 미션','personal-sizes');for(const h of m.hardest){const line=el('div',undefined,'personal-comparison');line.append(el('strong',`미션 ${h.mission}`),el('span',`시도 ${h.count}회`));hard.append(line);}layout.append(hard);}
+  if(m?.hardest.length){const hard=section('어려웠던 미션','personal-sizes');for(const h of m.hardest){const line=el('div',undefined,'personal-comparison');line.append(el('strong',missionName(missionGame,h.mission)),el('span',`시도 ${h.count}회`));hard.append(line);}layout.append(hard);}
   const sizes=section('인원별 성적','personal-sizes');
   for(const row of s.sizes){const line=el('div',undefined,'personal-comparison');const sizeMissions=m?missionPlays.filter(play=>play.players.length===row.size):[];line.append(el('strong',`${row.size}인`),el('span',sizeMissions.length?`${row.count}회 · 미션당 평균 시도 ${num(cooperativeStats(sizeMissions).missions.average)}회`:`${row.count}회 · ${ranked?`평균 ${num(row.averageRank)}위 · 1위 ${row.wins}회`:row.known?`${row.wins}${coop?'회 성공':'승'} · ${num(row.wins/row.known*100)}%`:'결과 정보 없음'}`));sizes.append(line);}
   layout.append(sizes);content.append(layout);
