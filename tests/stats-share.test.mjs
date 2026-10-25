@@ -151,3 +151,10 @@ test('share game types fold strategy+family into family, co-op first and guess u
  const five=base({name:'아무 게임',bggId:''},{players:['a','b','c','d','e'].map(id=>({id,name:id,score:1}))});assert.equal(shareGameType(five),'family');
  assert.equal(shareGameType(base({name:'아무 게임',bggId:''},{players:[{id:'a',name:'하늘',score:null,winner:true},{id:'b',name:'바다',score:null,winner:false}]})),'family');
 });
+
+test('busy days start the side layout higher so covers and cards grow into the freed title space',async()=>{
+ const {shareCoverLayout}=await import('../stats-share.js');
+ const normal=shareCoverLayout(8,2),busy=shareCoverLayout(8,2,false,164);
+ assert.equal(busy.cells[0].y,164);assert.equal(busy.metrics[0].y,164);assert.ok(busy.cells[0].h>normal.cells[0].h);assert.ok(busy.cards[0].h>normal.cards[0].h);assert.ok(Math.abs(busy.cards[1].y+busy.cards[1].h-1260)<1);
+ const wide=shareCoverLayout(12,2,false,164);assert.equal(wide.cards[0].y,330);assert.ok(wide.cells.at(-1).y+wide.cells.at(-1).h<=1290.5);assert.equal(wide.others.y+wide.others.h,1285);
+});
