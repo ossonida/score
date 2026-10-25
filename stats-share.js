@@ -1,5 +1,5 @@
-import {gameKey,winnerIds,missionSummary,recordMode} from './records-core.js?v=127';
-import {metadata} from './bgg-metadata.js?v=64';
+import {gameKey,winnerIds,missionSummary} from './records-core.js?v=127';
+import {metadata,bggId} from './bgg-metadata.js?v=64';
 import {scoreGameType} from './score-games.js?v=119';
 import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
@@ -43,12 +43,13 @@ export function localizedGameName(game,locale){
 }
 
 // 공유용 게임 성격 3분류: 협동 → 가족/파티(BGG 유형에 가족·파티·어린이가 하나라도 있으면, 전략+가족도 가족) → 전략.
-// BGG 유형이 없으면 기록으로 짐작합니다: 5인 이상이거나 승패·팀전만 기록한 판은 가족/파티, 그 밖은 전략입니다.
+// BGG 유형이 없는 게임은 가족/파티로 봅니다. 무거운 전략 게임은 대부분 BGG 유형이 있기 때문입니다.
+// BGG는 전략이지만 모임에서 가볍게 즐기는 게임은 아래 목록으로 가족/파티에 넣습니다(BGG ID 또는 공백 뺀 이름).
+const LIGHT_GAMES={ids:['118','279537'],names:['모던아트','modernart','행성x를찾아서','thesearchforplanetx']};
 export function shareGameType(play){
- if(play.rule==='cooperative')return 'coop';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
+ if(play.rule==='cooperative')return 'coop';const plain=String(play.game?.name||'').replace(/s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
  const info=metadata(play.game);if(info?.cooperative)return 'coop';const domains=info?.domains||[];
- if(domains.some(domain=>['Family Games','Party Games',"Children's Games",'Children’s Games'].includes(domain)))return 'family';if(domains.length)return 'strategy';
- const mode=recordMode(play);return play.players.length>=5||mode==='win'||mode==='team'?'family':'strategy';
+ if(domains.some(domain=>['Family Games','Party Games',"Children's Games",'Children’s Games'].includes(domain)))return 'family';return domains.length?'strategy':'family';
 }
 export function recentShareData(records,profile,locale){
  const lang=shareLanguage(locale),words=copy[lang],date=latestPlayDate(records),plays=records.filter(play=>play.date===date),games=new Map();
