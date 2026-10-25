@@ -1,5 +1,5 @@
 import {recordMode,modeLabels,resultLabel,missionSummary} from './records-core.js?v=127';
-import {missionName,missionRange} from './mission-names.js?v=1';
+import {missionName,missionRange} from './mission-names.js?v=3';
 import {renderModeStats,cooperativeStats} from './record-view.js?v=131';
 import {metadata,domainLabels} from './bgg-metadata.js?v=64';
 import {renderGameArtwork} from './game-artwork.js?v=95';

@@ -29,7 +29,7 @@ test('share covers load app assets directly and only proxy BGG covers',async()=>
 test('share layout keeps three columns up to six games, two columns from seven and an other-games list past twelve',async()=>{
  const {shareCoverLayout}=await import('../stats-share.js');
  const six=shareCoverLayout(6);assert.equal(six.side,false);assert.equal(six.cells.length,6);assert.equal(new Set(six.cells.map(c=>c.x)).size,3);assert.ok(six.cells.every(c=>c.y>=122&&c.y+c.h<=six.metrics[0].y-19.5));assert.equal(six.metrics[0].y+172,1260);assert.equal(six.others,null);
- for(const count of [7,8,11,12]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,count);assert.equal(layout.others,null);assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=(count<12?1260.5:1290.5)&&c.w>0&&c.h>0),String(count));}
+ for(const count of [7,8,11,12]){const layout=shareCoverLayout(count);assert.equal(layout.side,true);assert.equal(layout.cells.length,count);assert.equal(layout.others===null,count<12);assert.equal(new Set(layout.cells.map(c=>c.x)).size,2);assert.ok(layout.cells.every(c=>c.x+c.w<=632&&c.y>=274&&c.y+c.h<=(count<12?1260.5:1290.5)&&c.w>0&&c.h>0),String(count));}
  const many=shareCoverLayout(15);assert.equal(many.cells.length,12);assert.deepEqual(many.others,{x:660,y:440,w:348,h:845});assert.deepEqual(shareCoverLayout(15,2).others,{x:660,y:836,w:348,h:449});
 });
 
@@ -75,7 +75,7 @@ test('day cards skip anonymous players, cooperative games and score-less games',
  assert.deepEqual(pickDayCards([coop],'2026-10-10','ko-KR'),[]);
  const winOnly=id=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:'할리갈리',bggId:''},rule:'highest',players:[{id:'a',name:'하늘',score:null,winner:true},{id:'b',name:'바다',score:null,winner:false}]});
  const cards=pickDayCards([winOnly('1'),winOnly('2'),coop],'2026-10-10','ko-KR');
- assert.deepEqual(cards.map(card=>[card.kind,card.detail]),[['mvp','2승 · 2판 중']]);
+ assert.deepEqual(cards.map(card=>[card.kind,card.detail]),[['mvp','2승 · 3판 중']]);
  assert.equal(pickDayCards([anonClose,scoredPlay('b','아줄',{하늘:7,바다:5})],'2026-10-10','ko-KR')[0].headline,'아줄 2점 차');
 });
 
@@ -84,7 +84,7 @@ test('day cards replace the winner box: side by side up to six games and stacked
  assert.deepEqual(shareCoverLayout(5).cards,[]);
  assert.deepEqual(shareCoverLayout(5,1).cards,[{x:72,y:1064,w:936,h:196}]);
  assert.deepEqual(shareCoverLayout(5,2).cards,[{x:72,y:1064,w:459,h:196},{x:549,y:1064,w:459,h:196}]);
- assert.deepEqual(shareCoverLayout(8,2).cards,[{x:660,y:610,w:348,h:316},{x:660,y:944,w:348,h:316}]);assert.deepEqual(shareCoverLayout(12,2).cards,[{x:660,y:440,w:348,h:413.5},{x:660,y:871.5,w:348,h:413.5}]);assert.deepEqual(shareCoverLayout(15,2).cards,[{x:660,y:440,w:348,h:180},{x:660,y:638,w:348,h:180}]);
+ assert.deepEqual(shareCoverLayout(8,2).cards,[{x:660,y:610,w:348,h:316},{x:660,y:944,w:348,h:316}]);assert.deepEqual(shareCoverLayout(12,2).cards,[{x:660,y:440,w:348,h:180},{x:660,y:638,w:348,h:180}]);assert.deepEqual(shareCoverLayout(12,2).others,{x:660,y:836,w:348,h:449});assert.deepEqual(shareCoverLayout(15,2).cards,[{x:660,y:440,w:348,h:180},{x:660,y:638,w:348,h:180}]);
  assert.deepEqual(shareCoverLayout(8,2).cells,shareCoverLayout(8).cells);assert.equal(shareCoverLayout(8,1).cards.length,1);
 });
 
@@ -127,4 +127,16 @@ test('mission sessions show their cleared range on the shared cover instead of w
  const data=recentShareData([mission('1',[{mission:4,result:'success'},{mission:5,result:'failure'}]),mission('2',[{mission:5,result:'success'}])],null,'ko-KR');
  assert.deepEqual(data.games.map(game=>[game.count,game.winners,game.mission]),[[2,[],'미션 4 → 5 클리어']]);
  assert.equal(recentShareData([mission('3',[{mission:7,result:'failure'}])],null,'en-US').games[0].mission,'Mission 7 in progress');
+});
+
+test('co-op plays add a co-op card after MVP and close game, up to three cards in the side column',async()=>{
+ const {shareCoverLayout}=await import('../stats-share.js');
+ const coop=(id,game,result,extra={})=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:game,bggId:''},rule:'cooperative',cooperativeResult:result,players:[{id:'a',name:'하늘',score:null},{id:'b',name:'바다',score:null}],...extra});
+ const mission=coop('m','전지적 추리시점','success',{missionAttempts:[1,2,3,4].map(mission=>({mission,result:'success'}))});
+ const one=recentShareData([mission],null,'ko-KR').cards.find(card=>card.kind==='coop');
+ assert.deepEqual({headline:one.headline,detail:one.detail},{headline:'전지적 추리시점',detail:'1-1~4막 4승'});
+ const two=recentShareData([mission,coop('p','판데믹','failure'),coop('q','판데믹','success')],null,'ko-KR').cards.find(card=>card.kind==='coop');
+ assert.equal(two.headline,'협력 게임 2개');assert.equal(two.detail,'전지적 추리시점 1-1~4막 4승 · 판데믹 2판 중 1번 성공');
+ assert.equal(shareCoverLayout(12,3).cards.length,3);assert.deepEqual(shareCoverLayout(12,3).others,{x:660,y:1034,w:348,h:251});
+ assert.equal(shareCoverLayout(8,3).cards.length,3);assert.equal(shareCoverLayout(5,3).cards.length,2);
 });

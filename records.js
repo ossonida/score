@@ -1,6 +1,6 @@
 import {renderRecordParticipants,renderModeStats} from './record-view.js?v=131';
 import {recordMode,modeLabels} from './records-core.js?v=127';
-import {missionName} from './mission-names.js?v=1';
+import {missionName} from './mission-names.js?v=3';
 import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=125';

@@ -1,5 +1,5 @@
 import {gameKey,winnerIds,missionSummary} from './records-core.js?v=127';
-import {missionRange,missionName} from './mission-names.js?v=1';
+import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
 import {nameKey} from './personal-stats.js?v=113';
@@ -10,8 +10,8 @@ import {summarizeStats} from './stats-insights.js?v=64';
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
 const copy={
- ko:{playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',playedShort:'플레이 게임',peopleShort:'함께한 인원',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,winnersTitle:'게임별 우승자',closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:(s,game)=>s.lastCleared?`${missionRange(game,s.first,s.lastCleared)} 클리어`:`${missionName(game,s.first)} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
- en:{playedCount:'Games played',peopleCount:'People',playedShort:'Games',peopleShort:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,winnersTitle:'Winners by game',closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
+ ko:{coopTitle:'협력 게임',coopGames:n=>`협력 게임 ${n}개`,coopResult:(wins,total)=>total===1?(wins?'성공':'실패'):`${total}판 중 ${wins}번 성공`,playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',playedShort:'플레이 게임',peopleShort:'함께한 인원',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,winnersTitle:'게임별 우승자',closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:(s,game)=>s.lastCleared?missionCleared(game,s.first,s.lastCleared,s.cleared):`${missionName(game,s.first)} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
+ en:{coopTitle:'Co-op games',coopGames:n=>`${n} co-op games`,coopResult:(wins,total)=>total===1?(wins?'Won':'Lost'):`${wins} of ${total} won`,playedCount:'Games played',peopleCount:'People',playedShort:'Games',peopleShort:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,winnersTitle:'Winners by game',closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
 };
 let current=null;
 
@@ -55,6 +55,10 @@ export function recentShareData(records,profile,locale){
  // MVP·접전이 없는 날은 빈칸 대신 게임별 우승자 카드 한 장을 넣습니다.
  const cards=pickDayCards(records,date,lang),winnerRows=[...games.values()].filter(entry=>entry.winners.length).map(entry=>({game:entry.game.name,winners:entry.winners}));
  if(!cards.length&&winnerRows.length)cards.push({kind:'winners',title:words.winnersTitle,rows:winnerRows});
+ // 협력 판이 있으면 MVP·접전 다음에 협력 게임 카드(게임명 · 미션 진행 또는 성공 횟수)를 붙입니다.
+ const coop=new Map();for(const play of plays.filter(item=>item.rule==='cooperative')){const key=gameKey(play.game),row=coop.get(key)||{name:localizedGameName(play.game,lang),game:play.game,total:0,wins:0,attempts:[]};row.total++;if(play.cooperativeResult==='success')row.wins++;if(Array.isArray(play.missionAttempts))row.attempts.push(...play.missionAttempts);coop.set(key,row);}
+ const coopRows=[...coop.values()].map(row=>({name:row.name,result:row.attempts.length?words.missionCover(missionSummary(row.attempts),row.game):words.coopResult(row.wins,row.total)}));
+ if(coopRows.length)cards.push({kind:'coop',title:words.coopTitle,headline:coopRows.length===1?coopRows[0].name:words.coopGames(coopRows.length),detail:coopRows.length===1?coopRows[0].result:coopRows.map(row=>`${row.name} ${row.result}`).join(' · ')});
  return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts),entry.game)}:entry),cards};
 }
 
@@ -62,7 +66,7 @@ export function recentShareData(records,profile,locale){
 export function pickDayCards(records,date,locale){
  const lang=shareLanguage(locale),words=copy[lang],dayPlays=records.filter(play=>play.date===date),cards=[];if(!dayPlays.length)return cards;
  const {leaders}=summarizeStats(dayPlays,date),wins=leaders[0]?.wins||0,tied=leaders.filter(row=>row.wins===wins);
- if(wins>=2&&tied.length<=2){const names=tied.map(row=>row.name.trim()),total=dayPlays.filter(play=>play.rule!=='cooperative').length;cards.push({kind:'mvp',names,wins,plays:total,title:words.mvpTitle,headline:names.join(' · '),detail:words.mvpDetail(wins,total)});}
+ if(wins>=2&&tied.length<=2){const names=tied.map(row=>row.name.trim()),total=dayPlays.length;cards.push({kind:'mvp',names,wins,plays:total,title:words.mvpTitle,headline:names.join(' · '),detail:words.mvpDetail(wins,total)});}
  let plays=dayPlays;
  for(let summary=summarizeStats(plays,date);summary.closest;summary=summarizeStats(plays,date)){
   const {play,first,second,gap}=summary.closest;if(gap>CLOSE_GAP)break;
@@ -89,18 +93,20 @@ function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
 }
 function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.measureText(value).width<=maxWidth)return value;while(value.length>1&&ctx.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);return value+'…';}
 // 표지가 10개 이상이면 위·아래 그라데이션 대신 표지 전체에 한 가지 농도의 그늘을 깝니다.
-function drawCover(ctx,image,game,x,y,w,h,flat=false){
+// fit이면 납작한 칸에서 그림이 덜 잘리도록 그림 전체를 칸 안에 맞추고, 남는 양옆은 같은 그림을 흐리게 채웁니다.
+function drawCover(ctx,image,game,x,y,w,h,flat=false,fit=false){
  const label=game.winners?.length?'🏆 '+game.winners.join(', '):game.mission||'';fillRound(ctx,x,y,w,h,28,'#17253a');ctx.save();roundRect(ctx,x,y,w,h,28);ctx.clip();
- if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale,sx=(image.naturalWidth-sw)/2,sy=(image.naturalHeight-sh)/2;ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
+ if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale,sx=(image.naturalWidth-sw)/2,sy=(image.naturalHeight-sh)/2;if(fit)ctx.filter='blur(14px) brightness(.75)';ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);
+  if(fit){ctx.filter='none';const inner=Math.min(w/image.naturalWidth,h/image.naturalHeight),iw=image.naturalWidth*inner,ih=image.naturalHeight*inner;ctx.drawImage(image,x+(w-iw)/2,y+(h-ih)/2,iw,ih);}}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
  if(flat){ctx.fillStyle='rgba(4,10,20,.5)';ctx.fillRect(x,y,w,h);}else{const shade=ctx.createLinearGradient(0,y+h*.54,0,y+h);shade.addColorStop(0,'transparent');shade.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=shade;ctx.fillRect(x,y,w,h);
  if(label){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}}ctx.restore();
  // ×N 배지는 위쪽 우승자와 아래쪽 게임명 사이 가운데에 두고, 게임명은 배지와 상관없이 하단에 둡니다.
  const repeated=game.count>1,nameFont='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';let nameY=y+h-56,badgeY=y+h/2-14,labelY=y+47;
- // 단색 그늘(flat)일 때는 우승자 → ×N 배지 → 게임명을 한 덩어리로 표지 세로 가운데에 둡니다.
- if(flat&&image){ctx.font=nameFont;const lines=drawWrapped({measureText:text=>ctx.measureText(text),fillText(){}},game.game.name,0,0,w-44,31,2),parts=[label?30:0,repeated?42:0,lines*31-6].filter(Boolean),total=parts.reduce((sum,value)=>sum+value,0)+8*(parts.length-1);let top=y+(h-total)/2;
-  if(label){labelY=top+24;top+=38;}if(repeated){badgeY=top+21;top+=50;}nameY=top+25;}
+ // 단색 그늘(flat)일 때는 우승자 → 게임명을 한 덩어리로 표지 세로 가운데에 두고, ×N 배지는 오른쪽 위 모서리에 둡니다.
+ if(flat&&image){ctx.font=nameFont;const lines=drawWrapped({measureText:text=>ctx.measureText(text),fillText(){}},game.game.name,0,0,w-44,31,2),parts=[label?30:0,lines*31-6].filter(Boolean),total=parts.reduce((sum,value)=>sum+value,0)+8*(parts.length-1);let top=y+(h-total)/2;
+  if(label){labelY=top+24;top+=38;}nameY=top+25;}
  if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font=nameFont;drawWrapped(ctx,game.game.name,x+w/2,nameY,w-44,31,2);}
- if(repeated){fillRound(ctx,x+w/2-35,badgeY-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,x+w/2,badgeY+8);}
+ if(repeated){const badgeX=flat?x+w-48:x+w/2;if(flat)badgeY=y+33;fillRound(ctx,badgeX-35,badgeY-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,badgeX,badgeY+8);}
  // 우승자는 표지 위쪽 가운데 정렬.
  if(label){const room=w-44;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+w/2,labelY);}
 }
@@ -113,23 +119,23 @@ function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false}={}){
  ctx.fillStyle=muted?'rgba(225,239,255,.68)':'#fff';let size=72;for(;size>36;size-=4){ctx.font=`800 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=w-40)break;}ctx.fillText(clippedText(ctx,text,w-40),left,y+h/2+14);
  ctx.fillStyle='#9fc8f7';const room=w-(center?28:56);for(let size=26;size>=18;size-=2){ctx.font=`600 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(label).width<=room)break;}ctx.fillText(clippedText(ctx,label,room),left,y+h/2+58);
 }
-// 6개 이하는 상단 표지 → 지표 줄(장소가 있으면 3칸) → MVP·접전 카드, 7개 이상은 왼쪽 2열 표지 + 오른쪽 지표·카드 열로 배치합니다.
-// 12개 이상(wide)은 표지를 12개(2열 6행)까지 그리고, 오른쪽 열은 가로 지표 2칸 → MVP·접전 → 12개를 넘는 게임의 "그 밖의 게임" 목록(게임명 · 우승자) 순입니다.
+// 6개 이하는 상단 표지 → 지표 줄(장소가 있으면 3칸) → 카드 최대 2장, 7개 이상은 왼쪽 2열 표지 + 오른쪽 지표·카드(MVP·접전·협력 최대 3장) 열로 배치합니다.
+// 12개 이상(wide)은 표지를 12개(2열 6행)까지 그리고, 오른쪽 열은 가로 지표 2칸 → MVP·접전 → 아래 목록 칸 순입니다. 목록 칸은 12개를 넘는 게임이 있으면 "그 밖의 게임", 없으면 게임별 우승자입니다.
 export function shareCoverLayout(gameCount,cardCount=0,hasPlace=false){
- const gap=18,cards=Math.min(cardCount,2);
- if(gameCount>MAX_COVERS&&gameCount<SIDE_COVERS){const rows=Math.ceil(gameCount/2),cellW=(560-gap)/2,cellH=Math.min(cellW,(986-gap*(rows-1))/rows),cardH=(650-gap)/2;
+ const gap=18,cards=Math.min(cardCount,gameCount>MAX_COVERS?3:2);
+ if(gameCount>MAX_COVERS&&gameCount<SIDE_COVERS){const rows=Math.ceil(gameCount/2),cellW=(560-gap)/2,cellH=Math.min(cellW,(986-gap*(rows-1))/rows),cardH=(650-gap*(Math.max(cards,2)-1))/Math.max(cards,2);
   return {side:true,wide:false,others:null,cells:Array.from({length:gameCount},(_,index)=>({x:72+index%2*(cellW+gap),y:274+Math.floor(index/2)*(cellH+gap),w:cellW,h:cellH})),metrics:[{x:660,y:274,w:348,h:150},{x:660,y:442,w:348,h:150}],cards:Array.from({length:cards},(_,index)=>({x:660,y:610+index*(cardH+gap),w:348,h:cardH}))};}
  if(gameCount>=SIDE_COVERS){const shown=Math.min(gameCount,SIDE_COVERS),rows=Math.ceil(shown/2),cellW=(560-gap)/2,cellH=Math.min(cellW,(1016-gap*(rows-1))/rows),overflow=gameCount>SIDE_COVERS,bottom=1285,cardY=440;
-  const cardH=overflow?180:cards?(bottom-cardY-gap*(cards-1))/cards:0,othersY=cardY+cards*(cardH+gap);
+  const cardH=180,othersY=cardY+cards*(cardH+gap);
   const cells=Array.from({length:shown},(_,index)=>({x:72+index%2*(cellW+gap),y:274+Math.floor(index/2)*(cellH+gap),w:cellW,h:cellH}));
-  return {side:true,wide:true,cells,others:overflow?{x:660,y:othersY,w:348,h:bottom-othersY}:null,metrics:[{x:660,y:274,w:168,h:148},{x:840,y:274,w:168,h:148}],cards:Array.from({length:cards},(_,index)=>({x:660,y:cardY+index*(cardH+gap),w:348,h:cardH}))};}
+  return {side:true,wide:true,cells,others:{x:660,y:othersY,w:348,h:bottom-othersY},metrics:[{x:660,y:274,w:168,h:148},{x:840,y:274,w:168,h:148}],cards:Array.from({length:cards},(_,index)=>({x:660,y:cardY+index*(cardH+gap),w:348,h:cardH}))};}
  // 6개 이하는 표지 영역이 남는 세로 공간을 모두 차지해 아래쪽이 측면 레이아웃과 같은 1260에서 끝납니다.
  const coverH=1260-122-20-172-(cards?30+196:0),metricY=122+coverH+20;
  const count=Math.max(1,gameCount),cols=count===4?2:count<=2?count:3,rows=Math.ceil(count/cols),cellW=(936-gap*(cols-1))/cols,cellH=(coverH-gap*(rows-1))/rows,slots=hasPlace?3:2,metricGap=39,metricW=(936-metricGap*(slots-1))/slots,cardW=cards>1?(936-gap)/2:936;
  return {side:false,others:null,metrics:Array.from({length:slots},(_,index)=>({x:72+index*(metricW+metricGap),y:metricY,w:metricW,h:172})),cards:Array.from({length:cards},(_,index)=>({x:72+index*(cardW+gap),y:metricY+172+30,w:cardW,h:196})),cells:Array.from({length:Math.min(gameCount,MAX_COVERS)},(_,index)=>{const row=Math.floor(index/cols),col=index%cols,rowCount=Math.min(cols,count-row*cols),offset=(cols-rowCount)*(cellW+gap)/2;return {x:72+offset+col*(cellW+gap),y:122+row*(cellH+gap),w:cellW,h:cellH};})};
 }
-function otherGames(ctx,games,words,{x,y,w,h}){
- fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.otherGames,x+28,y+44);
+function otherGames(ctx,games,title,words,{x,y,w,h}){
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(title,x+28,y+44);
  const lineH=36,capacity=Math.max(1,Math.floor((h-70)/lineH)),rows=games.length>capacity?games.slice(0,capacity-1):games;
  rows.forEach((game,index)=>{const text=game.winners?.length?`${game.game.name} · ${game.winners.join(', ')}`:game.game.name;ctx.fillStyle='#fff';fitText(ctx,text,w-56,26,20);ctx.fillText(clippedText(ctx,text,w-56),x+28,y+86+index*lineH);});
  if(rows.length<games.length){ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.moreGames(games.length-rows.length),x+28,y+86+rows.length*lineH);}
@@ -151,13 +157,13 @@ function winnersCard(ctx,card,words,{x,y,w,h},columns){
 export async function createRecentShareImage(data){
  const words=data?.copy||shareCopy(data?.locale);if(!data?.playCount)throw Error(words.empty);
  const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;const ctx=canvas.getContext('2d');drawBackground(ctx);
- const place=data.location||'',cards=(data.cards||[]).filter(card=>!(data.games.length>SIDE_COVERS&&card.kind==='winners')),layout=shareCoverLayout(data.games.length,cards.length,Boolean(place)),shown=data.games.slice(0,layout.cells.length),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
+ const place=data.location||'',cards=(data.cards||[]).filter(card=>!(data.games.length>=SIDE_COVERS&&card.kind==='winners')),layout=shareCoverLayout(data.games.length,cards.length,Boolean(place)),shown=data.games.slice(0,layout.cells.length),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
  ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 30px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText('SCORE COUNTER',72,71);
  const corner=layout.side?(place?words.atPlace(place):''):data.dateLabel||'';if(corner){ctx.fillStyle='#fff';ctx.textAlign='right';ctx.font='700 31px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,corner,600),1008,72);ctx.textAlign='left';}
- if(layout.side){const title=words.togetherTitle(data.dateLabel||'');ctx.fillStyle='#fff';fitText(ctx,title,936,53,40);ctx.fillText(clippedText(ctx,title,936),72,168);ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,250);const wide=layout.wide;metric(ctx,layout.metrics[0],data.playCount,wide?words.playedShort:words.playedCount,{center:wide});metric(ctx,layout.metrics[1],data.peopleCount,wide?words.peopleShort:words.peopleCount,{center:wide});}
- else{const values=[...(place?[[place,words.place,true]]:[]),[data.playCount,words.playedCount,false],[data.peopleCount,words.peopleCount,false]];values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted}));}
- shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h,data.games.length>=10);});
- if(layout.others)otherGames(ctx,data.games.slice(shown.length),words,layout.others);
+ if(layout.side){const title=words.togetherTitle(data.dateLabel||'');ctx.fillStyle='#fff';fitText(ctx,title,936,53,40);ctx.fillText(clippedText(ctx,title,936),72,168);ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,250);const wide=layout.wide;metric(ctx,layout.metrics[0],data.games.length,wide?words.playedShort:words.playedCount,{center:wide});metric(ctx,layout.metrics[1],data.peopleCount,wide?words.peopleShort:words.peopleCount,{center:wide});}
+ else{const values=[...(place?[[place,words.place,true]]:[]),[data.games.length,words.playedCount,false],[data.peopleCount,words.peopleCount,false]];values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted}));}
+ shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h,data.games.length>=10,Boolean(layout.wide));});
+ if(layout.others){const rest=data.games.slice(shown.length);rest.length?otherGames(ctx,rest,words.otherGames,words,layout.others):otherGames(ctx,data.games.filter(game=>game.winners?.length),words.winnersTitle,words,layout.others);}
  layout.cards.forEach((box,index)=>cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box));
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
