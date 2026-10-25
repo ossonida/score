@@ -5,7 +5,7 @@ import {readGameLibrary} from './game-library.js?v=95';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer} from './record-edit.js?v=125';
 import {enrichGames} from './bgg-details-client.js?v=64';
-import {renderOverview} from './overview-dashboard.js?v=128';
+import {renderOverview,renderGameRivals} from './overview-dashboard.js?v=129';
 import {latestPlayDate} from './stats-overview.js?v=64';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=64';
@@ -285,9 +285,9 @@ function renderHistory(){
  $('gameFilterSection').hidden=statsView!=='games';$('periodFilterSection').hidden=statsView!=='all';$('gameDetailTabs').hidden=statsView!=='games';
  $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?`선택 기간의 기록 ${filtered.length}개 보기`:'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){
-  if(filtered.length)renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});
+  if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameRivals($('statsInsights'),filtered,{scope:key(),onRecord:openStatsRecord});}
   else $('statsInsights').replaceChildren(node('p','저장된 게임 기록이 없습니다.','record-note'));
- }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),records,period);}
+ }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),records,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,title:'선택 기간의 게임',footnote:'선택 기간 기록과 BGG 컬렉션 기준입니다. 보유·하고 싶은 게임은 BGG 컬렉션을 연결하면 표시됩니다.',onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
  else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});
  $('statsDetailCount').textContent=statsView==='all'?'':`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}

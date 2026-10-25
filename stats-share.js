@@ -66,9 +66,9 @@ export function recentShareData(records,profile,locale){
  // MVP·접전이 없는 날은 빈칸 대신 게임별 우승자 카드 한 장을 넣습니다.
  const cards=pickDayCards(records,date,lang),winnerRows=[...games.values()].filter(entry=>entry.winners.length).map(entry=>({game:entry.game.name,winners:entry.winners}));
  if(!cards.length&&winnerRows.length)cards.push({kind:'winners',title:words.winnersTitle,rows:winnerRows});
- // 협력 판이 있으면 MVP·접전 다음에 협력 게임 카드(게임명 · 미션 진행 또는 성공 횟수)를 붙입니다.
+ // 미션·시나리오로 기록한 협력 판이 있으면 MVP·접전 다음에 협력 게임 카드(게임명 · 진행한 미션/시나리오)를 붙입니다. 미션 없는 협력 판은 넣지 않습니다.
  const coop=new Map();for(const play of plays.filter(item=>item.rule==='cooperative')){const key=gameKey(play.game),row=coop.get(key)||{name:localizedGameName(play.game,lang),game:play.game,total:0,wins:0,attempts:[]};row.total++;if(play.cooperativeResult==='success')row.wins++;if(Array.isArray(play.missionAttempts))row.attempts.push(...play.missionAttempts);coop.set(key,row);}
- const coopRows=[...coop.values()].map(row=>({name:row.name,result:row.attempts.length?words.missionCover(missionSummary(row.attempts),row.game):words.coopResult(row.wins,row.total)}));
+ const coopRows=[...coop.values()].filter(row=>row.attempts.length).map(row=>({name:row.name,result:words.missionCover(missionSummary(row.attempts),row.game)}));
  if(coopRows.length)cards.push({kind:'coop',title:words.coopTitle,headline:coopRows.length===1?coopRows[0].name:words.coopGames(coopRows.length),detail:coopRows.length===1?coopRows[0].result:coopRows.map(row=>`${row.name} ${row.result}`).join(' · ')});
  return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts),entry.game)}:entry),cards,typeMix:plays.reduce((mix,play)=>{mix[shareGameType(play)]++;return mix;},{strategy:0,family:0,coop:0})};
 }
