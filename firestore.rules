@@ -35,7 +35,7 @@ service cloud.firestore {
       function owns() { return request.auth != null && request.auth.uid == uid; }
       function valid() {
         let p = request.resource.data;
-        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts'])
+        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario'])
           && p.keys().hasAll(['id','game','date','rule','createdAt','players'])
           && p.id == playId && p.id is string && p.id.matches('^[A-Za-z0-9_.:-]{1,100}$')
           && p.game is map && p.game.keys().hasOnly(['name','bggId'])
@@ -47,6 +47,8 @@ service cloud.firestore {
           && (!('cooperativeResult' in p) || p.rule == 'cooperative' && p.cooperativeResult in ['success','failure'])
           && (!('sharedScore' in p) || p.rule == 'cooperative' && p.sharedScore is number && p.sharedScore >= -9007199254740991 && p.sharedScore <= 9007199254740991)
           && (!('missionAttempts' in p) || p.rule == 'cooperative' && 'cooperativeResult' in p && !('sharedScore' in p) && p.missionAttempts is list && p.missionAttempts.size() > 0 && p.missionAttempts.size() <= 300)
+          && (!('difficulty' in p) || p.rule == 'cooperative' && 'cooperativeResult' in p && !('missionAttempts' in p) && p.difficulty is string && p.difficulty.size() > 0 && p.difficulty.size() <= 40)
+          && (!('scenario' in p) || p.rule == 'cooperative' && 'cooperativeResult' in p && !('missionAttempts' in p) && !('difficulty' in p) && p.scenario is int && p.scenario >= 1 && p.scenario <= 999)
           && (!('location' in p) || p.location is string && p.location.size() <= 120)
           && p.players is list && p.players.size() > 0 && p.players.size() <= 100;
       }

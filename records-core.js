@@ -23,7 +23,25 @@ export function missionSummary(list){
  return {first:list[0].mission,last:last.mission,lastCleared:cleared.at(-1)?.mission??null,cleared:cleared.length,attempts:list.length,next:last.result==='success'?Math.min(MISSION_MAX,last.mission+1):last.mission,result:cleared.length?'success':'failure'};
 }
 export function missionLabel(list){const s=missionSummary(list);return s?`미션 ${s.first}${s.last!==s.first?' → '+s.last:''} · 클리어 ${s.cleared} · 시도 ${s.attempts}`:'';}
-export function createPlay({game, date, rule, players, location, cooperativeResult, sharedScore, missionAttempts}, id = crypto.randomUUID()) {
+// 협력 방식: 미션 시도가 있으면 미션형, 시나리오가 있으면 캠페인형, 난이도가 있으면 난이도형, 그 밖의 협력은 성공·실패·점수형으로 읽습니다.
+export const COOP_KINDS=['score','mission','difficulty','campaign'];
+export const coopKindLabels={score:'성공·실패·점수형',mission:'미션형',difficulty:'난이도형',campaign:'캠페인형'};
+export function coopKind(play){if(play?.rule!=='cooperative')return '';if(Array.isArray(play.missionAttempts)&&play.missionAttempts.length)return 'mission';if(Number.isSafeInteger(play.scenario))return 'campaign';if(typeof play.difficulty==='string'&&play.difficulty)return 'difficulty';return 'score';}
+export const DIFFICULTY_DEFAULT=['입문','보통','어려움','최고'];
+const DIFFICULTY_PRESETS=[{ids:['30549'],names:['판데믹','pandemic'],levels:['입문','보통','영웅','전설']}];
+// 게임별 난이도 목록이 있으면 그 목록, 없으면 공통 목록을 씁니다.
+export function difficultyOptions(game){const id=String(game?.bggId||''),name=String(game?.name||'').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,'');const preset=DIFFICULTY_PRESETS.find(p=>id&&p.ids.includes(id)||p.names.some(n=>name.startsWith(n)));return preset?preset.levels:DIFFICULTY_DEFAULT;}
+export const SCENARIO_MAX=999;
+export function validDifficulty(value){return typeof value==='string'&&value.trim().length>0&&value.trim().length<=40;}
+export function validScenario(value){return Number.isSafeInteger(value)&&value>=1&&value<=SCENARIO_MAX;}
+// 캠페인형: 같은 게임·같은 시나리오 기록 중 이 기록이 몇 번째 도전인지(날짜·저장 순).
+export function scenarioAttempt(records,play){if(!validScenario(play?.scenario))return 0;const key=gameKey(play.game),order=p=>p.date+'|'+(p.createdAt||'');return records.filter(p=>p.rule==='cooperative'&&p.scenario===play.scenario&&gameKey(p.game)===key&&p.id!==play.id&&order(p)<=order(play)).length+1;}
+// 플레이는 날짜·저장 순으로 넘겨 주세요.
+// 협력 난이도형: 난이도별 시도·성공과 성공한 가장 높은 난이도(게임 난이도 목록 순서 기준).
+export function coopDifficultyStats(plays){const list=plays.filter(p=>coopKind(p)==='difficulty'),order=difficultyOptions(list[0]?.game),rows=new Map();for(const p of list){const r=rows.get(p.difficulty)||{level:p.difficulty,tries:0,wins:0};r.tries++;if(p.cooperativeResult==='success')r.wins++;rows.set(p.difficulty,r);}const rank=level=>{const i=order.indexOf(level);return i<0?order.length:i;};const sorted=[...rows.values()].sort((a,b)=>rank(a.level)-rank(b.level)||a.level.localeCompare(b.level));return {rows:sorted,best:[...sorted].reverse().find(r=>r.wins>0)?.level||null};}
+// 협력 캠페인형: 시나리오별 시도 횟수·성공 여부와 현재 진행 위치(마지막 기록이 성공이면 다음 시나리오).
+export function coopCampaignStats(plays){const list=plays.filter(p=>coopKind(p)==='campaign'),rows=new Map();for(const p of list){const r=rows.get(p.scenario)||{scenario:p.scenario,tries:0,cleared:false};r.tries++;if(p.cooperativeResult==='success')r.cleared=true;rows.set(p.scenario,r);}const last=list.at(-1);return {rows:[...rows.values()].sort((a,b)=>a.scenario-b.scenario),cleared:[...rows.values()].filter(r=>r.cleared).length,attempts:list.length,current:last?(last.cooperativeResult==='success'?Math.min(999,last.scenario+1):last.scenario):null};}
+export function createPlay({game, date, rule, players, location, cooperativeResult, sharedScore, missionAttempts, difficulty, scenario}, id = crypto.randomUUID()) {
   if(!game||typeof game.name!=='string'||typeof id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(id))throw Error('기록 형식을 확인해주세요.');
   const name = game.name.trim();
   if (!name || name.length > 120) throw Error('게임명을 120자 이내로 입력해주세요.');
@@ -35,12 +53,14 @@ export function createPlay({game, date, rule, players, location, cooperativeResu
   if(cooperativeResult!==undefined&&(rule!=='cooperative'||!['success','failure'].includes(cooperativeResult)))throw Error('협력 결과를 확인해주세요.');
   if(sharedScore!==undefined&&(rule!=='cooperative'||typeof sharedScore!=='number'||!Number.isFinite(sharedScore)||Math.abs(sharedScore)>Number.MAX_SAFE_INTEGER))throw Error('공동 점수를 확인해주세요.');
   if(missionAttempts!==undefined&&(rule!=='cooperative'||!validMissionAttempts(missionAttempts)||cooperativeResult!==missionSummary(missionAttempts).result||sharedScore!==undefined))throw Error('미션 기록을 확인해주세요.');
+  if(difficulty!==undefined&&(rule!=='cooperative'||!validDifficulty(difficulty)||cooperativeResult===undefined||missionAttempts!==undefined))throw Error('난이도를 확인해주세요.');
+  if(scenario!==undefined&&(rule!=='cooperative'||!validScenario(scenario)||cooperativeResult===undefined||missionAttempts!==undefined||difficulty!==undefined))throw Error('시나리오 번호를 확인해주세요.');
   location=typeof location==='string'?location.trim():'';
   if(location.length>120)throw Error('장소를 120자 이내로 입력해주세요.');
   if (!Array.isArray(players) || !players.length || players.length > 100 || players.some(p => !p||typeof p.id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>120 || !(p.score===null||typeof p.score==='number'&&Number.isFinite(p.score)&&Math.abs(p.score)<=Number.MAX_SAFE_INTEGER) || !/^#[0-9a-f]{6}$/i.test(p.color))) throw Error('플레이어와 점수를 확인해주세요.');
   const hasTeams=players.some(p=>p.teamId!==undefined||p.teamName!==undefined);
   if(hasTeams){const teams=new Map();for(const p of players){if(typeof p.teamId!=='string'||!/^team-[1-4]$/.test(p.teamId)||typeof p.teamName!=='string'||!p.teamName.trim()||p.teamName.trim().length>40)throw Error('팀 정보를 확인해주세요.');const teamName=p.teamName.trim();if(teams.has(p.teamId)&&teams.get(p.teamId)!==teamName)throw Error('팀 정보를 확인해주세요.');teams.set(p.teamId,teamName);}if(teams.size<2||teams.size>4)throw Error('팀은 2~4개로 구성해주세요.');}
-  return {id, game:{name, bggId}, date, rule,...(location?{location}:{}),...(cooperativeResult!==undefined?{cooperativeResult}:{}),...(sharedScore!==undefined?{sharedScore}:{}),...(missionAttempts!==undefined?{missionAttempts:missionAttempts.map(({mission,result})=>({mission,result}))}:{}),createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{}),...(hasTeams?{teamId:p.teamId,teamName:p.teamName.trim()}:{})}))};
+  return {id, game:{name, bggId}, date, rule,...(location?{location}:{}),...(cooperativeResult!==undefined?{cooperativeResult}:{}),...(sharedScore!==undefined?{sharedScore}:{}),...(missionAttempts!==undefined?{missionAttempts:missionAttempts.map(({mission,result})=>({mission,result}))}:{}),...(difficulty!==undefined?{difficulty:difficulty.trim()}:{}),...(scenario!==undefined?{scenario}:{}),createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{}),...(hasTeams?{teamId:p.teamId,teamName:p.teamName.trim()}:{})}))};
 }
 export function recordMode(play){
  if(play.rule==='cooperative')return 'cooperative';

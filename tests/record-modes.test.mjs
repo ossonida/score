@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome,normalizePlay} from '../records-core.js';
+import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome,normalizePlay,coopKind,difficultyOptions,scenarioAttempt} from '../records-core.js';
 import {editRecordedPlayer} from '../record-edit.js';
 import {personalGame} from '../personal-stats.js';
 import {rivalStats} from '../social-insights.js';
@@ -112,4 +112,24 @@ test('scenario games show missions as scenario and act while other games keep mi
  assert.equal(missionRange({name:'전지적 추리 시점'},3,5),'시나리오 1 · 3막 → 시나리오 2 · 1막');assert.equal(missionRange({name:'전지적 추리 시점'},5,7),'시나리오 2 · 1→3막');
  assert.equal(missionCleared({name:'전지적 추리 시점'},1,4,4),'1-1~4막 4승');assert.equal(missionCleared({name:'전지적 추리 시점'},2,2,1),'1-2막 1승');assert.equal(missionCleared({name:'전지적 추리 시점'},3,5,3),'1-3~2-1막 3승');assert.equal(missionCleared({name:'딥씨 크루'},1,3,3),'미션 1 → 3 클리어');
  assert.equal(missionName({name:'딥씨 크루'},3),'미션 3');assert.equal(missionRange({name:'딥씨 크루'},1,2),'미션 1 → 2');assert.equal(missionName(null,4),'미션 4');
+});
+
+test('cooperative difficulty and campaign fields are optional, validated and classified by kind',()=>{
+ const players=[person('a'),person('b')],coop=(id,extra)=>play(id,players,{rule:'cooperative',cooperativeResult:'success',...extra});
+ const legacy=coop('legacy',{}),scored=coop('scored',{sharedScore:21}),hard=coop('hard',{difficulty:' 영웅 '}),camp=coop('camp',{scenario:3});
+ assert.equal(hard.difficulty,'영웅');assert.equal(camp.scenario,3);assert.equal('difficulty' in legacy,false);assert.equal('scenario' in legacy,false);
+ assert.deepEqual([legacy,scored,hard,camp].map(coopKind),['score','score','difficulty','campaign']);
+ assert.equal(coopKind(coop('mission',{missionAttempts:[{mission:1,result:'success'}]})),'mission');
+ assert.equal(recordMode(hard),'cooperative');assert.ok(isPlay(hard));assert.ok(isPlay(camp));
+ assert.throws(()=>play('bad1',players,{rule:'highest',difficulty:'영웅'}));
+ assert.throws(()=>coop('bad2',{scenario:0}));
+ assert.throws(()=>coop('bad3',{scenario:1000}));
+ assert.throws(()=>coop('bad4',{difficulty:'x'.repeat(41)}));
+ assert.throws(()=>coop('bad5',{difficulty:'영웅',missionAttempts:[{mission:1,result:'success'}]}));
+ assert.throws(()=>play('bad6',players,{rule:'cooperative',difficulty:'영웅'}));
+ assert.deepEqual(difficultyOptions({name:'판데믹',bggId:'30549'}),['입문','보통','영웅','전설']);
+ assert.deepEqual(difficultyOptions({name:'Pandemic',bggId:''}),['입문','보통','영웅','전설']);
+ assert.deepEqual(difficultyOptions({name:'스피릿 아일랜드',bggId:''}),['입문','보통','어려움','최고']);
+ const g={name:'글룸헤이븐',bggId:''},try1={...coop('t1',{scenario:2}),game:g,date:'2026-10-01'},try2={...coop('t2',{scenario:2}),game:g,date:'2026-10-05'},other={...coop('t3',{scenario:3}),game:g,date:'2026-10-06'};
+ assert.equal(scenarioAttempt([try1,try2,other],try1),1);assert.equal(scenarioAttempt([try1,try2,other],try2),2);assert.equal(scenarioAttempt([try1,try2,other],other),1);
 });

@@ -265,3 +265,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .coop-result-actions button[aria-pressed="true"]{outline:2px solid currentColor;outline-offset:-3px}
 .coop-result-controls label{display:grid;gap:8px}
 .coop-result-controls input{width:100%;box-sizing:border-box;min-height:44px}.mission-stepper{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:10px}.mission-stepper button{display:grid;place-items:center;min-height:44px;padding:0;border:1px solid #253553;border-radius:10px;background:#141d2c;color:#72adff}.mission-stepper button svg{width:24px;height:24px}.mission-now{display:grid;justify-items:center;gap:2px;min-width:0}.mission-now strong{font-size:22px}.mission-now small{font-size:12px;font-weight:700;color:#f2c14e}.mission-actions button{display:grid;align-content:center;gap:2px;min-height:72px}.mission-actions button strong{font-size:20px}.mission-actions button small{font-size:11px;opacity:.75}.mission-actions .mission-failure{color:#ff8a8a;border:1px solid #ff8a8a73;background:#ff6b6b1f}.mission-actions .mission-success{color:#5fe0a1;border:1px solid #3dd68c8c;background:#3dd68c1f}.mission-trail{display:grid;gap:6px}.mission-trail-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#aab6ca}.mission-trail-head button{min-height:32px;padding:0 10px;background:transparent;color:#7fb2ff;font-size:12px;font-weight:700}.mission-chips{display:flex;flex-wrap:wrap;gap:6px}.mission-chip{padding:4px 10px;border:1px solid #344158;border-radius:999px;font-size:12px;font-weight:700;color:#ff8a8a}.mission-chip.is-cleared{border-color:#3dd68c99;color:#5fe0a1}.mission-empty{font-size:12px;color:#8fa6c3}.mission-resume{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.mission-resume[hidden]{display:none}.mission-resume-chip{min-height:36px;padding:0 12px;border:1px solid #f2c14e8c;border-radius:999px;background:#f2c14e1a;color:#f8d98a;font-size:13px;font-weight:700}.mission-resume-chip[aria-pressed=true]{background:#f2c14e40}.record-mission-result{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.record-mission-summary{font-size:13px;color:#aab6ca}
+/* 협력 기록 방식: 성공·실패 버튼, 난이도 선택, 최근 협력 게임 칩 */
+.coop-outcome-actions button{min-height:48px;border-radius:10px;font-size:16px;font-weight:700}
+.coop-outcome-actions .coop-outcome-success{color:#5fe0a1;border:1px solid #3dd68c8c;background:#3dd68c1f}
+.coop-outcome-actions .coop-outcome-failure{color:#ff8a8a;border:1px solid #ff8a8a73;background:#ff6b6b1f}
+.coop-outcome-actions button[aria-pressed="true"]{outline:none;box-shadow:inset 0 0 0 2px currentColor}
+.coop-outcome-actions .coop-outcome-success[aria-pressed="true"]{background:#3dd68c40}
+.coop-outcome-actions .coop-outcome-failure[aria-pressed="true"]{background:#ff6b6b40}
+.coop-difficulty-options{display:flex;flex-wrap:wrap;gap:8px}
+.coop-difficulty-options button{flex:1 1 calc(50% - 4px);min-height:44px;border:1px solid #365070;border-radius:10px;background:#15253a;color:#dce9fa;font-size:14px}
+.coop-difficulty-options button[aria-pressed="true"]{border-color:#4b9cff;background:#163a6a;color:#fff;font-weight:700}
+.coop-recent-choices{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.coop-recent-choices[hidden]{display:none}
+.coop-recent-label{flex-basis:100%;font-size:12px;color:#a9bdd7}
+.record-coop-detail{align-self:center;margin-right:auto;font-size:13px;color:#b7d3f5}

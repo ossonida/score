@@ -136,7 +136,10 @@ test('co-op plays add a co-op card after MVP and close game, up to three cards i
  const one=recentShareData([mission],null,'ko-KR').cards.find(card=>card.kind==='coop');
  assert.deepEqual({headline:one.headline,detail:one.detail},{headline:'전지적 추리시점',detail:'1-1~4막 4승'});
  const two=recentShareData([mission,coop('p','판데믹','failure'),coop('q','판데믹','success')],null,'ko-KR').cards.find(card=>card.kind==='coop');
- assert.equal(two.headline,'전지적 추리시점');assert.equal(two.detail,'1-1~4막 4승');assert.equal(recentShareData([coop('p','판데믹','failure')],null,'ko-KR').cards.some(card=>card.kind==='coop'),false);
+ assert.equal(two.headline,'협력 게임 2개');assert.equal(two.detail,'전지적 추리시점 1-1~4막 4승 · 판데믹 2판 중 1번 성공');const plain=recentShareData([coop('p','판데믹','failure')],null,'ko-KR');assert.equal(plain.cards.find(card=>card.kind==='coop').detail,'실패');assert.equal(plain.games[0].mission,'실패');
+ const kinds=recentShareData([coop('s','하나비','success',{sharedScore:21}),coop('d','판데믹','success',{difficulty:'영웅'}),coop('c1','글룸헤이븐','failure',{scenario:3,date:'2026-10-09'}),coop('c2','글룸헤이븐','success',{scenario:3})],null,'ko-KR');
+ assert.deepEqual(kinds.games.map(game=>game.mission),['성공 · 21점','영웅 난이도 성공','시나리오 3 성공 (2번째 시도)']);
+ assert.equal(kinds.cards.find(card=>card.kind==='coop').detail,'하나비 성공 · 21점 · 판데믹 영웅 난이도 성공 · 글룸헤이븐 시나리오 3 성공 (2번째 시도)');
  assert.equal(shareCoverLayout(12,3).cards.length,3);assert.deepEqual(shareCoverLayout(12,3).others,{x:660,y:1034,w:348,h:251});
  assert.equal(shareCoverLayout(8,3).cards.length,3);assert.equal(shareCoverLayout(5,3).cards.length,2);
 });

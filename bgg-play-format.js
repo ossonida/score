@@ -1,5 +1,7 @@
 const idPattern=/^[1-9][0-9]{0,9}$/;
-const missionNote=play=>{const list=Array.isArray(play.missionAttempts)?play.missionAttempts:[];if(!list.length)return '';const first=list[0].mission,last=list.at(-1).mission,cleared=list.filter(item=>item.result==='success').length;return `Missions ${first}${last!==first?'-'+last:''} · cleared ${cleared} · ${list.length} attempts\n`;};
+const missionNote=play=>{const list=Array.isArray(play.missionAttempts)?play.missionAttempts:[];if(!list.length)return Number.isSafeInteger(play.scenario)?`Scenario ${play.scenario}
+`:typeof play.difficulty==='string'&&play.difficulty?`Difficulty ${play.difficulty}
+`:'';const first=list[0].mission,last=list.at(-1).mission,cleared=list.filter(item=>item.result==='success').length;return `Missions ${first}${last!==first?'-'+last:''} · cleared ${cleared} · ${list.length} attempts\n`;};
 
 export function bggPlayForm(play,username,bggPlayId=''){
  const explicit=play.players.some(person=>typeof person.winner==='boolean');

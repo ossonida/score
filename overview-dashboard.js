@@ -1,9 +1,9 @@
-import {recentHighlights,rivalStats} from './social-insights.js?v=113';
-import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=127';
+import {recentHighlights,rivalStats} from './social-insights.js?v=114';
+import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=128';
 import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=76';
-import {readIdentity,meIn} from './personal-stats.js?v=113';
+import {readIdentity,meIn} from './personal-stats.js?v=114';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=138';
+import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=139';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
