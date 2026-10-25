@@ -140,3 +140,14 @@ test('co-op plays add a co-op card after MVP and close game, up to three cards i
  assert.equal(shareCoverLayout(12,3).cards.length,3);assert.deepEqual(shareCoverLayout(12,3).others,{x:660,y:1034,w:348,h:251});
  assert.equal(shareCoverLayout(8,3).cards.length,3);assert.equal(shareCoverLayout(5,3).cards.length,2);
 });
+
+test('share game types fold strategy+family into family, co-op first and guess unknown games from the record',async()=>{
+ const {shareGameType}=await import('../stats-share.js');
+ const base=(game,extra={})=>({id:'x',date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game,rule:'highest',players:[{id:'a',name:'하늘',score:3},{id:'b',name:'바다',score:1}],...extra});
+ assert.equal(shareGameType(base({name:'카탄',bggId:'13'})),'family');
+ assert.equal(shareGameType(base({name:'전략 게임',bggId:'93'})),'strategy');
+ assert.equal(shareGameType(base({name:'아무 게임',bggId:''},{rule:'cooperative'})),'coop');
+ assert.equal(shareGameType(base({name:'아무 게임',bggId:''})),'strategy');
+ const five=base({name:'아무 게임',bggId:''},{players:['a','b','c','d','e'].map(id=>({id,name:id,score:1}))});assert.equal(shareGameType(five),'family');
+ assert.equal(shareGameType(base({name:'아무 게임',bggId:''},{players:[{id:'a',name:'하늘',score:null,winner:true},{id:'b',name:'바다',score:null,winner:false}]})),'family');
+});

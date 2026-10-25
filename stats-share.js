@@ -1,4 +1,6 @@
-import {gameKey,winnerIds,missionSummary} from './records-core.js?v=127';
+import {gameKey,winnerIds,missionSummary,recordMode} from './records-core.js?v=127';
+import {metadata} from './bgg-metadata.js?v=64';
+import {scoreGameType} from './score-games.js?v=119';
 import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
@@ -10,8 +12,8 @@ import {summarizeStats} from './stats-insights.js?v=64';
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
 const copy={
- ko:{coopTitle:'협력 게임',coopGames:n=>`협력 게임 ${n}개`,coopResult:(wins,total)=>total===1?(wins?'성공':'실패'):`${total}판 중 ${wins}번 성공`,playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',playedShort:'플레이 게임',peopleShort:'함께한 인원',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,winnersTitle:'게임별 우승자',closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:(s,game)=>s.lastCleared?missionCleared(game,s.first,s.lastCleared,s.cleared):`${missionName(game,s.first)} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
- en:{coopTitle:'Co-op games',coopGames:n=>`${n} co-op games`,coopResult:(wins,total)=>total===1?(wins?'Won':'Lost'):`${wins} of ${total} won`,playedCount:'Games played',peopleCount:'People',playedShort:'Games',peopleShort:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,winnersTitle:'Winners by game',closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
+ ko:{typesTitle:'어떤 게임을 했을까',typeNames:{strategy:'전략',family:'가족/파티',coop:'협동'},playsUnit:n=>`${n}판`,coopTitle:'협력 게임',coopGames:n=>`협력 게임 ${n}개`,coopResult:(wins,total)=>total===1?(wins?'성공':'실패'):`${total}판 중 ${wins}번 성공`,playedCount:'플레이한 게임 수',peopleCount:'함께한 인원 수',playedShort:'플레이 게임',peopleShort:'함께한 인원',otherGames:'그 밖의 게임',playedGames:'플레이한 게임',anonymous:'익명의 플레이어',recent:'최근 게임기록',dialogTitle:'최근 기록 공유',creating:'공유 이미지를 만드는 중입니다.',save:'이미지 저장',share:'SNS 공유',readyShare:'이미지를 저장하거나 원하는 SNS로 공유할 수 있습니다.',readySave:'이 브라우저에서는 이미지를 기기에 저장할 수 있습니다.',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',empty:'공유할 최근 기록이 없습니다.',createFailed:'공유 이미지를 만들지 못했습니다. 잠시 후 다시 시도해주세요.',previewAlt:'최근 게임 기록 공유 이미지 미리보기',moreGames:n=>`외 ${n}경기`,winnersTitle:'게임별 우승자',closeTitle:'오늘의 접전',closeHeadline:(game,gap)=>`${game} ${gap}점 차`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:'오늘의 MVP',mvpDetail:(wins,plays)=>`${wins}승 · ${plays}판 중`,missionCover:(s,game)=>s.lastCleared?missionCleared(game,s.first,s.lastCleared,s.cleared):`${missionName(game,s.first)} 도전 중`,place:'장소',atPlace:place=>`${place} 에서`,togetherTitle:date=>`${date} 함께한 기록`},
+ en:{typesTitle:'What we played',typeNames:{strategy:'Strategy',family:'Family/Party',coop:'Co-op'},playsUnit:n=>`${n} ${n===1?'play':'plays'}`,coopTitle:'Co-op games',coopGames:n=>`${n} co-op games`,coopResult:(wins,total)=>total===1?(wins?'Won':'Lost'):`${wins} of ${total} won`,playedCount:'Games played',peopleCount:'People',playedShort:'Games',peopleShort:'People',otherGames:'Other games',playedGames:'Games played',anonymous:'Anonymous player',recent:'Recent Game Record',dialogTitle:'Share recent record',creating:'Creating your share image…',save:'Save image',share:'Share',readyShare:'Save the image or share it to another app.',readySave:'You can save the image to this device.',shareFailed:'Could not share the image. Please save it instead.',empty:'There is no recent record to share.',createFailed:'Could not create the share image. Please try again.',previewAlt:'Preview of recent game record share image',moreGames:n=>`+${n} more games`,winnersTitle:'Winners by game',closeTitle:'Closest game',closeHeadline:(game,gap)=>`${game} by ${gap} ${gap===1?'point':'points'}`,closeDetail:(first,firstScore,secondScore,second)=>`${first} ${firstScore} : ${secondScore} ${second}`,mvpTitle:"Today's MVP",mvpDetail:(wins,plays)=>`${wins} wins · ${plays} games`,missionCover:s=>s.lastCleared?`Mission ${s.first}${s.lastCleared!==s.first?'–'+s.lastCleared:''} cleared`:`Mission ${s.first} in progress`,place:'Place',atPlace:place=>`at ${place}`,togetherTitle:date=>`Played together · ${date}`}
 };
 let current=null;
 
@@ -40,6 +42,14 @@ export function localizedGameName(game,locale){
  return known.aliases.find(name=>/[가-힣]/.test(name))||game.name||known.name;
 }
 
+// 공유용 게임 성격 3분류: 협동 → 가족/파티(BGG 유형에 가족·파티·어린이가 하나라도 있으면, 전략+가족도 가족) → 전략.
+// BGG 유형이 없으면 기록으로 짐작합니다: 5인 이상이거나 승패·팀전만 기록한 판은 가족/파티, 그 밖은 전략입니다.
+export function shareGameType(play){
+ if(play.rule==='cooperative')return 'coop';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
+ const info=metadata(play.game);if(info?.cooperative)return 'coop';const domains=info?.domains||[];
+ if(domains.some(domain=>['Family Games','Party Games',"Children's Games",'Children’s Games'].includes(domain)))return 'family';if(domains.length)return 'strategy';
+ const mode=recordMode(play);return play.players.length>=5||mode==='win'||mode==='team'?'family':'strategy';
+}
 export function recentShareData(records,profile,locale){
  const lang=shareLanguage(locale),words=copy[lang],date=latestPlayDate(records),plays=records.filter(play=>play.date===date),games=new Map();
  for(const play of plays){
@@ -59,7 +69,7 @@ export function recentShareData(records,profile,locale){
  const coop=new Map();for(const play of plays.filter(item=>item.rule==='cooperative')){const key=gameKey(play.game),row=coop.get(key)||{name:localizedGameName(play.game,lang),game:play.game,total:0,wins:0,attempts:[]};row.total++;if(play.cooperativeResult==='success')row.wins++;if(Array.isArray(play.missionAttempts))row.attempts.push(...play.missionAttempts);coop.set(key,row);}
  const coopRows=[...coop.values()].map(row=>({name:row.name,result:row.attempts.length?words.missionCover(missionSummary(row.attempts),row.game):words.coopResult(row.wins,row.total)}));
  if(coopRows.length)cards.push({kind:'coop',title:words.coopTitle,headline:coopRows.length===1?coopRows[0].name:words.coopGames(coopRows.length),detail:coopRows.length===1?coopRows[0].result:coopRows.map(row=>`${row.name} ${row.result}`).join(' · ')});
- return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts),entry.game)}:entry),cards};
+ return {locale:lang,copy:words,date,title:formatRecentRecordTitle(date,lang),dateLabel:formatShareDate(date,lang),location,playCount:plays.length,peopleCount:attendanceCount(plays,profile),games:[...games.values()].map(entry=>entry.missionAttempts?{...entry,mission:words.missionCover(missionSummary(entry.missionAttempts),entry.game)}:entry),cards,typeMix:plays.reduce((mix,play)=>{mix[shareGameType(play)]++;return mix;},{strategy:0,family:0,coop:0})};
 }
 
 // 그날 MVP(2승 이상, 동률 2명까지)와 접전(1·2위 CLOSE_GAP점 차 이하, 같은 차이면 최근 판)을 각각 찾아 해당하는 카드만 MVP → 접전 순으로 돌려줍니다.
@@ -141,6 +151,18 @@ function otherGames(ctx,games,title,words,{x,y,w,h}){
  if(rows.length<games.length){ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.moreGames(games.length-rows.length),x+28,y+86+rows.length*lineH);}
 }
 
+// 게임 성격 비율 막대: 전략 · 가족/파티 · 협동을 판 수 기준 비율로 그립니다. 낮은 칸(행 높이 60 미만)은 이름 · 막대 · 비율을 한 줄에 둡니다.
+function typesCard(ctx,mix,words,{x,y,w,h}){
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.typesTitle,x+28,y+44);
+ const rows=[['strategy','#82bfff'],['family','#ffc56b'],['coop','#7ee0b0']],total=rows.reduce((sum,[key])=>sum+(mix?.[key]||0),0)||1,rowH=Math.min(70,(h-76)/3),barW=w-56;
+ const compact=rowH<60;
+ rows.forEach(([key,color],index)=>{const count=mix?.[key]||0,ratio=count/total,top=y+70+index*rowH;
+  if(compact){const barX=x+132,barLen=w-132-118;ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='700 21px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.typeNames[key],x+28,top+22);fillRound(ctx,barX,top+10,barLen,12,6,'rgba(255,255,255,.12)');if(count)fillRound(ctx,barX,top+10,Math.max(12,barLen*ratio),12,6,color);ctx.textAlign='right';ctx.fillStyle='#9fc8f7';ctx.font='600 19px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(`${Math.round(ratio*100)}% · ${words.playsUnit(count)}`,x+w-24,top+22);return;}
+  ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='700 23px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.typeNames[key],x+28,top+24);
+  ctx.textAlign='right';ctx.fillStyle='#9fc8f7';ctx.font='600 20px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(`${Math.round(ratio*100)}% · ${words.playsUnit(count)}`,x+w-28,top+24);
+  fillRound(ctx,x+28,top+36,barW,12,6,'rgba(255,255,255,.12)');if(count)fillRound(ctx,x+28,top+36,Math.max(12,barW*ratio),12,6,color);});
+ ctx.textAlign='left';
+}
 function dayCard(ctx,card,{x,y,w,h}){
  const top=y+(h-196)/2;fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,top+46);
  ctx.fillStyle='#fff';fitText(ctx,card.headline,w-68,40,26);ctx.fillText(clippedText(ctx,card.headline,w-68),x+34,top+104);
@@ -157,14 +179,14 @@ function winnersCard(ctx,card,words,{x,y,w,h},columns){
 export async function createRecentShareImage(data){
  const words=data?.copy||shareCopy(data?.locale);if(!data?.playCount)throw Error(words.empty);
  const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;const ctx=canvas.getContext('2d');drawBackground(ctx);
- const place=data.location||'',cards=(data.cards||[]).filter(card=>!(data.games.length>=SIDE_COVERS&&card.kind==='winners')),layout=shareCoverLayout(data.games.length,cards.length,Boolean(place)),shown=data.games.slice(0,layout.cells.length),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
+ const place=data.location||'',cards=(data.cards||[]).filter(card=>!(data.games.length>=10&&card.kind==='winners')).concat(data.games.length>=10&&data.games.length<SIDE_COVERS&&data.typeMix&&(data.cards||[]).filter(card=>card.kind!=='winners').length<3?[{kind:'types'}]:[]),layout=shareCoverLayout(data.games.length,cards.length,Boolean(place)),shown=data.games.slice(0,layout.cells.length),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
  ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 30px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText('SCORE COUNTER',72,71);
  const corner=layout.side?(place?words.atPlace(place):''):data.dateLabel||'';if(corner){ctx.fillStyle='#fff';ctx.textAlign='right';ctx.font='700 31px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,corner,600),1008,72);ctx.textAlign='left';}
  if(layout.side){const title=words.togetherTitle(data.dateLabel||'');ctx.fillStyle='#fff';fitText(ctx,title,936,53,40);ctx.fillText(clippedText(ctx,title,936),72,168);ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,250);const wide=layout.wide;metric(ctx,layout.metrics[0],data.games.length,wide?words.playedShort:words.playedCount,{center:wide});metric(ctx,layout.metrics[1],data.peopleCount,wide?words.peopleShort:words.peopleCount,{center:wide});}
  else{const values=[...(place?[[place,words.place,true]]:[]),[data.games.length,words.playedCount,false],[data.peopleCount,words.peopleCount,false]];values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted}));}
  shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h,data.games.length>=10,Boolean(layout.wide));});
- if(layout.others){const rest=data.games.slice(shown.length);rest.length?otherGames(ctx,rest,words.otherGames,words,layout.others):otherGames(ctx,data.games.filter(game=>game.winners?.length),words.winnersTitle,words,layout.others);}
- layout.cards.forEach((box,index)=>cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box));
+ if(layout.others){const rest=data.games.slice(shown.length);rest.length?otherGames(ctx,rest,words.otherGames,words,layout.others):data.typeMix?typesCard(ctx,data.typeMix,words,layout.others):otherGames(ctx,data.games.filter(game=>game.winners?.length),words.winnersTitle,words,layout.others);}
+ layout.cards.forEach((box,index)=>cards[index].kind==='types'?typesCard(ctx,data.typeMix,words,box):cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box));
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
 
