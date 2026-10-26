@@ -26,6 +26,8 @@
 - 숨겨진 화면은 데이터 변경 이벤트(`score-bgg:changed`, `score-records:changed` 등)에 다시 그리지 않는다. 바뀜 표시만 하고 화면이 보일 때 그린다.
 - 목록을 그리는 반복문 안에서 localStorage 읽기·JSON 파싱·전체 별칭 정규화처럼 항목 수에 비례해 반복되는 일을 하지 않는다. 미리 인덱스나 캐시를 만든다. 긴 목록은 첫 화면 분량만 바로 그리고 나머지는 나눠 붙인다.
 - 첫 화면과 로그인 확인은 네트워크나 당장 쓰지 않는 큰 SDK를 기다리지 않는다. 마지막 계정의 기기 기록으로 먼저 표시한다.
+- localStorage의 JSON은 `stored-json.js`의 `readStoredJson`으로 읽는다(저장 문자열이 바뀔 때만 해석). 직접 `JSON.parse(localStorage.getItem(...))`을 새로 쓰면 `tests/performance-guards.test.mjs`가 실패한다.
+- 새 저장 캐시를 만들거나 기존 캐시가 커질 수 있으면 `scripts/perf.mjs`에 실제 계정 크기의 시드를 함께 넣는다. 빈 캐시로만 재면 느린 경로가 드러나지 않는다.
 - 시작·화면 전환·목록 렌더·서비스 워커에 영향이 있으면 `npm run perf`(헤드리스 Chrome, 4배 CPU 제한, 기록 600개 예산 검사)를 실행한다.
 
 ## 세션과 인수인계

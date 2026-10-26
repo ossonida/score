@@ -1,11 +1,10 @@
 import {gameTypes} from './game-types.js?v=64';
+import {readStoredJson} from './stored-json.js?v=170';
 import {starterGames,normalizeGameQuery} from './game-catalog.js?v=164';
 const KEY='score.bgg.metadata.v1';
 export const domainLabels={'Strategy Games':'전략','Family Games':'가족','Party Games':'파티','Abstract Games':'추상','Thematic Games':'테마','Wargames':'워게임',"Children’s Games":'어린이',"Children\'s Games":'어린이','Customizable Games':'커스터마이징'};
 export function bggId(game){const id=game?.bggId||game?.id||starterGames.find(g=>[g.name,...g.aliases].some(n=>normalizeGameQuery(n)===normalizeGameQuery(game?.name||'')))?.id;return /^[1-9][0-9]{0,9}$/.test(String(id||''))?String(id):'';}
-// 게임마다 호출되므로 저장 문자열이 바뀔 때만 다시 해석한다.
-let savedRaw=null,savedValue={};
-function saved(){try{const raw=localStorage.getItem(KEY)||'{}';if(raw!==savedRaw){const d=JSON.parse(raw);savedValue=d&&typeof d==='object'&&!Array.isArray(d)?d:{};savedRaw=raw;}return savedValue;}catch{return {};}}
+function saved(){return readStoredJson(KEY,{},d=>d&&typeof d==='object'&&!Array.isArray(d)?d:{});}
 export function metadata(game){const id=bggId(game),cached=saved()[id],bundled=gameTypes[id],data=cached&&(!bundled||Number(cached.checkedAt)>Number(bundled.checkedAt||0))?cached:bundled||cached;if(!data)return null;return {...data,domains:Array.isArray(data.domains)?[...new Set(data.domains.filter(x=>Object.hasOwn(domainLabels,x)))]:[],cooperative:data.cooperative===true};}
 const text=(value,max)=>typeof value==='string'?value.trim().slice(0,max):'';
 export function rememberMetadata(games){const data={...saved()};for(const game of games){const id=bggId(game);if(!id||!Array.isArray(game.domains))continue;data[id]={v:typeof game.deduction==='boolean'?4:3,domains:[...new Set(game.domains.filter(x=>Object.hasOwn(domainLabels,x)))],cooperative:game.cooperative===true,deduction:game.deduction===true,name:text(game.name,300),koName:text(game.koName,200),subtype:text(game.subtype,40),expansions:(Array.isArray(game.expansions)?game.expansions:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,60).map(x=>({id:String(x.id),name:text(x.name,200)})),expands:(Array.isArray(game.expands)?game.expands:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,10).map(x=>({id:String(x.id),name:text(x.name,200)})),checkedAt:Date.now()};}localStorage.setItem(KEY,JSON.stringify(Object.fromEntries(Object.entries(data).slice(-1500))));}

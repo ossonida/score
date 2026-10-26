@@ -17,7 +17,7 @@ const plays=Array.from({length:1000},(_,i)=>{const [name,id]=ids[i%ids.length];r
 // BGG 게임 정보 저장분(게임별 확장 목록 포함): 실제 계정처럼 크게 채운다.
 const meta={};for(const [name,id] of [...ids,...Array.from({length:250},(_,i)=>['Game '+i,String(500000+i)])])meta[id]={v:4,domains:['Strategy Games'],cooperative:false,deduction:false,name,koName:'',subtype:'boardgame',expansions:Array.from({length:20},(_,j)=>({id:String(800000+Number(id)%5000*20+j),name:name+': Expansion '+j})),expands:[],checkedAt:Date.now()};
 const put=(k,v)=>`localStorage.setItem(${JSON.stringify(k)},${JSON.stringify(typeof v==='string'?v:JSON.stringify(v))});`;
-const seed=`try{if(!localStorage.getItem('perf.seeded')){${put('score.lastUser.v1',uid)}${put(`score.plays.v1.user.${uid}`,{records,pending:[]})}${put(`score.identity.v1.score.plays.v1.user.${uid}`,{primary:'나',aliases:[]})}${put(`score.bgg.${uid}.collection`,collection)}${put(`score.bgg.${uid}.plays`,plays)}${put('score.bgg.metadata.v1',meta)}localStorage.setItem('perf.seeded','1');}}catch(e){}
+const seed=`try{if(!localStorage.getItem('perf.seeded')){${put('score.lastUser.v1',uid)}${put(`score.plays.v1.user.${uid}`,{records,pending:[]})}${put(`score.identity.v1.score.plays.v1.user.${uid}`,{primary:'나',aliases:[]})}${put(`score.bgg.${uid}.collection`,collection)}${put(`score.bgg.${uid}.plays`,plays)}${put('score.bgg.metadata.v1',meta)}${put('score.bgg.covers.v1',Object.fromEntries(Object.keys(meta).slice(0,1000).map(id=>[id,`https://cf.geekdo-images.com/perf/${id}.jpg`])))}localStorage.setItem('perf.seeded','1');}}catch(e){}
 window.__lt=[];try{new PerformanceObserver(l=>{for(const e of l.getEntries())window.__lt.push(Math.round(e.duration));}).observe({type:'longtask',buffered:true});}catch{}`;
 const profile=fs.mkdtempSync(path.join(os.tmpdir(),'score-perf-'));
 const chrome=spawn(chromePath,['--headless=new','--remote-debugging-port=0',`--user-data-dir=${profile}`,'--window-size=412,915','--no-first-run','about:blank'],{stdio:['ignore','ignore','pipe']});
@@ -29,7 +29,7 @@ const send=(method,params={})=>new Promise(r=>{const i=++id;wait.set(i,r);ws.sen
 const ev=async expr=>{for(let i=0;i<5;i++){const r=await send('Runtime.evaluate',{expression:expr,awaitPromise:true,returnByValue:true});if(!r.result?.exceptionDetails)return r.result?.result?.value;await sleep(300);}throw Error('evaluate failed: '+expr.slice(0,60));};
 let failed=false;
 try{
- await send('Page.enable');await send('Runtime.enable');await send('Page.addScriptToEvaluateOnNewDocument',{source:seed});
+ await send('Page.enable');await send('Runtime.enable');await send('Network.enable');await send('Network.setBlockedURLs',{urls:['*cf.geekdo-images.com*']});await send('Page.addScriptToEvaluateOnNewDocument',{source:seed});
  await send('Emulation.setUserAgentOverride',{userAgent:'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36'});
  await send('Emulation.setCPUThrottlingRate',{rate:4});
  const url=`http://localhost:${PORT}/score/index.html`;
