@@ -7,7 +7,7 @@ let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});
 // 일괄 내보내기 중에는 기록마다 화면 전체를 다시 그리지 않고 끝날 때 한 번만 그립니다.
 let quiet=false;
-function notify(){if(quiet)return;window.dispatchEvent(new Event('score-bgg:changed'));api.renderHistory();}
+function notify(){if(quiet)return;window.dispatchEvent(new Event('score-bgg:changed'));if(location.hash==='#stats')api.renderHistory();}
 function render(){
  const connected=Boolean(user&&state.connected);$('bggAccountSection').setAttribute('data-connected',String(connected));
  $('bggLinkedStatus').setAttribute('aria-busy',String(busy));$('bggLinkLogin').disabled=!user||busy||!state.ready;$('bggLinkLogin').textContent=connected?'계정 변경':'BGG 로그인';$('bggLinkLogout').hidden=!connected;$('bggLinkLogout').disabled=busy;

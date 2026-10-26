@@ -1,5 +1,5 @@
 import {gameTypes} from './game-types.js?v=64';
-import {readStoredJson} from './stored-json.js?v=170';
+import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {starterGames,normalizeGameQuery} from './game-catalog.js?v=164';
 const KEY='score.bgg.metadata.v1';
 export const domainLabels={'Strategy Games':'전략','Family Games':'가족','Party Games':'파티','Abstract Games':'추상','Thematic Games':'테마','Wargames':'워게임',"Children’s Games":'어린이',"Children\'s Games":'어린이','Customizable Games':'커스터마이징'};
@@ -7,8 +7,9 @@ export function bggId(game){const id=game?.bggId||game?.id||starterGames.find(g=
 function saved(){return readStoredJson(KEY,{},d=>d&&typeof d==='object'&&!Array.isArray(d)?d:{});}
 export function metadata(game){const id=bggId(game),cached=saved()[id],bundled=gameTypes[id],data=cached&&(!bundled||Number(cached.checkedAt)>Number(bundled.checkedAt||0))?cached:bundled||cached;if(!data)return null;return {...data,domains:Array.isArray(data.domains)?[...new Set(data.domains.filter(x=>Object.hasOwn(domainLabels,x)))]:[],cooperative:data.cooperative===true};}
 const text=(value,max)=>typeof value==='string'?value.trim().slice(0,max):'';
-export function rememberMetadata(games){const data={...saved()};for(const game of games){const id=bggId(game);if(!id||!Array.isArray(game.domains))continue;data[id]={v:typeof game.deduction==='boolean'?4:3,domains:[...new Set(game.domains.filter(x=>Object.hasOwn(domainLabels,x)))],cooperative:game.cooperative===true,deduction:game.deduction===true,name:text(game.name,300),koName:text(game.koName,200),subtype:text(game.subtype,40),expansions:(Array.isArray(game.expansions)?game.expansions:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,60).map(x=>({id:String(x.id),name:text(x.name,200)})),expands:(Array.isArray(game.expands)?game.expands:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,10).map(x=>({id:String(x.id),name:text(x.name,200)})),checkedAt:Date.now()};}localStorage.setItem(KEY,JSON.stringify(Object.fromEntries(Object.entries(data).slice(-1500))));}
-export function metadataFresh(game){const value=saved()[bggId(game)];return value&&value.v===4&&Date.now()-value.checkedAt<7*86400000;}
+export function rememberMetadata(games){const data={...saved()};for(const game of games){const id=bggId(game);if(!id||!Array.isArray(game.domains))continue;data[id]={v:typeof game.deduction==='boolean'?4:3,domains:[...new Set(game.domains.filter(x=>Object.hasOwn(domainLabels,x)))],cooperative:game.cooperative===true,deduction:game.deduction===true,name:text(game.name,300),koName:text(game.koName,200),subtype:text(game.subtype,40),expansions:(Array.isArray(game.expansions)?game.expansions:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,60).map(x=>({id:String(x.id),name:text(x.name,200)})),expands:(Array.isArray(game.expands)?game.expands:[]).filter(x=>/^[1-9][0-9]{0,9}$/.test(String(x?.id||''))&&text(x?.name,200)).slice(0,10).map(x=>({id:String(x.id),name:text(x.name,200)})),checkedAt:Date.now()};}writeStoredJson(KEY,Object.fromEntries(Object.entries(data).slice(-1500)));}
+// v:3은 추리 정보가 없는 이전 서버 응답이라 하루만 최신으로 본다(새로고침마다 전체 재요청 방지).
+export function metadataFresh(game){const value=saved()[bggId(game)],age=Date.now()-value?.checkedAt;return Boolean(value)&&(value.v===4&&age<7*86400000||value.v===3&&age<86400000);}
 // 표시용 이름: 한글 이름(원래 이름이 한글이거나 BGG 한글 별칭)과 영문 이름(BGG 기본 이름)을 나눠 줍니다.
 const hangul=/[\uac00-\ud7a3]/;
 export function gameNames(game){const name=typeof game?.name==='string'?game.name:'',info=metadata(game),ko=hangul.test(name)?name:info?.koName||name,en=info?.name&&info.name!==ko?info.name:!hangul.test(name)&&name!==ko?name:'';return {ko,en};}

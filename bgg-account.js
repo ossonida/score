@@ -30,7 +30,10 @@ async function checkUpdates(){
 const maybeCheck=()=>{if((!globalThis.location||location.hash==='#settings')&&$('bggAccountSection').open)void checkUpdates();};
 // 내보내기 뒤에는 다음에 연동 영역을 열 때 새 정보를 다시 확인합니다.
 function expectUpdates(){updates=null;checkedAt=0;render();}
-function render(){window.dispatchEvent?.(new Event('score-bgg:changed'));$('bggAccountStatus').setAttribute('aria-busy',String(busy));
+// 데이터(계정·컬렉션·플레이)가 바뀐 경우에만 다른 화면에 알린다. 알림을 받으면 이 화면만 다시 그린다(다시 알리지 않음).
+let announced=[];
+function render(){renderView();const next=[user?.uid||viewUid,collection,plays];if(next.some((value,index)=>value!==announced[index])){announced=next;window.dispatchEvent?.(new Event('score-bgg:changed'));}}
+function renderView(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  $('bggAccountSection').hidden=!user;
  const username=$('bggUsername').value.trim();$('bggImport').disabled=!user||busy||!username||!bggSearchUrl;
  const fresh=Boolean(updates&&(updates.collection||updates.plays)),notice=$('bggUpdateNotice');$('bggImport').textContent=fresh?'새 정보 가져오기':'내 정보 가져오기';$('bggImport').setAttribute('data-update',String(fresh));
@@ -41,7 +44,7 @@ function render(){window.dispatchEvent?.(new Event('score-bgg:changed'));$('bggA
   item.className='bgg-data-count';label.textContent=title;count.textContent=`${items.length}개`;item.append(label,count);box.append(item);
  }
 }
-window.addEventListener('score-bgg:changed',render);
+window.addEventListener('score-bgg:changed',renderView);
 window.addEventListener('score-bgg:linked',event=>{if(!user||busy)return;const name=event.detail?.username;if(!validUsername(name))return;$('bggUsername').value=name;void saveUsername({announce:false});});
 async function saveUsername({announce=true}={}){
  if(!user||busy)return;const username=$('bggUsername').value.trim();if(!validUsername(username)){status('BGG 사용자명을 64자 이내로 입력해주세요.');return;}
