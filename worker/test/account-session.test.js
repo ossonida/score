@@ -75,3 +75,8 @@ test('a successful post clears only BGG want-to-play for that game and keeps oth
  const other=setup(async url=>{const u=String(url);if(u.includes('/login/'))return loginResponse();if(u.includes('geekplay.php'))return Response.json({success:true,playid:556});if(u.includes('xmlapi2/collection'))return new Response('<items></items>');throw Error('unexpected '+u);});other.env.BGG_API_TOKEN='token';await login(other.session);
  const kept=await(await other.session.fetch(req('/post',{play}))).json();assert.equal(kept.status,'sent');assert.equal(kept.wantToPlayCleared,false);
 });
+test('worker and app compute the same export fingerprint for location, difficulty, scenario and missions',async()=>{
+ const {bggPlayFingerprint}=await import('../../bgg-play-format.js');
+ for(const extra of [{location:'집'},{rule:'cooperative',cooperativeResult:'success',difficulty:'영웅'},{rule:'cooperative',cooperativeResult:'failure',scenario:3},{rule:'cooperative',cooperativeResult:'success',missionAttempts:[{mission:1,result:'failure'},{mission:1,result:'success'}]}]){const p={...play,...extra};assert.equal(await playFingerprint(p,'alice'),await bggPlayFingerprint(p,'alice'));}
+ for(const bad of [{location:'x'.repeat(121)},{difficulty:''},{scenario:0},{missionAttempts:[{mission:0,result:'success'}]}])await assert.rejects(async()=>playFingerprint({...play,...bad},'alice'));
+});
