@@ -1,9 +1,10 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
 import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=128';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=166';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=172';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id);
 // 키 순서와 상관없이 같은 내용인지 비교합니다.
+const sameItems=(before,after)=>{if(before.length!==after.length)return false;const known=new Map(before.map(item=>[item.id,sameShape(item)]));return after.every(item=>known.get(item.id)===sameShape(item));};
 const sameShape=value=>JSON.stringify(value,(name,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a<b?-1:a>b?1:0)):item);
 let user=null,viewUid=null,epoch=0,busy=false,collection=[],plays=[];
 function key(part){return `score.bgg.${user?.uid||viewUid}.${part}`;}
@@ -80,7 +81,7 @@ async function importPublic(){
    }while(items.length<total&&page<=10);
    if(action==='plays'&&!skipped)try{localStorage.setItem(key('playsFullAt'),String(Date.now()));}catch{}
    items=[...new Map(items.map(p=>[p.id,p])).values()];
-   const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),removed=previous.filter(item=>!items.some(next=>next.id===item.id)),pendingCloud=cached(action+'Pending',false);
+   const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),nextIds=new Set(items.map(next=>next.id)),removed=previous.filter(item=>!nextIds.has(item.id)),pendingCloud=cached(action+'Pending',false);
    if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;counts[action]=changed.length+removed.length;}if(action==='collection')collection=safeBggItems(items,'collection');else plays=safeBggItems(items,'plays');render();
    if(!changed.length&&!removed.length&&!pendingCloud)continue;
    try{await saveBggData(action,username,items,uid);if(version===epoch)localStorage.removeItem(key(action+'Pending'));}catch(error){if(version!==epoch)return;cloudFailed=true;status('가져온 정보를 이 기기에 저장했습니다. '+cloudFailure(error));}if(version!==epoch)return;
@@ -101,6 +102,6 @@ if(cloudConfigured())connectCloud(async next=>{
  if(!user){showCached(mobileDevice?rememberedUid():null);render();return;}
  const uid=user.uid,profileCache=cached('profile',{});$('bggUsername').value=validUsername(profileCache?.username)?profileCache.username:'';collection=safeBggItems(cached('collection',[]),'collection');plays=safeBggItems(cached('plays',[]),'plays');render();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');
  if(cached('profilePending',false)){status('이 기기에 저장된 사용자명입니다. 공개 정보 가져오기를 다시 눌러 클라우드 저장을 시도할 수 있습니다.');return;}
- try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;if(!cached('collectionPending',false))collection=safeBggItems(data.collection,'collection');if(!cached('playsPending',false))plays=safeBggItems(data.plays,'plays');render();maybeCheck();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
+ try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;if(!cached('collectionPending',false)){const next=safeBggItems(data.collection,'collection');if(!sameItems(collection,next))collection=next;}if(!cached('playsPending',false)){const next=safeBggItems(data.plays,'plays');if(!sameItems(plays,next))plays=next;}render();maybeCheck();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
  catch{if(version===epoch)status('계정의 BGG 정보를 불러오지 못해 이 기기에 저장된 내용을 표시합니다.');}
 }).catch(()=>{});

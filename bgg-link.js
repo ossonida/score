@@ -1,5 +1,5 @@
-import './records.js?v=169';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=166';
+import './records.js?v=172';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=172';
 import {bggLinkRequest} from './bgg-link-client.js?v=66';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=97';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
@@ -24,7 +24,7 @@ $('bggLoginForm').onsubmit=async event=>{event.preventDefault();if(!user||busy||
 $('bggLinkLogout').onclick=async()=>{if(!user||busy)return;const owner=user.uid,version=epoch;busy=true;render();try{await bggLinkRequest('link-logout',{uid:owner,body:{}});if(version!==epoch)return;state={ready:true,connected:false,uploads:{}};$('bggLinkMessage').textContent='이 앱의 BGG 연결을 해제했습니다.';notify();}catch(error){if(version===epoch)$('bggLinkMessage').textContent=error.message;}finally{if(version===epoch){busy=false;render();}}};
 async function postPlay(play,context){
  if(!user||!state.connected)throw Error('설정에서 BGG에 먼저 로그인해주세요.');const owner=user.uid,version=epoch,key=owner+':'+play.id,expectedUsername=state.username;if(posting.has(key))return;
- const now=api.context();if(now.key!==context.key||now.epoch!==context.epoch)throw Error('계정이 변경됐습니다. 다시 선택해주세요.');
+ const now=api.scope();if(now.key!==context.key||now.epoch!==context.epoch)throw Error('계정이 변경됐습니다. 다시 선택해주세요.');
  posting.add(key);notify();try{const result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:Boolean(state.uploads?.[play.id]?.bggPlayId)}});if(version!==epoch)return;state.uploads={...state.uploads,[play.id]:result};notify();return result;}catch(error){if(version===epoch&&error.code==='BGG_POST_UNCERTAIN'){state.uploads={...state.uploads,[play.id]:{...state.uploads?.[play.id],status:'unknown'}};notify();}if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}finally{posting.delete(key);if(version===epoch)notify();}
 }
 // BGG에 보낸 기록이 있는 게임 중 가져온 BGG 컬렉션에서 아직 하고 싶은 게임인 것을 BGG에서 해제합니다(한 번에 최대 20개).

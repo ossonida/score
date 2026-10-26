@@ -20,7 +20,7 @@ import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableG
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=166';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=172';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {decodeXmlText} from './bgg-validation.js?v=128';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
@@ -358,7 +358,8 @@ $('endGameHome').onclick=()=>{try{api.clearPlayers();pendingGame=null;close('end
 async function sync({silent=false}={}){
  if(!currentUser||syncing===accountEpoch)return;
  const uid=currentUser.uid,epoch=accountEpoch;syncing=epoch;cloudState='saving';updateButtons();
- try{while(pending.size){const id=[...pending][0];if(epoch!==accountEpoch)return;const play=records.find(p=>p.id===id);if(play)await saveCloud(play,uid);else await deleteCloud(id,uid);if(epoch!==accountEpoch)return;if(records.find(p=>p.id===id)!==play)continue;pending.delete(id);persist();}
+ // 25건씩 동시에 보내고(Firestore가 한 연결로 이어 보냄) 묶음마다 한 번만 기기에 저장한다. 보내는 사이 바뀐 기록은 대기로 남는다.
+ try{while(pending.size){if(epoch!==accountEpoch)return;const ids=[...pending].slice(0,25),sent=new Map(records.map(p=>[p.id,p]));const results=await Promise.allSettled(ids.map(id=>{const play=sent.get(id);return (play?saveCloud(play,uid):deleteCloud(id,uid)).then(()=>id);}));if(epoch!==accountEpoch)return;const now=new Map(records.map(p=>[p.id,p]));let failure=null;for(const result of results){if(result.status==='rejected'){failure??=result.reason;continue;}if(now.get(result.value)===sent.get(result.value))pending.delete(result.value);}persist();if(failure)throw failure;}
  if(epoch===accountEpoch){cloudState='ready';cloudError='';message('accountError','');if(!silent)notify('기록을 클라우드에 저장했습니다.');}
  }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 저장 대기 중입니다. '+friendly(error));}}
  finally{if(syncing===epoch)syncing=null;updateButtons();}
@@ -405,6 +406,7 @@ window.ScoreRecords={
   try{rememberIdentity(key(),updated.players.find(p=>p.isSelf));}catch{}
   renderHistory();updateButtons();notify('이 경기의 내 플레이어 지정을 저장했습니다.');return updated;
  },
+ scope:()=>({key:key(),epoch:accountEpoch}),
  context:()=>({ready:authReady||!!offlineUid,key:key(),epoch:accountEpoch,records:records.map(p=>({...p,game:{...p.game},players:p.players.map(person=>({...person}))}))}),
  merge:(incoming,context)=>{
   if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 파일을 다시 선택해주세요.');
