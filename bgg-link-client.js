@@ -1,5 +1,5 @@
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {idToken} from './cloud-records.js?v=115';
+import {idToken} from './cloud-records.js?v=159';
 const messages={BGG_ACCOUNT_CHANGED:'연결된 BGG 계정이 변경됐습니다. 설정에서 BGG에 다시 로그인해주세요.',BGG_LINK_NOT_READY:'BGG 로그인 서버 업데이트가 필요합니다.',BGG_LINK_UNAVAILABLE:'BGG 로그인 서버에 연결하지 못했습니다.',BGG_INVALID_CREDENTIALS:'BGG 사용자명과 비밀번호를 확인해주세요.',BGG_LOGIN_UNCONFIRMED:'BGG 로그인 세션을 확인하지 못했습니다. 계정 정보 또는 추가 인증 여부를 확인해주세요.',BGG_LOGIN_BLOCKED:'BGG가 서버 로그인을 차단했습니다. BGG 웹사이트의 추가 인증 여부를 확인해주세요.',BGG_LOGIN_UNAVAILABLE:'BGG 로그인에 응답하지 못했습니다. 잠시 후 다시 시도해주세요.',BGG_LOGIN_RATE_LIMIT:'BGG 요청이 많습니다. 1분 뒤 다시 시도해주세요.',BGG_LOGIN_REQUIRED:'BGG에 다시 로그인해주세요.',BGG_INVALID_PLAY:'BGG 게임 ID와 경기 날짜·점수를 확인해주세요.',BGG_POST_UNCERTAIN:'전송 결과를 확인하지 못했습니다. 중복 등록을 막기 위해 BGG에서 먼저 확인해주세요.',BGG_POST_REJECTED:'BGG가 경기 등록을 거부했습니다. 경기 정보를 확인해주세요.',BGG_UPDATE_REQUIRED:'이미 BGG에 등록된 경기입니다. 기록 화면에서 다시 시도해주세요.',INVALID_BODY:'입력 정보를 확인해주세요.'};
 export async function bggLinkRequest(action,{uid,body,fetcher=fetch,tokenProvider=idToken,endpoint=bggSearchUrl}={}){
  if(!endpoint)throw Error(messages.BGG_LINK_NOT_READY);

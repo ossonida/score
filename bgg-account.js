@@ -1,12 +1,14 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
 import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=128';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=115';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=159';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id);
 // 키 순서와 상관없이 같은 내용인지 비교합니다.
 const sameShape=value=>JSON.stringify(value,(name,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a<b?-1:a>b?1:0)):item);
-let user=null,epoch=0,busy=false,collection=[],plays=[];
-function key(part){return `score.bgg.${user.uid}.${part}`;}
+let user=null,viewUid=null,epoch=0,busy=false,collection=[],plays=[];
+function key(part){return `score.bgg.${user?.uid||viewUid}.${part}`;}
+// 로그인 확인 전·모바일 로그아웃 상태에서는 마지막 로그인 계정의 기기 저장분만 보여 준다.
+function showCached(uid){viewUid=uid;if(!uid)return;collection=safeBggItems(cached('collection',[]),'collection');plays=safeBggItems(cached('plays',[]),'plays');}
 function cached(part,fallback){try{return JSON.parse(localStorage.getItem(key(part)))??fallback;}catch{return fallback;}}
 function cloudFailure(error){return String(error?.code||error?.message||'').includes('permission')?'Firebase 보안 규칙에서 BGG 저장 권한을 확인해야 합니다.':'네트워크 또는 Firebase 설정을 확인해주세요.';}
 function status(text){$('bggAccountStatus').textContent=text;}
@@ -90,10 +92,10 @@ $('bggImport').onclick=importPublic;
 function clearWantToPlay(ids){if(!user)return;const set=new Set(ids.map(String));collection=collection.map(item=>set.has(item.id)?{...item,wantToPlay:false}:item);try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');}catch{}render();}
 window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,expectUpdates};
 $('bggAccountSection').addEventListener('toggle',maybeCheck);window.addEventListener('hashchange',maybeCheck);
-render();
+if(cloudConfigured())showCached(rememberedUid());render();
 if(cloudConfigured())connectCloud(async next=>{
  const version=++epoch;user=next;busy=false;collection=[];plays=[];$('bggUsername').value='';status('');
- if(!user){render();return;}
+ if(!user){showCached(mobileDevice?rememberedUid():null);render();return;}
  const uid=user.uid,profileCache=cached('profile',{});$('bggUsername').value=validUsername(profileCache?.username)?profileCache.username:'';collection=safeBggItems(cached('collection',[]),'collection');plays=safeBggItems(cached('plays',[]),'plays');render();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');
  if(cached('profilePending',false)){status('이 기기에 저장된 사용자명입니다. 공개 정보 가져오기를 다시 눌러 클라우드 저장을 시도할 수 있습니다.');return;}
  try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;if(!cached('collectionPending',false))collection=safeBggItems(data.collection,'collection');if(!cached('playsPending',false))plays=safeBggItems(data.plays,'plays');render();maybeCheck();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}

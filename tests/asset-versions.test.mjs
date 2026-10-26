@@ -23,3 +23,24 @@ test('versioned entry scripts in index.html are precached by the service worker'
  const missing=[...html.matchAll(/<script[^>]*src="\.\/([\w.-]+\.js\?v=\d+)"/g)].map(m=>m[1]).filter(path=>!sw.includes(`'${path}'`));
  assert.deepEqual(missing,[]);
 });
+
+test('service worker parses and serves cached shell files, index and Firebase SDK without waiting for the network',async()=>{
+  const vm=await import('node:vm');
+  const source=fs.readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+  const base='https://example.com/score/',stores=new Map(),listeners={},fetched=[];
+  const open=name=>{if(!stores.has(name))stores.set(name,new Map());const map=stores.get(name);return {match:async r=>map.get(r.url||r),put:async(r,v)=>{map.set(r.url||r,v);},addAll:async()=>{}};};
+  const caches={open:async name=>open(name),keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name),match:async r=>{for(const map of stores.values()){const hit=map.get(r.url||r);if(hit)return hit;}}};
+  const response=body=>({ok:true,body,clone(){return response(body);}});
+  const context={self:{location:{href:base+'sw.js'},addEventListener:(type,fn)=>{listeners[type]=fn;},skipWaiting(){},clients:{claim(){}}},caches,URL,Request:class{constructor(url){this.url=url;}},Response:class{},fetch:async(request)=>{fetched.push(request.url||request);return response('network');},Promise,Set};
+  vm.runInNewContext(source,context);
+  const cacheName=source.match(/const CACHE='([^']+)'/)[1],index=base+'index.html',asset=base+source.match(/'(records\.js\?v=\d+)'/)[1];
+  await (await caches.open(cacheName)).put(index,response('cached index'));
+  await (await caches.open(cacheName)).put(asset,response('cached asset'));
+  const run=async request=>{let result,waits=[];listeners.fetch({request,respondWith:p=>{result=p;},waitUntil:p=>waits.push(p)});const value=await result;await Promise.all(waits);return value;};
+  assert.equal((await run({method:'GET',url:asset,mode:'cors'})).body,'cached asset');
+  assert.equal(fetched.includes(asset),false);
+  assert.equal((await run({method:'GET',url:base+'#stats',mode:'navigate'})).body,'cached index');
+  const sdk='https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+  assert.equal((await run({method:'GET',url:sdk,mode:'cors'})).body,'network');
+  fetched.length=0;assert.equal((await run({method:'GET',url:sdk,mode:'cors'})).body,'network');assert.deepEqual(fetched,[]);
+});

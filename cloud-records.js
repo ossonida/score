@@ -3,6 +3,11 @@ import {validUsername,validBggItem} from './bgg-validation.js?v=128';
 import {firebaseConfig} from './firebase-config.js?v=64';
 import {validIdentity} from './personal-stats.js?v=115';
 let connection;
+const lastUserKey='score.lastUser.v1';
+export const mobileDevice=Boolean(globalThis.Capacitor?.isNativePlatform?.())||/Android|iPhone|iPad|iPod|Mobi/i.test(globalThis.navigator?.userAgent||'')||(/Macintosh/.test(globalThis.navigator?.userAgent||'')&&globalThis.navigator?.maxTouchPoints>1);
+// 마지막 로그인 계정: 로그인 확인 전·오프라인·모바일 로그아웃 상태에서도 같은 기기 기록을 보여 준다.
+export function rememberedUid(){try{return localStorage.getItem(lastUserKey)||null;}catch{return null;}}
+export function rememberUid(uid){try{if(uid)localStorage.setItem(lastUserKey,uid);else localStorage.removeItem(lastUserKey);}catch{}}
 export function cloudConfigured(){return !!(firebaseConfig?.apiKey && firebaseConfig?.projectId && firebaseConfig?.authDomain);}
 export async function connectCloud(onUser){
   if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 지금은 이 브라우저에 기록을 저장할 수 있습니다.');
