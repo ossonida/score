@@ -5,7 +5,7 @@ import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=164';
 import {nameKey} from './personal-stats.js?v=115';
-import {bggSearchUrl} from './firebase-config.js';
+import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames} from './game-catalog.js?v=164';
 import {summarizeStats} from './stats-insights.js?v=66';
 
