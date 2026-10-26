@@ -309,7 +309,8 @@ async function enrichRecordGames(){if(enriching||!currentUser||!bggSearchUrl)ret
 function renderHistory(){
  records=matchGameRecords(records);
  void enrichRecordGames();
- const allGroups=gameStats(records),groups=searchableGameGroups(allGroups),select=$('recordFilter'),selected=statsGameTarget||select.value;statsGameTarget='';
+ // 기간 분석·게임별 통계는 내가 플레이어로 참여한 기록만 집계한다(최근 기록은 전체).
+ const mine=records.filter(p=>meIn(p,readIdentity(key()))),allGroups=gameStats(mine),groups=searchableGameGroups(allGroups),select=$('recordFilter'),selected=statsGameTarget||select.value;statsGameTarget='';
  select.replaceChildren(node('option','게임 선택'));select.firstChild.textContent='게임 선택';select.firstChild.value='';select.firstChild.disabled=groups.length>0;
  for(const g of groups){const o=node('option',`${g.game.name} (${g.count}회)`);o.value=g.key;select.append(o);}
  if(statsGameTargetGame&&statsGameTargetGame.name&&!groups.some(g=>g.key===selected)){const o=node('option',`${gameNames(statsGameTargetGame).ko} (0회)`);o.value=gameKey(statsGameTargetGame);select.append(o);}
@@ -317,19 +318,19 @@ function renderHistory(){
  if(statsGameTargetGame&&gameKey(statsGameTargetGame)===selected)select.value=selected;
  enhanceGamePicker(select,groups);
  const recentDate=latestPlayDate(records),period=statsView==='all'?selectedPeriod():null;
- const filtered=(statsView==='recent'?records.filter(p=>p.date===recentDate):statsView==='games'?records.filter(p=>gameKey(p.game)===select.value):recordsInPeriod(records,period.current)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
+ const filtered=(statsView==='recent'?records.filter(p=>p.date===recentDate):statsView==='games'?mine.filter(p=>gameKey(p.game)===select.value):recordsInPeriod(mine,period.current)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
  for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']]){$(id).setAttribute('aria-selected',String(statsView===view));$(id).setAttribute('tabindex',statsView===view?'0':'-1');}
  $('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
  $('gameFilterSection').hidden=statsView!=='games';$('periodFilterSection').hidden=statsView!=='all';$('gameDetailTabs').hidden=statsView!=='games';
  $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?`선택 기간의 기록 ${filtered.length}개 보기`:'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){
   const bggCollection=window.ScoreBggAccount?.state().collection||[];
-  if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:records,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameRivals($('statsInsights'),filtered,{scope:key(),onRecord:openStatsRecord});renderGameExpansions($('statsInsights'),filtered[0].game,bggCollection,filtered);loadExpansionNames((metadata(filtered[0].game)?.expansions||[]).slice(0,30),renderHistory);}
+  if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:mine,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameRivals($('statsInsights'),filtered,{scope:key(),onRecord:openStatsRecord});renderGameExpansions($('statsInsights'),filtered[0].game,bggCollection,filtered);loadExpansionNames((metadata(filtered[0].game)?.expansions||[]).slice(0,30),renderHistory);}
   else{const game=statsGameTargetGame&&gameKey(statsGameTargetGame)===select.value?statsGameTargetGame:null,box=$('statsInsights');box.replaceChildren();
    // 플레이하지 않은 게임도 표지·게임명·유형은 보여 주고 나의 기록 데이터가 없다고 안내합니다.
    if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
- }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),records,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
+ }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),mine,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
  else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});
  $('statsDetailCount').textContent=statsView==='all'?'':`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
