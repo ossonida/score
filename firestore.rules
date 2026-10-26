@@ -15,10 +15,20 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['username'])
         && request.resource.data.username is string && request.resource.data.username.size() > 0 && request.resource.data.username.size() <= 64;
     }
+    // 종류별 마지막 변경 시각(서버 시각). 기기는 이것만 읽고 바뀐 경우에만 변경분을 받는다.
+    match /users/{uid}/settings/sync {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['plays','bggCollection','bggPlays'])
+        && (!('plays' in request.resource.data) || request.resource.data.plays is timestamp)
+        && (!('bggCollection' in request.resource.data) || request.resource.data.bggCollection is timestamp)
+        && (!('bggPlays' in request.resource.data) || request.resource.data.bggPlays is timestamp);
+    }
     match /users/{uid}/{kind}/{itemId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays'];
       allow create, update: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays']
-        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username','owned','wishlist','wantToPlay','numPlays','thumbnail'])
+        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username','owned','wishlist','wantToPlay','numPlays','thumbnail','updatedAt'])
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt == request.time)
         && request.resource.data.id == itemId && itemId.matches('^[1-9][0-9]{0,19}$')
         && request.resource.data.gameId is string && request.resource.data.gameId.matches('^[1-9][0-9]{0,9}$')
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 300
@@ -40,7 +50,8 @@ service cloud.firestore {
       function owns() { return request.auth != null && request.auth.uid == uid; }
       function valid() {
         let p = request.resource.data;
-        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','expansions'])
+        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','expansions','updatedAt'])
+          && (!('updatedAt' in p) || p.updatedAt == request.time)
           && p.keys().hasAll(['id','game','date','rule','createdAt','players'])
           && p.id == playId && p.id is string && p.id.matches('^[A-Za-z0-9_.:-]{1,100}$')
           && p.game is map && p.game.keys().hasOnly(['name','bggId'])

@@ -1,9 +1,22 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
 import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=128';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=172';
+import * as cloudApi from './cloud-records.js?v=173';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id);
 // 키 순서와 상관없이 같은 내용인지 비교합니다.
+// 클라우드 BGG 정보 받기: 규칙 미배포면 전체, 종류별 변경 시각이 그대로면 받지 않음(null), 바뀌었으면 변경분만.
+// 변경분을 합친 개수가 클라우드 개수와 다르면 그 종류만 전체를 다시 받는다.
+async function loadBggCloud(username,uid){
+ const manifest=cloudApi.cloudManifest?await cloudApi.cloudManifest(uid):null;if(!manifest)return loadBggData(username,uid);
+ const mark=cached('cloudMark',{}),same=mark?.username===username,result={mark:{username,collection:manifest.bggCollection,plays:manifest.bggPlays}};let full=null;
+ for(const kind of ['collection','plays']){const now=kind==='collection'?manifest.bggCollection:manifest.bggPlays;
+  if(same&&now>0&&mark[kind]===now){result[kind]=null;continue;}
+  if(same&&mark[kind]>0){const {changed,count}=await cloudApi.loadBggChanges(kind,username,uid,mark[kind]);const merged=new Map(safeBggItems(cached(kind,[]),kind).map(item=>[item.id,item]));for(const item of changed)merged.set(item.id,item);if(merged.size===count){result[kind]=[...merged.values()];if(kind==='plays')result[kind].sort((a,b)=>b.date.localeCompare(a.date));continue;}}
+  full??=await loadBggData(username,uid);result[kind]=full[kind];
+ }
+ return result;
+}
 const sameItems=(before,after)=>{if(before.length!==after.length)return false;const known=new Map(before.map(item=>[item.id,sameShape(item)]));return after.every(item=>known.get(item.id)===sameShape(item));};
 const sameShape=value=>JSON.stringify(value,(name,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a<b?-1:a>b?1:0)):item);
 let user=null,viewUid=null,epoch=0,busy=false,collection=[],plays=[];
@@ -84,7 +97,7 @@ async function importPublic(){
    const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),nextIds=new Set(items.map(next=>next.id)),removed=previous.filter(item=>!nextIds.has(item.id)),pendingCloud=cached(action+'Pending',false);
    if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;counts[action]=changed.length+removed.length;}if(action==='collection')collection=safeBggItems(items,'collection');else plays=safeBggItems(items,'plays');render();
    if(!changed.length&&!removed.length&&!pendingCloud)continue;
-   try{await saveBggData(action,username,items,uid);if(version===epoch)localStorage.removeItem(key(action+'Pending'));}catch(error){if(version!==epoch)return;cloudFailed=true;status('가져온 정보를 이 기기에 저장했습니다. '+cloudFailure(error));}if(version!==epoch)return;
+   try{const mark=cached('cloudMark',{}),mirror=!pendingCloud&&mark?.username===username&&mark[action]>0?previous:null;await saveBggData(action,username,items,uid,mirror);if(version===epoch)localStorage.removeItem(key(action+'Pending'));}catch(error){if(version!==epoch)return;cloudFailed=true;status('가져온 정보를 이 기기에 저장했습니다. '+cloudFailure(error));}if(version!==epoch)return;
    if(action==='plays'&&items.length<total)status('최근 플레이 기록 최대 1,000개를 가져왔습니다.');
   }
   window.ScoreAnalytics?.feature('bgg','import_completed');
@@ -102,6 +115,6 @@ if(cloudConfigured())connectCloud(async next=>{
  if(!user){showCached(mobileDevice?rememberedUid():null);render();return;}
  const uid=user.uid,profileCache=cached('profile',{});$('bggUsername').value=validUsername(profileCache?.username)?profileCache.username:'';collection=safeBggItems(cached('collection',[]),'collection');plays=safeBggItems(cached('plays',[]),'plays');render();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');
  if(cached('profilePending',false)){status('이 기기에 저장된 사용자명입니다. 공개 정보 가져오기를 다시 눌러 클라우드 저장을 시도할 수 있습니다.');return;}
- try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggData(profile.username,uid);if(version!==epoch)return;if(!cached('collectionPending',false)){const next=safeBggItems(data.collection,'collection');if(!sameItems(collection,next))collection=next;}if(!cached('playsPending',false)){const next=safeBggItems(data.plays,'plays');if(!sameItems(plays,next))plays=next;}render();maybeCheck();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
+ try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggCloud(profile.username,uid);if(version!==epoch)return;for(const kind of ['collection','plays']){if(!data[kind]||cached(kind+'Pending',false))continue;const next=safeBggItems(data[kind],kind);if(!sameItems(kind==='collection'?collection:plays,next)){if(kind==='collection')collection=next;else plays=next;}try{localStorage.setItem(key(kind),JSON.stringify(next));}catch{}}if(data.mark)try{localStorage.setItem(key('cloudMark'),JSON.stringify(data.mark));}catch{}render();maybeCheck();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
  catch{if(version===epoch)status('계정의 BGG 정보를 불러오지 못해 이 기기에 저장된 내용을 표시합니다.');}
 }).catch(()=>{});

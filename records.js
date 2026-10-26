@@ -20,7 +20,9 @@ import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableG
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=172';
+import * as cloudApi from './cloud-records.js?v=173';
+import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {decodeXmlText} from './bgg-validation.js?v=128';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
@@ -359,18 +361,30 @@ async function sync({silent=false}={}){
  if(!currentUser||syncing===accountEpoch)return;
  const uid=currentUser.uid,epoch=accountEpoch;syncing=epoch;cloudState='saving';updateButtons();
  // 25건씩 동시에 보내고(Firestore가 한 연결로 이어 보냄) 묶음마다 한 번만 기기에 저장한다. 보내는 사이 바뀐 기록은 대기로 남는다.
- try{while(pending.size){if(epoch!==accountEpoch)return;const ids=[...pending].slice(0,25),sent=new Map(records.map(p=>[p.id,p]));const results=await Promise.allSettled(ids.map(id=>{const play=sent.get(id);return (play?saveCloud(play,uid):deleteCloud(id,uid)).then(()=>id);}));if(epoch!==accountEpoch)return;const now=new Map(records.map(p=>[p.id,p]));let failure=null;for(const result of results){if(result.status==='rejected'){failure??=result.reason;continue;}if(now.get(result.value)===sent.get(result.value))pending.delete(result.value);}persist();if(failure)throw failure;}
+ try{while(pending.size){if(epoch!==accountEpoch)return;const ids=[...pending].slice(0,25),sent=new Map(records.map(p=>[p.id,p]));const results=await Promise.allSettled(ids.map(id=>{const play=sent.get(id);return (play?saveCloud(play,uid):deleteCloud(id,uid)).then(()=>id);}));if(epoch!==accountEpoch)return;if(results.some(result=>result.status==='fulfilled'))await cloudApi.markCloudChanged?.(uid);if(epoch!==accountEpoch)return;const now=new Map(records.map(p=>[p.id,p]));let failure=null;for(const result of results){if(result.status==='rejected'){failure??=result.reason;continue;}if(now.get(result.value)===sent.get(result.value))pending.delete(result.value);}persist();if(failure)throw failure;}
  if(epoch===accountEpoch){cloudState='ready';cloudError='';message('accountError','');if(!silent)notify('기록을 클라우드에 저장했습니다.');}
  }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 저장 대기 중입니다. '+friendly(error));}}
  finally{if(syncing===epoch)syncing=null;updateButtons();}
 }
-async function refreshCloud(){
+// 클라우드 기록 목록. 규칙 미배포(예전 방식)·처음·full이면 전체를 받는다.
+// 변경 시각이 그대로면 받지 않고 기기 기록을 그대로 쓰며, 바뀌었으면 마지막 시각 이후 변경분만 받아 기기 기록에 덮어쓴다(partial).
+function cloudMarkKey(uid){return 'score.cloudSync.v1.'+uid;}
+function readCloudMark(uid){const mark=readStoredJson(cloudMarkKey(uid),null);return mark&&Number.isFinite(mark.plays)?mark:null;}
+function writeCloudMark(uid,manifest){try{writeStoredJson(cloudMarkKey(uid),manifest?{plays:manifest.plays}:null);}catch{}}
+async function remotePlays(uid,full){
+ const manifest=cloudApi.cloudManifest?await cloudApi.cloudManifest(uid):null;if(!manifest)return {plays:await loadCloud(uid),mark:null};
+ const mark=readCloudMark(uid);
+ if(!full&&mark&&manifest.plays>0&&mark.plays===manifest.plays)return {plays:records.map(p=>({...p})),mark:manifest};
+ if(!full&&mark?.plays>0){const changed=await cloudApi.loadCloudChanges(uid,mark.plays);const merged=new Map(records.map(p=>[p.id,p]));for(const p of changed)merged.set(p.id,p);return {plays:[...merged.values()],mark:manifest,partial:true};}
+ return {plays:await loadCloud(uid),mark:manifest};
+}
+async function refreshCloud(full=false){
  if(!currentUser||['loading','saving'].includes(cloudState))return;
  const uid=currentUser.uid,epoch=accountEpoch,revision=recordRevision;cloudState='loading';updateButtons();
  try{
  await syncIdentity(key(),{load:()=>loadCloudIdentity(uid),save:profile=>saveCloudIdentity(profile,uid),isCurrent:()=>epoch===accountEpoch,onChange:()=>{window.dispatchEvent?.(new Event('score-identity:changed'));renderHistory();}});
  if(epoch!==accountEpoch)return;
- const remote=await loadCloud(uid);if(epoch!==accountEpoch)return;
+ const fetched=await remotePlays(uid,full);if(epoch!==accountEpoch)return;const remote=fetched.plays;
  if(!Array.isArray(remote)||remote.some(p=>!isPlay(p)))throw Error('클라우드 기록 형식을 확인하지 못했습니다. 기기 기록을 유지합니다.');
  if(revision!==recordRevision){await sync();return;}
  const previousPending=new Set(pending),normalizedRemote=remote.map(normalizeStoredPlay),repairedIds=normalizedRemote.filter((play,index)=>play!==remote[index]).map(play=>play.id),matchedRemote=matchGameRecords(normalizedRemote);const map=new Map(matchedRemote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);for(const id of repairedIds)pending.add(id);
@@ -379,7 +393,10 @@ async function refreshCloud(){
  const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));
  if(missing.length){const backup=new Map(read(recoveryKey()).records.map(p=>[p.id,p]));for(const p of missing)backup.set(p.id,p);localStorage.setItem(recoveryKey(),JSON.stringify({records:[...backup.values()],pending:[]}));}
  const previous=records,next=[...map.values()],current=new Map(records.map(play=>[play.id,play])),changed=next.length!==records.length||next.some(play=>JSON.stringify(current.get(play.id))!==JSON.stringify(play)),pendingChanged=pending.size!==previousPending.size;if(changed)records=next;try{if(changed||pendingChanged)persist();}catch(error){records=previous;pending=previousPending;throw error;}
- await sync();if(epoch===accountEpoch)renderHistory();
+ await sync();if(epoch!==accountEpoch)return;
+ // 변경분만 받은 경우: 올리기까지 끝난 클라우드 개수가 기기 기록 수와 같아야 한다. 다르면(다른 기기에서 삭제 등) 전체를 다시 받는다.
+ if(fetched.mark&&!pending.size){if(fetched.partial&&await cloudApi.cloudCount?.(uid)!==records.length){if(epoch!==accountEpoch)return;writeCloudMark(uid,null);if(!full){await refreshCloud(true);return;}}else writeCloudMark(uid,fetched.mark);}
+ if(epoch===accountEpoch)renderHistory();
  }catch(error){if(epoch===accountEpoch){syncFailure(error);notify('클라우드 기록을 불러오지 못했습니다. 기기 기록은 유지됩니다. '+friendly(error));}}
  finally{if(epoch===accountEpoch)updateButtons();}
 }
