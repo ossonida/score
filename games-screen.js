@@ -1,20 +1,27 @@
-import './records.js?v=131';
-import {searchLocalGames,bggSearchQuery,resolveGame} from './game-catalog.js?v=95';
+import './records.js?v=132';
+import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups} from './game-catalog.js?v=95';
 import {gameKey} from './records-core.js?v=128';
-import {readGameLibrary,libraryGames,addLibraryGame} from './game-library.js?v=96';
+import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=97';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {idToken} from './cloud-records.js?v=114';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-let opened=null,timer,controller,serial=0,lastScope='';
+let opened=null,timer,controller,serial=0,lastScope='',view='all';
+const views={all:'gamesAll',owned:'gamesOwned',wishlist:'gamesWishlist'},viewLabels={owned:'보유 게임',wishlist:'위시 리스트 게임'};
+const bggCollection=()=>window.ScoreBggAccount?.state().collection||[];
 const searchRecords=context=>[...context.records,...readGameLibrary(context.key).map(game=>({game}))];
 const current=c=>{const n=api.context();return c.key===n.key&&c.epoch===n.epoch;};
 function rows(){const c=api.context();return libraryGames(c.records,readGameLibrary(c.key));}
 function artwork(game){const wrap=el('span',undefined,'library-art'),placeholder=el('span','◇','library-art-fallback'),art=el('span');wrap.setAttribute('aria-hidden','true');wrap.append(placeholder,art);renderGameArtwork(art,game);const image=art.querySelector('img');if(image)image.alt='';return wrap;}
-function render(){const scope=api.context().key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList'),context=api.context();$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const games=rows();list.replaceChildren();$('gamesCount').textContent=games.length+'개 게임';$('gamesEmpty').hidden=games.length>0;
+function render(){const scope=api.context().key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList'),context=api.context();$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view),query=$('gameSearch').value.trim(),games=query?searchableGameGroups(all,query):all;list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
+ $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':'설정에서 BGG 컬렉션을 가져오면 '+viewLabels[view]+'이 표시됩니다.';
  for(const {game,count}of games){const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',game.name+' 게임별 통계 보기');info.append(el('strong',game.name),el('small',count?'플레이 '+count+'회':'아직 플레이 기록이 없습니다.'));row.append(artwork(game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}
 }
+function selectView(next,focus){view=next;for(const [key,id] of Object.entries(views)){const tab=$(id),on=key===next;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;if(on&&focus)tab.focus();}render();}
+for(const [key,id] of Object.entries(views))$(id).onclick=()=>selectView(key);
+$('gameViewTabs').addEventListener('keydown',e=>{const keys=Object.keys(views),step={ArrowRight:1,ArrowLeft:-1}[e.key];if(!step)return;e.preventDefault();selectView(keys[(keys.indexOf(view)+step+keys.length)%keys.length],true);});
+$('gameSearch').addEventListener('input',()=>render());
 function cancel(){clearTimeout(timer);controller?.abort();serial++;$('librarySearchButton').disabled=false;$('librarySearchButton').setAttribute('aria-busy','false');}
 function close(){cancel();$('addGameDialog').close();opened=null;}
 function showResults(games,context){const box=$('librarySearchResults'),existing=new Set(rows().map(r=>r.key));box.replaceChildren();
@@ -35,5 +42,6 @@ $('closeAddGame').onclick=close;$('addGameDialog').addEventListener('close',()=>
 $('librarySearchForm').onsubmit=e=>{e.preventDefault();void search();};
 $('librarySearch').addEventListener('input',()=>{cancel();if(!opened)return;showResults(searchLocalGames($('librarySearch').value,searchRecords(opened)),opened);timer=setTimeout(search,600);});
 window.addEventListener('score-records:changed',()=>{if(opened&&!current(opened))close();render();});
+window.addEventListener('score-bgg:changed',()=>render());
 window.addEventListener('hashchange',()=>{if(location.hash!=='#games'&&opened)close();if(location.hash==='#games')render();});
 window.addEventListener('storage',e=>{if(e.key?.startsWith('score.games.v1.'))render();});render();window.ScoreStartup?.ready('games');

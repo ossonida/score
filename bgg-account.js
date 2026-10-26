@@ -8,7 +8,7 @@ function key(part){return `score.bgg.${user.uid}.${part}`;}
 function cached(part,fallback){try{return JSON.parse(localStorage.getItem(key(part)))??fallback;}catch{return fallback;}}
 function cloudFailure(error){return String(error?.code||error?.message||'').includes('permission')?'Firebase 보안 규칙에서 BGG 저장 권한을 확인해야 합니다.':'네트워크 또는 Firebase 설정을 확인해주세요.';}
 function status(text){$('bggAccountStatus').textContent=text;}
-function render(){$('bggAccountStatus').setAttribute('aria-busy',String(busy));
+function render(){window.dispatchEvent?.(new Event('score-bgg:changed'));$('bggAccountStatus').setAttribute('aria-busy',String(busy));
  $('bggAccountSection').hidden=!user;
  const username=$('bggUsername').value.trim();$('bggImport').disabled=!user||busy||!username||!bggSearchUrl;
  const box=$('bggAccountData');box.replaceChildren();

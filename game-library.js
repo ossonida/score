@@ -9,6 +9,14 @@ export function libraryGames(records,saved=[]){
  for(const play of records){if(!valid(play.game))continue;const game=resolveGame(clean(play.game),records),key=gameKey(game),row=map.get(key)||{key,game,count:0};row.count++;map.set(key,row);}
  return searchableGameGroups([...map.values()]);
 }
+// 게임 탭 보기(all·owned·wishlist): 내 목록과 BGG 컬렉션을 BGG ID로 맞춰 한 줄로 합칩니다.
+export function gameCollectionView(records,saved=[],collection=[],view='all'){
+ const items=collection.filter(item=>item&&/^[1-9][0-9]{0,9}$/.test(String(item.id))&&typeof item.name==='string'&&item.name.trim()),status=new Map();
+ for(const item of items){const s=status.get(String(item.id))||{owned:false,wishlist:false};s.owned||=item.owned===true;s.wishlist||=item.wishlist===true;status.set(String(item.id),s);}
+ const mine=libraryGames(records,saved),known=new Set(mine.map(row=>row.key)),extra=libraryGames([],items.map(item=>({name:item.name.trim().slice(0,120),bggId:String(item.id)}))).filter(row=>!known.has(row.key));
+ const rows=searchableGameGroups([...mine,...extra]).map(row=>({...row,...(status.get(row.game.bggId)||{owned:false,wishlist:false})}));
+ return view==='all'?rows:rows.filter(row=>row[view]);
+}
 export function addLibraryGame(scope,game,records=[],storage=localStorage){
  if(!valid(game))throw Error('게임 이름과 BGG ID를 확인해주세요.');
  const resolved=resolveGame(clean(game),records),key=gameKey(resolved),saved=readGameLibrary(scope,storage);

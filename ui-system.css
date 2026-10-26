@@ -157,6 +157,17 @@ dialog .actions .danger{margin-right:0}
 .library-copy{flex:1;min-width:0;display:grid;gap:6px}.library-copy h2,.library-copy strong{font-size:15px;font-weight:500;line-height:1.45;margin:0;overflow-wrap:anywhere}.library-copy p,.library-copy small{font-size:12px;color:#93a7c1;margin:0;line-height:1.5}
 #addLibraryGame.library-fab{position:fixed;right:max(20px,calc((100vw - 960px)/2 + 20px));bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom,0px) + 18px);display:grid;place-items:center;width:56px;height:56px;padding:0;border-radius:18px;background:#287dff;color:white;box-shadow:0 5px 22px #0006;z-index:45}.library-fab svg{width:26px;height:26px}
 #gamesScreen[hidden]{display:none!important}
+#gamesScreen>.settings-heading{margin-bottom:13px}
+#gamesScreen>.settings-heading>div{display:flex;align-items:baseline;gap:12px}
+#gamesScreen>.settings-heading p{margin:0}
+.game-view-tabs{display:flex;gap:7px;margin-bottom:13px}
+.game-view-tabs button{min-height:28px;padding:5px 15px;border:1px solid #26384f;border-radius:15px;background:#0d1522;color:#8fa6c3;font-size:13px;font-weight:500;line-height:1}
+.game-view-tabs button[aria-selected=true]{background:#223c5d;color:#e4f0ff}
+.game-view-tabs button:focus-visible{outline:2px solid #8fc3ff;outline-offset:2px}
+.game-search{position:relative;display:block;margin-bottom:13px}
+.game-search img{position:absolute;left:17px;top:12px;pointer-events:none}
+.game-search input{width:100%;height:49px;box-sizing:border-box;padding:0 16px 0 64px;border:1px solid #293c55;border-radius:12px;background:#0b111c;color:#f6f7fb;font-size:13px;font-weight:500}
+.game-search input::placeholder{color:#75839b}
 .library-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.library-search-row button{height:44px;padding:0 16px;border-radius:10px}
 #librarySearchResults{max-height:min(360px,35dvh);overflow:auto;overscroll-behavior:contain}
 #librarySearchResults .library-choice{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border-radius:0;border-bottom:1px solid #29364b;color:#e4edf9;text-align:left;padding:12px 0;min-width:0}
