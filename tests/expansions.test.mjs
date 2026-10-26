@@ -49,4 +49,6 @@ test('expansion choices carry collection tags and the last record preselects',()
  assert.deepEqual(lastExpansions([older,newer],base.game,choices),[cities]);
  assert.deepEqual(lastExpansions([older,newer],base.game,choices,'n'),[seafarers]);
  assert.equal(expansionLabel([seafarers]),'+ Catan: Seafarers');assert.equal(expansionLabel([seafarers,cities]),'+ 확장 2');assert.equal(expansionLabel([]),'');
+ // 확장 자체의 BGG 게임 정보를 받으면 한글 이름으로 표시합니다.
+ rememberMetadata([{id:'325',name:'Catan: Seafarers',koName:'카탄: 항해사',subtype:'boardgameexpansion',domains:[]}]);assert.equal(expansionLabel([seafarers]),'+ 카탄: 항해사');
 });
