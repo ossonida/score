@@ -1,7 +1,5 @@
-const EXCLUDED_EMAIL_HASHES=new Set([
- 'f4605ef7ee3ca9ba05d7df9241f099ef78dbaa021e6215e00d7036d94912f18c',
- '473170b5ef04948a82f911fd11d1bfa6630e2ef798b8404c457626c23e53b457'
-]);
+// 공개 저장소라 개발자 이메일(해시 포함)은 두지 않습니다. 내 방문은 한 번 ?analytics=off로 열면 그 기기에서 계속 제외됩니다.
+const EXCLUDED_EMAIL_HASHES=new Set();
 export async function isExcludedEmail(email){
  if(typeof email!=='string'||!email.trim())return false;
  const bytes=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(email.trim().toLowerCase()));
