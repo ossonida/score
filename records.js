@@ -6,8 +6,8 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=152';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=153';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=156';
-import {renderGameTitle} from './personal-dashboard.js?v=135';
+import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=157';
+import {renderGameTitle} from './personal-dashboard.js?v=157';
 import {latestPlayDate} from './stats-overview.js?v=64';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
@@ -328,7 +328,7 @@ function renderHistory(){
    // 플레이하지 않은 게임도 표지·게임명·유형은 보여 주고 나의 기록 데이터가 없다고 안내합니다.
    if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
- }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),records,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,selfHint:false,summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
+ }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),records,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
  else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});
  $('statsDetailCount').textContent=statsView==='all'?'':`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
