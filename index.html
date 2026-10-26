@@ -530,7 +530,9 @@ document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>b.closest('di
 function fitMiniScores(){const compact=window.innerWidth<=430&&window.innerHeight>500&&players.length>=1&&players.length<=2;for(const score of document.querySelectorAll('#cards .score')){if(!score.getClientRects().length)continue;const node=score.closest('.card');node.classList.toggle('mini-short-card',compact&&node.clientHeight<210);if(!compact){score.style.removeProperty('font-size');continue;}const rect=score.getBoundingClientRect(),card=node.getBoundingClientRect();const size=Math.max(12,Math.floor(Math.min(rect.height*1.1,rect.width/(Math.max(1,score.textContent.length)*.66),card.height*.68)));score.style.fontSize=size+'px';}}
 if('ResizeObserver' in window)new ResizeObserver(()=>requestAnimationFrame(fitMiniScores)).observe($('cards'));
 if(document.fonts)document.fonts.ready.then(()=>requestAnimationFrame(fitMiniScores));
-function fitDialogs(){const viewport=window.visualViewport;document.documentElement.style.setProperty('--keyboard-height',`${viewport?viewport.height:window.innerHeight}px`);document.documentElement.style.setProperty('--keyboard-top',`${viewport?viewport.offsetTop:0}px`);requestAnimationFrame(fitMiniScores);}
+// 값이 바뀔 때만 루트 변수를 고친다(스크롤마다 전체 스타일 재계산 방지).
+let fitHeight='',fitTop='',fitWidth=0;
+function fitDialogs(){const viewport=window.visualViewport,height=`${viewport?viewport.height:window.innerHeight}px`,top=`${viewport?viewport.offsetTop:0}px`;if(height===fitHeight&&top===fitTop&&window.innerWidth===fitWidth)return;fitHeight=height;fitTop=top;fitWidth=window.innerWidth;document.documentElement.style.setProperty('--keyboard-height',height);document.documentElement.style.setProperty('--keyboard-top',top);requestAnimationFrame(fitMiniScores);}
 if(window.visualViewport){window.visualViewport.addEventListener('resize',fitDialogs);window.visualViewport.addEventListener('scroll',fitDialogs);}
 window.addEventListener('resize',fitDialogs);
 let installPrompt=null;
@@ -583,11 +585,11 @@ render();
 </script>
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
-<script type="module" src="./app-analytics.js?v=119"></script>
+<script type="module" src="./app-analytics.js?v=167"></script>
 <script type="module" src="./records.js?v=166"></script>
 <script type="module" src="./bgg-account.js?v=159"></script>
 <script type="module" src="./bgg-link.js?v=127"></script>
 <script type="module" src="./settings.js?v=125"></script>
-<script type="module" src="./games-screen.js?v=125"></script>
+<script type="module" src="./games-screen.js?v=167"></script>
 </body>
 </html>

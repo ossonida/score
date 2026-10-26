@@ -10,7 +10,9 @@ export const scoreGames=[
  {name:'탁구',aliases:['Table Tennis','Ping Pong','핑퐁'],type:'sports',image:'./assets/score-games/table-tennis.webp'}
 ];
 const normalize=value=>String(value??'').normalize('NFKC').toLocaleLowerCase().replace(/[\s:’'–—-]+/g,'');
-export function scoreGame(game){const name=typeof game==='string'?game:game?.name,key=normalize(name);return scoreGames.find(item=>[item.name,...item.aliases].some(alias=>normalize(alias)===key))||null;}
+// 별칭 정규화는 한 번만 한다(게임 목록·표지 렌더마다 반복 호출됨).
+const aliasIndex=new Map();for(const item of scoreGames)for(const alias of [item.name,...item.aliases]){const k=normalize(alias);if(!aliasIndex.has(k))aliasIndex.set(k,item);}
+export function scoreGame(game){const name=typeof game==='string'?game:game?.name;return aliasIndex.get(normalize(name))||null;}
 export function isScoreGame(game){return Boolean(scoreGame(game));}
 export function scoreGameType(game){return scoreGame(game)?.type||'';}
 export function searchScoreGames(query){const key=normalize(query);if(!key)return [];return scoreGames.filter(item=>[item.name,...item.aliases].some(alias=>normalize(alias).includes(key)));}

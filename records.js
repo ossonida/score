@@ -9,7 +9,7 @@ import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=164';
 import {renderGameTitle} from './personal-dashboard.js?v=157';
 import {latestPlayDate} from './stats-overview.js?v=164';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=95';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=167';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity} from './personal-stats.js?v=115';
 import {renderStatsDashboard} from './stats-dashboard.js?v=98';
@@ -17,7 +17,7 @@ import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './peri
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
 import {mergeImported} from './data-transfer.js?v=66';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=164';
-import {isScoreGame,scoreGameType} from './score-games.js?v=163';
+import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=162';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=166';

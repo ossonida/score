@@ -6,7 +6,8 @@ const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
 window[disableKey]=true;
 const analytics=createFeatureAnalytics({
  storage:sessionStorage,
- send:(name,params)=>{if(window[disableKey]||typeof window.gtag!=='function')return;window.gtag('event',name,params);}
+ // 전송은 화면 전환이 끝난 뒤 한가할 때 한다.
+ send:(name,params)=>{if(window[disableKey]||typeof window.gtag!=='function')return;(window.requestIdleCallback||setTimeout)(()=>window.gtag('event',name,params),{timeout:2000});}
 });
 window.ScoreAnalytics=analytics;
 

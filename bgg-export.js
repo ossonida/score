@@ -1,5 +1,5 @@
 import {bggPlayFingerprint} from './bgg-play-format.js?v=152';
-import {isScoreGame} from './score-games.js?v=163';
+import {isScoreGame} from './score-games.js?v=167';
 const uncertain=new Set(['pending','unknown']);
 
 export async function planBggExport(records,uploads={},limit=20,username=''){
