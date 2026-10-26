@@ -1,5 +1,5 @@
-import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=129';
-import {metadata,bggId} from './bgg-metadata.js?v=89';
+import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=152';
+import {metadata,bggId} from './bgg-metadata.js?v=152';
 import {scoreGameType} from './score-games.js?v=119';
 import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';

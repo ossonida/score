@@ -1,4 +1,4 @@
-import {bggPlayFingerprint} from './bgg-play-format.js?v=126';
+import {bggPlayFingerprint} from './bgg-play-format.js?v=152';
 import {isScoreGame} from './score-games.js?v=119';
 const uncertain=new Set(['pending','unknown']);
 

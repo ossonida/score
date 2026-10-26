@@ -1,12 +1,12 @@
-import './records.js?v=138';
+import './records.js?v=152';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=95';
-import {gameKey} from './records-core.js?v=129';
+import {gameKey} from './records-core.js?v=152';
 import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=99';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {idToken} from './cloud-records.js?v=115';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {gameNames} from './bgg-metadata.js?v=89';
+import {gameNames} from './bgg-metadata.js?v=152';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;

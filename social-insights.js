@@ -1,4 +1,4 @@
-import {gameKey,winnerIds,recordMode,playerOutcome} from './records-core.js?v=129';
+import {gameKey,winnerIds,recordMode,playerOutcome} from './records-core.js?v=152';
 import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=115';
 import {latestPlayDate} from './stats-overview.js?v=64';
 const scored=p=>typeof p.score==='number'&&Number.isFinite(p.score);

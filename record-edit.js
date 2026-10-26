@@ -1,4 +1,11 @@
-import {isPlay,recordMode} from './records-core.js?v=129';
+import {isPlay,recordMode} from './records-core.js?v=152';
+// 사용한 확장만 바꾸고 다른 값은 그대로 둡니다. 빈 목록이면 필드를 지웁니다.
+export function setRecordExpansions(play,list){
+ const next=(Array.isArray(list)?list:[]).map(x=>({id:String(x?.id||''),name:String(x?.name||'').trim()})),before=JSON.stringify(play.expansions||[]);
+ if(JSON.stringify(next)===before)return play;
+ const updated={...play};if(next.length)updated.expansions=next;else delete updated.expansions;
+ if(!isPlay(updated))throw Error('사용한 확장을 확인해주세요.');return updated;
+}
 export function editRecordedPlayer(play,playerId,field,value){
  if(!play.players.some(p=>p.id===playerId))throw Error('플레이어를 찾을 수 없습니다.');
  if(['cooperativeResult','sharedScore'].includes(field)){
