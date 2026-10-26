@@ -36,16 +36,24 @@ async function importPublic(){
  if(username!==cached('profile',{}).username){status('BGG 연결 정보를 다시 확인해주세요.');return;}
  busy=true;render();let updated=0,cloudFailed=false;const counts={collection:0,plays:0};
  try{
+  // 컬렉션은 BGG가 준비 중(202)으로 자주 기다리게 하므로 플레이 기록 첫 페이지와 동시에 요청합니다.
+  // 동시에 시작하는 요청이 같은 로그인 토큰을 쓰도록 한 번만 받습니다.
+  let token;const fetchPage=(action,page)=>fetchBggPublicPage({endpoint:bggSearchUrl,action,username,page,getToken:()=>token||=idToken(uid),isCurrent:()=>version===epoch,onWaiting:retry=>status(`BGG가 정보를 준비 중입니다 · 다시 확인 중 ${retry}/2`)});
+  const first={collection:fetchPage('collection',1),plays:fetchPage('plays',1)};for(const request of Object.values(first))request.catch(()=>{});
+  status('보유 게임과 플레이 기록 가져오는 중');
   for(const action of ['collection','plays']){
-   let page=1,total=Infinity,items=[];
+   let page=1,total=Infinity,items=[],skipped=false;
    do{
-    status(`${action==='collection'?'보유 게임':'플레이 기록'} 가져오는 중 · ${page}페이지`);
-    const data=await fetchBggPublicPage({endpoint:bggSearchUrl,action,username,page,getToken:()=>idToken(uid),isCurrent:()=>version===epoch,onWaiting:retry=>status(`BGG가 정보를 준비 중입니다 · 다시 확인 중 ${retry}/2`)});if(version!==epoch)return;
+    if(page>1)status(`플레이 기록 가져오는 중 · ${page}페이지`);
+    const data=await(page===1?first[action]:fetchPage(action,page));if(version!==epoch)return;
     if(!Array.isArray(data.items))throw Error('BGG 응답 형식을 확인해주세요.');const rows=data.items;
     if(rows.length>(action==='plays'?100:10000)||rows.some(r=>!validBggItem(r,action)))throw Error('BGG 응답 형식을 확인해주세요.');
     items.push(...rows);total=Number(data.total)||items.length;page++;
     if(action==='collection'||!rows.length)break;
+    // BGG 전체 플레이 수와 첫 페이지가 저장분과 같으면 나머지 페이지는 건너뜁니다. 오래된 기록 수정도 반영하도록 7일마다 한 번은 전체를 받습니다.
+    if(page===2){const saved=cached('plays',[]),known=new Map(safeBggItems(saved,'plays').map(item=>[item.id,sameShape(item)]));if(Date.now()-Number(cached('playsFullAt',0))<7*86400000&&saved.length===Math.min(total,1000)&&safeBggItems(rows,'plays').every(item=>known.get(item.id)===sameShape(item))){items=saved;skipped=true;break;}}
    }while(items.length<total&&page<=10);
+   if(action==='plays'&&!skipped)try{localStorage.setItem(key('playsFullAt'),String(Date.now()));}catch{}
    items=[...new Map(items.map(p=>[p.id,p])).values()];
    const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),removed=previous.filter(item=>!items.some(next=>next.id===item.id)),pendingCloud=cached(action+'Pending',false);
    if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;counts[action]=changed.length+removed.length;}if(action==='collection')collection=items;else plays=items;render();
