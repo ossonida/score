@@ -1,6 +1,6 @@
 // Score 자체 게임은 BGG와 연결하지 않으며 이름으로만 식별합니다.
 export const scoreGames=[
- {name:'홀덤',aliases:['텍사스 홀덤','Texas Hold’em','Texas Holdem','Hold’em','Holdem'],type:'strategy',image:'./assets/score-games/holdem.webp'},
+ {name:'홀덤',aliases:['텍사스 홀덤','Texas Hold’em','Texas Holdem','Hold’em','Holdem'],type:'sports',image:'./assets/score-games/holdem.webp'},
  {name:'테니스',aliases:['Tennis'],type:'sports',image:'./assets/score-games/tennis.webp'},
  {name:'볼링',aliases:['Bowling'],type:'sports',image:'./assets/score-games/bowling.webp'},
  {name:'당구',aliases:['Billiards','Pool'],type:'sports',image:'./assets/score-games/billiards.webp'},

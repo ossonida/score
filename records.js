@@ -17,7 +17,7 @@ import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './peri
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
 import {mergeImported} from './data-transfer.js?v=66';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=95';
-import {isScoreGame,scoreGameType} from './score-games.js?v=119';
+import {isScoreGame,scoreGameType} from './score-games.js?v=163';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=162';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,mobileDevice} from './cloud-records.js?v=159';
