@@ -1,4 +1,4 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=128';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=129';
 import {missionName,missionRange} from './mission-names.js?v=3';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});

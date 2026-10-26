@@ -1,6 +1,6 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
-import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=127';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=114';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=128';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData} from './cloud-records.js?v=115';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id);
 let user=null,epoch=0,busy=false,collection=[],plays=[];

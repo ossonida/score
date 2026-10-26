@@ -18,14 +18,19 @@ service cloud.firestore {
     match /users/{uid}/{kind}/{itemId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays'];
       allow create, update: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays']
-        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username'])
+        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username','owned','wishlist','wantToPlay','numPlays','thumbnail'])
         && request.resource.data.id == itemId && itemId.matches('^[1-9][0-9]{0,19}$')
         && request.resource.data.gameId is string && request.resource.data.gameId.matches('^[1-9][0-9]{0,9}$')
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 300
         && request.resource.data.username is string && request.resource.data.username.size() > 0 && request.resource.data.username.size() <= 64
         && ((kind == 'bggCollection' && request.resource.data.keys().hasAll(['id','gameId','name','username'])
           && request.resource.data.id == request.resource.data.gameId
-          && (!('year' in request.resource.data) || request.resource.data.year is string && request.resource.data.year.size() <= 10))
+          && (!('year' in request.resource.data) || request.resource.data.year is string && request.resource.data.year.size() <= 10)
+          && (!('owned' in request.resource.data) || request.resource.data.owned is bool)
+          && (!('wishlist' in request.resource.data) || request.resource.data.wishlist is bool)
+          && (!('wantToPlay' in request.resource.data) || request.resource.data.wantToPlay is bool)
+          && (!('numPlays' in request.resource.data) || request.resource.data.numPlays is int && request.resource.data.numPlays >= 0 && request.resource.data.numPlays <= 100000)
+          && (!('thumbnail' in request.resource.data) || request.resource.data.thumbnail is string && request.resource.data.thumbnail.size() <= 2048 && request.resource.data.thumbnail.matches('^https://cf[.]geekdo-images[.]com/.*')))
           || (kind == 'bggPlays' && request.resource.data.keys().hasAll(['id','gameId','name','username','date','quantity','players'])
           && request.resource.data.date is string && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
           && request.resource.data.quantity is int && request.resource.data.quantity > 0 && request.resource.data.quantity <= 10000

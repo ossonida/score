@@ -1,22 +1,27 @@
-import './records.js?v=132';
+import './records.js?v=133';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups} from './game-catalog.js?v=95';
-import {gameKey} from './records-core.js?v=128';
-import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=97';
+import {gameKey} from './records-core.js?v=129';
+import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=98';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {idToken} from './cloud-records.js?v=114';
+import {idToken} from './cloud-records.js?v=115';
 import {bggSearchUrl} from './firebase-config.js?v=64';
+import {enrichGames} from './bgg-details-client.js?v=64';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
-let opened=null,timer,controller,serial=0,lastScope='',view='all';
-const views={all:'gamesAll',owned:'gamesOwned',wishlist:'gamesWishlist'},viewLabels={owned:'보유 게임',wishlist:'위시 리스트 게임'};
-const bggCollection=()=>window.ScoreBggAccount?.state().collection||[];
+let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;
+const views={all:'gamesAll',played:'gamesPlayed',wantToPlay:'gamesWantToPlay',owned:'gamesOwned',wishlist:'gamesWishlist'},viewLabels={wantToPlay:'하고 싶은 게임',owned:'보유 게임',wishlist:'위시 리스트 게임'};
+const bggState=()=>window.ScoreBggAccount?.state()||{collection:[],plays:[]},bggCollection=()=>bggState().collection||[];
+const playText=(count,bgg)=>[count?'플레이 '+count+'회':'',bgg?'BGG 플레이 '+bgg+'회':''].filter(Boolean).join(' · ')||'아직 플레이 기록이 없습니다.';
+// BGG 컬렉션 표지가 없는 게임은 로그인 상태에서 BGG 게임 정보로 표지를 보충합니다.
+async function enrichArtwork(context,games){if(enriching||!bggSearchUrl||!context.key.startsWith('score.plays.v1.user.'))return;enriching=true;try{const token=await idToken(context.key.slice('score.plays.v1.user.'.length));if(!current(context))return;await enrichGames(games.filter(row=>!row.thumbnail).map(row=>row.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(current(context))render();}});}catch{}finally{enriching=false;}}
 const searchRecords=context=>[...context.records,...readGameLibrary(context.key).map(game=>({game}))];
 const current=c=>{const n=api.context();return c.key===n.key&&c.epoch===n.epoch;};
 function rows(){const c=api.context();return libraryGames(c.records,readGameLibrary(c.key));}
 function artwork(game){const wrap=el('span',undefined,'library-art'),placeholder=el('span','◇','library-art-fallback'),art=el('span');wrap.setAttribute('aria-hidden','true');wrap.append(placeholder,art);renderGameArtwork(art,game);const image=art.querySelector('img');if(image)image.alt='';return wrap;}
-function render(){const scope=api.context().key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList'),context=api.context();$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view),query=$('gameSearch').value.trim(),games=query?searchableGameGroups(all,query):all;list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
- $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':'설정에서 BGG 컬렉션을 가져오면 '+viewLabels[view]+'이 표시됩니다.';
- for(const {game,count}of games){const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',game.name+' 게임별 통계 보기');info.append(el('strong',game.name),el('small',count?'플레이 '+count+'회':'아직 플레이 기록이 없습니다.'));row.append(artwork(game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}
+function render(){const scope=api.context().key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList'),context=api.context();$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view,bggState().plays||[]),query=$('gameSearch').value.trim(),games=query?searchableGameGroups(all,query):all;list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
+ $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':view==='played'?'아직 플레이한 게임이 없습니다. 기록을 저장하거나 BGG 정보를 가져오면 표시됩니다.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':'설정에서 BGG 컬렉션을 가져오면 '+viewLabels[view]+'이 표시됩니다.';
+ for(const {game,count,bggPlays,thumbnail}of games){const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',game.name+' 게임별 통계 보기');info.append(el('strong',game.name),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}
+ void enrichArtwork(context,all);
 }
 function selectView(next,focus){view=next;for(const [key,id] of Object.entries(views)){const tab=$(id),on=key===next;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;if(on&&focus)tab.focus();}render();}
 for(const [key,id] of Object.entries(views))$(id).onclick=()=>selectView(key);

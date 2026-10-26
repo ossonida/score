@@ -1,13 +1,13 @@
-import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=128';
+import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=129';
 import {metadata,bggId} from './bgg-metadata.js?v=64';
 import {scoreGameType} from './score-games.js?v=119';
 import {missionCleared,missionName} from './mission-names.js?v=3';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=95';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=64';
-import {nameKey} from './personal-stats.js?v=114';
+import {nameKey} from './personal-stats.js?v=115';
 import {bggSearchUrl} from './firebase-config.js';
 import {starterGames} from './game-catalog.js?v=95';
-import {summarizeStats} from './stats-insights.js?v=65';
+import {summarizeStats} from './stats-insights.js?v=66';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
