@@ -106,7 +106,7 @@ function openGuestRecordAction(action){
 function updateButtons(){
  updateGuestRecordActions();
  // 로그인 확인 전에도 마지막 로그인 계정이 있으면 그 계정으로 바로 표시한다.
- const accountShown=authReady||!!offlineUid;$('authChecking').hidden=accountShown;$('accountName').hidden=!accountShown;$('accountStorage').hidden=!accountShown;
+ const accountShown=authReady||!!offlineUid;$('deviceDataClear').hidden=!authReady||!!currentUser;$('authChecking').hidden=accountShown;$('accountName').hidden=!accountShown;$('accountStorage').hidden=!accountShown;
  const working=!!currentUser&&['loading','saving'].includes(cloudState),progress=cloudState==='saving'?'기록 동기화 중…':'기록 불러오는 중…';
  $('cloudProgress').hidden=!working;$('cloudProgress').textContent=working?progress:'';
  $('accountStorage').setAttribute('aria-busy',String(working));$('cloudSync').setAttribute('aria-busy',String(working));$('cloudSync').disabled=working;$('cloudSync').textContent=working?(cloudState==='saving'?'동기화 중…':'불러오는 중…'):'클라우드 동기화';
@@ -402,7 +402,11 @@ async function refreshCloud(full=false){
 }
 $('accountLogin').onclick=async()=>{const button=$('accountLogin');button.disabled=true;button.setAttribute('aria-busy','true');$('accountError').textContent='';try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 잠시 후 다시 시도해주세요.');await login();}catch(e){message('accountError',friendly(e));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
 $('accountLogout').onclick=async()=>{try{await logout();$('accountError').textContent='';notify('로그아웃했습니다.');}catch(e){message('accountError',friendly(e));}};
-$('cloudSync').onclick=refreshCloud;
+// 클라우드 동기화 버튼이 기록과 BGG 정보 받기를 함께 시작한다.
+$('cloudSync').onclick=async()=>{window.dispatchEvent?.(new Event('score-cloud:pull'));await refreshCloud();};
+// 로그아웃 상태에서 이 앱이 이 기기에 저장한 데이터(score.·pointer. 키)를 모두 지운다. 클라우드는 건드리지 않는다.
+function clearDeviceData(){for(const storage of [localStorage,globalThis.sessionStorage].filter(Boolean)){const keys=[];for(let index=0;index<storage.length;index++){const name=storage.key(index);if(/^(score\.|pointer\.)/.test(name))keys.push(name);}for(const name of keys)storage.removeItem(name);}}
+$('deviceDataClear').onclick=()=>{if(currentUser||!authReady)return;api.confirm('이 기기 데이터 모두 지우기','이 기기에 저장된 기록, 작성 중인 초안, 닉네임 설정, BGG 정보를 모두 지웁니다. 클라우드에 올리지 않은 기록은 되돌릴 수 없습니다. 클라우드에 저장된 데이터는 지우지 않습니다.',()=>{if(currentUser)return;try{clearDeviceData();}catch(error){message('accountError','기기 데이터를 지우지 못했습니다. '+friendly(error));return;}location.reload();});};
 $('recoverRecords').onclick=()=>{const context={key:key(),epoch:accountEpoch},items=recoveryRecords();api.confirm('기기 기록 복구',items.length+'개 기록을 계정에 다시 저장할까요? 다른 기기에서 삭제한 기록도 포함될 수 있습니다.',async()=>{try{checkRecordContext(context);const old=records,oldPending=new Set(pending);const restored=recoveryRecords();records=[...records,...restored];for(const p of restored)pending.add(p.id);try{persist();}catch(error){records=old;pending=oldPending;throw error;}window.ScoreAnalytics?.feature('account','recovery_completed');renderHistory();updateButtons();await sync();}catch(error){message('accountError',error);}});};
 $('guestUpload').onclick=()=>openGuestRecordAction('merge');
 $('guestDelete').onclick=()=>openGuestRecordAction('delete');
