@@ -1,4 +1,4 @@
-import {metadata} from './bgg-metadata.js?v=161';
+import {metadata} from './bgg-metadata.js?v=162';
 import {gameKey,winnerIds} from './records-core.js?v=152';
 import {meIn,nameKey} from './personal-stats.js?v=115';
 import {scoreGameType} from './score-games.js?v=119';

@@ -3,7 +3,7 @@ import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=152';
 import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=161';
 import {readIdentity,meIn} from './personal-stats.js?v=115';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {metadata,gameNames} from './bgg-metadata.js?v=161';
+import {metadata,gameNames} from './bgg-metadata.js?v=162';
 import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=141';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
