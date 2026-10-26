@@ -6,7 +6,7 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 // Browsers treat ./x.js?v=1 and ./x.js?v=2 as two module instances, so one file must be referenced with one version.
 // Pre-existing mismatches below are known debt; remove an entry once its imports are aligned. Never add new ones.
-const KNOWN_MIXED={'bgg-metadata.js':['64','88'],'game-artwork.js':['64','95'],'game-catalog.js':['64','76','95'],'stats-overview.js':['64','76']};
+const KNOWN_MIXED={'game-artwork.js':['64','95'],'game-catalog.js':['64','76','95'],'stats-overview.js':['64','76']};
 function versionRefs(){
  const refs=new Map(),add=(file,version,where)=>{if(!refs.has(file))refs.set(file,new Map());const versions=refs.get(file);versions.set(version,[...(versions.get(version)||[]),where]);};
  const html=fs.readFileSync(resolve(root,'index.html'),'utf8');for(const m of html.matchAll(/(?:src|href)="\.\/([\w.-]+\.js)\?v=(\d+)"/g))add(m[1],m[2],'index.html');

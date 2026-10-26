@@ -3,7 +3,8 @@ import {gameKey,recordMode,modeLabels,modeStats} from './records-core.js?v=129';
 import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=76';
 import {readIdentity,meIn} from './personal-stats.js?v=115';
 import {renderGameArtwork} from './game-artwork.js?v=95';
-import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=140';
+import {metadata,gameNames} from './bgg-metadata.js?v=89';
+import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=141';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
@@ -32,6 +33,10 @@ function renderHighlights(container,records,profile,onRecord){
  const best=el('section',undefined,'insight-card');best.append(el('h3','개인 최고점'));for(const {play,me,improved}of data.personal)highlightRow(best,play,me.score.toLocaleString('ko-KR')+'점', (play.rule==='lowest'?'이날 최저점':'이날 최고점')+(improved?' · 개인 기록 갱신':''),onRecord);if(!data.personal.length)note(best,'내 플레이어와 점수가 지정된 경쟁 기록이 필요합니다.');else note(best,'이날의 내 최고 성적을 게임별로 표시합니다. 낮은 점수 승리 게임은 최저점 기준입니다.');container.append(best);
 }
 // 게임별 통계: 선택한 게임 기록만으로 나의 라이벌 카드를 덧붙입니다.
+// 게임별 통계 · 나의 라이벌 아래에 BGG에 등록된 이 게임의 확장판을 보여 줍니다(BGG 게임 정보를 받아 둔 경우).
+export function renderGameExpansions(container,game,collection=[]){const list=metadata(game)?.expansions||[];if(!list.length)return;const mine=new Map(collection.map(item=>[String(item.id),item])),card=el('section',undefined,'insight-card expansion-card'),items=el('ul',undefined,'expansion-list');if(card.style)card.style.marginTop='14px';card.append(el('h3','확장판'));
+ for(const expansion of list.slice(0,30)){const row=el('li'),link=el('a',gameNames({name:expansion.name,bggId:expansion.id}).ko,'expansion-link'),status=mine.get(expansion.id),tags=[status?.owned?'보유':'',status?.wishlist?'위시':'',status?.wantToPlay?'하고 싶은':''].filter(Boolean);link.href='https://boardgamegeek.com/boardgame/'+expansion.id;link.target='_blank';link.rel='noopener noreferrer';row.append(link);if(tags.length)row.append(el('span',tags.join(' · '),'expansion-tag'));items.append(row);}
+ card.append(items);if(list.length>30)note(card,`외 ${list.length-30}개는 BGG에서 확인할 수 있습니다.`);const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);}
 export function renderGameRivals(container,records,{scope,onRecord}){const box=el('div');renderRivals(box,records,readIdentity(scope),onRecord);const card=[...(box.children||[])][0]||box.firstChild;if(!card)return;if(card.style)card.style.marginTop='14px';const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);}
 function renderRivals(container,records,profile,onRecord){
  const rivals=rivalStats(records,profile),card=el('section',undefined,'insight-card rival-card');card.append(el('h3','나의 라이벌'));

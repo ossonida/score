@@ -4,7 +4,7 @@ import {XMLParser} from 'fast-xml-parser';
 import {verifyFirebaseToken} from './auth.js';
 import {bearerToken,boundedXml} from '../functions/request-security.js';
 import {gameDetails} from '../functions/game-details.js';
-import {collectionData,playsData} from '../functions/bgg-data.js';
+import {collectionData,playsData,decodeEntities} from '../functions/bgg-data.js';
 export {BggLimits} from './limits.js';
 const ORIGINS=new Set(['https://ossonida.github.io','https://localhost','capacitor://localhost']);
 const MAX_COVER_BYTES=5*1024*1024;
@@ -105,15 +105,14 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
    if(parsed.errors||parsed.error){const internal=JSON.stringify(parsed.errors||parsed.error);if(/invalid username|user(?:name)? not found|invalid user|unknown user/i.test(internal))return failure('BGG_USER_NOT_FOUND',400);return failure('BGG_API_ERROR');}
    if(action==='details'){if(!parsed.items)throw Error();return reply(200,{games:gameDetails(parsed)});}
    if(action==='collection'){if(!parsed.items)throw Error();for(const item of parsed.items.item||[])if(Array.isArray(item.name))item.name=item.name[0];
-    // 진단: BGG가 돌려준 컬렉션 생성 시각과 하고 싶은 게임 목록을 Cloudflare 로그에 남깁니다(토큰·쿠키 값은 남기지 않음).
-    const rows=parsed.items.item||[];console.log(JSON.stringify({diag:'bgg-collection',username:url.searchParams.get('username'),pubdate:String(parsed.items['@_pubdate']||''),totalitems:String(parsed.items['@_totalitems']||''),rows:rows.length,withCookie:Boolean(options.headers.Cookie),upstream:Object.fromEntries(['date','age','last-modified','cache-control','cf-cache-status','x-cache','expires'].map(name=>[name,response.headers.get(name)]).filter(([,value])=>value)),wantToPlay:rows.filter(row=>String(row?.status?.['@_wanttoplay']||'')==='1').map(row=>({id:String(row['@_objectid']||''),collid:String(row['@_collid']||''),name:String(row.name?.['#text']??row.name??'').slice(0,80),lastmodified:String(row.status?.['@_lastmodified']||'')}))}));
-    return reply(200,collectionData(parsed));}
+    // BGG는 컬렉션 자료를 미리 만들어 두고 주므로, 만든 시각(pubdate)을 함께 돌려 반영 지연을 안내합니다.
+    return reply(200,{...collectionData(parsed),pubdate:String(parsed.items['@_pubdate']||'').slice(0,64)});}
    if(action==='plays'){
     if(!parsed.plays)throw Error();for(const play of parsed.plays.play||[])if(Array.isArray(play.item))play.item=play.item[0];
     return reply(200,playsData(parsed));
    }
    if(!parsed.items)throw Error();
-   const games=(parsed.items.item||[]).slice(0,40).map(item=>{const names=item.name||[],name=names.find(n=>n?.['@_type']==='primary')||names[0];return {id:String(item['@_id']),name:String(name?.['@_value']||''),year:String(item.yearpublished?.['@_value']||'')};}).filter(g=>/^[1-9][0-9]{0,9}$/.test(g.id)&&g.name);
+   const games=(parsed.items.item||[]).slice(0,40).map(item=>{const names=item.name||[],name=names.find(n=>n?.['@_type']==='primary')||names[0];return {id:String(item['@_id']),name:decodeEntities(String(name?.['@_value']||'')),year:String(item.yearpublished?.['@_value']||'')};}).filter(g=>/^[1-9][0-9]{0,9}$/.test(g.id)&&g.name);
    return reply(200,{games});
   }catch(error){if(error?.name==='TimeoutError'||error?.name==='AbortError')return failure('BGG_TIMEOUT',504);if(error?.message==='Response too large')return failure('BGG_RESPONSE_TOO_LARGE');return failure(phase==='network'?'BGG_NETWORK_ERROR':phase==='body'?'BGG_BODY_REJECTED':'BGG_INVALID_XML');}
  };

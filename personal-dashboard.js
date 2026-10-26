@@ -1,7 +1,7 @@
 import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=129';
 import {missionName,missionRange} from './mission-names.js?v=3';
 import {renderModeStats,cooperativeStats} from './record-view.js?v=133';
-import {metadata,domainLabels} from './bgg-metadata.js?v=64';
+import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=89';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=115';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
@@ -23,12 +23,14 @@ export function renderIdentitySettings(container,records,scope,onChange){
  }
  select.onchange=()=>{const next={primary:select.value,aliases:select.value?(profile?.aliases||[]).filter(x=>x!==select.value):[]};if(!save(next))select.value=profile?.primary||'';draw();};form.onsubmit=event=>event.preventDefault();draw();container.append(form);
 }
+// 게임별 통계 머리: 표지, 한글 게임명과 그 아래 영문명, 유형. 기록이 없는 게임에도 씁니다.
+export function renderGameTitle(game){const names=gameNames(game),title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',names.ko+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',names.ko||'게임 통계'));if(names.en)copy.append(el('p',names.en,'game-alt-name'));copy.append(el('p',types.join(' · '),'game-type-label'));title.append(art,copy);return title;}
 export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{}}={}){
  const previousRule=container.querySelector('.personal-rule')?.value;
  container.replaceChildren();
  const profile=readIdentity(scope),game=records[0]?.game;
  const overview=el('section',undefined,'insight-hero game-overview');
- const title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',game.name+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',game?.name||'게임 통계'),el('p',types.join(' · '),'game-type-label'));title.append(art,copy);overview.append(title);
+ overview.append(renderGameTitle(game));
  const scores=records.filter(p=>['highest','lowest'].includes(recordMode(p))).flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
  const best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null;
  const metrics=el('div',undefined,'insight-metrics');
