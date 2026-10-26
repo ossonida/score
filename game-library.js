@@ -1,4 +1,4 @@
-import {resolveGame,searchableGameGroups} from './game-catalog.js?v=95';
+import {resolveGame,searchableGameGroups} from './game-catalog.js?v=164';
 import {gameKey} from './records-core.js?v=152';
 const valid=g=>g&&typeof g.name==='string'&&g.name.trim().length>0&&g.name.trim().length<=120&&(!g.bggId||/^[1-9][0-9]{0,9}$/.test(String(g.bggId)));
 const clean=g=>({name:g.name.trim(),bggId:String(g.bggId||'')});

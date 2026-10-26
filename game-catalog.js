@@ -1,4 +1,4 @@
-import {koreanAliases,wikidataGames} from './korean-game-names.js?v=127';
+import {koreanAliases,wikidataGames} from './korean-game-names.js?v=164';
 import {scoreGames,searchScoreGames,isScoreGame} from './score-games.js?v=163';
 // Curated public game names and exact aliases, not the complete live BGG database.
 const bundledGames = [
@@ -1279,7 +1279,7 @@ export function gameResolver(plays=[]){
 }
 const resolveCatalogGame=gameResolver();
 export function resolveGame(game,plays=[]){return plays.length?gameResolver(plays)(game):resolveCatalogGame(game);}
-function koreanGameName(game){if(!game?.bggId||/[가-힣]/.test(game.name))return game.name;return (koreanAliases[String(game.bggId)]||[]).find(name=>/[가-힣]/.test(name))||(wikiById.get(String(game.bggId))?.aliases||[]).find(name=>/[가-힣]/.test(name))||game.name;}
+function koreanGameName(game){const curated=koreanAliases[String(game?.bggId)]||[];if(!game?.bggId||/[가-힣]/.test(game.name)&&!curated.includes(game.name))return game.name;return curated.find(name=>/[가-힣]/.test(name))||(wikiById.get(String(game.bggId))?.aliases||[]).find(name=>/[가-힣]/.test(name))||game.name;}
 export function matchGameRecords(plays){const resolve=gameResolver(plays);return plays.map(play=>{const resolved=resolve(play.game),name=koreanGameName(resolved),game=name===resolved.name?resolved:{...resolved,name};return game===play.game?play:{...play,game};});}
 
 const alphabeticalNames=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
