@@ -104,7 +104,10 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
    const parsed=parser.parse(xml);
    if(parsed.errors||parsed.error){const internal=JSON.stringify(parsed.errors||parsed.error);if(/invalid username|user(?:name)? not found|invalid user|unknown user/i.test(internal))return failure('BGG_USER_NOT_FOUND',400);return failure('BGG_API_ERROR');}
    if(action==='details'){if(!parsed.items)throw Error();return reply(200,{games:gameDetails(parsed)});}
-   if(action==='collection'){if(!parsed.items)throw Error();for(const item of parsed.items.item||[])if(Array.isArray(item.name))item.name=item.name[0];return reply(200,collectionData(parsed));}
+   if(action==='collection'){if(!parsed.items)throw Error();for(const item of parsed.items.item||[])if(Array.isArray(item.name))item.name=item.name[0];
+    // 진단: BGG가 돌려준 컬렉션 생성 시각과 하고 싶은 게임 목록을 Cloudflare 로그에 남깁니다(토큰·쿠키 값은 남기지 않음).
+    const rows=parsed.items.item||[];console.log(JSON.stringify({diag:'bgg-collection',username:url.searchParams.get('username'),pubdate:String(parsed.items['@_pubdate']||''),totalitems:String(parsed.items['@_totalitems']||''),rows:rows.length,withCookie:Boolean(options.headers.Cookie),upstream:Object.fromEntries(['date','age','last-modified','cache-control','cf-cache-status','x-cache','expires'].map(name=>[name,response.headers.get(name)]).filter(([,value])=>value)),wantToPlay:rows.filter(row=>String(row?.status?.['@_wanttoplay']||'')==='1').map(row=>({id:String(row['@_objectid']||''),collid:String(row['@_collid']||''),name:String(row.name?.['#text']??row.name??'').slice(0,80),lastmodified:String(row.status?.['@_lastmodified']||'')}))}));
+    return reply(200,collectionData(parsed));}
    if(action==='plays'){
     if(!parsed.plays)throw Error();for(const play of parsed.plays.play||[])if(Array.isArray(play.item))play.item=play.item[0];
     return reply(200,playsData(parsed));
