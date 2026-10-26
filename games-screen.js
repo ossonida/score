@@ -1,4 +1,4 @@
-import './records.js?v=166';
+import './records.js?v=169';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=164';
 import {gameKey} from './records-core.js?v=152';
 import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=99';
@@ -6,7 +6,7 @@ import {renderGameArtwork} from './game-artwork.js?v=167';
 import {idToken} from './cloud-records.js?v=166';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {gameNames} from './bgg-metadata.js?v=162';
+import {gameNames} from './bgg-metadata.js?v=169';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;

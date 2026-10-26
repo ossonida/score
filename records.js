@@ -18,7 +18,7 @@ import {renderPeriodDashboard} from './period-dashboard.js?v=4';
 import {mergeImported} from './data-transfer.js?v=66';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=164';
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
-import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=162';
+import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=169';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=166';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -311,7 +311,7 @@ function renderHistory(){
  records=matchGameRecords(records);
  void enrichRecordGames();
  // 기간 분석·게임별 통계는 내가 플레이어로 참여한 기록만 집계한다(최근 기록은 전체).
- const mine=records.filter(p=>meIn(p,readIdentity(key()))),allGroups=gameStats(mine),groups=searchableGameGroups(allGroups),select=$('recordFilter'),selected=statsGameTarget||select.value;statsGameTarget='';
+ const mine=(profile=>records.filter(p=>meIn(p,profile)))(readIdentity(key())),allGroups=gameStats(mine),groups=searchableGameGroups(allGroups),select=$('recordFilter'),selected=statsGameTarget||select.value;statsGameTarget='';
  select.replaceChildren(node('option','게임 선택'));select.firstChild.textContent='게임 선택';select.firstChild.value='';select.firstChild.disabled=groups.length>0;
  for(const g of groups){const o=node('option',`${g.game.name} (${g.count}회)`);o.value=g.key;select.append(o);}
  if(statsGameTargetGame&&statsGameTargetGame.name&&!groups.some(g=>g.key===selected)){const o=node('option',`${gameNames(statsGameTargetGame).ko} (0회)`);o.value=gameKey(statsGameTargetGame);select.append(o);}

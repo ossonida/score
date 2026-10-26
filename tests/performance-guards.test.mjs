@@ -24,4 +24,5 @@ test('auth state does not wait for the Firestore SDK',()=>{
 test('per-item helpers do not re-read storage or re-normalize every alias',()=>{
  assert.match(read('score-games.js'),/aliasIndex\.get\(normalize\(name\)\)/);
  assert.match(read('game-artwork.js'),/if\(raw!==savedRaw\)/);
+ assert.match(read('bgg-metadata.js'),/if\(raw!==savedRaw\)/);
 });
