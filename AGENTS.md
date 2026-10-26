@@ -21,6 +21,13 @@
 - CTA 상세 상태와 흐름은 `docs/CTA-FLOWS.md`를 따른다. CTA 추가·흐름 변경 시 구현 전에 해당 문서를 갱신한다.
 - CTA의 노출·문구·활성·액션은 하나의 앱 상태에서 결정하고, 같은 의도는 공통 액션을 호출한다. 숨겨진 버튼의 `.click()`으로 우회하지 않는다.
 
+## 성능
+
+- 숨겨진 화면은 데이터 변경 이벤트(`score-bgg:changed`, `score-records:changed` 등)에 다시 그리지 않는다. 바뀜 표시만 하고 화면이 보일 때 그린다.
+- 목록을 그리는 반복문 안에서 localStorage 읽기·JSON 파싱·전체 별칭 정규화처럼 항목 수에 비례해 반복되는 일을 하지 않는다. 미리 인덱스나 캐시를 만든다. 긴 목록은 첫 화면 분량만 바로 그리고 나머지는 나눠 붙인다.
+- 첫 화면과 로그인 확인은 네트워크나 당장 쓰지 않는 큰 SDK를 기다리지 않는다. 마지막 계정의 기기 기록으로 먼저 표시한다.
+- 시작·화면 전환·목록 렌더·서비스 워커에 영향이 있으면 `npm run perf`(헤드리스 Chrome, 4배 CPU 제한, 기록 600개 예산 검사)를 실행한다.
+
 ## 세션과 인수인계
 
 - 한 작업 폴더에는 한 AI 세션만 작업한다. 병행이 필요하면 `git worktree`로 폴더를 나눈다. 다른 세션의 미커밋 변경은 커밋·되돌리기 하지 않는다.
@@ -32,7 +39,7 @@
 - 테스트: `npm test` 또는 `node --experimental-vm-modules --test tests/*.test.mjs`. 단일 파일은 경로를 지정한다. Bash에서 node가 없으면 `"/c/Program Files/nodejs/node.exe"`, PowerShell에서 git이 없으면 Bash를 쓴다.
 - `npm run build`는 Android `dist/` 패키징이며 GitHub Pages 검증이 아니다. 웹 검증은 테스트로 한다.
 - 소스 대부분이 한 줄이 긴 압축 형태다. 줄 전체를 출력하지 말고 `grep -o ".\{0,80\}키워드.\{0,120\}"`처럼 주변만 자른다. 일괄 치환은 파일명 일부가 겹치는지(예: `records.js`와 `cloud-records.js`) 확인한다.
-- 모듈 `?v=` 버전은 index.html과 모든 import에서 같아야 한다(`tests/asset-versions.test.mjs`). 새 버전 경로는 `sw.js` 캐시 목록에도 추가한다.
+- 모듈 `?v=` 버전은 index.html과 모든 import에서 같아야 한다(`tests/asset-versions.test.mjs`). `sw.js` 캐시 목록은 손으로 고치지 말고 버전·파일 변경 후 `npm run sw:assets`로 다시 만든다(`tests/performance-guards.test.mjs`가 옛 버전 누적·2MB 초과를 막는다).
 - 알려진 기존 실패: `tests/records-ui.test.mjs`의 "an individual result choice fills every player result and enables SAVE".
 
 ## 검증과 소통

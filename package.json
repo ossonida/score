@@ -9,7 +9,9 @@
     "android:add": "npm run build && cap add android",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
-    "android:setup": "node scripts/android-setup.mjs"
+    "android:setup": "node scripts/android-setup.mjs",
+    "sw:assets": "node scripts/sw-assets.mjs",
+    "perf": "node scripts/perf.mjs"
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.5.2",
