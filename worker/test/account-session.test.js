@@ -43,7 +43,7 @@ test('uncertain submissions are retained and cannot silently duplicate on retry'
  await s.session.fetch(req('/logout',{}));await login(s.session);assert.equal((await(await s.session.fetch(req('/status'))).json()).uploads[play.id].status,'unknown');
 });
 test('an uncertain new submission is recovered from BGG before any retry can duplicate it',async()=>{
- let posts=0,lookups=0;const s=setup(async url=>{url=String(url);if(url.includes('/login/'))return loginResponse();if(url.includes('/geekplay.php')){posts++;throw Error('timeout after send');}lookups++;if(lookups===1)return new Response('',{status:202});return new Response(`<plays><play id="321"><item objecttype="thing" objectid="13"/><comments>Recorded with Score Counter [ScoreCounter:${play.id}]</comments></play></plays>`,{headers:{'Content-Type':'application/xml'}});});s.env.BGG_API_TOKEN='application-token';await login(s.session);
+ let posts=0,lookups=0;const s=setup(async url=>{url=String(url);if(url.includes('/login/'))return loginResponse();if(url.includes('/geekplay.php')){posts++;throw Error('timeout after send');}if(url.includes('xmlapi2/collection'))return new Response('<items></items>');lookups++;if(lookups===1)return new Response('',{status:202});return new Response(`<plays><play id="321"><item objecttype="thing" objectid="13"/><comments>Recorded with Score Counter [ScoreCounter:${play.id}]</comments></play></plays>`,{headers:{'Content-Type':'application/xml'}});});s.env.BGG_API_TOKEN='application-token';await login(s.session);
  const first=await s.session.fetch(req('/post',{play}));assert.equal(first.status,409);assert.equal((await first.json()).code,'BGG_POST_UNCERTAIN');
  const second=await s.session.fetch(req('/post',{play})),data=await second.json();assert.equal(second.status,200);assert.equal(data.recovered,true);assert.equal(data.bggPlayId,'321');assert.equal(posts,1);assert.equal(lookups,2);
 });
@@ -66,4 +66,12 @@ test('a stale device cannot post to a different linked BGG account',async()=>{
  const response=await s.session.fetch(req('/post',{play,expectedUsername:'old-account'}));assert.equal(response.status,409);assert.equal((await response.json()).code,'BGG_ACCOUNT_CHANGED');assert.equal(posts,0);assert.equal([...s.data.keys()].some(k=>k.startsWith('post:')),false);
  const missing=await s.session.fetch(req('/post',{play,expectedUsername:null}));assert.equal((await missing.json()).code,'BGG_ACCOUNT_CHANGED');assert.equal(posts,0);
  assert.equal((await s.session.fetch(req('/post',{play,expectedUsername:'ALICE'}))).status,200);assert.equal(posts,1);
+});
+test('a successful post clears only BGG want-to-play for that game and keeps other statuses',async()=>{
+ const calls=[];const s=setup(async(url,init)=>{const u=String(url);calls.push([u,init]);if(u.includes('/login/'))return loginResponse();if(u.includes('geekplay.php'))return Response.json({success:true,playid:555});if(u.includes('xmlapi2/collection'))return new Response('<items><item objecttype="thing" objectid="13" collid="777"><name>CATAN</name><status own="1" wishlist="1" wishlistpriority="2" wanttoplay="1"/></item></items>');if(u.includes('geekcollection.php'))return new Response('ok');return new Response('',{status:404});});
+ s.env.BGG_API_TOKEN='token';await login(s.session);
+ const result=await(await s.session.fetch(req('/post',{play}))).json();assert.equal(result.wantToPlayCleared,true);
+ const save=calls.find(([u])=>u.includes('geekcollection.php')),form=new URLSearchParams(save[1].body);assert.equal(form.get('collid'),'777');assert.equal(form.get('fieldname'),'status');assert.equal(form.get('own'),'1');assert.equal(form.get('wishlist'),'1');assert.equal(form.get('wishlistpriority'),'2');assert.equal(form.has('wanttoplay'),false);assert.equal(save[1].headers.Cookie,'bggusername=alice; bggpassword=opaque-auth-cookie');
+ const other=setup(async url=>{const u=String(url);if(u.includes('/login/'))return loginResponse();if(u.includes('geekplay.php'))return Response.json({success:true,playid:556});if(u.includes('xmlapi2/collection'))return new Response('<items></items>');throw Error('unexpected '+u);});other.env.BGG_API_TOKEN='token';await login(other.session);
+ const kept=await(await other.session.fetch(req('/post',{play}))).json();assert.equal(kept.status,'sent');assert.equal(kept.wantToPlayCleared,false);
 });

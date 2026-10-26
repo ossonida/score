@@ -1,7 +1,7 @@
-import './records.js?v=133';
+import './records.js?v=134';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups} from './game-catalog.js?v=95';
 import {gameKey} from './records-core.js?v=129';
-import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=98';
+import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=99';
 import {renderGameArtwork} from './game-artwork.js?v=95';
 import {idToken} from './cloud-records.js?v=115';
 import {bggSearchUrl} from './firebase-config.js?v=64';

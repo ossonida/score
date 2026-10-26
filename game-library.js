@@ -19,6 +19,7 @@ export function gameCollectionView(records,saved=[],collection=[],view='all',bgg
  const mine=libraryGames(records,saved),known=new Set(mine.map(row=>row.key)),more=libraryGames([],extra).filter(row=>!known.has(row.key));
  const rows=searchableGameGroups([...mine,...more]).map(row=>{const {logged,...s}=status.get(row.game.bggId)||entry('');const bgg=Math.max(s.bggPlays,logged);return {...row,...s,bggPlays:bgg,played:row.count>0||bgg>0};});
  if(view==='played')return rows.filter(row=>row.played).sort((a,b)=>Math.max(b.count,b.bggPlays)-Math.max(a.count,a.bggPlays));
+ if(view==='wantToPlay')return rows.filter(row=>row.wantToPlay&&!row.played);
  return view==='all'?rows:rows.filter(row=>row[view]);
 }
 export function addLibraryGame(scope,game,records=[],storage=localStorage){
