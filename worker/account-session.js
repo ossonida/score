@@ -33,24 +33,38 @@ async function findScorePlay(fetcher,env,session,play){
   return {checked:true,id:''};
  }catch{return {checked:false,id:''};}
 }
-// 내보낸 게임이 BGG 컬렉션에서 하고 싶은 게임(want to play)이면 그 표시만 끕니다. 나머지 상태는 그대로 다시 보내며, 실패해도 플레이 등록 결과는 유지합니다.
+// BGG에서 하고 싶은 게임(want to play)인 항목을 한 번에 읽습니다. 컬렉션 조회는 처음에 202(준비 중)를 자주 주므로 잠시 기다렸다 다시 묻습니다.
+const agent='ScoreCounter/1.0 (https://ossonida.github.io/score/)',pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function wantToPlayItems(fetcher,env,session){
+ if(!env.BGG_API_TOKEN)return null;
+ const url=new URL('https://boardgamegeek.com/xmlapi2/collection');url.searchParams.set('username',session.username);url.searchParams.set('wanttoplay','1');url.searchParams.set('showprivate','1');
+ const delay=Number(env.BGG_RETRY_DELAY_MS??1500);
+ for(let attempt=0;attempt<4;attempt++){
+  if(attempt)await pause(delay*attempt);
+  try{
+   const response=await fetcher(url,{redirect:'manual',headers:{Cookie:session.cookie,'User-Agent':agent,Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml'},signal:AbortSignal.timeout(12000)});
+   if(response.status===202)continue;if(response.status!==200)return null;
+   const xml=await boundedXml(response);if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return null;
+   const rows=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>name==='item'}).parse(xml)?.items?.item||[];
+   return new Map(rows.filter(row=>String(row?.status?.['@_wanttoplay']||'')==='1'&&idPattern.test(String(row?.['@_collid']||''))).map(row=>[String(row['@_objectid']),row]));
+  }catch{return null;}
+ }
+ return null;
+}
+// 요청한 게임의 하고 싶은 표시만 끕니다. BGG 저장 양식은 체크된 상태만 보내므로 나머지 상태는 그대로 다시 보냅니다.
 const keptFlags=['own','prevowned','fortrade','want','wanttobuy','wishlist','preordered'];
-async function clearWantToPlay(fetcher,env,session,bggId){
- if(!env.BGG_API_TOKEN)return false;
- const headers={Cookie:session.cookie,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'};
- try{
-  const url=new URL('https://boardgamegeek.com/xmlapi2/collection');url.searchParams.set('username',session.username);url.searchParams.set('id',bggId);url.searchParams.set('wanttoplay','1');url.searchParams.set('showprivate','1');
-  const response=await fetcher(url,{redirect:'manual',headers:{...headers,Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml'},signal:AbortSignal.timeout(12000)});
-  if(response.status!==200)return false;const xml=await boundedXml(response);if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return false;
-  const rows=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>name==='item'}).parse(xml)?.items?.item||[];
-  const item=rows.find(row=>String(row?.['@_objectid']||'')===bggId&&String(row?.status?.['@_wanttoplay']||'')==='1'),collid=String(item?.['@_collid']||'');
-  if(!idPattern.test(collid))return false;
-  const form=new URLSearchParams({ajax:'1',action:'savedata',collid,fieldname:'status',objecttype:'thing',objectid:bggId});
+async function clearWantToPlay(fetcher,env,session,ids){
+ const result={cleared:[],notMarked:[],failed:[],unavailable:false},items=await wantToPlayItems(fetcher,env,session);
+ if(!items){result.unavailable=true;return result;}
+ for(const bggId of ids){
+  const item=items.get(bggId);if(!item){result.notMarked.push(bggId);continue;}
+  const form=new URLSearchParams({ajax:'1',action:'savedata',collid:String(item['@_collid']),fieldname:'status',objecttype:'thing',objectid:bggId});
   for(const flag of keptFlags)if(String(item.status['@_'+flag]||'')==='1')form.set(flag,'1');
   const priority=String(item.status['@_wishlistpriority']||'');if(form.has('wishlist')&&/^[1-5]$/.test(priority))form.set('wishlistpriority',priority);
-  const saved=await fetcher('https://boardgamegeek.com/geekcollection.php',{method:'POST',redirect:'manual',headers:{...headers,'Content-Type':'application/x-www-form-urlencoded',Accept:'text/html, */*',Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/boardgame/'+bggId},body:form.toString(),signal:AbortSignal.timeout(12000)});
-  return saved.status===200;
- }catch{return false;}
+  try{const saved=await fetcher('https://boardgamegeek.com/geekcollection.php',{method:'POST',redirect:'manual',headers:{Cookie:session.cookie,'User-Agent':agent,'Content-Type':'application/x-www-form-urlencoded',Accept:'text/html, */*',Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/boardgame/'+bggId},body:form.toString(),signal:AbortSignal.timeout(12000)});(saved.status===200?result.cleared:result.failed).push(bggId);}
+  catch{result.failed.push(bggId);}
+ }
+ return result;
 }
 function authCookie(response,username,now){
  const headers=response.headers,all=typeof headers.getSetCookie==='function'?headers.getSetCookie():typeof headers.getAll==='function'?headers.getAll('Set-Cookie'):[headers.get('Set-Cookie')||''];
@@ -92,13 +106,19 @@ export class BggSessions{
     return json(200,{ready:true,connected:true,username,expiresAt:session.expiresAt,uploads:{}});
    }catch{return fail('BGG_LOGIN_UNAVAILABLE',502);}finally{password='';body.password='';}
   }
+  if(path==='/clear-want'){
+   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
+   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
+   const ids=Array.isArray(body.bggIds)?[...new Set(body.bggIds.map(String))]:[];if(!ids.length||ids.length>20||ids.some(id=>!idPattern.test(id)))return fail('INVALID_BODY');
+   return json(200,await clearWantToPlay(fetcher,this.env,session,ids));
+  }
   if(path!=='/post')return fail('INVALID_ACTION');
   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
   // Bind the user's explicit action to the account shown on their device.
   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
   let play;try{play=checkedPlay(body.play);}catch{return fail('BGG_INVALID_PLAY');}
   const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id;let previous=await this.state.storage.get(key);const fingerprint=await playFingerprint(play,session.username);
-  if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint,wantToPlayCleared:await clearWantToPlay(fetcher,this.env,session,play.game.bggId)});}previous={status:'failed',fingerprint:'',bggPlayId:''};}
+  if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}previous={status:'failed',fingerprint:'',bggPlayId:''};}
   if(previous?.status==='sent'&&previous.fingerprint===fingerprint)return json(200,{posted:true,unchanged:true,status:'sent',bggPlayId:previous.bggPlayId,fingerprint});
   if(previous?.bggPlayId&&body.update!==true)return fail('BGG_UPDATE_REQUIRED',409);
   const bggPlayId=previous?.bggPlayId||'';await this.state.storage.put(key,{status:'pending',fingerprint,bggPlayId});
@@ -111,7 +131,7 @@ export class BggSessions{
    const raw=await readSmallText(response);let data;try{data=JSON.parse(raw);}catch{if(/must\s+login|not\s+permitted|cannot\s+edit|can't.*play/i.test(raw)){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}if(/messagebox\s+error/i.test(raw)){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});return fail('BGG_POST_REJECTED',422);}throw Error('UNCERTAIN');}
    if(typeof data.error==='string'&&data.error){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});if(/login|not permitted|cannot edit|can't.*play/i.test(data.error)){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}return fail('BGG_POST_REJECTED',422);}
    const id=String(data.playid||'');if(!/^[1-9][0-9]{0,9}$/.test(id)||(bggPlayId&&id!==String(bggPlayId)))throw Error('UNCERTAIN');
-   await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:id});return json(200,{posted:true,status:'sent',bggPlayId:id,fingerprint,wantToPlayCleared:await clearWantToPlay(fetcher,this.env,session,play.game.bggId)});
-  }catch{if(!bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint,wantToPlayCleared:await clearWantToPlay(fetcher,this.env,session,play.game.bggId)});}}await this.state.storage.put(key,{status:'unknown',fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
+   await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:id});return json(200,{posted:true,status:'sent',bggPlayId:id,fingerprint});
+  }catch{if(!bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}}await this.state.storage.put(key,{status:'unknown',fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
  }
 }

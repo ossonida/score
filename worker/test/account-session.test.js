@@ -67,13 +67,15 @@ test('a stale device cannot post to a different linked BGG account',async()=>{
  const missing=await s.session.fetch(req('/post',{play,expectedUsername:null}));assert.equal((await missing.json()).code,'BGG_ACCOUNT_CHANGED');assert.equal(posts,0);
  assert.equal((await s.session.fetch(req('/post',{play,expectedUsername:'ALICE'}))).status,200);assert.equal(posts,1);
 });
-test('a successful post clears only BGG want-to-play for that game and keeps other statuses',async()=>{
- const calls=[];const s=setup(async(url,init)=>{const u=String(url);calls.push([u,init]);if(u.includes('/login/'))return loginResponse();if(u.includes('geekplay.php'))return Response.json({success:true,playid:555});if(u.includes('xmlapi2/collection'))return new Response('<items><item objecttype="thing" objectid="13" collid="777"><name>CATAN</name><status own="1" wishlist="1" wishlistpriority="2" wanttoplay="1"/></item></items>');if(u.includes('geekcollection.php'))return new Response('ok');return new Response('',{status:404});});
- s.env.BGG_API_TOKEN='token';await login(s.session);
- const result=await(await s.session.fetch(req('/post',{play}))).json();assert.equal(result.wantToPlayCleared,true);
- const save=calls.find(([u])=>u.includes('geekcollection.php')),form=new URLSearchParams(save[1].body);assert.equal(form.get('collid'),'777');assert.equal(form.get('fieldname'),'status');assert.equal(form.get('own'),'1');assert.equal(form.get('wishlist'),'1');assert.equal(form.get('wishlistpriority'),'2');assert.equal(form.has('wanttoplay'),false);assert.equal(save[1].headers.Cookie,'bggusername=alice; bggpassword=opaque-auth-cookie');
- const other=setup(async url=>{const u=String(url);if(u.includes('/login/'))return loginResponse();if(u.includes('geekplay.php'))return Response.json({success:true,playid:556});if(u.includes('xmlapi2/collection'))return new Response('<items></items>');throw Error('unexpected '+u);});other.env.BGG_API_TOKEN='token';await login(other.session);
- const kept=await(await other.session.fetch(req('/post',{play}))).json();assert.equal(kept.status,'sent');assert.equal(kept.wantToPlayCleared,false);
+test('clear-want waits for the BGG collection and clears only want to play, keeping other statuses',async()=>{
+ const calls=[];let lookups=0;const s=setup(async(url,init)=>{const u=String(url);calls.push([u,init]);if(u.includes('/login/'))return loginResponse();if(u.includes('xmlapi2/collection')){lookups++;assert.equal(new URL(u).searchParams.get('wanttoplay'),'1');if(lookups===1)return new Response('',{status:202});return new Response('<items><item objecttype="thing" objectid="13" collid="777"><name>CATAN</name><status own="1" wishlist="1" wishlistpriority="2" wanttoplay="1"/></item><item objectid="822" collid="778"><status wanttoplay="1"/></item></items>');}if(u.includes('geekcollection.php'))return new Response('ok');return new Response('',{status:404});});
+ s.env.BGG_API_TOKEN='token';s.env.BGG_RETRY_DELAY_MS=0;await login(s.session);
+ const result=await(await s.session.fetch(req('/clear-want',{expectedUsername:'alice',bggIds:['13','30549']}))).json();
+ assert.deepEqual(result,{cleared:['13'],notMarked:['30549'],failed:[],unavailable:false});assert.equal(lookups,2);
+ const saves=calls.filter(([u])=>u.includes('geekcollection.php'));assert.equal(saves.length,1);const form=new URLSearchParams(saves[0][1].body);assert.equal(form.get('collid'),'777');assert.equal(form.get('fieldname'),'status');assert.equal(form.get('own'),'1');assert.equal(form.get('wishlist'),'1');assert.equal(form.get('wishlistpriority'),'2');assert.equal(form.has('wanttoplay'),false);assert.equal(saves[0][1].headers.Cookie,'bggusername=alice; bggpassword=opaque-auth-cookie');
+ assert.equal((await s.session.fetch(req('/clear-want',{expectedUsername:'bob',bggIds:['13']}))).status,409);assert.equal((await s.session.fetch(req('/clear-want',{expectedUsername:'alice',bggIds:Array(21).fill('13').map((x,i)=>String(i+1))}))).status,400);
+ const busy=setup(async url=>{const u=String(url);if(u.includes('/login/'))return loginResponse();return new Response('',{status:202});});busy.env.BGG_API_TOKEN='token';busy.env.BGG_RETRY_DELAY_MS=0;await login(busy.session);
+ assert.deepEqual(await(await busy.session.fetch(req('/clear-want',{expectedUsername:'alice',bggIds:['13']}))).json(),{cleared:[],notMarked:[],failed:[],unavailable:true});
 });
 test('worker and app compute the same export fingerprint for location, difficulty, scenario and missions',async()=>{
  const {bggPlayFingerprint}=await import('../../bgg-play-format.js');

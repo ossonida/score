@@ -19,11 +19,11 @@ export async function planBggExport(records,uploads={},limit=20,username=''){
 const stopCodes=new Set(['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED','BGG_POST_UNCERTAIN','BGG_LOGIN_RATE_LIMIT','BGG_LINK_UNAVAILABLE']);
 
 export async function sendBggExport(records,send,onProgress=()=>{}){
- let sent=0,unchanged=0,failed=0,cleared=0,lastError='';
+ let sent=0,unchanged=0,failed=0,lastError='';
  for(const [index,play]of records.entries()){
   onProgress(index+1,records.length);
-  try{const result=await send(play);if(result?.unchanged)unchanged++;else if(result)sent++;if(result?.wantToPlayCleared)cleared++;}
+  try{const result=await send(play);if(result?.unchanged)unchanged++;else if(result)sent++;}
   catch(error){failed++;lastError=error.message;if(stopCodes.has(error.code))break;}
  }
- return {sent,unchanged,failed,cleared,lastError};
+ return {sent,unchanged,failed,lastError};
 }
