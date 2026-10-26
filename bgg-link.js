@@ -1,5 +1,5 @@
-import './records.js?v=160';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=159';
+import './records.js?v=166';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=166';
 import {bggLinkRequest} from './bgg-link-client.js?v=66';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=97';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;

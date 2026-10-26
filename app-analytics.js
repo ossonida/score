@@ -1,4 +1,4 @@
-import {cloudConfigured,connectCloud} from './cloud-records.js?v=159';
+import {cloudConfigured,connectCloud} from './cloud-records.js?v=166';
 import {createAnalyticsGate} from './analytics-policy.js?v=154';
 import {createFeatureAnalytics} from './analytics-events.js?v=117';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.

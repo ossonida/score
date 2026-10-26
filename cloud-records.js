@@ -2,30 +2,32 @@ import {signInNativeGoogle} from './native-auth-flow.js?v=64';
 import {validUsername,validBggItem} from './bgg-validation.js?v=128';
 import {firebaseConfig} from './firebase-config.js?v=64';
 import {validIdentity} from './personal-stats.js?v=115';
-let connection;
+let connection,storeConnection;
 const lastUserKey='score.lastUser.v1';
 export const mobileDevice=Boolean(globalThis.Capacitor?.isNativePlatform?.())||/Android|iPhone|iPad|iPod|Mobi/i.test(globalThis.navigator?.userAgent||'')||(/Macintosh/.test(globalThis.navigator?.userAgent||'')&&globalThis.navigator?.maxTouchPoints>1);
 // 마지막 로그인 계정: 로그인 확인 전·오프라인·모바일 로그아웃 상태에서도 같은 기기 기록을 보여 준다.
 export function rememberedUid(){try{return localStorage.getItem(lastUserKey)||null;}catch{return null;}}
-export function rememberUid(uid){try{if(uid)localStorage.setItem(lastUserKey,uid);else localStorage.removeItem(lastUserKey);}catch{}}
+export function rememberUid(uid,label=''){try{if(uid){localStorage.setItem(lastUserKey,uid);localStorage.setItem(lastUserKey+'.label',label);}else{localStorage.removeItem(lastUserKey);localStorage.removeItem(lastUserKey+'.label');}}catch{}}
+export function rememberedLabel(){try{return localStorage.getItem(lastUserKey+'.label')||'';}catch{return '';}}
 export function cloudConfigured(){return !!(firebaseConfig?.apiKey && firebaseConfig?.projectId && firebaseConfig?.authDomain);}
 export async function connectCloud(onUser){
   if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 지금은 이 브라우저에 기록을 저장할 수 있습니다.');
   if(!connection){
     connection=(async()=>{
       const base='https://www.gstatic.com/firebasejs/12.4.0/';
-      const [app,auth,store]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js'),import(base+'firebase-firestore.js')]);
+      // 로그인 확인은 Firestore를 기다리지 않는다. 팝업 로그인 도구도 로그인할 때만 쓴다(시작 시 인증 iframe 로드 생략).
+      const [app,auth]=await Promise.all([import(base+'firebase-app.js'),import(base+'firebase-auth.js')]);
       const firebase=app.initializeApp(firebaseConfig);
-      const session=auth.getAuth(firebase),db=store.getFirestore(firebase);
-      await auth.setPersistence(session,auth.browserLocalPersistence);
-      return {auth,store,session,db};
+      const session=auth.initializeAuth(firebase,{persistence:auth.browserLocalPersistence});
+      return {auth,session,firebase};
     })().catch(e=>{connection=null;throw e;});
   }
   const c=await connection;
   if(onUser)c.auth.onAuthStateChanged(c.session,onUser);
-  return c;
+  if(!storeConnection)storeConnection=import('https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js').then(store=>({...c,store,db:store.getFirestore(c.firebase)})).catch(e=>{storeConnection=null;throw e;});
+  return storeConnection;
 }
-export async function login(){const c=await connectCloud();if(globalThis.Capacitor?.isNativePlatform?.()){if(!globalThis.ScoreNativeAuth)throw Error('앱 로그인 모듈을 준비하지 못했습니다. 앱을 다시 실행해주세요.');await signInNativeGoogle(globalThis.ScoreNativeAuth,c);}else await c.auth.signInWithPopup(c.session,new c.auth.GoogleAuthProvider());}
+export async function login(){const c=await connectCloud();if(globalThis.Capacitor?.isNativePlatform?.()){if(!globalThis.ScoreNativeAuth)throw Error('앱 로그인 모듈을 준비하지 못했습니다. 앱을 다시 실행해주세요.');await signInNativeGoogle(globalThis.ScoreNativeAuth,c);}else await c.auth.signInWithPopup(c.session,new c.auth.GoogleAuthProvider(),c.auth.browserPopupRedirectResolver);}
 export async function logout(){const c=await connectCloud();await c.auth.signOut(c.session);if(globalThis.Capacitor?.isNativePlatform?.())await globalThis.ScoreNativeAuth?.signOut();}
 function userId(c,expected){if(!c.session.currentUser)throw Error('로그인이 필요합니다.');if(expected&&c.session.currentUser.uid!==expected)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');return c.session.currentUser.uid;}
 export async function loadCloud(uid){const c=await connectCloud();const result=await c.store.getDocsFromServer(c.store.collection(c.db,'users',userId(c,uid),'plays'));return result.docs.map(d=>({...d.data(),id:d.id}));}
