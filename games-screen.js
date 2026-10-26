@@ -6,7 +6,7 @@ import {renderGameArtwork} from './game-artwork.js?v=95';
 import {idToken} from './cloud-records.js?v=159';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {gameNames} from './bgg-metadata.js?v=152';
+import {gameNames} from './bgg-metadata.js?v=161';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;
