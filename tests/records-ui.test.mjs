@@ -573,6 +573,12 @@ test('merging another name rewrites every record to the person name, even when b
  const saved=JSON.parse(store.get('score.plays.v1.guest')).records;assert.deepEqual(saved.map(p=>p.players.map(x=>x.name).join(',')),['하늘,케이','하늘,케이','하늘,케이,케이','하늘,바다']);
  assert.ok(!walk(a.get('statsInsights')).some(e=>e.textContent?.startsWith?.('상교')),'merged name disappears from the person view');
 });
+test('the save dialog suggests places already used, most used first, then unused defaults',async()=>{
+ const play=(id,date,location)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',...(location?{location}:{}),players:[{id:'a',name:'하늘',color:'#52c7ef',score:10}]});
+ const records=[play('p1','2026-10-01','철수네'),play('p2','2026-10-02','보드게임 카페'),play('p3','2026-10-03','보드게임 카페'),play('p4','2026-10-04','A카페'),play('p5','2026-10-05')];
+ const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records,pending:[]})]]));a.bridge.openFinish();
+ assert.deepEqual(a.get('savedLocations').children.map(o=>o.value),['보드게임 카페','A카페','철수네','집','모임 장소','온라인']);
+});
 test('stats view, chosen game and period survive a refresh in the same tab',async()=>{
  const session=new Map(),a=await app(new Map(),false,'',{me:'하늘',session});await save(a);
  a.get('statsGames').onclick();const game=a.get('recordFilter').value;assert.ok(game);
