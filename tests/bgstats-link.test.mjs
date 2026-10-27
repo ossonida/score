@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {bgStatsLinks,duplicateScoreUploads} from '../bgstats-link.js';
+import {bgStatsLinks,duplicateScoreUploads,bgStatsDuplicates} from '../bgstats-link.js';
 import {placeStats} from '../places.js';
 import {planBggExport} from '../bgg-export.js';
 const record=(id,date,location,scores=[10,7])=>({id,date,rule:'highest',location,game:{name:'Ants',bggId:'13'},players:[{id:'a',name:'나',score:scores[0]},{id:'b',name:'민수',score:scores[1]}]});
@@ -17,3 +17,5 @@ test('abbreviated BG Stats locations on BGG are not counted twice and linked rec
 });
 test('a stored BGG play number links the record even when names were renamed later',async()=>{const records=[{...record('bgstats:a','2026-09-25','B1'),bggPlayId:'100',players:[{id:'a',name:'나',score:10},{id:'b',name:'케이',score:7}]}],plays=[bgg('100','2026-09-25','B.')];
  assert.deepEqual([...bgStatsLinks(records,plays)],[['bgstats:a','100']]);assert.deepEqual(placeStats(records,plays).map(x=>x.place),['B1']);});
+test('duplicates are only Score uploads whose BG Stats original is still on BGG',()=>{const records=[{id:'bgstats:a'},{id:'bgstats:b'},{id:'bgstats:c'}],links=new Map([['bgstats:a','100'],['bgstats:b','200'],['bgstats:c','300']]),plays=[{id:'100'},{id:'900'},{id:'300'}],uploads={'bgstats:a':{bggPlayId:'900'},'bgstats:b':{bggPlayId:'901'}};
+ assert.deepEqual(bgStatsDuplicates(records,links,plays,uploads),[{recordId:'bgstats:a',playId:'900',original:'100'}],'b keeps its upload because its original was deleted; c was never uploaded');});

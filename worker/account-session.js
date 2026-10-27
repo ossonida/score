@@ -148,6 +148,21 @@ export class BggSessions{
    if(result.code==='BGG_LOGIN_REQUIRED')await this.state.storage.delete('session');
    return result.saved?json(200,{saved:true,bggId,status}):fail(result.code,{BGG_LOGIN_REQUIRED:401,BGG_COLLECTION_BUSY:503,BGG_COLLECTION_PENDING:409}[result.code]||502);
   }
+  // 중복 정리: 이 앱이 올린 플레이(업로드 기록의 BGG 플레이 번호와 같은 것)만 BGG에서 지운다.
+  if(path==='/delete-play'){
+   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
+   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
+   const playId=String(body.playId??''),recordId=typeof body.recordId==='string'?body.recordId:'';if(!/^[1-9][0-9]{0,19}$/.test(playId)||!/^[A-Za-z0-9_.:-]{1,100}$/.test(recordId))return fail('INVALID_BODY');
+   const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+recordId,previous=await this.state.storage.get(key);if(String(previous?.bggPlayId||'')!==playId)return fail('BGG_DELETE_NOT_OURS',409);
+   const response=await fetcher('https://boardgamegeek.com/geekplay.php',{method:'POST',redirect:'manual',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json, text/plain, */*',Cookie:session.cookie,Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/play/details/'+playId,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},body:new URLSearchParams({ajax:'1',action:'delete',playid:playId,finalize:'1'}).toString(),signal:AbortSignal.timeout(12000)});
+   if(response.status===401||response.status===403){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}
+   if(response.status===429)return fail('BGG_LOGIN_RATE_LIMIT',429);if(!response.ok)return fail('BGG_DELETE_REJECTED',502);
+   const raw=await readSmallText(response);let data;try{data=JSON.parse(raw);}catch{data=null;}
+   const error=typeof data?.error==='string'?data.error:'';if(/login|not permitted/i.test(error)){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}
+   // 이미 없는 플레이(잘못된 번호)도 지운 것으로 본다.
+   if(data?.success===true||/invalid|not\s+found|does\s+not\s+exist/i.test(error)){await this.state.storage.delete(key);return json(200,{deleted:true,playId});}
+   return fail('BGG_DELETE_REJECTED',422);
+  }
   if(path!=='/post')return fail('INVALID_ACTION');
   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
   // Bind the user's explicit action to the account shown on their device.

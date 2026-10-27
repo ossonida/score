@@ -1,5 +1,5 @@
 import {connectCloud,login} from './cloud-records.js?v=173';
-import {bggLinkRequest} from './bgg-link-client.js?v=67';
+import {bggLinkRequest} from './bgg-link-client.js?v=68';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 // 계정 삭제: BGG 연결 정보(워커) → 클라우드 기록·BGG 정보·설정 → Google 로그인 계정 순으로 지운다.
 // Google은 최근에 로그인한 경우에만 계정 삭제를 허용하므로, 오래됐으면 같은 계정으로 다시 로그인을 받는다.

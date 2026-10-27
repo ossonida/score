@@ -100,3 +100,7 @@ test('collection status sets only the chosen flags, keeps other BGG statuses and
 });
 
 test('account deletion removes the session and every upload mapping',async()=>{const s=setup(async()=>loginResponse());await login(s.session);assert.ok(s.data.size>0);const r=await s.session.fetch(req('/delete',{}));assert.equal(r.status,200);assert.equal(s.data.size,0);assert.equal((await(await s.session.fetch(req('/status'))).json()).connected,false);});
+test('duplicate cleanup deletes only plays this app uploaded and forgets the upload mapping',async()=>{let posted='';const s=setup(async(url,init)=>{if(String(url).includes('geekplay.php')&&String(init?.body||'').includes('action=delete')){posted=String(init.body);return new Response(JSON.stringify({success:true}));}return loginResponse();});await login(s.session);
+ s.data.set('post:alice:bgstats:abc',{status:'sent',fingerprint:'x',bggPlayId:'555'});
+ const other=await s.session.fetch(req('/delete-play',{playId:'777',recordId:'bgstats:abc',expectedUsername:'alice'}));assert.equal(other.status,409,'a play this app did not upload is refused');assert.equal(posted,'');
+ const ok=await s.session.fetch(req('/delete-play',{playId:'555',recordId:'bgstats:abc',expectedUsername:'alice'}));assert.equal(ok.status,200);assert.match(posted,/action=delete/);assert.match(posted,/playid=555/);assert.match(posted,/finalize=1/);assert.equal(s.data.has('post:alice:bgstats:abc'),false);});

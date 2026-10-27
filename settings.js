@@ -1,9 +1,9 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=159';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=189';
+import './records.js?v=190';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=68';
-import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=3';
+import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=4';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}

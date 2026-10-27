@@ -13,3 +13,6 @@ export function bgStatsLinks(records,bggPlays=[]){
 }
 // BG Stats 원본이 BGG에 있는데 Score가 같은 기록을 다시 올린 중복 플레이(BGG 플레이 ID 목록).
 export function duplicateScoreUploads(records,bggPlays=[]){const links=bgStatsLinks(records,bggPlays);return bggPlays.filter(p=>p?.score?.id&&links.has(p.score.id)).map(p=>({bggPlayId:String(p.id),recordId:p.score.id,original:links.get(p.score.id),date:p.date,name:p.name}));}
+// 내보내기 정리 대상: BG Stats 원본(links의 값)이 지금 BGG에 있는데 이 앱이 따로 올린 플레이가 있는 기록.
+// 원본이 BGG에 없으면(이미 지운 경우) 이 앱이 올린 플레이가 유일한 기록이므로 남긴다.
+export function bgStatsDuplicates(records,links,bggPlays=[],uploads={}){const present=new Set(bggPlays.map(p=>String(p?.id)));return records.flatMap(r=>{const original=links.get(r.id),mine=String(uploads?.[r.id]?.bggPlayId||'');return original&&mine&&mine!==String(original)&&present.has(String(original))?[{recordId:r.id,playId:mine,original:String(original)}]:[];});}
