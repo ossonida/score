@@ -179,6 +179,8 @@ export class BggSessions{
   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
   let play;try{play=checkedPlay(body.play);}catch{return fail('BGG_INVALID_PLAY');}
   const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id;let previous=await this.state.storage.get(key);const fingerprint=await playFingerprint(play,session.username);
+  // BG Stats가 올린 원본을 이 기록으로 업데이트: 그 날짜의 내 BGG 플레이에 원본이 실제로 있을 때만(없으면 새로 올리지 않는다).
+  if(!previous?.bggPlayId&&body.adoptPlayId!==undefined){const adopt=String(body.adoptPlayId);if(!idPattern.test(adopt))return fail('INVALID_BODY');const check=await playStillThere(fetcher,this.env,session,play.date,adopt);if(!check.checked)return fail('BGG_POST_UNCERTAIN',409);if(!check.exists)return fail('BGG_ADOPT_NOT_FOUND',404);previous={status:'adopt',fingerprint:'',bggPlayId:adopt};}
   if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}previous={status:'failed',fingerprint:'',bggPlayId:''};}
   if(previous?.status==='sent'&&previous.fingerprint===fingerprint)return json(200,{posted:true,unchanged:true,status:'sent',bggPlayId:previous.bggPlayId,fingerprint});
   if(previous?.bggPlayId&&body.update!==true)return fail('BGG_UPDATE_REQUIRED',409);
