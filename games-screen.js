@@ -1,5 +1,5 @@
 import './records.js?v=177';
-import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=164';
+import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=165';
 import {gameKey} from './records-core.js?v=152';
 import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=100';
 import {renderGameArtwork} from './game-artwork.js?v=171';

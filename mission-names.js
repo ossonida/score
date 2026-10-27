@@ -1,5 +1,5 @@
 // 막 단위 시나리오로 진행하는 협력 게임은 미션 번호를 "시나리오 N · M막"으로 보여 줍니다. 저장은 미션 번호 그대로입니다.
-const scenarioGames=[{names:['전지적추리시점'],acts:4}];
+const scenarioGames=[{names:['전지적추리시점','전지적추리시점블루','perspectivesblue'],acts:4}];
 const compact=value=>String(value||'').replace(/\s+/g,'').toLowerCase();
 const place=(format,mission)=>({scenario:Math.ceil(mission/format.acts),act:(mission-1)%format.acts+1});
 const valid=value=>Number.isInteger(Number(value))&&Number(value)>0;

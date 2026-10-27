@@ -1,6 +1,6 @@
 import {renderRecordParticipants,renderModeStats} from './record-view.js?v=133';
 import {recordMode,modeLabels} from './records-core.js?v=152';
-import {missionName} from './mission-names.js?v=3';
+import {missionName} from './mission-names.js?v=4';
 import {readGameLibrary} from './game-library.js?v=100';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=152';
@@ -17,7 +17,7 @@ import {renderStatsDashboard} from './stats-dashboard.js?v=98';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=4';
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
 import {mergeImported} from './data-transfer.js?v=66';
-import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=164';
+import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=165';
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario} from './records-core.js?v=152';

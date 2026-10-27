@@ -554,6 +554,10 @@ export const koreanAliases={
   "375459": [
     "스피크이지"
   ],
+  "427087": [
+    "전지적 추리시점 블루",
+    "전지적추리시점 블루"
+  ],
   "236457": [
     "서쪽 왕국의 건축가",
     "서왕국의 건축가"
@@ -640,6 +644,14 @@ export const koreanAliases={
   ]
 };
 export const wikidataGames=[
+  {
+    "id": "427087",
+    "name": "Perspectives Blue",
+    "aliases": [
+      "전지적 추리시점 블루",
+      "전지적추리시점 블루"
+    ]
+  },
   {
     "id": "19764",
     "name": "PÜNCT",
