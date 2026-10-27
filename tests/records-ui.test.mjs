@@ -576,3 +576,15 @@ test('collection menu checks owned and wishlist once the BGG collection loads af
  collection=[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:true,wantToPlay:false}];a.vm.window.dispatchEvent(new Event('score-bgg:changed'));await new Promise(r=>setTimeout(r,5));
  assert.deepEqual(boxes(),[true,false,true,false],'owned and wishlist are checked after the collection arrives');
 });
+test('BGG import restores missing Score records once, never deleted ones, and cloud sync keeps the original or uploads',async()=>{const source=`export const cloudConfigured=()=>true;export async function connectCloud(cb){globalThis.changeAuth=cb;}export async function login(){}export async function logout(){}export async function cloudManifest(){return null;}export async function loadCloud(){return globalThis.cloud.map(p=>({...p}));}export async function saveCloud(play){globalThis.uploads.push(play.id);}export async function deleteCloud(){}export async function idToken(){return '';}`;
+ const play=(id,score,extra={})=>({id,game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score},{id:'b',name:'민수',color:'#ffcc00',score:1}],...extra}),scope='score.plays.v1.user.one';
+ const store=new Map([['score.lastUser.v1','one'],[scope,JSON.stringify({records:[play('r1',5)],pending:[]})],[scope+'.deletedIds',JSON.stringify(['gone'])]]);
+ const a=await app(store,true,source);Object.assign(a.vm,{cloud:[play('r1',5)],uploads:[]});await a.changeAuth({uid:'one'});
+ const row=id=>({id:'9'+id.length,gameId:'13',name:'CATAN',date:'2026-10-24',quantity:1,score:{id,location:'',note:'[ScoreCounter:'+id+']',known:true},players:[{name:'나',username:'alice',score:10,win:true,color:'#52c7ef'},{name:'민수',username:'',score:7,win:false,color:'#ffcc00'}]});
+ const restore=(uid='one')=>a.vm.window.dispatchEvent(Object.assign(new Event('score-bgg:restore'),{detail:{uid,username:'alice',plays:[row('new-1'),row('r1'),row('gone')]}}));
+ restore('other');assert.equal(JSON.parse(store.get(scope)).records.length,1,'another account is ignored');
+ restore();let saved=JSON.parse(store.get(scope)).records;assert.deepEqual(saved.map(p=>p.id).sort(),['new-1','r1'],'only the missing, not-deleted record is restored');assert.equal(saved.find(p=>p.id==='r1').players[0].score,5,'existing records are not overwritten');
+ assert.deepEqual(JSON.parse(store.get(scope+'.bggRestored')),['new-1']);restore();assert.equal(JSON.parse(store.get(scope)).records.length,2,'restoring twice adds nothing');
+ await a.get('cloudSync').onclick();assert.ok(a.vm.uploads.includes('new-1'),'a restored record missing in the cloud is uploaded');assert.deepEqual(JSON.parse(store.get(scope+'.bggRestored')),[]);
+ restore();a.vm.cloud=[play('r1',5),play('new-1',99)];await a.get('cloudSync').onclick();assert.equal(JSON.parse(store.get(scope)).records.find(p=>p.id==='new-1').players[0].score,99,'the cloud original wins over the restored copy');
+});

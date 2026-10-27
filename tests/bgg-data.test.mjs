@@ -8,3 +8,11 @@ test('public plays preserve absent scores, wins, quantity and remote identity',(
 test('BGG names decode XML entities and details carry the Korean name and expansions',()=>{const c=collectionData({items:{item:[{'@_objectid':'1','name':{'#text':'Detective: Saints &amp; Sinners'},status:{'@_wanttoplay':'1'}},{'@_objectid':'2','name':{'#text':'Chicago &#039;68'},status:{'@_own':'1'}}]}});assert.deepEqual(c.items.map(i=>i.name),['Detective: Saints & Sinners',"Chicago '68"]);
  const d=gameDetails({items:{item:[{'@_id':'29223','@_type':'boardgame',name:[{'@_type':'primary','@_value':'Marrakech'},{'@_type':'alternate','@_value':'마라케시'}],link:[{'@_type':'boardgameexpansion','@_id':'200','@_value':'Marrakech: Expansion &amp; More'},{'@_type':'boardgameexpansion','@_id':'1','@_value':'Base','@_inbound':'true'},{'@_type':'boardgamemechanic','@_id':'2023','@_value':'Cooperative'}]}]}})[0];
  assert.equal(d.name,'Marrakech');assert.equal(d.koName,'마라케시');assert.equal(d.subtype,'boardgame');assert.deepEqual(d.expansions,[{id:'200',name:'Marrakech: Expansion & More'}]);});
+test('plays exported by Score Counter carry the record id, note, location and colors for restoring',()=>{
+ const result=playsData({plays:{'@_total':'2',play:[
+  {'@_id':'501','@_date':'2026-10-24','@_quantity':'1','@_location':'Cafe &amp; Co','@_nowinstats':'0',item:{'@_name':'CATAN','@_objectid':'13'},comments:'Recorded with Score Counter\nScenario 3\n[ScoreCounter:abc-1]',players:{player:[{'@_name':'나','@_username':'alice','@_score':'10','@_win':'1','@_color':'#52c7ef'}]}},
+  {'@_id':'502','@_date':'2026-10-24','@_quantity':'1',item:{'@_name':'CATAN','@_objectid':'13'},comments:'just a note',players:{player:[{'@_name':'B','@_score':'3','@_win':'1','@_color':'Red'}]}}]}});
+ const [marked,plain]=result.items;
+ assert.deepEqual(marked.score,{id:'abc-1',location:'Cafe & Co',note:'Recorded with Score Counter\nScenario 3\n[ScoreCounter:abc-1]',known:true});assert.equal(marked.players[0].color,'#52c7ef');
+ assert.equal('score' in plain,false,'plays without the marker stay unchanged');assert.equal('color' in plain.players[0],false);
+});

@@ -70,11 +70,11 @@ async function importPublic(){
   const first={collection:fetchPage('collection',1),plays:fetchPage('plays',1)};for(const request of Object.values(first))request.catch(()=>{});
   status('보유 게임과 플레이 기록 가져오는 중');
   for(const action of ['collection','plays']){
-   let page=1,total=Infinity,items=[],skipped=false;
+   let page=1,total=Infinity,items=[],skipped=false;const restorable=[];
    do{
     if(page>1)status(`플레이 기록 가져오는 중 · ${page}페이지`);
     const data=await(page===1?first[action]:fetchPage(action,page));if(version!==epoch)return;if(action==='collection'&&typeof data.pubdate==='string')pubdate=data.pubdate;
-    if(!Array.isArray(data.items))throw Error('BGG 응답 형식을 확인해주세요.');const rows=data.items;
+    if(!Array.isArray(data.items))throw Error('BGG 응답 형식을 확인해주세요.');const rows=action==='plays'?data.items.map(row=>{if(!row?.score)return row;restorable.push(row);const {score,...rest}=row;return {...rest,players:Array.isArray(rest.players)?rest.players.map(({color,...person})=>person):rest.players};}):data.items;
     if(rows.length>(action==='plays'?100:10000)||rows.some(r=>!validBggItem(r,action)))throw Error('BGG 응답 형식을 확인해주세요.');
     items.push(...rows);total=Number(data.total)||items.length;page++;
     if(action==='collection'||!rows.length)break;
@@ -82,6 +82,8 @@ async function importPublic(){
     if(page===2){const saved=cached('plays',[]),known=new Map(safeBggItems(saved,'plays').map(item=>[item.id,sameShape(item)]));if(Date.now()-Number(cached('playsFullAt',0))<7*86400000&&saved.length===Math.min(total,1000)&&safeBggItems(rows,'plays').every(item=>known.get(item.id)===sameShape(item))){items=saved;skipped=true;break;}}
    }while(items.length<total&&page<=10);
    if(action==='plays'&&!skipped)try{localStorage.setItem(key('playsFullAt'),String(Date.now()));}catch{}
+   // Score Counter가 내보낸 BGG 경기는 이 기기에 없으면 기록 화면이 Score 기록으로 되살린다.
+   if(action==='plays'&&restorable.length)window.dispatchEvent?.(new CustomEvent('score-bgg:restore',{detail:{uid,username,plays:restorable}}));
    items=[...new Map(items.map(p=>[p.id,p])).values()];if(action==='collection')items=withEdits(items);
    const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),nextIds=new Set(items.map(next=>next.id)),removed=previous.filter(item=>!nextIds.has(item.id)),pendingCloud=cached(action+'Pending',false);
    if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;counts[action]=changed.length+removed.length;}if(action==='collection')collection=safeBggItems(items,'collection');else plays=safeBggItems(items,'plays');render();

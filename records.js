@@ -9,6 +9,7 @@ import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=165';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
+import {restorablePlay} from './bgg-restore.js?v=1';
 import {latestPlayDate} from './stats-overview.js?v=164';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
@@ -38,6 +39,11 @@ try{const saved=JSON.parse(globalThis.sessionStorage?.getItem(statsStateKey)||'n
 function saveStatsState(game){if(statsView==='games')savedStatsGame=game||'';try{globalThis.sessionStorage?.setItem(statsStateKey,JSON.stringify({view:statsView,game:savedStatsGame,unit:activePeriodUnit,offset:activePeriodOffset,custom:activePeriodUnit==='custom'?activeCustomPeriod:null}));}catch{}}
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
 function recoveryKey(){return key()+'.recovery';}
+// BGG에서 되살린 기록 ID와, 이 기기에서 삭제했거나 동기화로 삭제를 받은 기록 ID(되살리지 않음).
+const idList=value=>Array.isArray(value)?value.filter(id=>typeof id==='string'):[];
+function storedIds(part){return new Set(readStoredJson(key()+'.'+part,[],idList));}
+function saveIds(part,ids){try{writeStoredJson(key()+'.'+part,[...ids].slice(-5000));}catch{}}
+function rememberDeleted(ids){if(!ids.length)return;const deleted=storedIds('deletedIds'),restored=storedIds('bggRestored');for(const id of ids){deleted.add(id);restored.delete(id);}saveIds('deletedIds',deleted);saveIds('bggRestored',restored);}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
 function syncFailure(error){cloudState='error';cloudError=friendly(error);message('accountError','클라우드 동기화 실패: '+cloudError);}
 let recordLoginPending=false,recordDraftVersion=0,recordFlow='setup',recordStep='game',pendingGame=null,pendingScoreless=null,scorelessMode='',scorelessPlayers=[],scorelessTeams=[],scorelessBoardActive=false,scorelessSelectedPlayers=new Set(),scorelessPlayerSignature='',scorelessStep='count',scorelessDraftMuted=false;
@@ -292,7 +298,7 @@ function updateRecordedPlayer(playId,personId,field,value,context,expected){
 }
 function deleteRecordedPlay(playId,context){
  checkRecordContext(context);if(!records.some(p=>p.id===playId))throw Error('기록을 찾을 수 없습니다.');const old=records,oldPending=new Set(pending);records=records.filter(p=>p.id!==playId);if(scopeUid())pending.add(playId);else pending.delete(playId);
- try{persist();}catch{records=old;pending=oldPending;throw Error('삭제하지 못했습니다. 기기 저장 공간을 확인해주세요.');}
+ try{persist();}catch{records=old;pending=oldPending;throw Error('삭제하지 못했습니다. 기기 저장 공간을 확인해주세요.');}rememberDeleted([playId]);
  renderHistory();updateButtons();notify(scopeUid()?'기록을 삭제했습니다. 클라우드 동기화 대기 중입니다.':'기록을 삭제했습니다.');
 }
 
@@ -382,6 +388,16 @@ async function sync({silent=false}={}){
 function cloudMarkKey(uid){return 'score.cloudSync.v1.'+uid;}
 function readCloudMark(uid){const mark=readStoredJson(cloudMarkKey(uid),null);return mark&&Number.isFinite(mark.plays)?mark:null;}
 function writeCloudMark(uid,manifest){try{writeStoredJson(cloudMarkKey(uid),manifest?{plays:manifest.plays}:null);}catch{}}
+// 다른 기기에서 BGG로 내보낸 Score 기록을 이 기기에 없을 때만 되살린다(덮어쓰기·삭제한 기록 부활 없음).
+window.addEventListener?.('score-bgg:restore',event=>{
+ const detail=event.detail||{};if(!currentUser||detail.uid!==currentUser.uid||!Array.isArray(detail.plays))return;
+ const have=new Set(records.map(p=>p.id)),deleted=storedIds('deletedIds'),added=[];
+ for(const row of detail.plays){const raw=restorablePlay(row,detail.username);if(!raw||have.has(raw.id)||deleted.has(raw.id))continue;try{const play={...createPlay(raw,raw.id),createdAt:raw.date+'T12:00:00.000Z'};if(isPlay(play)){added.push(play);have.add(play.id);}}catch{}}
+ if(!added.length)return;const previous=records;records=matchGameRecords([...added,...records]);
+ try{persist();}catch{records=previous;notify('BGG 기록을 되살리지 못했습니다. 기기 저장 공간을 확인해주세요.');return;}
+ const restored=storedIds('bggRestored');for(const play of added)restored.add(play.id);saveIds('bggRestored',restored);writeCloudMark(currentUser.uid,null);
+ renderHistory();updateButtons();notify(`BGG에서 이 기기에 없던 Score 기록 ${added.length}개를 되살렸습니다. 클라우드 동기화 때 원본과 맞춥니다.`);
+});
 async function remotePlays(uid,full){
  const manifest=cloudApi.cloudManifest?await cloudApi.cloudManifest(uid):null;if(!manifest)return {plays:await loadCloud(uid),mark:null};
  const mark=readCloudMark(uid);
@@ -401,7 +417,9 @@ async function refreshCloud(full=false){
  const previousPending=new Set(pending),normalizedRemote=remote.map(normalizeStoredPlay),repairedIds=normalizedRemote.filter((play,index)=>play!==remote[index]).map(play=>play.id),matchedRemote=matchGameRecords(normalizedRemote);const map=new Map(matchedRemote.map(p=>[p.id,p]));for(const p of records)if(pending.has(p.id))map.set(p.id,p);for(const id of pending)if(!records.some(p=>p.id===id))map.delete(id);for(const id of repairedIds)pending.add(id);
  // Keep a separate, account-scoped recovery copy before accepting remote removals.
  // Never automatically resurrect games intentionally deleted on another device.
- const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));
+ // BGG에서 되살린 기록: 클라우드에 원본이 있으면 원본을 쓰고, 없으면 클라우드에 올린다.
+ const restored=storedIds('bggRestored');if(restored.size&&!fetched.partial){for(const p of records)if(restored.has(p.id)&&!map.has(p.id)&&!pending.has(p.id)){map.set(p.id,p);pending.add(p.id);}saveIds('bggRestored',new Set());}
+ const missing=records.filter(p=>!map.has(p.id)&&!pending.has(p.id));rememberDeleted(missing.map(p=>p.id));
  if(missing.length){const backup=new Map(read(recoveryKey()).records.map(p=>[p.id,p]));for(const p of missing)backup.set(p.id,p);localStorage.setItem(recoveryKey(),JSON.stringify({records:[...backup.values()],pending:[]}));}
  const previous=records,next=[...map.values()],current=new Map(records.map(play=>[play.id,play])),changed=next.length!==records.length||next.some(play=>JSON.stringify(current.get(play.id))!==JSON.stringify(play)),pendingChanged=pending.size!==previousPending.size;if(changed)records=next;try{if(changed||pendingChanged)persist();}catch(error){records=previous;pending=previousPending;throw error;}
  await sync();if(epoch!==accountEpoch)return;
