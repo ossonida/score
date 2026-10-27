@@ -15,3 +15,5 @@ test('abbreviated BG Stats locations on BGG are not counted twice and linked rec
  assert.deepEqual(placeStats(records,plays).map(x=>[x.place,x.records,x.bgg]),[['B1',1,0]]);
  const plan=await planBggExport(records,{},20,'',new Set(bgStatsLinks(records,plays).keys()));assert.equal(plan.records.length,0);assert.equal(plan.fromBgStats,1);
 });
+test('a stored BGG play number links the record even when names were renamed later',async()=>{const records=[{...record('bgstats:a','2026-09-25','B1'),bggPlayId:'100',players:[{id:'a',name:'나',score:10},{id:'b',name:'케이',score:7}]}],plays=[bgg('100','2026-09-25','B.')];
+ assert.deepEqual([...bgStatsLinks(records,plays)],[['bgstats:a','100']]);assert.deepEqual(placeStats(records,plays).map(x=>x.place),['B1']);});

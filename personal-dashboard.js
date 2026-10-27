@@ -1,4 +1,4 @@
-import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=153';
+import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=154';
 import {missionName,missionRange} from './mission-names.js?v=4';
 import {renderModeStats,cooperativeStats} from './record-view.js?v=134';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';

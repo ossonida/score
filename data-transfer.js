@@ -1,5 +1,5 @@
 import {safeGameImage} from './game-artwork.js?v=171';
-import {createPlay,isPlay} from './records-core.js?v=153';
+import {createPlay,isPlay} from './records-core.js?v=154';
 export const MAX_IMPORT_BYTES=20*1024*1024,MAX_IMPORT_RECORDS=10000;
 const colors=['#52c7ef','#ffcc00','#b44cdb','#45d9a0','#ff9461','#b19be6','#087fff','#ff2496'];
 const yes=v=>v===true||v===1;
@@ -8,8 +8,8 @@ const ref=v=>typeof v==='string'||Number.isSafeInteger(v)?String(v):'';
 async function hash(value){const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');}
 function date(value){const s=String(value||'');const match=s.match(/^(\d{4})-?(\d{2})-?(\d{2})/);if(!match)throw Error('날짜 없음');const d=`${match[1]}-${match[2]}-${match[3]}`;if(new Date(d+'T00:00:00Z').toISOString().slice(0,10)!==d)throw Error('잘못된 날짜');return d;}
 function number(value){if(value===null||value===undefined||value===''||typeof value==='string'&&!value.trim())return null;if(typeof value!=='number'&&typeof value!=='string')throw Error('잘못된 점수');if(typeof value==='string'&&!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value.trim()))throw Error('잘못된 점수');const n=Number(value);if(!Number.isFinite(n)||Math.abs(n)>Number.MAX_SAFE_INTEGER)throw Error('점수 범위 초과');return n;}
-// 같은 ID는 중복으로 두되, 기존 기록에 장소가 없고 가져온 기록에 있으면 장소만 채운다(updated).
-export function mergeImported(existing,incoming){const map=new Map(existing.map(p=>[p.id,p]));let duplicates=0;const added=[],updated=[];for(const play of incoming){const old=map.get(play.id);if(old){duplicates++;if(!old.location&&play.location){const next={...old,location:play.location};map.set(play.id,next);updated.push(next);}continue;}map.set(play.id,play);added.push(play);}return {records:[...map.values()],added,duplicates,updated};}
+// 같은 ID는 중복으로 두되, 기존 기록에 없는 장소·BGG 플레이 번호가 가져온 기록에 있으면 그것만 채운다(updated).
+export function mergeImported(existing,incoming){const map=new Map(existing.map(p=>[p.id,p]));let duplicates=0;const added=[],updated=[];for(const play of incoming){const old=map.get(play.id);if(old){duplicates++;const fill={...(!old.location&&play.location?{location:play.location}:{}),...(!old.bggPlayId&&play.bggPlayId?{bggPlayId:play.bggPlayId}:{})};if(Object.keys(fill).length){const next={...old,...fill};map.set(play.id,next);updated.push(next);}continue;}map.set(play.id,play);added.push(play);}return {records:[...map.values()],added,duplicates,updated};}
 export async function parseImport(raw){
  if(typeof raw!=='string'||new TextEncoder().encode(raw).byteLength>MAX_IMPORT_BYTES)throw Error('20MB 이하의 JSON 파일을 선택해주세요.');
  let data;try{data=JSON.parse(raw.replace(/^\uFEFF/,''));}catch{throw Error('JSON 파일을 읽을 수 없습니다. 압축을 풀고 JSON 파일을 선택해주세요.');}
@@ -51,7 +51,7 @@ export async function parseImport(raw){
     const occurrence=occurrences.get(fingerprint)||0;occurrences.set(fingerprint,occurrence+1);
     const identity=text(p.uuid)?'uuid:'+text(p.uuid).toLowerCase():fingerprint+'#'+occurrence;
     const id='bgstats:'+(await hash(identity)).slice(0,48);
-    const location=places.get(ref(p.locationRefId))||'';const record=createPlay({game:{name,bggId},date:when,rule,players,location},id);record.createdAt=when+'T12:00:00.000Z';records.push(record);
+    const location=places.get(ref(p.locationRefId))||'',bggPlayId=Number.isSafeInteger(Number(p.bggId))&&Number(p.bggId)>0?String(p.bggId):undefined;const record=createPlay({game:{name,bggId},date:when,rule,players,location,bggPlayId},id);record.createdAt=when+'T12:00:00.000Z';records.push(record);
     if(index%200===199)await new Promise(resolve=>setTimeout(resolve,0));
    }catch(error){reject(error.message||'읽을 수 없는 기록');}
   }

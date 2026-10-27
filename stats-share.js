@@ -1,4 +1,4 @@
-import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=153';
+import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=154';
 import {metadata,bggId} from './bgg-metadata.js?v=171';
 import {scoreGameType} from './score-games.js?v=167';
 import {missionCleared,missionName} from './mission-names.js?v=4';

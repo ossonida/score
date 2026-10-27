@@ -7,7 +7,8 @@ const keyOf=(gameId,date,players)=>gameId&&date?[gameId,date,playersKey(players)
 // 반환: 기록 ID → 연결된 BGG 플레이 ID. 같은 열쇠의 경기가 여러 번이면 순서대로 하나씩 짝짓는다.
 export function bgStatsLinks(records,bggPlays=[]){
  const pool=new Map();for(const p of bggPlays){if(!p||p.score?.id)continue;const k=keyOf(p.gameId,p.date,p.players);if(!k)continue;if(!pool.has(k))pool.set(k,[]);pool.get(k).push(String(p.id));}
- const links=new Map();for(const r of records){if(typeof r?.id!=='string'||!r.id.startsWith('bgstats:'))continue;const list=pool.get(keyOf(r.game?.bggId,r.date,r.players));if(list?.length)links.set(r.id,list.shift());}
+ // 기록에 BGG 플레이 번호가 있으면 그 번호로 바로 연결하고, 없는 기록만 내용으로 맞춘다.
+ const links=new Map();for(const r of records){if(typeof r?.bggPlayId==='string'&&r.bggPlayId){links.set(r.id,r.bggPlayId);continue;}if(typeof r?.id!=='string'||!r.id.startsWith('bgstats:'))continue;const list=pool.get(keyOf(r.game?.bggId,r.date,r.players));if(list?.length)links.set(r.id,list.shift());}
  return links;
 }
 // BG Stats 원본이 BGG에 있는데 Score가 같은 기록을 다시 올린 중복 플레이(BGG 플레이 ID 목록).

@@ -1,8 +1,8 @@
-import './records.js?v=188';
+import './records.js?v=189';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=173';
 import {bggLinkRequest} from './bgg-link-client.js?v=67';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=98';
-import {bgStatsLinks} from './bgstats-link.js?v=1';
+import {bgStatsLinks} from './bgstats-link.js?v=2';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});

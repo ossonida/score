@@ -1,5 +1,5 @@
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {gameKey,EXPANSIONS_MAX} from './records-core.js?v=153';
+import {gameKey,EXPANSIONS_MAX} from './records-core.js?v=154';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const fold=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,'');
 // 기록 카드·저장 2단계의 확장 배지: 1개면 이름, 2개 이상이면 개수.

@@ -1,5 +1,5 @@
 import {renderRecordParticipants,renderModeStats} from './record-view.js?v=134';
-import {recordMode,modeLabels} from './records-core.js?v=153';
+import {recordMode,modeLabels} from './records-core.js?v=154';
 import {missionName} from './mission-names.js?v=4';
 import {readGameLibrary} from './game-library.js?v=100';
 import {enhanceGamePicker} from './game-picker.js?v=64';
@@ -8,7 +8,7 @@ import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} fr
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
 import {personStats} from './social-insights.js?v=117';
-import {readPlacePrefs,placeSuggestions} from './places.js?v=2';
+import {readPlacePrefs,placeSuggestions} from './places.js?v=3';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
@@ -19,11 +19,11 @@ import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,name
 import {renderStatsDashboard} from './stats-dashboard.js?v=98';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=4';
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
-import {mergeImported} from './data-transfer.js?v=67';
+import {mergeImported} from './data-transfer.js?v=68';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=166';
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=153';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=154';
 import * as cloudApi from './cloud-records.js?v=173';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=173';
