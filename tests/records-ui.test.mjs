@@ -552,6 +552,16 @@ test('opponent records open a person view from game stats and period analysis, a
  a.get('statsAll').onclick();assert.equal(find('insight-card opponent-card').length,1,'period analysis shows the opponent card');find('opponent-row')[0].onclick();assert.equal(find('person-scope')[0].children[0].attributes['aria-pressed'],'true','period entry opens all games');
  a.get('statsRecent').onclick();assert.equal(find('person-head').length,0,'switching stats tabs closes the person view');
 });
+test('phone or browser back closes only the person view and the back button reuses the same history step',async()=>{
+ const play=(id,date,mine,theirs)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:mine},{id:'b',name:'바다',color:'#ffcc00',score:theirs}]});
+ const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records:[play('p1','2026-10-01',10,8),play('p2','2026-10-02',5,9)],pending:[]})]]),false,'',{me:'하늘',initialHash:'#stats'}),walk=e=>[e,...(e.children||[]).flatMap(walk)],find=cls=>walk(a.get('statsInsights')).filter(e=>e.className===cls);
+ const stack=[null],w=a.vm.window,popped=()=>w.dispatchEvent(new Event('popstate'));w.history={get state(){return stack.at(-1);},pushState(state){stack.push(state);},replaceState(state){stack[stack.length-1]=state;},back(){stack.pop();popped();}};
+ a.get('statsGames').onclick();a.get('recordFilter').value='bgg:13';a.get('recordFilter').onchange();find('opponent-row')[0].onclick();assert.equal(stack.length,2,'opening adds one history step');assert.equal(find('person-head').length,1);
+ find('person-scope')[0].children[0].onclick();assert.equal(stack.length,2,'scope chips do not add steps');
+ w.history.back();assert.equal(find('person-head').length,0,'back closes the person view');assert.equal(find('insight-card opponent-card').length,1);assert.equal(a.get('statsGames').attributes['aria-selected'],'true');
+ find('opponent-row')[0].onclick();find('person-back')[0].onclick();assert.equal(stack.length,1,'‹ goes back through the same step');assert.equal(find('person-head').length,0);
+ find('opponent-row')[0].onclick();a.get('statsAll').onclick();assert.equal(stack.at(-1).scorePerson,false,'switching tabs releases the step');popped();assert.equal(find('person-head').length,0);
+});
 test('stats view, chosen game and period survive a refresh in the same tab',async()=>{
  const session=new Map(),a=await app(new Map(),false,'',{me:'하늘',session});await save(a);
  a.get('statsGames').onclick();const game=a.get('recordFilter').value;assert.ok(game);
