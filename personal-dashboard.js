@@ -3,7 +3,7 @@ import {missionName,missionRange} from './mission-names.js?v=4';
 import {renderModeStats,cooperativeStats} from './record-view.js?v=134';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
 import {renderGameArtwork} from './game-artwork.js?v=171';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=115';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=116';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>modeLabels[rule]||rule;
@@ -42,9 +42,8 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
  const heading=el('div',undefined,'personal-game-heading');heading.append(el('h2','나의 기록'));container.append(heading);
  if(!configured){renderModeStats(container,records);return;}
  const initial=personal;
- const controls=el('div',undefined,'personal-controls'),ruleLabel=el('label','기록 방식'),rule=el('select',undefined,'personal-rule');
- for(const value of initial.rules){const option=el('option',ruleName(value));option.value=value;rule.append(option);}
- rule.value=initial.rule;ruleLabel.append(rule);controls.append(ruleLabel);controls.hidden=initial.rules.length<2;container.append(controls);
+ // 기록 방식 선택은 두지 않고 이 게임에서 가장 많이 쓴 방식으로 보여 준다(personalGame 기본값).
+ const rule={value:initial.rule};
  const content=el('div');container.append(content);
  function draw(){
   const s=personalGame(records,profile,rule.value);content.replaceChildren();
@@ -84,7 +83,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   if(m)note(methods,'미션 기록은 한 번이라도 미션을 클리어하면 성공으로 저장되므로 성공률 대신 미션 진행으로 집계합니다. 미션당 평균 시도는 시도한 미션 수 기준입니다.');
   if(!scored&&!m)note(methods,'기록 방식을 구분해 집계합니다. 승률·1위 비율·성공률은 결과가 확인된 경기만 기준으로 합니다. 공동 1위는 1위에 포함하고 평균 순위는 참가 인원별로 계산합니다. 팀전은 내 팀의 결과를 사용하며 협력은 경기 전체 결과만 사용합니다.');if(scored)note(methods,'개인 기록 갱신은 같은 게임·승리 조건에서 이전 날짜의 개인 최고·최저점을 넘어선 경우에만 표시합니다. 첫 기록과 동점은 갱신으로 표시하지 않습니다.');content.append(methods);
  }
- rule.onchange=draw;draw();
+ draw();
 }
 function drawChart(container,entries,best){
  const rows=entries.slice(-30),scored=rows.filter(x=>typeof x.person.score==='number');if(!scored.length){note(container,'점수가 저장된 경기가 아직 없습니다.');return;}

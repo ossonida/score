@@ -1,5 +1,5 @@
-import {readIdentity} from './personal-stats.js?v=115';
-import {renderIdentitySettings} from './personal-dashboard.js?v=159';
+import {readIdentity} from './personal-stats.js?v=116';
+import {renderIdentitySettings} from './personal-dashboard.js?v=160';
 import {rememberGameImages} from './game-artwork.js?v=171';
 import './records.js?v=194';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=68';
