@@ -1,5 +1,5 @@
 import {cloudConfigured,connectCloud} from './cloud-records.js?v=173';
-import {createAnalyticsGate} from './analytics-policy.js?v=154';
+import {createAnalyticsGate} from './analytics-policy.js?v=155';
 import {createFeatureAnalytics} from './analytics-events.js?v=117';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
 const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
@@ -95,7 +95,7 @@ function installFeatureListeners(){
 installFeatureListeners();
 const gate=createAnalyticsGate({
  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},search:location.search,
- stop:()=>{window[disableKey]=true;},
+ stop:()=>{window[disableKey]=true;},resume:()=>{window[disableKey]=false;},
  start:()=>{
   window[disableKey]=false;window.dataLayer=window.dataLayer||[];
   window.gtag=function(){window.dataLayer.push(arguments);};
@@ -107,3 +107,9 @@ const gate=createAnalyticsGate({
 // Wait for restored Firebase auth before loading GA. Auth errors leave collection disabled.
 if(cloudConfigured())connectCloud(user=>gate.onAuthState(user)).catch(()=>{window[disableKey]=true;});
 else void gate.onAuthState(null);
+
+// 이용 분석 안내: 처음 한 번 화면 아래에 띄우고, 확인하거나 끄면 이 기기에서 다시 띄우지 않는다. 설정의 스위치도 같은 값을 쓴다.
+window.ScoreAnalyticsConsent={enabled:()=>gate.enabled(),set:on=>gate.setEnabled(on)};
+(()=>{const noticeKey='score.analytics.notice.v1',box=document.getElementById('analyticsNotice');let seen;try{seen=localStorage.getItem(noticeKey)==='1';}catch{seen=true;}if(!box||seen||!gate.enabled())return;
+ const done=on=>{try{localStorage.setItem(noticeKey,'1');}catch{}if(!on)gate.setEnabled(false);box.hidden=true;window.dispatchEvent(new Event('score-analytics:changed'));};
+ document.getElementById('analyticsNoticeOk').onclick=()=>done(true);document.getElementById('analyticsNoticeOff').onclick=()=>done(false);box.hidden=false;})();

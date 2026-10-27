@@ -3,7 +3,7 @@ import {BggSessions,sessionReady} from '../account-session.js';
 import {playForm,playFingerprint} from '../play-upload.js';
 const key=Buffer.alloc(32,7).toString('base64');
 function setup(fetcher,owner='owner-one'){
- const data=new Map();let chain=Promise.resolve();const state={id:{toString:()=>owner},storage:{get:async k=>data.get(k),put:async(k,v)=>{data.set(k,v);},delete:async k=>data.delete(k),setAlarm:async()=>{},list:async({prefix})=>new Map([...data].filter(([k])=>k.startsWith(prefix)).sort())},blockConcurrencyWhile:fn=>{const task=chain.then(fn);chain=task.catch(()=>{});return task;}};
+ const data=new Map();let chain=Promise.resolve();const state={id:{toString:()=>owner},storage:{get:async k=>data.get(k),put:async(k,v)=>{data.set(k,v);},delete:async k=>data.delete(k),deleteAll:async()=>data.clear(),setAlarm:async()=>{},list:async({prefix})=>new Map([...data].filter(([k])=>k.startsWith(prefix)).sort())},blockConcurrencyWhile:fn=>{const task=chain.then(fn);chain=task.catch(()=>{});return task;}};
  const env={BGG_ACCOUNT_LINK_ENABLED:'true',BGG_SESSION_KEY:key,TEST_FETCH:fetcher};return {session:new BggSessions(state,env),data,state,env};
 }
 const req=(path,body)=>new Request('https://internal'+path,{method:body===undefined?'GET':'POST',...(body===undefined?{}:{headers:{'Content-Type':'application/json'},body:JSON.stringify(path==='/post'?{expectedUsername:'alice',...body}:body)})});
@@ -98,3 +98,5 @@ test('collection status sets only the chosen flags, keeps other BGG statuses and
  assert.equal((await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{own:true}}))).status,400);
  assert.equal((await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'x',status:{owned:true}}))).status,400);
 });
+
+test('account deletion removes the session and every upload mapping',async()=>{const s=setup(async()=>loginResponse());await login(s.session);assert.ok(s.data.size>0);const r=await s.session.fetch(req('/delete',{}));assert.equal(r.status,200);assert.equal(s.data.size,0);assert.equal((await(await s.session.fetch(req('/status'))).json()).connected,false);});

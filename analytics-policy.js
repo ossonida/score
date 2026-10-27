@@ -5,9 +5,11 @@ export async function isExcludedEmail(email){
  const bytes=await globalThis.crypto.subtle.digest('SHA-256',new TextEncoder().encode(email.trim().toLowerCase()));
  return EXCLUDED_EMAIL_HASHES.has([...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join(''));
 }
-export function createAnalyticsGate({storage,search='',start,stop,isExcluded=isExcludedEmail}){
- const key='score.analytics.exclude.v1';let excluded=false,started=false,epoch=0;
+// 사용자가 끈 이용 분석(optout)은 개발자 제외(exclude)와 따로 저장하며, 다시 켜면 resume으로 전송을 재개한다.
+export function createAnalyticsGate({storage,search='',start,stop,resume=()=>{},isExcluded=isExcludedEmail}){
+ const key='score.analytics.exclude.v1',optKey='score.analytics.optout.v1';let excluded=false,optedOut=false,ready=false,started=false,epoch=0;
  try{excluded=storage.getItem(key)==='1';}catch{excluded=true;}
+ try{optedOut=storage.getItem(optKey)==='1';}catch{optedOut=true;}
  if(new URLSearchParams(search).get('analytics')==='off'){excluded=true;try{storage.setItem(key,'1');}catch{}}
  stop();
  return {async onAuthState(user){
@@ -16,6 +18,9 @@ export function createAnalyticsGate({storage,search='',start,stop,isExcluded=isE
   let blocked;try{blocked=await isExcluded(user?.email);}catch{if(current===epoch)stop();return;}
   if(current!==epoch)return;
   if(blocked){excluded=true;try{storage.setItem(key,'1');}catch{}stop();return;}
-  if(!started){started=true;start();}
- }};
+  ready=true;apply();
+ },
+ enabled:()=>!excluded&&!optedOut,
+ setEnabled(on){optedOut=!on;try{storage.setItem(optKey,on?'0':'1');}catch{}apply();}};
+ function apply(){if(excluded||optedOut||!ready){stop();return;}if(!started){started=true;start();}else resume();}
 }

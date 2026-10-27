@@ -119,6 +119,8 @@ export class BggSessions{
   if(path==='/cookie'&&request.method==='GET'){const session=await this.session();return json(200,{cookie:session&&session.username.toLowerCase()===(url.searchParams.get('username')||'').toLowerCase()?session.cookie:''});}
   if(request.method!=='POST')return fail('METHOD_NOT_ALLOWED',405);
   if(path==='/logout'){await this.state.storage.delete('session');return json(200,{connected:false,ready:true});}
+  // 계정 삭제: 세션과 업로드 연결 정보를 모두 지운다.
+  if(path==='/delete'){await this.state.storage.deleteAll();return json(200,{deleted:true});}
   let body;try{body=await readSmallJson(request,path==='/login'?4096:65536);}catch{return fail('INVALID_BODY');}if(!body||typeof body!=='object'||Array.isArray(body))return fail('INVALID_BODY');
   const fetcher=this.env.TEST_FETCH||fetch;
   if(path==='/login'){

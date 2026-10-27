@@ -49,3 +49,8 @@ test('a blocked GA sender never breaks the calling feature',()=>{
  const analytics=createFeatureAnalytics({send:()=>{throw Error('blocked');}});
  assert.equal(analytics.recordChanged('score'),false);assert.equal(analytics.feature('bgg','import_completed'),false);
 });
+test('a visitor can turn analytics off and on again; the choice survives reload and is separate from developer exclusion',async()=>{let starts=0,resumes=0,disabled;const storage=new Map(),make=()=>createAnalyticsGate({storage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},isExcluded:async()=>false,start:()=>{starts++;disabled=false;},stop:()=>{disabled=true;},resume:()=>{resumes++;disabled=false;}});
+ const a=make();await a.onAuthState(null);assert.equal(starts,1);assert.equal(a.enabled(),true);
+ a.setEnabled(false);assert.equal(disabled,true);assert.equal(storage.get('score.analytics.optout.v1'),'1');assert.equal(storage.get('score.analytics.exclude.v1'),undefined);
+ const b=make();await b.onAuthState(null);assert.equal(starts,1,'opted-out visitors do not start GA after reload');assert.equal(b.enabled(),false);
+ b.setEnabled(true);assert.equal(starts,2);assert.equal(disabled,false);b.setEnabled(false);b.setEnabled(true);assert.equal(resumes,1,'turning it back on resumes the loaded GA');});

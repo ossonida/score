@@ -200,7 +200,7 @@ dialog .swatch{width:28px;height:28px}
 <link rel="stylesheet" href="./records.css?v=170">
 <link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js">
 <link rel="stylesheet" href="./modal-ui.css?v=65">
-<link rel="stylesheet" href="./ui-system.css?v=105">
+<link rel="stylesheet" href="./ui-system.css?v=106">
 <style>
 html[data-initial-view] #homeScreen{display:none!important}
 html[data-boot-pending] body>main,html[data-boot-pending] dialog{visibility:hidden;pointer-events:none}
@@ -228,7 +228,7 @@ html[data-initial-view=settings] #navSettings,html[data-initial-view=games] #nav
 <section class="settings-card" id="settingsIdentityCard"><h2>기록에서 내 닉네임 지정하기</h2><div id="identityEditor"></div></section><section class="settings-card" id="settingsPlacesCard"><h2>장소 관리</h2><p class="settings-note">게임 기록과 BGG에서 가져온 플레이의 장소입니다. 기본으로 정한 장소는 새 기록에 자동으로 입력되고, 숨긴 장소는 장소 추천에 나오지 않습니다.</p><div id="placeList" class="place-list"></div><p id="placeStatus" class="settings-note" role="status"></p></section>
 <section class="settings-card"><h2>데이터 관리</h2><p id="settingsRecordCount" role="status"></p><div class="transfer-actions"><button id="importData" type="button">가져오기 <small>BG Stats · Score JSON</small></button></div><input id="importFile" type="file" accept=".json,application/json" hidden><p class="settings-note">기존 기록과 합치고 중복은 제외합니다. 점수판은 유지됩니다.</p><p id="transferStatus" class="transfer-status" role="status" aria-live="polite"></p>
 <div id="importPreview" class="import-preview" hidden><h3>가져오기 미리보기</h3><p id="importSummary"></p><p id="importScope" class="settings-note"></p><div id="importWarnings" class="import-warnings"></div><div id="importExamples"></div><div class="transfer-actions"><button id="cancelImport" type="button">취소</button><button id="confirmImport" type="button" class="primary" disabled>기록 가져오기</button></div></div>
-</section></div><button id="installApp" type="button">웹을 홈화면에 추가</button></main>
+</section><section class="settings-card" id="settingsPrivacyCard"><h2>개인정보</h2><label class="privacy-toggle" for="analyticsEnabled"><input id="analyticsEnabled" type="checkbox"><span><strong>이용 분석 허용</strong><small>Google Analytics로 어떤 기능을 많이 쓰는지 집계합니다. 이름·게임 기록 같은 입력 내용은 보내지 않습니다.</small></span></label><p class="settings-note"><a id="privacyPolicyLink" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p><div id="accountDeleteArea" class="account-delete" hidden><button id="deleteAccount" class="record-danger" type="button">계정과 클라우드 데이터 삭제</button><p class="settings-note">클라우드에 저장된 기록·닉네임 설정·BGG 정보와 BGG 연결, Google 로그인 계정을 모두 지웁니다. 되돌릴 수 없습니다.</p><p id="deleteAccountStatus" class="settings-note" role="status"></p></div></section></div><button id="installApp" type="button">웹을 홈화면에 추가</button></main><div id="analyticsNotice" class="analytics-notice" role="region" aria-label="이용 분석 안내" hidden><p>더 나은 앱을 위해 Google Analytics로 이용 통계를 수집합니다. 이름·게임 기록 같은 입력 내용은 보내지 않습니다. <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></p><div><button id="analyticsNoticeOff" type="button">분석 끄기</button><button id="analyticsNoticeOk" type="button">확인</button></div></div>
 <main id="gamesScreen" hidden><header class="settings-heading"><div><h1>게임</h1><p id="gamesCount" class="record-note"></p></div></header><div id="gameViewTabs" class="game-view-tabs" role="tablist" aria-label="게임 보기"><button id="gamesAll" type="button" role="tab" aria-selected="true" aria-controls="gamesList">전체</button><button id="gamesPlayed" type="button" role="tab" aria-selected="false" aria-controls="gamesList" tabindex="-1">해본</button><button id="gamesWantToPlay" type="button" role="tab" aria-selected="false" aria-controls="gamesList" tabindex="-1">하고 싶은</button><button id="gamesOwned" type="button" role="tab" aria-selected="false" aria-controls="gamesList" tabindex="-1">보유</button><button id="gamesWishlist" type="button" role="tab" aria-selected="false" aria-controls="gamesList" tabindex="-1">위시 리스트</button><button id="gamesPreordered" type="button" role="tab" aria-selected="false" aria-controls="gamesList" tabindex="-1">펀딩</button></div><label class="game-search" for="gameSearch"><img src="assets/icon-search.svg" width="24" height="24" alt=""><input id="gameSearch" type="search" aria-label="게임 검색" maxlength="120" placeholder="게임명을 입력하세요" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"></label><p id="gamesMessage" class="record-message" role="status"></p><div id="gamesList" class="library-list"></div><nav id="gameIndex" class="game-index" aria-label="게임 색인" hidden></nav><span id="gameIndexBubble" class="game-index-bubble" aria-hidden="true" hidden></span><p id="gamesEmpty" class="record-note">아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.</p><button id="addLibraryGame" class="library-fab" type="button" aria-label="게임 추가" title="게임 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></main>
 <main id="statsScreen" class="record-dialog" hidden><header class="settings-heading"><div><h1>통계</h1></div></header>
 <div id="statsViewTabs" class="stats-view-tabs" role="tablist" aria-label="통계 보기"><button id="statsRecent" type="button" role="tab" aria-selected="true" aria-controls="statsPanel">최근 기록</button><button id="statsAll" type="button" role="tab" aria-selected="false" aria-controls="statsPanel" tabindex="-1">기간 분석</button><button id="statsGames" type="button" role="tab" aria-selected="false" aria-controls="statsPanel" tabindex="-1">게임별 통계</button></div>
@@ -588,11 +588,11 @@ render();
 </script>
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
-<script type="module" src="./app-analytics.js?v=167"></script>
-<script type="module" src="./records.js?v=186"></script>
+<script type="module" src="./app-analytics.js?v=168"></script>
+<script type="module" src="./records.js?v=187"></script>
 <script type="module" src="./bgg-account.js?v=177"></script>
 <script type="module" src="./bgg-link.js?v=174"></script>
-<script type="module" src="./settings.js?v=128"></script>
+<script type="module" src="./settings.js?v=129"></script>
 <script type="module" src="./games-screen.js?v=175"></script>
 </body>
 </html>

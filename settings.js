@@ -1,7 +1,7 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=159';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=186';
+import './records.js?v=187';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=66';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=1';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
@@ -27,7 +27,13 @@ function renderPlaces(context){
  for(const item of ordered.slice(0,placesOpen?ordered.length:20))list.append(row(item));
  if(!placesOpen&&ordered.length>20)list.append(placeButton('장소 '+(ordered.length-20)+'개 더 보기',()=>{placesOpen=true;renderPlaces(api.context());}));
 }
-function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);renderPlaces(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+// 개인정보 · 이용 분석 허용: app-analytics.js의 ScoreAnalyticsConsent와 같은 값을 쓴다(이 기기 저장).
+function renderPrivacy(){const consent=window.ScoreAnalyticsConsent,box=$('analyticsEnabled');box.disabled=!consent;box.checked=!!consent?.enabled();$('accountDeleteArea').hidden=!api.context().key.startsWith('score.plays.v1.user.');}
+// 계정 삭제: 범위를 확인받은 뒤 records.js의 deleteAccount로 진행 상황을 보여 주며 지운다.
+$('deleteAccount').onclick=()=>{const context=api.context();if(!context.key.startsWith('score.plays.v1.user.'))return;const run=async()=>{const button=$('deleteAccount');button.disabled=true;try{const removed=await api.deleteAccount(context,text=>{$('deleteAccountStatus').textContent=text;});$('deleteAccountStatus').textContent='계정을 삭제했습니다. 클라우드 데이터 '+removed+'건을 지웠습니다.';}catch(error){$('deleteAccountStatus').textContent=error.message||'계정을 삭제하지 못했습니다.';}finally{button.disabled=false;renderPrivacy();}};window.ScoreCounter?.confirm?.('계정과 클라우드 데이터 삭제','클라우드의 기록·닉네임 설정·BGG 정보와 BGG 연결, Google 로그인 계정을 모두 삭제합니다. 이 기기의 이 계정 기록도 지워지며 되돌릴 수 없습니다. BGG 사이트에 이미 올린 플레이는 BGG에서 직접 지워야 합니다.',run);};
+$('analyticsEnabled').onchange=()=>{window.ScoreAnalyticsConsent?.set($('analyticsEnabled').checked);try{localStorage.setItem('score.analytics.notice.v1','1');}catch{}const notice=$('analyticsNotice');if(notice)notice.hidden=true;renderPrivacy();};
+window.addEventListener('score-analytics:changed',renderPrivacy);
+function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);renderPlaces(context);renderPrivacy();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=currentView();
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['games','gamesScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;

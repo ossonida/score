@@ -43,10 +43,10 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
   if(!token&&action==='search'&&request.method==='GET'){if(!origin)return reply(401,{error:'Sign in required'});uid='guest:'+(request.headers.get('CF-Connecting-IP')||'unknown');}
   else try{if(!token)throw Error();uid=await verify(token,env.FIREBASE_PROJECT_ID);}catch{return reply(401,{error:'Sign in required'});}
   if(!env.BGG_API_TOKEN||!env.BGG_LIMITS)return reply(503,{error:'BGG service is not configured'});
-  const accountRoutes={'link-status':['GET','/status'],'link-login':['POST','/login'],'link-logout':['POST','/logout'],'link-post':['POST','/post'],'link-clear-want':['POST','/clear-want'],'link-collection':['POST','/collection']};
+  const accountRoutes={'link-status':['GET','/status'],'link-login':['POST','/login'],'link-logout':['POST','/logout'],'link-post':['POST','/post'],'link-clear-want':['POST','/clear-want'],'link-collection':['POST','/collection'],'link-delete':['POST','/delete']};
   if(Object.hasOwn(accountRoutes,action)){
    const [method,path]=accountRoutes[action];if(request.method!==method)return reply(405,{error:'Invalid method'});
-   if(!sessionReady(env)||!env.BGG_SESSIONS)return reply(action==='link-status'?200:503,{ready:false,connected:false,code:'BGG_LINK_NOT_READY'});
+   if(!sessionReady(env)||!env.BGG_SESSIONS)return reply(action==='link-status'||action==='link-delete'?200:503,{ready:false,connected:false,code:'BGG_LINK_NOT_READY'});
    if(['link-login','link-post','link-clear-want','link-collection'].includes(action)){
     try{for(const [name,path]of [['user:'+uid,'/user'],['global','/global']]){const limiter=env.BGG_LIMITS.get(env.BGG_LIMITS.idFromName(name)),limited=await limiter.fetch('https://limits.internal'+path);if(limited.status===429)return reply(429,{code:'BGG_LOGIN_RATE_LIMIT'});if(!limited.ok)throw Error();}}catch{return reply(503,{code:'BGG_LINK_UNAVAILABLE'});}
    }
