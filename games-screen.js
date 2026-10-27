@@ -7,6 +7,7 @@ import {idToken} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {gameNames} from './bgg-metadata.js?v=171';
+import {indexEntries} from './game-index.js?v=1';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;
@@ -20,12 +21,24 @@ const current=c=>{const n=api.context();return c.key===n.key&&c.epoch===n.epoch;
 function rows(){const c=api.context();return libraryGames(c.records,readGameLibrary(c.key));}
 function artwork(game){const wrap=el('span',undefined,'library-art'),placeholder=el('span','◇','library-art-fallback'),art=el('span');wrap.setAttribute('aria-hidden','true');wrap.append(placeholder,art);renderGameArtwork(art,game);const image=art.querySelector('img');if(image)image.alt='';return wrap;}
 // 게임 탭이 보이지 않을 때는 그리지 않고, 바뀐 내용이 있을 때만 게임 탭으로 이동하며 다시 그린다.
-let stale=true,renderToken=0;
-function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;const context=api.context(),scope=context.key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList');$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view,bggState().plays||[]),query=$('gameSearch').value.trim(),q=normalizeGameQuery(query),games=(query?all.filter(row=>searchableGameGroups([row],query).length||normalizeGameQuery(gameNames(row.game).ko).includes(q)):[...all]).map(row=>({...row,label:gameNames(row.game).ko}));if(view!=='played')games.sort((a,b)=>a.label.localeCompare(b.label,'ko'));list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
+let stale=true,renderToken=0,showRow=()=>null;
+function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;const context=api.context(),scope=context.key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList');$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();renderIndex([]);$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view,bggState().plays||[]),query=$('gameSearch').value.trim(),q=normalizeGameQuery(query),games=(query?all.filter(row=>searchableGameGroups([row],query).length||normalizeGameQuery(gameNames(row.game).ko).includes(q)):[...all]).map(row=>({...row,label:gameNames(row.game).ko}));if(view!=='played')games.sort((a,b)=>a.label.localeCompare(b.label,'ko'));list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
  $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':view==='played'?'아직 플레이한 게임이 없습니다. 기록을 저장하거나 BGG 정보를 가져오면 표시됩니다.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':'설정에서 BGG 컬렉션을 가져오면 '+viewLabels[view]+'이 표시됩니다.';
- const token=++renderToken,addRows=from=>{if(token!==renderToken)return;const end=Math.min(games.length,from+(from?60:30));for(let index=from;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index];const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}if(end<games.length)setTimeout(()=>addRows(end),0);};addRows(0);
+ const token=++renderToken;let rendered=0;const append=limit=>{const end=Math.min(games.length,limit);for(let index=rendered;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index];const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}rendered=Math.max(rendered,end);},addRows=()=>{if(token!==renderToken)return;append(rendered+(rendered?60:30));if(rendered<games.length)setTimeout(addRows,0);};
+ // 색인 이동은 아직 나눠 붙이지 않은 줄까지 바로 그린 뒤 그 줄을 돌려준다.
+ showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(view==='played'?[]:indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
+// 우측 초성·알파벳 색인: 누르거나 끌면 가리키는 글자의 첫 게임으로 즉시 스크롤한다.
+let indexItems=[],indexKeyNow='';
+function renderIndex(entries){const nav=$('gameIndex');indexItems=entries.length>1?entries:[];nav.hidden=!indexItems.length;$('gamesList').classList.toggle('has-index',!nav.hidden);nav.replaceChildren(...indexItems.map(item=>{const button=el('button',item.key);button.type='button';button.setAttribute('aria-label',item.key+'(으)로 시작하는 게임으로 이동');button.onclick=()=>jumpTo(item);return button;}));}
+function jumpTo(item){const row=showRow(item.index);if(!row)return;row.scrollIntoView({block:'start'});}
+function indexAt(y){const nav=$('gameIndex'),box=nav.getBoundingClientRect();return indexItems[Math.max(0,Math.min(indexItems.length-1,Math.floor((y-box.top)/box.height*indexItems.length)))];}
+function dragIndex(e){const item=indexItems.length&&indexAt(e.clientY);if(!item)return;const bubble=$('gameIndexBubble');bubble.textContent=item.key;bubble.hidden=false;if(item.key===indexKeyNow)return;indexKeyNow=item.key;jumpTo(item);}
+function endIndexDrag(){indexKeyNow='';$('gameIndexBubble').hidden=true;}
+$('gameIndex').addEventListener('pointerdown',e=>{if(e.button)return;e.preventDefault();$('gameIndex').setPointerCapture?.(e.pointerId);dragIndex(e);});
+$('gameIndex').addEventListener('pointermove',e=>{if($('gameIndex').hasPointerCapture?.(e.pointerId))dragIndex(e);});
+for(const name of ['pointerup','pointercancel','lostpointercapture'])$('gameIndex').addEventListener(name,endIndexDrag);
 function selectView(next,focus){view=next;for(const [key,id] of Object.entries(views)){const tab=$(id),on=key===next;tab.setAttribute('aria-selected',String(on));tab.tabIndex=on?0:-1;if(on&&focus)tab.focus();}render();}
 for(const [key,id] of Object.entries(views))$(id).onclick=()=>selectView(key);
 $('gameViewTabs').addEventListener('keydown',e=>{const keys=Object.keys(views),step={ArrowRight:1,ArrowLeft:-1}[e.key];if(!step)return;e.preventDefault();selectView(keys[(keys.indexOf(view)+step+keys.length)%keys.length],true);});

@@ -152,7 +152,14 @@ dialog .actions .danger{margin-right:0}
 
 .bottom-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
 #gamesScreen{padding:24px 18px calc(var(--bottom-nav-height) + env(safe-area-inset-bottom,0px) + 90px);max-width:960px;width:100%;margin:auto;box-sizing:border-box}
-.library-list{display:grid;gap:0}.library-row{display:flex;align-items:center;gap:14px;width:100%;padding:16px 0;border:0;border-bottom:1px solid #253247;border-radius:0;background:transparent;color:inherit;text-align:left;min-width:0}
+.library-list{display:grid;gap:0}
+.library-list.has-index{padding-right:20px}
+.game-index{position:fixed;right:max(0px,calc((100vw - 960px)/2));top:176px;bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom,0px) + 86px);display:flex;flex-direction:column;justify-content:center;width:26px;touch-action:none;user-select:none;-webkit-user-select:none;z-index:44}
+.game-index[hidden],.game-index-bubble[hidden]{display:none}
+.game-index button{flex:1 1 0;max-height:22px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:#8fa6c3;font-size:11px;font-weight:700;line-height:1;overflow:hidden}
+.game-index button:focus-visible{outline:2px solid #8fc3ff;outline-offset:-2px}
+.game-index-bubble{position:fixed;left:50%;top:45%;display:grid;place-items:center;width:64px;height:64px;transform:translate(-50%,-50%);border-radius:16px;background:#223c5dee;color:#e4f0ff;font-size:30px;font-weight:700;pointer-events:none;z-index:46}
+@media(max-height:500px){.game-index{top:12px}}.library-row{display:flex;align-items:center;gap:14px;width:100%;padding:16px 0;border:0;border-bottom:1px solid #253247;border-radius:0;background:transparent;color:inherit;text-align:left;min-width:0}
 .library-art{display:flex;align-items:center;justify-content:center;flex:0 0 52px;width:52px;height:64px;border-radius:8px;background:#172334;color:#849dbd;font-size:25px;overflow:hidden}.library-art>span,.library-art img{display:block;width:100%;height:100%;object-fit:contain}
 .library-copy{flex:1;min-width:0;display:grid;gap:6px}.library-copy h2,.library-copy strong{font-size:15px;font-weight:500;line-height:1.45;margin:0;overflow-wrap:anywhere}.library-copy p,.library-copy small{font-size:12px;color:#93a7c1;margin:0;line-height:1.5}
 #addLibraryGame.library-fab{position:fixed;right:max(20px,calc((100vw - 960px)/2 + 20px));bottom:calc(var(--bottom-nav-height) + env(safe-area-inset-bottom,0px) + 18px);display:grid;place-items:center;width:56px;height:56px;padding:0;border-radius:18px;background:#287dff;color:white;box-shadow:0 5px 22px #0006;z-index:45}.library-fab svg{width:26px;height:26px}
