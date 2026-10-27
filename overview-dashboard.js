@@ -13,12 +13,35 @@ const groupPriority=['추리','협동','전략','가족/파티','스포츠','미
 const groupOf=game=>groupPriority.find(group=>group.types.some(t=>game.types.has(t)));
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
 function note(box,text){box.append(el('p',text,'insight-footnote'));}
+// 기간 분석 · 방식별 나의 성적: 방식마다 승률(협력은 성공률) 막대와 경기 인원으로 본 기대 승률(세로선)을 보여 주고, 기대보다 가장 잘한 방식을 맨 위에 짚어 준다.
+const sidesOf=play=>{if(recordMode(play)==='team'){const teams=new Set(play.players.map(p=>p.teamId).filter(Boolean));if(teams.size>1)return teams.size;}return Math.max(1,play.players.length);};
+const percent=value=>Math.round(value*100);
+function modeScoreCard(subset,profile){
+ const section=el('section',undefined,'insight-card mode-scores');section.append(el('h3','방식별 나의 성적'));
+ const mine=subset.flatMap(play=>{const me=meIn(play,profile);return me?[{...play,players:play.players.map(p=>({...p,isSelf:p.id===me.id}))}]:[];});
+ const rows=modeStats(mine).map(g=>{const own=mine.filter(play=>recordMode(play)===g.mode),coop=g.mode==='cooperative';return {...g,me:g.players.find(p=>p.name==='나'),coop,expected:coop||!own.length?null:own.reduce((sum,play)=>sum+1/sidesOf(play),0)/own.length};}).filter(row=>row.me).sort((a,b)=>b.count-a.count);
+ if(!rows.length){note(section,'선택 기간에 내가 참여한 기록이 없습니다.');return section;}
+ const best=rows.filter(row=>row.expected!==null&&row.me.rate!==null&&row.me.known>=5).sort((a,b)=>(b.me.rate-b.expected)-(a.me.rate-a.expected))[0];
+ if(best&&percent(best.me.rate-best.expected)>0){const callout=el('p',undefined,'mode-score-best');callout.append('가장 강한 방식은 ',el('strong',best.label),` · 기대보다 +${percent(best.me.rate-best.expected)}%p`);section.append(callout);}
+ for(const row of rows){
+  const rate=row.me.rate,word=row.coop?'성공':row.mode==='rank'?'1위':'승리',item=el('div',undefined,'mode-score'),head=el('div',undefined,'mode-score-head');head.append(el('span',row.label,'mode-score-label'),el('span',`${row.count}판`,'mode-score-count'));
+  const value=el('div',undefined,'mode-score-value'),track=el('div',undefined,'mode-score-track'),fill=el('span',undefined,'mode-score-fill');fill.style.width=`${rate===null?0:percent(rate)}%`;track.append(fill);
+  if(row.expected!==null){const mark=el('span',undefined,'mode-score-mark');mark.style.left=`${percent(row.expected)}%`;track.append(mark);}
+  track.setAttribute('role','img');track.setAttribute('aria-label',rate===null?'결과 미입력':`${word}률 ${percent(rate)}%${row.expected===null?'':`, 기대 ${percent(row.expected)}%`}`);
+  value.append(el('strong',rate===null?'–':`${percent(rate)}%`,'mode-score-rate'),track);
+  const foot=el('div',undefined,'mode-score-foot');foot.append(el('span',rate===null?'결과 미입력':[`${word} ${row.me.wins}회`,...(row.coop?[`실패 ${row.me.losses}회`]:row.me.draws?[`무승부 ${row.me.draws}회`]:[])].join(' · ')));
+  if(rate!==null&&row.expected!==null){const diff=percent(rate-row.expected);foot.append(el('span',`기대 ${percent(row.expected)}% ${diff>0?'+':diff<0?'−':'±'}${Math.abs(diff)}%p`,'mode-score-chip'+(diff>0?' up':diff<0?' down':'')));}
+  item.append(head,value,foot);section.append(item);
+ }
+ if(rows.some(row=>row.expected!==null))note(section,'기대 승률은 경기 인원(팀전은 팀 수)으로 나눈 평균 확률이며 막대의 노란 세로선입니다.');
+ return section;
+}
 export function renderOverview(container,records,{scope,view,onGame,onRecord,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',rivals=true,summary=true}){
  container.replaceChildren();const profile=readIdentity(scope),day=latestPlayDate(records),subset=view==='recent'?records.filter(p=>p.date===day):records,s=overviewStats(subset,profile);
  const hero=el('section',undefined,'insight-hero overview-summary'),heading=el('div',undefined,'overview-summary-heading');heading.append(el('h2',view==='recent'?(day?formatRecentRecordTitle(day):'최근 게임기록'):title));hero.append(heading);
  if(!s.total&&view==='recent'){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings';hero.append(link);container.append(hero);return;}
  if(view==='recent'){hero.className+=' recent-summary';const share=el('button','공유하기','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openRecentShare(records,profile);}finally{share.disabled=false;}};heading.append(share);metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.gameCount,'플레이한 게임'],[bggCollection.filter(game=>game.owned).length,'보유게임'],[bggCollection.filter(game=>game.wishlist||game.wantToPlay).length,'하고 싶은 게임']]);note(hero,footnote);}if(summary)container.append(hero);if(!s.total)return;
- if(view==='all'){const results=el('section',undefined,'insight-card');results.append(el('h3','방식별 나의 성적'));for(const g of modeStats(subset.flatMap(play=>{const me=meIn(play,profile);return me?[play]:[]}))){const own=subset.flatMap(play=>{const me=meIn(play,profile);return me&&recordMode(play)===g.mode?[{...play,players:play.players.map(p=>({...p,isSelf:p.id===me.id}))}]:[]}),row=modeStats(own)[0]?.players.find(p=>p.name==='나');if(row)note(results,`${g.label} · ${g.count}회 · ${g.mode==='cooperative'?'성공':g.mode==='rank'?'1위':'승리'} ${row.wins}회 · ${row.rate===null?'결과 미입력':Math.round(row.rate*100)+'%'}`);}container.append(results);}
+ if(view==='all')container.append(modeScoreCard(subset,profile));
  if(view==='recent')renderHighlights(container,records,profile,onRecord);
  if(view==='all'){
   if(rivals)renderRivals(container,records,profile,onRecord);

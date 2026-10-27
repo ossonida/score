@@ -11,7 +11,7 @@ const server=http.createServer((req,res)=>{const u=decodeURIComponent(new URL(re
 await new Promise(r=>server.listen(0,r));const PORT=server.address().port;
 const ids=[...fs.readFileSync(path.join(ROOT,'game-catalog.js'),'utf8').matchAll(/"id": "(\d+)",\s*"name": "([^"]+)"/g)].slice(0,150).map(m=>[m[2],m[1]]);
 const names=['나','민수','지영','철수','영희','현우'],uid='perfUser';
-const records=Array.from({length:N},(_,i)=>{const [name,bggId]=ids[(i*7)%ids.length],d=new Date(Date.UTC(2023,0,1)+i*86400000*1.2).toISOString().slice(0,10);return {id:'r'+i,date:d,createdAt:d+'T12:00:00.000Z',game:{name,bggId},rule:'highest',players:names.slice(0,3+i%3).map((n,j)=>({id:'p'+j,name:n,score:(i*7+j*13)%60,isSelf:false}))};});
+const records=Array.from({length:N},(_,i)=>{const [name,bggId]=ids[(i*7)%ids.length],d=new Date(Date.UTC(2023,0,1)+i*86400000*1.2).toISOString().slice(0,10);return {id:'r'+i,date:d,createdAt:d+'T12:00:00.000Z',game:{name,bggId},rule:'highest',players:names.slice(0,3+i%3).map((n,j)=>({id:'p'+j,name:n,score:(i*7+j*13)%60,isSelf:false,color:['#52c7ef','#ffcc00','#ff6b6b','#7ed957','#b48cff','#ff9f40'][j]}))};});
 const collection=ids.map(([name,id],i)=>({id,gameId:id,name,owned:i%2===0,wishlist:i%5===0,numPlays:i%9}));
 const plays=Array.from({length:1000},(_,i)=>{const [name,id]=ids[i%ids.length];return {id:String(1000+i),gameId:id,name,date:new Date(Date.UTC(2022,0,1)+i*86400000).toISOString().slice(0,10),quantity:1,players:[{name:'나',username:'me',score:10,win:true},{name:'민수',username:'',score:8,win:false}]};});
 // BGG 게임 정보 저장분(게임별 확장 목록 포함): 실제 계정처럼 크게 채운다.
@@ -38,6 +38,7 @@ try{
  const boot=await ev(`new Promise(r=>{const t=()=>document.documentElement.dataset.bootPending?setTimeout(t,10):r(Math.round(performance.now()));t();})`);
  const nav=target=>ev(`new Promise(r=>{const t0=performance.now();window.addEventListener('hashchange',()=>requestAnimationFrame(()=>setTimeout(()=>r(Math.round(performance.now()-t0)),0)),{once:true});document.getElementById('${target}').click();})`);
  const times={};for(const n of ['navStats','navGames','navSettings','navHome','navStats','navGames','navHome']){const ms=await nav(n);(times[n]??=[]).push(ms);await sleep(400);}
+ const loaded=await ev('window.ScoreRecords?.context?.().records?.length||0');if(loaded<N){console.error('FAIL seeded records not loaded: '+loaded+'/'+N);failed=true;}
  await sleep(3000);const longTasks=(await ev('window.__lt')).reduce((a,b)=>a+b,0);
  const checks=[['long tasks total',longTasks,BUDGET.longTasks],['first games tab',times.navGames[0],BUDGET.firstGames],...['navStats','navSettings','navHome'].map(n=>[n,Math.max(...times[n]),BUDGET.nav]),['games tab revisit',times.navGames[1],BUDGET.nav]];
  console.log(`records ${N}, boot ${boot}ms (4x CPU)`);

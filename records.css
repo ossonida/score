@@ -348,3 +348,21 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .collection-menu-option:has(input:disabled){color:#6f819a;cursor:default}
 .collection-menu-note{max-width:200px;margin:4px 10px 6px;color:#8fa9c3;font-size:12px;line-height:1.4}
 .collection-menu-note:empty{display:none}
+/* 기간 분석 · 다른 카드와 같은 간격, 방식별 나의 성적 */
+#statsInsights>.period-overview{margin-top:14px}
+.mode-score-best{margin:0 0 4px;padding:10px 12px;border-radius:10px;background:#3dd68c1a;color:#c9f5df;font-size:13px;line-height:1.5}
+.mode-score-best strong{color:#5fe0a1;font-weight:600}
+.mode-score{display:grid;gap:8px;padding:14px 0}
+.mode-score+.mode-score{border-top:1px solid #23334c}
+.mode-score-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mode-score-label{min-width:0;color:#e4f0ff;font-size:14px;font-weight:500}
+.mode-score-count{flex:none;color:#8fa9c3;font-size:12px}
+.mode-score-value{display:flex;align-items:center;gap:12px}
+.mode-score-rate{flex:none;min-width:56px;color:#f2f7ff;font-size:22px;font-weight:600;line-height:1}
+.mode-score-track{position:relative;flex:1;height:10px;border-radius:5px;background:#1b2a3e}
+.mode-score-fill{display:block;height:100%;max-width:100%;border-radius:5px;background:#4d9cff}
+.mode-score-mark{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:#f2c14e}
+.mode-score-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#a6bad3;font-size:12px}
+.mode-score-chip{flex:none;padding:3px 8px;border-radius:999px;background:#1b2a3e;color:#a6bad3;font-size:12px;white-space:nowrap}
+.mode-score-chip.up{background:#3dd68c1f;color:#5fe0a1}
+.mode-score-chip.down{background:#ff8a8a1a;color:#ff8a8a}
