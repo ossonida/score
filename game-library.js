@@ -1,5 +1,5 @@
 import {resolveGame,searchableGameGroups} from './game-catalog.js?v=166';
-import {gameKey} from './records-core.js?v=152';
+import {gameKey} from './records-core.js?v=153';
 const valid=g=>g&&typeof g.name==='string'&&g.name.trim().length>0&&g.name.trim().length<=120&&(!g.bggId||/^[1-9][0-9]{0,9}$/.test(String(g.bggId)));
 const clean=g=>({name:g.name.trim(),bggId:String(g.bggId||'')});
 const storageKey=scope=>'score.games.v1.'+scope;

@@ -1,6 +1,6 @@
-import './records.js?v=177';
+import './records.js?v=178';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=166';
-import {gameKey} from './records-core.js?v=152';
+import {gameKey} from './records-core.js?v=153';
 import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=100';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {idToken} from './cloud-records.js?v=173';

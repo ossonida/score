@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome,normalizePlay,coopKind,difficultyOptions,scenarioAttempt} from '../records-core.js';
+import {createPlay,isPlay,recordMode,modeStats,resultLabel,playerOutcome,normalizePlay,coopKind,difficultyOptions,scenarioAttempt,coopCampaignStats} from '../records-core.js';
 import {editRecordedPlayer} from '../record-edit.js';
 import {personalGame} from '../personal-stats.js';
 import {rivalStats} from '../social-insights.js';
@@ -124,6 +124,10 @@ test('cooperative difficulty and campaign fields are optional, validated and cla
  assert.throws(()=>play('bad1',players,{rule:'highest',difficulty:'영웅'}));
  assert.throws(()=>coop('bad2',{scenario:0}));
  assert.throws(()=>coop('bad3',{scenario:1000}));
+ const leveled=coop('lv',{scenario:3,scenarioLevel:0});assert.equal(leveled.scenarioLevel,0);assert.ok(isPlay(leveled));assert.equal('scenarioLevel' in camp,false);
+ assert.throws(()=>coop('badLevel1',{scenarioLevel:2}),/시나리오 레벨/);assert.throws(()=>coop('badLevel2',{scenario:3,scenarioLevel:8}));assert.throws(()=>coop('badLevel3',{scenario:3,scenarioLevel:1.5}));
+ const stats=coopCampaignStats([coop('c1',{scenario:1,scenarioLevel:2}),{...coop('c2',{scenario:4,scenarioLevel:2}),cooperativeResult:'failure'},coop('c3',{scenario:4,scenarioLevel:3})]);
+ assert.equal(stats.current,4,'the last scenario is shown as-is (branching campaigns)');assert.equal(stats.currentLevel,3);assert.deepEqual(stats.levels,[{level:2,tries:2,successes:1},{level:3,tries:1,successes:1}]);
  assert.throws(()=>coop('bad4',{difficulty:'x'.repeat(41)}));
  assert.throws(()=>coop('bad5',{difficulty:'영웅',missionAttempts:[{mission:1,result:'success'}]}));
  assert.throws(()=>play('bad6',players,{rule:'cooperative',difficulty:'영웅'}));

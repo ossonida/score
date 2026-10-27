@@ -513,7 +513,7 @@ test('cooperative mission sessions restore after reload, save one play with atte
 });
 
 test('cooperative difficulty and campaign kinds restore after reload and save their new optional fields',async()=>{
- for(const [game,kind,details,field,value,label] of [['판데믹','difficulty',{difficulty:'영웅'},'difficulty','영웅','협력 난이도 기록'],['글룸헤이븐','campaign',{scenario:3},'scenario',3,'협력 캠페인 기록']]){
+ for(const [game,kind,details,field,value,label] of [['판데믹','difficulty',{difficulty:'영웅'},'difficulty','영웅','협력 난이도 기록'],['글룸헤이븐','campaign',{scenario:3},'scenario',3,'협력 캠페인 기록'],['글룸헤이븐','campaign',{scenario:3,scenarioLevel:2},'scenarioLevel',2,'협력 캠페인 기록']]){
   const a=await app();await beginScoreless(a,game,'2','coop');a.get('scorelessCoopMode').onclick();a.get(kind==='difficulty'?'scorelessCoopDifficultyMode':'scorelessCoopCampaignMode').onclick();
   const api=a.vm.window.ScoreCounter;assert.equal(api.getResultEntry().coopKind,kind);assert.match(a.get('scorelessBoardMode').textContent,new RegExp(label));
   a.get('savePlay').onclick();assert.equal(a.get('savePlayDialog').open,false);

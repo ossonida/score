@@ -366,3 +366,6 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .mode-score-chip{flex:none;padding:3px 8px;border-radius:999px;background:#1b2a3e;color:#a6bad3;font-size:12px;white-space:nowrap}
 .mode-score-chip.up{background:#3dd68c1f;color:#5fe0a1}
 .mode-score-chip.down{background:#ff8a8a1a;color:#ff8a8a}
+/* 협력 캠페인 · 시나리오 레벨 0~7 한 줄 */
+.coop-level-options{flex-wrap:nowrap;gap:6px}
+.coop-difficulty-options.coop-level-options button{flex:1 1 0;min-width:0;padding:0}

@@ -1,4 +1,4 @@
-import {isPlay,recordMode} from './records-core.js?v=152';
+import {isPlay,recordMode} from './records-core.js?v=153';
 // 사용한 확장만 바꾸고 다른 값은 그대로 둡니다. 빈 목록이면 필드를 지웁니다.
 export function setRecordExpansions(play,list){
  const next=(Array.isArray(list)?list:[]).map(x=>({id:String(x?.id||''),name:String(x?.name||'').trim()})),before=JSON.stringify(play.expansions||[]);
