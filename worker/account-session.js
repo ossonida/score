@@ -22,6 +22,14 @@ async function readSmallText(response,max=65536){
  try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>max)throw Error('INVALID_RESPONSE');chunks.push(value);}}finally{await reader.cancel();}
  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}return new TextDecoder('utf-8',{fatal:true}).decode(bytes);
 }
+// 그 날짜의 BGG 플레이 목록에 이 번호가 아직 있는지 확인한다(삭제 응답이 애매할 때).
+async function playStillThere(fetcher,env,session,date,playId){
+ if(!env.BGG_API_TOKEN||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return {checked:false,exists:true};
+ try{const url=new URL('https://boardgamegeek.com/xmlapi2/plays');url.searchParams.set('username',session.username);url.searchParams.set('mindate',date);url.searchParams.set('maxdate',date);url.searchParams.set('page','1');
+  const response=await fetcher(url,{redirect:'manual',headers:{Authorization:'Bearer '+env.BGG_API_TOKEN.trim(),Accept:'application/xml',Cookie:session.cookie,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},signal:AbortSignal.timeout(12000)});
+  if(!response.ok)return {checked:false,exists:true};const xml=await boundedXml(response);if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return {checked:false,exists:true};
+  return {checked:true,exists:new RegExp('<play\\s[^>]*\\bid="'+playId+'"').test(xml)};}catch{return {checked:false,exists:true};}
+}
 async function findScorePlay(fetcher,env,session,play){
  if(!env.BGG_API_TOKEN)return {checked:false,id:''};
  try{
@@ -156,11 +164,13 @@ export class BggSessions{
    const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+recordId,previous=await this.state.storage.get(key);if(String(previous?.bggPlayId||'')!==playId)return fail('BGG_DELETE_NOT_OURS',409);
    const response=await fetcher('https://boardgamegeek.com/geekplay.php',{method:'POST',redirect:'manual',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json, text/plain, */*',Cookie:session.cookie,Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/play/details/'+playId,'User-Agent':'ScoreCounter/1.0 (https://ossonida.github.io/score/)'},body:new URLSearchParams({ajax:'1',action:'delete',playid:playId,finalize:'1'}).toString(),signal:AbortSignal.timeout(12000)});
    if(response.status===401||response.status===403){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}
-   if(response.status===429)return fail('BGG_LOGIN_RATE_LIMIT',429);if(!response.ok)return fail('BGG_DELETE_REJECTED',502);
-   const raw=await readSmallText(response);let data;try{data=JSON.parse(raw);}catch{data=null;}
+   if(response.status===429)return fail('BGG_LOGIN_RATE_LIMIT',429);
+   let data=null;if(response.ok){const raw=await readSmallText(response);try{data=JSON.parse(raw);}catch{data=null;}}
    const error=typeof data?.error==='string'?data.error:'';if(/login|not permitted/i.test(error)){await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}
    // 이미 없는 플레이(잘못된 번호)도 지운 것으로 본다.
    if(data?.success===true||/invalid|not\s+found|does\s+not\s+exist/i.test(error)){await this.state.storage.delete(key);return json(200,{deleted:true,playId});}
+   // 응답이 성공이 아니어도 BGG에 그 플레이가 이미 없으면(직접 지운 경우 등) 지운 것으로 본다.
+   const check=await playStillThere(fetcher,this.env,session,String(body.date||''),playId);if(check.checked&&!check.exists){await this.state.storage.delete(key);return json(200,{deleted:true,playId,alreadyGone:true});}
    return fail('BGG_DELETE_REJECTED',422);
   }
   if(path!=='/post')return fail('INVALID_ACTION');

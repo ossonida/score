@@ -104,3 +104,8 @@ test('duplicate cleanup deletes only plays this app uploaded and forgets the upl
  s.data.set('post:alice:bgstats:abc',{status:'sent',fingerprint:'x',bggPlayId:'555'});
  const other=await s.session.fetch(req('/delete-play',{playId:'777',recordId:'bgstats:abc',expectedUsername:'alice'}));assert.equal(other.status,409,'a play this app did not upload is refused');assert.equal(posted,'');
  const ok=await s.session.fetch(req('/delete-play',{playId:'555',recordId:'bgstats:abc',expectedUsername:'alice'}));assert.equal(ok.status,200);assert.match(posted,/action=delete/);assert.match(posted,/playid=555/);assert.match(posted,/finalize=1/);assert.equal(s.data.has('post:alice:bgstats:abc'),false);});
+
+test('a rejected delete counts as done when the play is already gone from that day on BGG',async()=>{const s=setup(async(url,init)=>{if(String(url).includes('xmlapi2/plays'))return new Response('<plays><play id="111" date="2026-09-25"/></plays>');if(String(init?.body||'').includes('action=delete'))return new Response(JSON.stringify({error:'Unexpected message'}));return loginResponse();});s.env.BGG_API_TOKEN='token';await login(s.session);
+ s.data.set('post:alice:bgstats:gone',{status:'sent',fingerprint:'x',bggPlayId:'555'});s.data.set('post:alice:bgstats:here',{status:'sent',fingerprint:'x',bggPlayId:'111'});
+ const gone=await s.session.fetch(req('/delete-play',{playId:'555',recordId:'bgstats:gone',date:'2026-09-25',expectedUsername:'alice'}));assert.equal(gone.status,200);assert.equal(s.data.has('post:alice:bgstats:gone'),false);
+ const here=await s.session.fetch(req('/delete-play',{playId:'111',recordId:'bgstats:here',date:'2026-09-25',expectedUsername:'alice'}));assert.equal(here.status,422);assert.equal(s.data.has('post:alice:bgstats:here'),true);});

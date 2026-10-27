@@ -1,8 +1,8 @@
-import './records.js?v=190';
+import './records.js?v=191';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=173';
 import {bggLinkRequest} from './bgg-link-client.js?v=68';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=98';
-import {bgStatsLinks,bgStatsDuplicates} from './bgstats-link.js?v=3';
+import {bgStatsLinks,bgStatsDuplicates} from './bgstats-link.js?v=4';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
 const snapshot=()=>({...state,uploads:{...(state.uploads||{})}});
@@ -56,7 +56,7 @@ $('bggExport').onclick=async()=>{
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function rateLimited(run){for(let attempt=0;;attempt++){try{return await run();}catch(error){if(error.code!=='BGG_LOGIN_RATE_LIMIT'||attempt>=3)throw error;$('bggLinkMessage').textContent='BGG 요청이 많아 1분 기다린 뒤 이어서 진행합니다…';await wait(61000);}}}
 // BG Stats 원본이 있는 Score 중복 업로드를 BGG에서 지운다(이 앱이 올린 플레이만, 하나씩 2초 간격).
-async function deleteDuplicates(list,context){let deleted=0,failed=0;const owner=user.uid,version=epoch,expectedUsername=state.username;for(const [index,item]of list.entries()){$('bggLinkMessage').textContent=`BG Stats 중복 삭제 중 · ${index+1}/${list.length}`;const now=api.scope();if(now.key!==context.key||now.epoch!==context.epoch||version!==epoch)break;if(index)await wait(2100);try{await rateLimited(()=>bggLinkRequest('link-delete-play',{uid:owner,body:{playId:item.playId,recordId:item.recordId,expectedUsername}}));const next={...state.uploads};delete next[item.recordId];state.uploads=next;deleted++;}catch(error){failed++;if(['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED','BGG_LOGIN_RATE_LIMIT'].includes(error.code))break;}}notify();return {deleted,failed};}
+async function deleteDuplicates(list,context){let deleted=0,failed=0;const owner=user.uid,version=epoch,expectedUsername=state.username;for(const [index,item]of list.entries()){$('bggLinkMessage').textContent=`BG Stats 중복 삭제 중 · ${index+1}/${list.length}`;const now=api.scope();if(now.key!==context.key||now.epoch!==context.epoch||version!==epoch)break;if(index)await wait(2100);try{await rateLimited(()=>bggLinkRequest('link-delete-play',{uid:owner,body:{playId:item.playId,recordId:item.recordId,date:item.date,expectedUsername}}));const next={...state.uploads};delete next[item.recordId];state.uploads=next;deleted++;}catch(error){failed++;if(['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED','BGG_LOGIN_RATE_LIMIT'].includes(error.code))break;}}notify();return {deleted,failed};}
 // 기록 내보내기 때 게임별 통계의 컬렉션 관리 메뉴에서 바꾼 대기 변경(보유·하고 싶은·위시리스트·펀딩)을 BGG 컬렉션에 반영합니다(한 번에 최대 20개).
 async function sendCollectionEdits(context){
  const account=window.ScoreBggAccount,edits=account?.collectionEdits?.()||{},ids=Object.keys(edits).filter(id=>/^[1-9][0-9]{0,9}$/.test(id)).slice(0,20);if(!ids.length||!user||!state.connected)return '';

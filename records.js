@@ -8,7 +8,7 @@ import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} fr
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
 import {personStats} from './social-insights.js?v=117';
-import {readPlacePrefs,placeSuggestions} from './places.js?v=4';
+import {readPlacePrefs,placeSuggestions} from './places.js?v=5';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
