@@ -11,7 +11,9 @@ const placeOf=value=>typeof value==='string'?value.trim():'';
 export function placeStats(records,bggPlays=[]){
  const ids=new Set(records.map(p=>p.id)),linked=new Set(bgStatsLinks(records,bggPlays).values()),found=new Map(),add=(place,date,source,count=1)=>{if(!place)return;const item=found.get(place)||{place,count:0,records:0,bgg:0,last:''};item.count+=count;item[source]+=count;if(date>item.last)item.last=date;found.set(place,item);};
  for(const p of records)add(placeOf(p.location),p.date||'','records');
- for(const p of bggPlays){if(p?.score?.id&&ids.has(p.score.id)||linked.has(String(p?.id)))continue;add(placeOf(p?.location??p?.score?.location),p?.date||'','bgg',Number.isSafeInteger(p?.quantity)&&p.quantity>0?p.quantity:1);}
+ // BG Stats는 BGG에 장소를 첫 글자+마침표(B.)로 올린다. 아는 장소 중 그 글자로 시작하는 것이 하나뿐이면 그 이름으로 센다.
+ const known=[...found.keys()],expand=place=>{const m=/^(\S)\.$/u.exec(place);if(!m)return place;const hits=known.filter(name=>name!==place&&name.startsWith(m[1]));return hits.length===1?hits[0]:place;};
+ for(const p of bggPlays){if(p?.score?.id&&ids.has(p.score.id)||linked.has(String(p?.id)))continue;add(expand(placeOf(p?.location??p?.score?.location)),p?.date||'','bgg',Number.isSafeInteger(p?.quantity)&&p.quantity>0?p.quantity:1);}
  return [...found.values()].sort((a,b)=>b.count-a.count||b.last.localeCompare(a.last)||a.place.localeCompare(b.place));
 }
 // 저장 화면 추천: 기본 장소 → 많이 쓴 장소(숨김 제외, 최대 30개) → 아직 안 쓴 기본 추천.
