@@ -24,13 +24,13 @@ export function renderIdentitySettings(container,records,scope,onChange){
  select.onchange=()=>{const next={primary:select.value,aliases:select.value?(profile?.aliases||[]).filter(x=>x!==select.value):[]};if(!save(next))select.value=profile?.primary||'';draw();};form.onsubmit=event=>event.preventDefault();draw();container.append(form);
 }
 // 게임별 통계 머리: 표지, 한글 게임명과 그 아래 영문명, 유형. 기록이 없는 게임에도 씁니다.
-export function renderGameTitle(game){const names=gameNames(game),title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',names.ko+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',names.ko||'게임 통계'));if(names.en)copy.append(el('p',names.en,'game-alt-name'));copy.append(el('p',types.join(' · '),'game-type-label'));title.append(art,copy);return title;}
-export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{}}={}){
+export function renderGameTitle(game,action){const names=gameNames(game),title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',names.ko+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',names.ko||'게임 통계'));if(names.en)copy.append(el('p',names.en,'game-alt-name'));copy.append(el('p',types.join(' · '),'game-type-label'));title.append(art,copy);const extra=action?.(game);if(extra)title.append(extra);return title;}
+export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{},titleAction}={}){
  const previousRule=container.querySelector('.personal-rule')?.value;
  container.replaceChildren();
  const profile=readIdentity(scope),game=records[0]?.game;
  const overview=el('section',undefined,'insight-hero game-overview');
- overview.append(renderGameTitle(game));
+ overview.append(renderGameTitle(game,titleAction));
  const scores=records.filter(p=>['highest','lowest'].includes(recordMode(p))).flatMap(p=>p.players.map(x=>x.score)).filter(x=>typeof x==='number');
  const best=scores.length?scores.reduce((a,b)=>Math.max(a,b)):null;
  const metrics=el('div',undefined,'insight-metrics');

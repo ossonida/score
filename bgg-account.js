@@ -1,5 +1,5 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
-import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=128';
+import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=129';
 import * as cloudApi from './cloud-records.js?v=173';
 import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -96,7 +96,12 @@ async function importPublic(){
 $('bggImport').onclick=importPublic;
 // BGG에서 하고 싶은 표시를 끈 게임은 이 기기 목록에도 바로 반영하고, 다음 가져오기 때 클라우드에 다시 저장합니다.
 function clearWantToPlay(ids){if(!user)return;const set=new Set(ids.map(String));collection=collection.map(item=>set.has(item.id)?{...item,wantToPlay:false}:item);try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');}catch{}render();}
-window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,expectUpdates};
+// 컬렉션 관리 메뉴에서 BGG에 저장한 상태를 이 기기의 BGG 컬렉션에도 반영합니다(클라우드에는 다음 클라우드 동기화 때 저장).
+function setCollectionStatus(game,status){if(!user)return;const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return;const flags={owned:status.owned===true,wishlist:status.wishlist===true,wantToPlay:status.wantToPlay===true},preordered=status.preordered===true,any=preordered||Object.values(flags).some(Boolean),current=collection.find(item=>item.id===id);let next;
+ if(current){const {preordered:_,...rest}=current,item={...rest,...flags,...(preordered?{preordered:true}:{})};next=any||item.numPlays>0?collection.map(entry=>entry.id===id?item:entry):collection.filter(entry=>entry.id!==id);}
+ else{if(!any)return;const item={id,gameId:id,name:String(game.name||'').trim().slice(0,300),...flags,...(preordered?{preordered:true}:{})};if(!validBggItem(item,'collection'))return;next=[...collection,item];}
+ collection=next;try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');}catch{}render();}
+window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,setCollectionStatus,expectUpdates};
 
 if(cloudConfigured())showCached(rememberedUid());render();
 if(cloudConfigured())connectCloud(async next=>{
@@ -107,7 +112,7 @@ if(cloudConfigured())connectCloud(async next=>{
 }).catch(()=>{});
 // 클라우드의 BGG 사용자명·컬렉션·플레이 기록은 사용자가 '클라우드 동기화'를 눌렀을 때만 받는다(로그인만으로 받지 않음).
 async function pullCloud(){if(!user)return;const uid=user.uid,version=epoch;if(cached('profilePending',false)){status('이 기기에 저장된 사용자명입니다. 공개 정보 가져오기를 다시 눌러 클라우드 저장을 시도할 수 있습니다.');return;}
- try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggCloud(profile.username,uid);if(version!==epoch)return;for(const kind of ['collection','plays']){if(!data[kind]||cached(kind+'Pending',false))continue;const next=safeBggItems(data[kind],kind);if(!sameItems(kind==='collection'?collection:plays,next)){if(kind==='collection')collection=next;else plays=next;}try{localStorage.setItem(key(kind),JSON.stringify(next));}catch{}}if(data.mark)try{localStorage.setItem(key('cloudMark'),JSON.stringify(data.mark));}catch{}render();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
+ try{const profile=await loadBggProfile(uid);if(version!==epoch)return;if(profile&&validUsername(profile.username)){$('bggUsername').value=profile.username;localStorage.setItem(key('profile'),JSON.stringify(profile));const data=await loadBggCloud(profile.username,uid);if(version!==epoch)return;for(const kind of ['collection','plays']){if(cached(kind+'Pending',false)){try{await saveBggData(kind,profile.username,kind==='collection'?collection:plays,uid,null);if(version===epoch)localStorage.removeItem(key(kind+'Pending'));}catch{}if(version!==epoch)return;continue;}if(!data[kind])continue;const next=safeBggItems(data[kind],kind);if(!sameItems(kind==='collection'?collection:plays,next)){if(kind==='collection')collection=next;else plays=next;}try{localStorage.setItem(key(kind),JSON.stringify(next));}catch{}}if(data.mark)try{localStorage.setItem(key('cloudMark'),JSON.stringify(data.mark));}catch{}render();if(cached('collectionPending',false)||cached('playsPending',false))status('클라우드에 저장되지 않은 BGG 정보를 이 기기에서 표시합니다. 가져오기를 다시 눌러 저장을 시도할 수 있습니다.');}}
  catch{if(version===epoch)status('계정의 BGG 정보를 불러오지 못해 이 기기에 저장된 내용을 표시합니다.');}
 }
 window.addEventListener('score-cloud:pull',()=>void pullCloud());

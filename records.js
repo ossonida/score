@@ -1,13 +1,14 @@
 import {renderRecordParticipants,renderModeStats} from './record-view.js?v=133';
 import {recordMode,modeLabels} from './records-core.js?v=152';
 import {missionName} from './mission-names.js?v=3';
-import {readGameLibrary} from './game-library.js?v=99';
+import {readGameLibrary} from './game-library.js?v=100';
 import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=152';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=153';
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=164';
-import {renderGameTitle} from './personal-dashboard.js?v=157';
+import {renderGameTitle} from './personal-dashboard.js?v=158';
+import {collectionMenu} from './collection-menu.js?v=1';
 import {latestPlayDate} from './stats-overview.js?v=164';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
@@ -24,7 +25,7 @@ import * as cloudApi from './cloud-records.js?v=173';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {decodeXmlText} from './bgg-validation.js?v=128';
+import {decodeXmlText} from './bgg-validation.js?v=129';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let expansionPick=null,expansionSerial=0,expansionEditing=null;
 let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history',statsView='recent',accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
@@ -306,6 +307,10 @@ $('recordDeletePlayer').onclick=()=>{if(!recordEditing)return;const editing=reco
 $('recordEditForm').onsubmit=event=>{event.preventDefault();if(!recordEditing)return;const {playId,personId,field,context,original}=recordEditing;try{updateRecordedPlayer(playId,personId,field,$(['result','cooperativeResult'].includes(field)?'recordEditResult':'recordEditValue').value,context,original);window.ScoreAnalytics?.recordChanged(field);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}};
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
+// 게임별 통계 게임 머리의 ⋮ 메뉴: 가져온 BGG 컬렉션 상태로 체크해 두고, BGG 계정이 연결돼 있을 때만 바꿀 수 있다. 다시 그려도 열림 상태를 유지한다.
+let collectionMenuOpen='';
+function collectionAction(game){const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return null;const item=(window.ScoreBggAccount?.state().collection||[]).find(entry=>entry.id===id),link=window.ScoreBggLink,linked=link?.state?.().connected===true;
+ return collectionMenu({status:{owned:item?.owned===true,wantToPlay:item?.wantToPlay===true,wishlist:item?.wishlist===true,preordered:item?.preordered===true},disabled:linked?'':'설정에서 BGG 계정을 연결하면 관리할 수 있습니다.',open:collectionMenuOpen===id,onToggle:open=>{collectionMenuOpen=open?id:'';},onChange:status=>link.updateCollection(game,status)});}
 function chooseStatsGame(game){statsView='games';mode='stats';statsGameTarget=game;statsGameTargetGame=null;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
 function openGameStats(game){const resolved=resolveGame(game,records);statsView='games';mode='stats';statsGameTarget=gameKey(resolved);statsGameTargetGame=resolved;$('statsDetails').open=false;renderHistory();void enrichRecordGames();if(location.hash!=='#stats')location.hash='stats';}
 const periodUnitIds={month:'periodUnitMonth',year:'periodUnitYear',all:'periodUnitAll',custom:'periodUnitCustom'};
@@ -332,10 +337,10 @@ function renderHistory(){
  $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?`선택 기간의 기록 ${filtered.length}개 보기`:'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){
   const bggCollection=window.ScoreBggAccount?.state().collection||[];
-  if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:mine,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameRivals($('statsInsights'),filtered,{scope:key(),onRecord:openStatsRecord});renderGameExpansions($('statsInsights'),filtered[0].game,bggCollection,filtered);loadExpansionNames((metadata(filtered[0].game)?.expansions||[]).slice(0,30),renderHistory);}
+  if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:mine,titleAction:collectionAction,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameRivals($('statsInsights'),filtered,{scope:key(),onRecord:openStatsRecord});renderGameExpansions($('statsInsights'),filtered[0].game,bggCollection,filtered);loadExpansionNames((metadata(filtered[0].game)?.expansions||[]).slice(0,30),renderHistory);}
   else{const game=statsGameTargetGame&&gameKey(statsGameTargetGame)===select.value?statsGameTargetGame:null,box=$('statsInsights');box.replaceChildren();
    // 플레이하지 않은 게임도 표지·게임명·유형은 보여 주고 나의 기록 데이터가 없다고 안내합니다.
-   if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
+   if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game,collectionAction),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
  }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),mine,period);if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',rivals:false,summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
  else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});

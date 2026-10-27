@@ -9,12 +9,12 @@ export function libraryGames(records,saved=[]){
  for(const play of records){if(!valid(play.game))continue;const game=resolveGame(clean(play.game),records),key=gameKey(game),row=map.get(key)||{key,game,count:0};row.count++;map.set(key,row);}
  return searchableGameGroups([...map.values()]);
 }
-// 게임 탭 보기(all·played·wantToPlay·owned·wishlist): 내 목록·기록과 BGG 컬렉션·플레이를 BGG ID로 맞춰 한 줄로 합칩니다.
+// 게임 탭 보기(all·played·wantToPlay·owned·wishlist·preordered): 내 목록·기록과 BGG 컬렉션·플레이를 BGG ID로 맞춰 한 줄로 합칩니다.
 // bggPlays는 BGG 컬렉션 플레이 수와 가져온 BGG 플레이 기록 중 큰 값입니다. 해본 탭은 플레이 많은 순입니다.
 export function gameCollectionView(records,saved=[],collection=[],view='all',bggPlays=[]){
  const id=value=>/^[1-9][0-9]{0,9}$/.test(String(value??''))?String(value):'',named=item=>typeof item?.name==='string'&&item.name.trim(),status=new Map(),extra=[];
- const entry=key=>{if(!status.has(key))status.set(key,{owned:false,wishlist:false,wantToPlay:false,bggPlays:0,logged:0,thumbnail:''});return status.get(key);};
- for(const item of collection){const key=id(item?.id);if(!key||!named(item))continue;const s=entry(key);s.owned||=item.owned===true;s.wishlist||=item.wishlist===true;s.wantToPlay||=item.wantToPlay===true;if(Number.isSafeInteger(item.numPlays))s.bggPlays=Math.max(s.bggPlays,item.numPlays);if(!s.thumbnail&&typeof item.thumbnail==='string')s.thumbnail=item.thumbnail;extra.push({name:item.name.trim().slice(0,120),bggId:key});}
+ const entry=key=>{if(!status.has(key))status.set(key,{owned:false,wishlist:false,wantToPlay:false,preordered:false,bggPlays:0,logged:0,thumbnail:''});return status.get(key);};
+ for(const item of collection){const key=id(item?.id);if(!key||!named(item))continue;const s=entry(key);s.owned||=item.owned===true;s.wishlist||=item.wishlist===true;s.wantToPlay||=item.wantToPlay===true;s.preordered||=item.preordered===true;if(Number.isSafeInteger(item.numPlays))s.bggPlays=Math.max(s.bggPlays,item.numPlays);if(!s.thumbnail&&typeof item.thumbnail==='string')s.thumbnail=item.thumbnail;extra.push({name:item.name.trim().slice(0,120),bggId:key});}
  for(const play of bggPlays){const key=id(play?.gameId);if(!key||!named(play))continue;entry(key).logged+=Number.isSafeInteger(play.quantity)?play.quantity:1;extra.push({name:play.name.trim().slice(0,120),bggId:key});}
  const mine=libraryGames(records,saved),known=new Set(mine.map(row=>row.key)),more=libraryGames([],extra).filter(row=>!known.has(row.key));
  const rows=searchableGameGroups([...mine,...more]).map(row=>{const {logged,...s}=status.get(row.game.bggId)||entry('');const bgg=Math.max(s.bggPlays,logged);return {...row,...s,bggPlays:bgg,played:row.count>0||bgg>0};});

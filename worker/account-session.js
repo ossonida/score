@@ -35,9 +35,10 @@ async function findScorePlay(fetcher,env,session,play){
 }
 // BGG에서 하고 싶은 게임(want to play)인 항목을 한 번에 읽습니다. 컬렉션 조회는 처음에 202(준비 중)를 자주 주므로 잠시 기다렸다 다시 묻습니다.
 const agent='ScoreCounter/1.0 (https://ossonida.github.io/score/)',pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function wantToPlayItems(fetcher,env,session){
+// 컬렉션 항목(collid가 있는 행)을 읽습니다. 확인하지 못하면 null입니다.
+async function collectionRows(fetcher,env,session,params){
  if(!env.BGG_API_TOKEN)return null;
- const url=new URL('https://boardgamegeek.com/xmlapi2/collection');url.searchParams.set('username',session.username);url.searchParams.set('wanttoplay','1');url.searchParams.set('showprivate','1');
+ const url=new URL('https://boardgamegeek.com/xmlapi2/collection');url.searchParams.set('username',session.username);for(const [name,value] of Object.entries(params))url.searchParams.set(name,value);url.searchParams.set('showprivate','1');
  const delay=Number(env.BGG_RETRY_DELAY_MS??1500);
  for(let attempt=0;attempt<4;attempt++){
   if(attempt)await pause(delay*attempt);
@@ -46,11 +47,13 @@ async function wantToPlayItems(fetcher,env,session){
    if(response.status===202)continue;if(response.status!==200)return null;
    const xml=await boundedXml(response);if(/^\s*(?:<!doctype\s+html|<html)\b/i.test(xml))return null;
    const rows=new XMLParser({ignoreAttributes:false,processEntities:false,parseAttributeValue:false,isArray:name=>name==='item'}).parse(xml)?.items?.item||[];
-   return new Map(rows.filter(row=>String(row?.status?.['@_wanttoplay']||'')==='1'&&idPattern.test(String(row?.['@_collid']||''))).map(row=>[String(row['@_objectid']),row]));
+   return rows.filter(row=>idPattern.test(String(row?.['@_collid']||'')));
   }catch{return null;}
  }
  return null;
 }
+async function wantToPlayItems(fetcher,env,session){const rows=await collectionRows(fetcher,env,session,{wanttoplay:'1'});return rows&&new Map(rows.filter(row=>String(row?.status?.['@_wanttoplay']||'')==='1').map(row=>[String(row['@_objectid']),row]));}
+const collectionPost=(fetcher,session,bggId,form)=>fetcher('https://boardgamegeek.com/geekcollection.php',{method:'POST',redirect:'manual',headers:{Cookie:session.cookie,'User-Agent':agent,'Content-Type':'application/x-www-form-urlencoded',Accept:'text/html, */*',Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/boardgame/'+bggId},body:form.toString(),signal:AbortSignal.timeout(12000)});
 // 요청한 게임의 하고 싶은 표시만 끕니다. BGG 저장 양식은 체크된 상태만 보내므로 나머지 상태는 그대로 다시 보냅니다.
 const keptFlags=['own','prevowned','fortrade','want','wanttobuy','wishlist','preordered'];
 async function clearWantToPlay(fetcher,env,session,ids){
@@ -61,10 +64,33 @@ async function clearWantToPlay(fetcher,env,session,ids){
   const form=new URLSearchParams({ajax:'1',action:'savedata',collid:String(item['@_collid']),fieldname:'status',objecttype:'thing',objectid:bggId});
   for(const flag of keptFlags)if(String(item.status['@_'+flag]||'')==='1')form.set(flag,'1');
   const priority=String(item.status['@_wishlistpriority']||'');if(form.has('wishlist')&&/^[1-5]$/.test(priority))form.set('wishlistpriority',priority);
-  try{const saved=await fetcher('https://boardgamegeek.com/geekcollection.php',{method:'POST',redirect:'manual',headers:{Cookie:session.cookie,'User-Agent':agent,'Content-Type':'application/x-www-form-urlencoded',Accept:'text/html, */*',Origin:'https://boardgamegeek.com',Referer:'https://boardgamegeek.com/boardgame/'+bggId},body:form.toString(),signal:AbortSignal.timeout(12000)});(saved.status===200?result.cleared:result.failed).push(bggId);}
+  try{const saved=await collectionPost(fetcher,session,bggId,form);(saved.status===200?result.cleared:result.failed).push(bggId);}
   catch{result.failed.push(bggId);}
  }
  return result;
+}
+// 한 게임의 보유·하고 싶은·위시리스트·펀딩을 사용자가 고른 값으로 맞춥니다(BGG의 Add to Collection).
+// 컬렉션에 없으면 먼저 추가하고, 다른 BGG 상태(이전 보유·교환 등)와 위시리스트 우선순위는 그대로 다시 보냅니다.
+const editableFlags={owned:'own',wantToPlay:'wanttoplay',wishlist:'wishlist',preordered:'preordered'},otherFlags=['prevowned','fortrade','want','wanttobuy'];
+async function setCollectionStatus(fetcher,env,storage,session,bggId,status){
+ const find=async()=>{const rows=await collectionRows(fetcher,env,session,{id:bggId});return rows&&(rows.find(row=>String(row['@_objectid'])===bggId)||false);};
+ const wanted=Object.keys(editableFlags).filter(name=>status[name]===true),delay=Number(env.BGG_RETRY_DELAY_MS??1500);
+ let item=await find();if(item===null)return {code:'BGG_COLLECTION_BUSY'};
+ if(!item){
+  if(!wanted.length)return {saved:true};
+  // 추가 직후 BGG 조회에 늦게 보일 수 있으므로 10분 안에는 다시 추가하지 않아 중복 항목을 막습니다.
+  const mark='added:'+encodeURIComponent(session.username.toLowerCase())+':'+bggId,recent=await storage.get(mark);
+  if(!(recent>Date.now()-600000)){let added;try{added=await collectionPost(fetcher,session,bggId,new URLSearchParams({ajax:'1',action:'additem',objecttype:'thing',objectid:bggId,quickadd:'1',force:'true'}));}catch{return {code:'BGG_COLLECTION_FAILED'};}if(added.status===401||added.status===403)return {code:'BGG_LOGIN_REQUIRED'};if(added.status!==200)return {code:'BGG_COLLECTION_FAILED'};await storage.put(mark,Date.now());}
+  for(let attempt=0;attempt<2&&!item;attempt++){if(attempt)await pause(delay*attempt);item=await find();}
+  if(!item)return {code:'BGG_COLLECTION_PENDING'};
+ }
+ const form=new URLSearchParams({ajax:'1',action:'savedata',collid:String(item['@_collid']),fieldname:'status',objecttype:'thing',objectid:bggId});
+ for(const flag of otherFlags)if(String(item.status?.['@_'+flag]||'')==='1')form.set(flag,'1');
+ for(const name of wanted)form.set(editableFlags[name],'1');
+ const priority=String(item.status?.['@_wishlistpriority']||'');if(form.has('wishlist'))form.set('wishlistpriority',/^[1-5]$/.test(priority)?priority:'3');
+ let saved;try{saved=await collectionPost(fetcher,session,bggId,form);}catch{return {code:'BGG_COLLECTION_FAILED'};}
+ if(saved.status===401||saved.status===403)return {code:'BGG_LOGIN_REQUIRED'};if(saved.status!==200)return {code:'BGG_COLLECTION_FAILED'};
+ return {saved:true};
 }
 function authCookie(response,username,now){
  const headers=response.headers,all=typeof headers.getSetCookie==='function'?headers.getSetCookie():typeof headers.getAll==='function'?headers.getAll('Set-Cookie'):[headers.get('Set-Cookie')||''];
@@ -111,6 +137,14 @@ export class BggSessions{
    if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
    const ids=Array.isArray(body.bggIds)?[...new Set(body.bggIds.map(String))]:[];if(!ids.length||ids.length>20||ids.some(id=>!idPattern.test(id)))return fail('INVALID_BODY');
    return json(200,await clearWantToPlay(fetcher,this.env,session,ids));
+  }
+  if(path==='/collection'){
+   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);
+   if(typeof body.expectedUsername!=='string'||body.expectedUsername.toLowerCase()!==session.username.toLowerCase())return fail('BGG_ACCOUNT_CHANGED',409);
+   const bggId=String(body.bggId??''),status=body.status;if(!idPattern.test(bggId)||!status||typeof status!=='object'||Array.isArray(status)||Object.keys(status).some(name=>!Object.hasOwn(editableFlags,name)||typeof status[name]!=='boolean'))return fail('INVALID_BODY');
+   const result=await setCollectionStatus(fetcher,this.env,this.state.storage,session,bggId,status);
+   if(result.code==='BGG_LOGIN_REQUIRED')await this.state.storage.delete('session');
+   return result.saved?json(200,{saved:true,bggId,status}):fail(result.code,{BGG_LOGIN_REQUIRED:401,BGG_COLLECTION_BUSY:503,BGG_COLLECTION_PENDING:409}[result.code]||502);
   }
   if(path!=='/post')return fail('INVALID_ACTION');
   const session=await this.session();if(!session)return fail('BGG_LOGIN_REQUIRED',401);

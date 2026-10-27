@@ -1,6 +1,6 @@
-import './records.js?v=175';
+import './records.js?v=176';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=173';
-import {bggLinkRequest} from './bgg-link-client.js?v=66';
+import {bggLinkRequest} from './bgg-link-client.js?v=67';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=97';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
@@ -51,6 +51,10 @@ $('bggExport').onclick=async()=>{
   finally{quiet=false;notify();busy=false;$('bggExport').setAttribute('aria-busy','false');render();const done=result.sent+result.unchanged,left=plan.remaining+plan.records.length-done,parts=[`BGG 기록 내보내기 완료 · ${result.sent}개`];if(result.unchanged)parts.push(`이미 등록된 동일 기록 ${result.unchanged}개`);if(cleared)parts.push(cleared);if(result.failed)parts.push(`실패 ${result.failed}개`);if(left)parts.push(`미전송 기록 ${left}개`);$('bggLinkMessage').textContent=parts.join(' · ')+(result.lastError?' · '+result.lastError:'')+(result.sent||cleared?' BGG가 자료를 새로 만든 뒤 내 정보 가져오기에 반영되며, 반영되면 이 화면에 새 정보 알림이 표시됩니다.':'');if(result.sent||cleared)window.ScoreBggAccount?.expectUpdates?.();}
  });
 };
-window.ScoreBggLink={state:snapshot,isPosting:id=>posting.has(user?.uid+':'+id),postPlay,clearWantToPlay:(context,ids)=>clearPlayedWantToPlay(context,ids).then(clearText)};
+// 게임별 통계의 컬렉션 관리 메뉴: BGG 컬렉션 상태를 저장하고 이 기기의 BGG 컬렉션에도 반영합니다.
+async function updateCollection(game,status){if(!user||!state.connected)throw Error('설정에서 BGG 계정을 연결해주세요.');const version=epoch;
+ try{await bggLinkRequest('link-collection',{uid:user.uid,body:{expectedUsername:state.username,bggId:String(game.bggId),status}});}catch(error){if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}
+ if(version===epoch)window.ScoreBggAccount?.setCollectionStatus?.(game,status);}
+window.ScoreBggLink={state:snapshot,updateCollection,isPosting:id=>posting.has(user?.uid+':'+id),postPlay,clearWantToPlay:(context,ids)=>clearPlayedWantToPlay(context,ids).then(clearText)};
 render();
 if(cloudConfigured())connectCloud(async next=>{epoch++;user=next;busy=false;state={ready:false,connected:false,uploads:{}};closeLogin();$('bggLoginSubmit').disabled=false;$('bggLoginSubmit').setAttribute('aria-busy','false');$('bggLinkMessage').textContent='';render();notify();if(user)await refresh();}).catch(()=>{$('bggLinkMessage').textContent='Google 로그인 상태를 확인하지 못했습니다.';});

@@ -1,7 +1,7 @@
-import './records.js?v=175';
+import './records.js?v=176';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=164';
 import {gameKey} from './records-core.js?v=152';
-import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=99';
+import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=100';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {idToken} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -10,7 +10,7 @@ import {gameNames} from './bgg-metadata.js?v=171';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;
-const views={all:'gamesAll',played:'gamesPlayed',wantToPlay:'gamesWantToPlay',owned:'gamesOwned',wishlist:'gamesWishlist'},viewLabels={wantToPlay:'하고 싶은 게임',owned:'보유 게임',wishlist:'위시 리스트 게임'};
+const views={all:'gamesAll',played:'gamesPlayed',wantToPlay:'gamesWantToPlay',owned:'gamesOwned',wishlist:'gamesWishlist',preordered:'gamesPreordered'},viewLabels={wantToPlay:'하고 싶은 게임',owned:'보유 게임',wishlist:'위시 리스트 게임',preordered:'펀딩 게임'};
 const bggState=()=>window.ScoreBggAccount?.state()||{collection:[],plays:[]},bggCollection=()=>bggState().collection||[];
 const playText=(count,bgg)=>[count?'플레이 '+count+'회':'',bgg?'BGG 플레이 '+bgg+'회':''].filter(Boolean).join(' · ')||'아직 플레이 기록이 없습니다.';
 // 로그인 상태에서 BGG 게임 정보를 받아 표지와 한글 이름을 보충합니다(7일 안에 받은 게임은 건너뜀).

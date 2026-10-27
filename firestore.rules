@@ -27,7 +27,7 @@ service cloud.firestore {
     match /users/{uid}/{kind}/{itemId} {
       allow read, delete: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays'];
       allow create, update: if request.auth != null && request.auth.uid == uid && kind in ['bggCollection','bggPlays']
-        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username','owned','wishlist','wantToPlay','numPlays','thumbnail','updatedAt'])
+        && request.resource.data.keys().hasOnly(['id','gameId','name','year','date','quantity','players','username','owned','wishlist','wantToPlay','preordered','numPlays','thumbnail','updatedAt'])
         && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt == request.time)
         && request.resource.data.id == itemId && itemId.matches('^[1-9][0-9]{0,19}$')
         && request.resource.data.gameId is string && request.resource.data.gameId.matches('^[1-9][0-9]{0,9}$')
@@ -39,6 +39,7 @@ service cloud.firestore {
           && (!('owned' in request.resource.data) || request.resource.data.owned is bool)
           && (!('wishlist' in request.resource.data) || request.resource.data.wishlist is bool)
           && (!('wantToPlay' in request.resource.data) || request.resource.data.wantToPlay is bool)
+          && (!('preordered' in request.resource.data) || request.resource.data.preordered is bool)
           && (!('numPlays' in request.resource.data) || request.resource.data.numPlays is int && request.resource.data.numPlays >= 0 && request.resource.data.numPlays <= 100000)
           && (!('thumbnail' in request.resource.data) || request.resource.data.thumbnail is string && request.resource.data.thumbnail.size() <= 2048 && request.resource.data.thumbnail.matches('^https://cf[.]geekdo-images[.]com/.*')))
           || (kind == 'bggPlays' && request.resource.data.keys().hasAll(['id','gameId','name','username','date','quantity','players'])

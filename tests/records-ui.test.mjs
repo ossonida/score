@@ -551,3 +551,20 @@ test('bottom nav scrolls the current screen to the top instead of re-navigating'
  a.vm.location.hash='';a.get('navHome').onclick();assert.equal(scrolls.length,2,'home is current when the hash is empty');
 });
 
+test('game stats title offers a BGG collection menu checked from the imported collection',async()=>{
+ const play={id:'p1',game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:3},{id:'b',name:'바다',color:'#ffcc00',score:1}]};
+ const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})]]),false,'',{me:'하늘'}),calls=[];let linked=false;
+ a.vm.window.ScoreBggAccount={state:()=>({collection:[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:false,wantToPlay:false,preordered:true}],plays:[]})};
+ a.vm.window.ScoreBggLink={state:()=>({connected:linked}),updateCollection:async(game,status)=>{calls.push([game.bggId,status]);if(status.wishlist)throw Error('BGG 컬렉션에 저장하지 못했습니다. 다시 시도해주세요.');}};
+ const walk=e=>[e,...(e.children||[]).flatMap(walk)],menu=()=>walk(a.get('statsInsights')).find(e=>e.className==='collection-menu');
+ a.get('statsGames').onclick();let box=menu();assert.ok(box,'menu is shown next to the game title');
+ const [button,panel]=box.children,boxes=()=>walk(menu().children[1]).filter(e=>e.type==='checkbox'),labels=walk(panel).filter(e=>e.tagName===undefined&&e.className===undefined&&e.textContent).map(e=>e.textContent);
+ assert.equal(button.attributes['aria-label'],'컬렉션 관리');assert.equal(panel.hidden,true);
+ assert.deepEqual(labels.filter(t=>['보유','하고 싶은','위시리스트','펀딩'].includes(t)),['보유','하고 싶은','위시리스트','펀딩'],'only Korean labels are shown');
+ assert.deepEqual(boxes().map(i=>i.checked),[true,false,false,true]);assert.ok(boxes().every(i=>i.disabled),'disabled until BGG is linked');
+ assert.match(walk(panel).find(e=>e.className==='collection-menu-note').textContent,/BGG 계정을 연결/);
+ button.onclick();assert.equal(panel.hidden,false);linked=true;a.bridge.renderHistory();
+ assert.equal(menu().children[1].hidden,false,'menu stays open across a re-render');assert.ok(boxes().every(i=>!i.disabled));
+ const [owned,,wish]=boxes();owned.checked=false;await owned.onchange();assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),['13',{owned:false,wantToPlay:false,wishlist:false,preordered:true}]);assert.equal(owned.checked,false);
+ wish.checked=true;await wish.onchange();assert.equal(wish.checked,false,'a failed save reverts the checkbox');assert.match(walk(menu().children[1]).find(e=>e.className==='collection-menu-note').textContent,/저장하지 못했습니다/);
+});

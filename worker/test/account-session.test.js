@@ -82,3 +82,19 @@ test('worker and app compute the same export fingerprint for location, difficult
  for(const extra of [{location:'집'},{rule:'cooperative',cooperativeResult:'success',difficulty:'영웅'},{rule:'cooperative',cooperativeResult:'failure',scenario:3},{rule:'cooperative',cooperativeResult:'success',missionAttempts:[{mission:1,result:'failure'},{mission:1,result:'success'}]}]){const p={...play,...extra};assert.equal(await playFingerprint(p,'alice'),await bggPlayFingerprint(p,'alice'));}
  for(const bad of [{location:'x'.repeat(121)},{difficulty:''},{scenario:0},{missionAttempts:[{mission:0,result:'success'}]}])await assert.rejects(async()=>playFingerprint({...play,...bad},'alice'));
 });
+test('collection status sets only the chosen flags, keeps other BGG statuses and adds a missing game once',async()=>{
+ const calls=[];let inCollection=false;const s=setup(async(url,init)=>{const u=String(url);calls.push([u,init]);if(u.includes('/login/'))return loginResponse();if(u.includes('xmlapi2/collection')){assert.equal(new URL(u).searchParams.get('id'),'13');return new Response(inCollection?'<items><item objecttype="thing" objectid="13" collid="777"><status own="1" fortrade="1" wishlist="1" wishlistpriority="2"/></item></items>':'<items></items>');}if(u.includes('geekcollection.php')){if(new URLSearchParams(init.body).get('action')==='additem')inCollection=true;return new Response('ok');}return new Response('',{status:404});});
+ s.env.BGG_API_TOKEN='token';s.env.BGG_RETRY_DELAY_MS=0;await login(s.session);
+ const forms=()=>calls.filter(([u])=>u.includes('geekcollection.php')).map(([,init])=>new URLSearchParams(init.body));
+ let r=await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{owned:false,wantToPlay:false,wishlist:false,preordered:true}}));assert.equal(r.status,200);
+ let saved=forms();assert.equal(saved.length,2);assert.equal(saved[0].get('action'),'additem');assert.equal(saved[0].get('objectid'),'13');
+ assert.equal(saved[1].get('action'),'savedata');assert.equal(saved[1].get('collid'),'777');assert.equal(saved[1].get('preordered'),'1');assert.equal(saved[1].get('own'),null,'unchecked own is cleared');assert.equal(saved[1].get('wishlist'),null);assert.equal(saved[1].get('fortrade'),'1','other statuses are kept');
+ calls.length=0;r=await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{owned:true,wantToPlay:true,wishlist:true,preordered:false}}));assert.equal(r.status,200);
+ saved=forms();assert.equal(saved.length,1,'an existing item is not added again');assert.equal(saved[0].get('own'),'1');assert.equal(saved[0].get('wanttoplay'),'1');assert.equal(saved[0].get('wishlistpriority'),'2');assert.equal(saved[0].get('preordered'),null);
+ inCollection=false;calls.length=0;const pending=s;let add=0;s.env.TEST_FETCH=async(url,init)=>{const u=String(url);if(u.includes('xmlapi2/collection'))return new Response('<items></items>');if(u.includes('geekcollection.php')){add++;return new Response('ok');}return new Response('',{status:404});};
+ r=await pending.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{owned:true}}));assert.equal(r.status,409);assert.equal((await r.json()).code,'BGG_COLLECTION_PENDING');
+ r=await pending.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{owned:true}}));assert.equal(r.status,409);assert.equal(add,0,'a recently added game is not added twice while BGG catches up');
+ assert.equal((await s.session.fetch(req('/collection',{expectedUsername:'bob',bggId:'13',status:{owned:true}}))).status,409);
+ assert.equal((await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'13',status:{own:true}}))).status,400);
+ assert.equal((await s.session.fetch(req('/collection',{expectedUsername:'alice',bggId:'x',status:{owned:true}}))).status,400);
+});

@@ -40,3 +40,13 @@ test('cloud sync skips unchanged BGG cloud data and merges only changed items',a
 });
 
 test('import compares with the synced device copy instead of re-reading the cloud',async()=>{const a=await app('https://example.com/bgg');a.store.set('score.bgg.one.profile',JSON.stringify({username:'alice'}));await a.auth({uid:'one'});await a.get('bggImport').onclick();assert.equal(a.writes[0].previous,null,'without a sync mark the cloud is diffed in full');a.store.set('score.bgg.one.cloudMark',JSON.stringify({username:'alice',collection:5,plays:7}));a.store.set('score.bgg.one.collection','[]');await a.get('bggImport').onclick();const last=a.writes.at(-1);assert.equal(last.kind,'collection');assert.deepEqual(last.previous,[],'the synced device copy is passed so only changes are written');});
+test('collection menu changes update this device and upload on the next cloud sync',async()=>{
+ const a=await app('https://example.com/bgg');Object.assign(a.ctx,{bggProfile:{username:'alice'}});
+ a.store.set('score.bgg.one.profile',JSON.stringify({username:'alice'}));a.store.set('score.bgg.one.collection',JSON.stringify([{id:'1',gameId:'1',name:'Game 1',owned:true,wishlist:false,wantToPlay:false,numPlays:3}]));
+ await a.auth({uid:'one'});await new Promise(r=>setTimeout(r,0));const account=a.win.ScoreBggAccount,saved=()=>JSON.parse(a.store.get('score.bgg.one.collection'));
+ account.setCollectionStatus({name:'CATAN',bggId:'13'},{owned:false,wantToPlay:true,wishlist:false,preordered:true});
+ assert.deepEqual(saved().find(item=>item.id==='13'),{id:'13',gameId:'13',name:'CATAN',owned:false,wishlist:false,wantToPlay:true,preordered:true});assert.equal(a.store.get('score.bgg.one.collectionPending'),'true');
+ account.setCollectionStatus({name:'CATAN',bggId:'13'},{owned:false,wantToPlay:false,wishlist:false,preordered:false});assert.equal(saved().some(item=>item.id==='13'),false,'unchecking everything removes the game');
+ account.setCollectionStatus({name:'Game 1',bggId:'1'},{owned:false,wantToPlay:false,wishlist:false,preordered:false});assert.deepEqual(saved()[0],{id:'1',gameId:'1',name:'Game 1',owned:false,wishlist:false,wantToPlay:false,numPlays:3},'a played game stays with its play count');
+ a.writes.length=0;await pull(a);assert.equal(a.writes.filter(w=>w.kind==='collection').length,1,'cloud sync uploads the device change');assert.equal(a.store.get('score.bgg.one.collectionPending'),undefined);
+});
