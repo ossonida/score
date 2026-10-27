@@ -1,4 +1,4 @@
-import {koreanAliases,wikidataGames} from './korean-game-names.js?v=166';
+import {koreanAliases,wikidataGames} from './korean-game-names.js?v=167';
 import {scoreGames,searchScoreGames,isScoreGame} from './score-games.js?v=167';
 // Curated public game names and exact aliases, not the complete live BGG database.
 const bundledGames = [

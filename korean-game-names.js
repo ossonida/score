@@ -561,6 +561,16 @@ export const koreanAliases={
   "455881": [
     "니하르"
   ],
+  "174430": [
+    "글룸헤이븐"
+  ],
+  "291457": [
+    "글룸헤이븐: 사자의 턱",
+    "글룸헤이븐 사자의 턱"
+  ],
+  "295770": [
+    "프로스트헤이븐"
+  ],
   "236457": [
     "서쪽 왕국의 건축가",
     "서왕국의 건축가"
@@ -647,6 +657,28 @@ export const koreanAliases={
   ]
 };
 export const wikidataGames=[
+  {
+    "id": "174430",
+    "name": "Gloomhaven",
+    "aliases": [
+      "글룸헤이븐"
+    ]
+  },
+  {
+    "id": "291457",
+    "name": "Gloomhaven: Jaws of the Lion",
+    "aliases": [
+      "글룸헤이븐: 사자의 턱",
+      "글룸헤이븐 사자의 턱"
+    ]
+  },
+  {
+    "id": "295770",
+    "name": "Frosthaven",
+    "aliases": [
+      "프로스트헤이븐"
+    ]
+  },
   {
     "id": "455881",
     "name": "Níjar",
