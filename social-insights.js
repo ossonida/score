@@ -30,15 +30,24 @@ export function rivalStats(records,profile){
  return [...groups].map(([key,list])=>{list.sort(newestFirst);const latest=list[0];return {key,name:latest.opponent.name,color:latest.opponent.color||'',last:latest.play.date,...tally(list),recent:list.slice(0,3)};}).sort((a,b)=>b.met-a.met||a.name.localeCompare(b.name));
 }
 // 상대 전적 카드 위 강조: 3판 이상 비교한 상대 중 가장 많이 이긴·진 상대.
-export function opponentHighlights(rivals){const known=rivals.filter(r=>r.decided>=3),pick=(field,other)=>known.filter(r=>r[field]>0).sort((a,b)=>b[field]-a[field]||a[other]-b[other]||b.met-a.met)[0]||null;return {beaten:pick('ahead','behind'),beatenBy:pick('behind','ahead')};}
+export function opponentHighlights(rivals){const known=rivals.filter(r=>r.decided>=3),pick=(field,other)=>known.filter(r=>r[field]>r[other]).sort((a,b)=>b[field]-a[field]||a[other]-b[other]||b.met-a.met)[0]||null;return {beaten:pick('ahead','behind'),beatenBy:pick('behind','ahead')};}
+// 협동 경기를 함께한 이름 있는 사람(나 제외)과 성공 횟수.
+function coopTogether(records,profile){const out=[];for(const play of records){if(play.rule!=='cooperative')continue;const me=meIn(play,profile);if(!me)continue;for(const [key,partner] of namedOpponents(play,me,profile,true))out.push({key,play,partner});}return out;}
+const coopTally=list=>{const success=list.filter(x=>x.play.cooperativeResult==='success').length,known=list.filter(x=>['success','failure'].includes(x.play.cooperativeResult)).length;return {count:list.length,success,rate:known?success/known:null};};
+export function coopPartners(records,profile){const groups=new Map();for(const x of coopTogether(records,profile)){if(!groups.has(x.key))groups.set(x.key,[]);groups.get(x.key).push(x);}return [...groups].map(([key,list])=>{list.sort((a,b)=>newestFirst({play:a.play},{play:b.play}));return {key,name:list[0].partner.name,last:list[0].play.date,...coopTally(list)};}).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));}
+// 다음에 같이 해볼 게임: 2판 이상 비교한 게임에서 팽팽한 승부·설욕전·자신 있는 게임을 서로 다른 게임으로 고른다.
+function suggestGames(games){const known=games.filter(g=>g.decided>=2);if(known.length<2)return [];const used=new Set(),out=[],take=(kind,list)=>{const g=list.find(x=>!used.has(x.key));if(g){used.add(g.key);out.push({kind,...g});}};
+ take('close',known.filter(g=>Math.abs(g.ahead-g.behind)<=1).sort((a,b)=>Math.abs(a.ahead-a.behind)-Math.abs(b.ahead-b.behind)||b.decided-a.decided));
+ take('revenge',known.filter(g=>g.behind>g.ahead).sort((a,b)=>(b.behind-b.ahead)-(a.behind-a.ahead)||b.decided-a.decided));
+ take('strong',known.filter(g=>g.ahead>g.behind).sort((a,b)=>(b.ahead-b.behind)-(a.ahead-a.behind)||b.decided-a.decided));return out;}
 // ○○와의 전적: 전체 기록에서 한 사람과의 대결(게임 범위 선택 가능)·게임별 전적·함께한 협동 경기를 모은다.
 export function personStats(records,profile,key,scope=''){
- const all=duels(records,profile).filter(d=>d.key===key).sort(newestFirst),list=scope?all.filter(d=>gameKey(d.play.game)===scope):all;if(!all.length)return null;
+ const all=duels(records,profile).filter(d=>d.key===key).sort(newestFirst),list=scope?all.filter(d=>gameKey(d.play.game)===scope):all,together=scope?[]:coopTogether(records,profile).filter(x=>x.key===key);if(!all.length&&!together.length)return null;
  const byGame=new Map();for(const d of all){const k=gameKey(d.play.game);if(!byGame.has(k))byGame.set(k,{key:k,game:d.play.game,list:[]});byGame.get(k).list.push(d);}
  const games=[...byGame.values()].map(g=>({key:g.key,game:g.game,...tally(g.list)})).sort((a,b)=>b.met-a.met||a.game.name.localeCompare(b.game.name));
- const flow=list.filter(d=>d.result!=='unknown').slice(0,5).reverse().map(d=>d.result),last=flow.at(-1);let streak=0;for(let i=flow.length-1;i>=0&&flow[i]===last;i--)streak++;
- const coop=[];if(!scope)for(const play of records){if(play.rule!=='cooperative')continue;const me=meIn(play,profile);if(me&&namedOpponents(play,me,profile,true).some(([k])=>k===key))coop.push(play);}
- const coopGames=new Map();for(const play of coop){const k=gameKey(play.game);coopGames.set(k,{game:play.game,count:(coopGames.get(k)?.count||0)+1});}
- const success=coop.filter(p=>p.cooperativeResult==='success').length,coopKnown=coop.filter(p=>['success','failure'].includes(p.cooperativeResult)).length;
- return {key,name:all[0].opponent.name,color:all[0].opponent.color||'',first:all.at(-1).play.date,total:all.length,...tally(list),games,flow,streak:last?{result:last,count:streak}:null,recent:list.slice(0,3),plays:list.map(d=>d.play),coop:{count:coop.length,success,rate:coopKnown?success/coopKnown:null,games:[...coopGames.values()].sort((a,b)=>b.count-a.count)}};
+ // 연승·연패는 범위 안 전체에서 세고, 흐름 점은 최근 5판만 쓴다.
+ const decided=list.filter(d=>d.result!=='unknown'),last=decided[0]?.result;let streak=0;while(streak<decided.length&&decided[streak].result===last)streak++;
+ const coopGames=new Map();for(const {play} of together){const k=gameKey(play.game);coopGames.set(k,{game:play.game,count:(coopGames.get(k)?.count||0)+1});}
+ const newest=all[0]?.opponent.name||together.sort((a,b)=>newestFirst({play:a.play},{play:b.play}))[0].partner.name,dates=[...all.map(d=>d.play.date),...together.map(x=>x.play.date)].sort();
+ return {key,name:newest,first:dates[0],total:all.length,...tally(list),multi:list.filter(d=>d.play.players.length>2).length,games,suggest:scope?[]:suggestGames(games),flow:decided.slice(0,5).reverse().map(d=>d.result),streak:last?{result:last,count:streak}:null,recent:list.slice(0,3),plays:list.map(d=>d.play),coop:{...coopTally(together),games:[...coopGames.values()].sort((a,b)=>b.count-a.count)}};
 }
