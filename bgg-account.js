@@ -82,7 +82,7 @@ async function importPublic(){
     if(page===2){const saved=cached('plays',[]),known=new Map(safeBggItems(saved,'plays').map(item=>[item.id,sameShape(item)]));if(Date.now()-Number(cached('playsFullAt',0))<7*86400000&&saved.length===Math.min(total,1000)&&safeBggItems(rows,'plays').every(item=>known.get(item.id)===sameShape(item))){items=saved;skipped=true;break;}}
    }while(items.length<total&&page<=10);
    if(action==='plays'&&!skipped)try{localStorage.setItem(key('playsFullAt'),String(Date.now()));}catch{}
-   items=[...new Map(items.map(p=>[p.id,p])).values()];
+   items=[...new Map(items.map(p=>[p.id,p])).values()];if(action==='collection')items=withEdits(items);
    const previous=cached(action,[]),before=new Map(safeBggItems(previous,action).map(item=>[item.id,sameShape(item)])),changed=safeBggItems(items,action).filter(item=>before.get(item.id)!==sameShape(item)),nextIds=new Set(items.map(next=>next.id)),removed=previous.filter(item=>!nextIds.has(item.id)),pendingCloud=cached(action+'Pending',false);
    if(version!==epoch)return;if(changed.length||removed.length){localStorage.setItem(key(action),JSON.stringify(items));localStorage.setItem(key(action+'Pending'),'true');updated+=changed.length+removed.length;counts[action]=changed.length+removed.length;}if(action==='collection')collection=safeBggItems(items,'collection');else plays=safeBggItems(items,'plays');render();
    if(!changed.length&&!removed.length&&!pendingCloud)continue;
@@ -96,12 +96,19 @@ async function importPublic(){
 $('bggImport').onclick=importPublic;
 // BGG에서 하고 싶은 표시를 끈 게임은 이 기기 목록에도 바로 반영하고, 다음 가져오기 때 클라우드에 다시 저장합니다.
 function clearWantToPlay(ids){if(!user)return;const set=new Set(ids.map(String));collection=collection.map(item=>set.has(item.id)?{...item,wantToPlay:false}:item);try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');}catch{}render();}
-// 컬렉션 관리 메뉴에서 BGG에 저장한 상태를 이 기기의 BGG 컬렉션에도 반영합니다(클라우드에는 다음 클라우드 동기화 때 저장).
-function setCollectionStatus(game,status){if(!user)return;const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return;const flags={owned:status.owned===true,wishlist:status.wishlist===true,wantToPlay:status.wantToPlay===true},preordered=status.preordered===true,any=preordered||Object.values(flags).some(Boolean),current=collection.find(item=>item.id===id);let next;
- if(current){const {preordered:_,...rest}=current,item={...rest,...flags,...(preordered?{preordered:true}:{})};next=any||item.numPlays>0?collection.map(entry=>entry.id===id?item:entry):collection.filter(entry=>entry.id!==id);}
- else{if(!any)return;const item={id,gameId:id,name:String(game.name||'').trim().slice(0,300),...flags,...(preordered?{preordered:true}:{})};if(!validBggItem(item,'collection'))return;next=[...collection,item];}
- collection=next;try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');}catch{}render();}
-window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,setCollectionStatus,expectUpdates};
+// 컬렉션 관리 메뉴(보유·하고 싶은·위시리스트·펀딩)의 체크는 바로 BGG에 보내지 않고 이 기기의 컬렉션과 대기 변경(collectionEdits)에만 저장한다.
+// 대기 변경은 BGG 기록 내보내기 때 BGG에 반영하고, 내 정보 가져오기로 받은 컬렉션에도 덮어 둔다(아직 보내지 않은 선택이 사라지지 않도록).
+const collectionFlags=status=>({owned:status?.owned===true,wishlist:status?.wishlist===true,wantToPlay:status?.wantToPlay===true,preordered:status?.preordered===true});
+function withStatus(list,id,name,status){const {preordered,...flags}=collectionFlags(status),any=preordered||Object.values(flags).some(Boolean),current=list.find(item=>item.id===id);
+ if(current){const {preordered:_,...rest}=current,item={...rest,...flags,...(preordered?{preordered:true}:{})};return any||item.numPlays>0?list.map(entry=>entry.id===id?item:entry):list.filter(entry=>entry.id!==id);}
+ if(!any)return list;const item={id,gameId:id,name:String(name||'').trim().slice(0,300),...flags,...(preordered?{preordered:true}:{})};return validBggItem(item,'collection')?[...list,item]:list;}
+function collectionEdits(){const edits=cached('collectionEdits',{});return edits&&typeof edits==='object'&&!Array.isArray(edits)?edits:{};}
+function withEdits(list){let next=list;for(const [id,edit] of Object.entries(collectionEdits()))if(/^[1-9][0-9]{0,9}$/.test(id))next=withStatus(next,id,edit.name,edit);return next;}
+function setCollectionStatus(game,status){if(!user)return false;const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return false;const name=String(game.name||'').trim().slice(0,300),edits={...collectionEdits(),[id]:{...collectionFlags(status),name}};
+ collection=withStatus(collection,id,name,status);try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');localStorage.setItem(key('collectionEdits'),JSON.stringify(edits));}catch{}render();return true;}
+// BGG에 반영한 대기 변경만 지운다. 보내는 동안 다시 바뀐 항목은 남긴다.
+function clearCollectionEdits(ids,sent){const edits=collectionEdits();for(const id of ids)if(JSON.stringify(edits[id])===JSON.stringify(sent[id]))delete edits[id];try{localStorage.setItem(key('collectionEdits'),JSON.stringify(edits));}catch{}}
+window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,setCollectionStatus,collectionEdits:()=>user?collectionEdits():{},clearCollectionEdits,editable:()=>!!user,expectUpdates};
 
 if(cloudConfigured())showCached(rememberedUid());render();
 if(cloudConfigured())connectCloud(async next=>{

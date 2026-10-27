@@ -8,7 +8,7 @@ import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} fr
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameRivals,renderGameExpansions} from './overview-dashboard.js?v=164';
 import {renderGameTitle} from './personal-dashboard.js?v=158';
-import {collectionMenu} from './collection-menu.js?v=1';
+import {collectionMenu} from './collection-menu.js?v=2';
 import {latestPlayDate} from './stats-overview.js?v=164';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
@@ -307,10 +307,12 @@ $('recordDeletePlayer').onclick=()=>{if(!recordEditing)return;const editing=reco
 $('recordEditForm').onsubmit=event=>{event.preventDefault();if(!recordEditing)return;const {playId,personId,field,context,original}=recordEditing;try{updateRecordedPlayer(playId,personId,field,$(['result','cooperativeResult'].includes(field)?'recordEditResult':'recordEditValue').value,context,original);window.ScoreAnalytics?.recordChanged(field);recordEditing=null;close('recordEditDialog');}catch(error){message('recordEditError',error);}};
 
 function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHistory();document.getElementById('record-'+id)?.scrollIntoView?.({behavior:'smooth',block:'center'});}
-// 게임별 통계 게임 머리의 ⋮ 메뉴: 가져온 BGG 컬렉션 상태로 체크해 두고, BGG 계정이 연결돼 있을 때만 바꿀 수 있다. 다시 그려도 열림 상태를 유지한다.
-let collectionMenuOpen='';
-function collectionAction(game){const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return null;const item=(window.ScoreBggAccount?.state().collection||[]).find(entry=>entry.id===id),link=window.ScoreBggLink,linked=link?.state?.().connected===true;
- return collectionMenu({status:{owned:item?.owned===true,wantToPlay:item?.wantToPlay===true,wishlist:item?.wishlist===true,preordered:item?.preordered===true},disabled:linked?'':'설정에서 BGG 계정을 연결하면 관리할 수 있습니다.',open:collectionMenuOpen===id,onToggle:open=>{collectionMenuOpen=open?id:'';},onChange:status=>link.updateCollection(game,status)});}
+// 게임별 통계 게임 머리의 ⋮ 메뉴: 이 기기의 BGG 컬렉션 상태로 체크해 두고, 체크는 기기에만 저장한다(BGG 반영은 기록 내보내기 때). 다시 그려도 열림 상태를 유지한다.
+let collectionMenuOpen='',bggRenderQueued=false;
+// BGG 컬렉션을 늦게 불러오거나 바뀌면 보이는 게임별 통계만 다시 그려 체크 상태를 맞춘다(숨겨진 화면은 그리지 않음).
+window.addEventListener?.('score-bgg:changed',()=>{if(location.hash!=='#stats'||statsView!=='games'||bggRenderQueued)return;bggRenderQueued=true;setTimeout(()=>{bggRenderQueued=false;if(location.hash==='#stats'&&statsView==='games')renderHistory();},0);});
+function collectionAction(game){const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return null;const account=window.ScoreBggAccount,item=(account?.state().collection||[]).find(entry=>entry.id===id),editable=account?.editable?.()===true,pending=!!account?.collectionEdits?.()[id],hint='BGG 기록 내보내기 때 BGG 컬렉션에 반영됩니다.';
+ return collectionMenu({status:{owned:item?.owned===true,wantToPlay:item?.wantToPlay===true,wishlist:item?.wishlist===true,preordered:item?.preordered===true},disabled:editable?'':'로그인하면 관리할 수 있습니다.',hint:pending?hint:'',open:collectionMenuOpen===id,onToggle:open=>{collectionMenuOpen=open?id:'';},onChange:status=>{if(!account?.setCollectionStatus?.(game,status))throw Error('저장하지 못했습니다. 다시 시도해주세요.');return hint;}});}
 function chooseStatsGame(game){statsView='games';mode='stats';statsGameTarget=game;statsGameTargetGame=null;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
 function openGameStats(game){const resolved=resolveGame(game,records);statsView='games';mode='stats';statsGameTarget=gameKey(resolved);statsGameTargetGame=resolved;$('statsDetails').open=false;renderHistory();void enrichRecordGames();if(location.hash!=='#stats')location.hash='stats';}
 const periodUnitIds={month:'periodUnitMonth',year:'periodUnitYear',all:'periodUnitAll',custom:'periodUnitCustom'};

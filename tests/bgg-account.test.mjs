@@ -50,3 +50,12 @@ test('collection menu changes update this device and upload on the next cloud sy
  account.setCollectionStatus({name:'Game 1',bggId:'1'},{owned:false,wantToPlay:false,wishlist:false,preordered:false});assert.deepEqual(saved()[0],{id:'1',gameId:'1',name:'Game 1',owned:false,wishlist:false,wantToPlay:false,numPlays:3},'a played game stays with its play count');
  a.writes.length=0;await pull(a);assert.equal(a.writes.filter(w=>w.kind==='collection').length,1,'cloud sync uploads the device change');assert.equal(a.store.get('score.bgg.one.collectionPending'),undefined);
 });
+test('collection menu checks stay as pending edits until exported and survive a BGG import',async()=>{
+ const a=await app('https://example.com/bgg');a.store.set('score.bgg.one.profile',JSON.stringify({username:'alice'}));await a.auth({uid:'one'});const account=a.win.ScoreBggAccount;
+ assert.equal(account.editable(),true);assert.equal(account.setCollectionStatus({name:'CATAN',bggId:'13'},{owned:true,wantToPlay:false,wishlist:true,preordered:false}),true);
+ const edits=account.collectionEdits();assert.deepEqual(JSON.parse(JSON.stringify(edits)),{13:{owned:true,wishlist:true,wantToPlay:false,preordered:false,name:'CATAN'}});
+ await a.get('bggImport').onclick();const imported=a.writes.find(w=>w.kind==='collection').items;assert.ok(imported.some(item=>item.id==='13'&&item.owned&&item.wishlist),'an unsent check is kept over the downloaded collection');
+ account.setCollectionStatus({name:'CATAN',bggId:'13'},{owned:false,wantToPlay:false,wishlist:true,preordered:false});account.clearCollectionEdits(['13'],edits);assert.ok(account.collectionEdits()['13'],'a change made while sending stays pending');
+ account.clearCollectionEdits(['13'],account.collectionEdits());assert.deepEqual(JSON.parse(JSON.stringify(account.collectionEdits())),{});
+});
+
