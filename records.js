@@ -243,7 +243,7 @@ function openScorelessDetails(){try{scorelessResultPlayers();persistScorelessDra
 $('saveScorelessPlay').onclick=openScorelessDetails;
 $('scorelessSetupDialog').addEventListener('close',()=>{if(scorelessBoardActive||scorelessDraftMuted)return;clearScorelessDraft();pendingScoreless=null;scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';});
 function renderGameResults(games){
- const box=$('bggResults');box.replaceChildren();$('bggResultsHint').hidden=!games.length||!bggSearchUrl||!currentUser;
+ const box=$('bggResults');box.replaceChildren();$('bggResultsHint').hidden=!games.length||!bggSearchUrl;
  for(const game of games){
  if(typeof game.name!=='string'||(game.id&&!/^[1-9][0-9]{0,9}$/.test(String(game.id))))continue;
  const row=node('div',undefined,'game-result-row'),button=node('button',undefined,'game-result-choice');button.type='button';
@@ -261,10 +261,10 @@ async function searchGames(){
  $('playError').textContent='';const local=searchLocalGames(query,gameSearchRecords());renderGameResults(local);if(local.some(game=>game.scoreGame)){$('gameSearchStatus').textContent=local.length+'개 결과 · Score 자체 게임은 BGG와 연동하지 않습니다.';return;}
  if(!bggSearchUrl){$('gameSearchStatus').textContent=local.length?local.length+'개 결과 · 저장 게임 / 기본 목록':'기본 목록에 없는 게임입니다. 이름을 직접 입력해 저장하거나 BGG 웹 검색을 이용해주세요.';return;}
  if(query.length<2){$('gameSearchStatus').textContent='게임명을 두 글자 이상 입력해주세요.';return;}
- if(!currentUser){$('gameSearchStatus').textContent=local.length?local.length+'개 결과 · BGG 전체 검색은 Google 로그인 후 이용할 수 있습니다.':'BGG 전체 검색은 Google 로그인 후 이용할 수 있습니다.';return;}
  searchController?.abort();searchController=new AbortController();const controller=searchController,serial=++searchSerial,button=$('searchBgg');button.disabled=true;button.setAttribute('aria-busy','true');$('gameSearchStatus').textContent='BGG 검색 중…';
  try{
- const token=await idToken(currentUser?.uid);if(serial!==searchSerial)return;const url=new URL(bggSearchUrl);url.searchParams.set('query',bggSearchQuery(query));const response=await fetch(url,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),headers:{Authorization:'Bearer '+token}});
+ // 로그인하지 않았으면 토큰 없이 검색한다(워커가 비로그인 검색을 접속 주소별로 제한).
+ const token=currentUser?await idToken(currentUser.uid):'';if(serial!==searchSerial)return;const url=new URL(bggSearchUrl);url.searchParams.set('query',bggSearchQuery(query));const response=await fetch(url,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]),headers:token?{Authorization:'Bearer '+token}:{}});
  if(response.status===202||!response.ok){const errors={202:'BGG가 검색을 준비 중입니다. 잠시 후 검색 버튼을 다시 눌러주세요.',401:'로그인 확인이 필요합니다. 다시 로그인한 뒤 검색해주세요.',429:'검색 요청이 많습니다. 1분 뒤 다시 검색해주세요.',502:'BGG에서 검색 결과를 받지 못했습니다. 잠시 후 다시 검색해주세요.',503:'BGG 검색 서버 설정을 확인해야 합니다. 기존 목록은 선택할 수 있습니다.'};throw Error(errors[response.status]||'BGG에 연결하지 못했습니다. 기존 목록을 선택하거나 직접 입력할 수 있습니다.');}
  const data=await response.json();if(serial!==searchSerial)return;const merged=new Map(local.map(g=>[g.id?'bgg:'+g.id:'name:'+g.name,g]));
  for(const game of Array.isArray(data.games)?data.games:[])if(/^[1-9][0-9]{0,9}$/.test(String(game.id))&&typeof game.name==='string')merged.set('bgg:'+game.id,{...game,name:decodeXmlText(game.name),source:'BGG'});

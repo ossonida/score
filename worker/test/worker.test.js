@@ -76,3 +76,12 @@ test('account routes are authenticated, method-bound and scoped only to the veri
  const unready=await handler()(request('action=link-status'),env);assert.deepEqual(await unready.json(),{ready:false,connected:false,code:'BGG_LINK_NOT_READY'});
  const denied=createHandler({verify:async()=>{throw Error();},upstream:async()=>{throw Error('should not fetch');}});assert.equal((await denied(request('action=link-login',{method:'POST'}),linked)).status,401);
 });
+test('signed-out users may only search, from an allowed site, limited per address',async()=>{
+ const keys=[];const limited={...env,BGG_LIMITS:{idFromName:n=>n,get:name=>({fetch:async()=>{keys.push(name);return new Response(null,{status:204});}})}};
+ const guest=(query,headers={Origin:'https://ossonida.github.io','CF-Connecting-IP':'203.0.113.7'})=>new Request('https://score.example/?'+query,{headers});
+ const h=createHandler({verify:async()=>{throw Error('no token expected');},upstream:async()=>new Response(xml)});
+ const res=await h(guest('query=flip'),limited);assert.equal(res.status,200);assert.deepEqual(await res.json(),{games:[{id:'420087',name:'Flip 7',year:'2024'}]});assert.deepEqual(keys,['user:guest:203.0.113.7','global']);
+ assert.equal((await h(guest('query=flip',{'CF-Connecting-IP':'203.0.113.7'}),limited)).status,401,'requests without an allowed site are rejected');
+ for(const query of ['action=details&ids=13','action=collection&username=alice','action=plays&username=alice'])assert.equal((await h(guest(query),limited)).status,401,query);
+});
+

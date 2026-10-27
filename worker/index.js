@@ -39,7 +39,9 @@ export function createHandler({verify=verifyFirebaseToken,upstream=fetch}={}){
    }catch{return reply(502,{error:'Cover request failed'});}
   }
   const token=bearerToken(request.headers.get('Authorization'));let uid;
-  try{if(!token)throw Error();uid=await verify(token,env.FIREBASE_PROJECT_ID);}catch{return reply(401,{error:'Sign in required'});}
+  // 로그인하지 않은 사용자도 게임 검색은 쓸 수 있다: 허용된 사이트의 GET 검색만, 접속 주소별 요청 제한을 건다.
+  if(!token&&action==='search'&&request.method==='GET'){if(!origin)return reply(401,{error:'Sign in required'});uid='guest:'+(request.headers.get('CF-Connecting-IP')||'unknown');}
+  else try{if(!token)throw Error();uid=await verify(token,env.FIREBASE_PROJECT_ID);}catch{return reply(401,{error:'Sign in required'});}
   if(!env.BGG_API_TOKEN||!env.BGG_LIMITS)return reply(503,{error:'BGG service is not configured'});
   const accountRoutes={'link-status':['GET','/status'],'link-login':['POST','/login'],'link-logout':['POST','/logout'],'link-post':['POST','/post'],'link-clear-want':['POST','/clear-want'],'link-collection':['POST','/collection']};
   if(Object.hasOwn(accountRoutes,action)){

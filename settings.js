@@ -1,7 +1,7 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=159';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=179';
+import './records.js?v=180';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=66';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
