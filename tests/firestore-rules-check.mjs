@@ -39,6 +39,8 @@ try{
  await assertSucceeds(setDoc(doc(alice,'users/alice/bggCollection/13'),game));await assertFails(setDoc(doc(bob,'users/alice/bggCollection/13'),game));
  await assertFails(setDoc(doc(alice,'users/alice/bggCollection/13'),{...game,id:'13',gameId:'99'}));
  await assertFails(setDoc(doc(alice,'users/alice/bggPlays/99'),{id:'99',gameId:'13',name:'Catan',username:'alice-bgg',date:'2026-10-12',quantity:-1,players:[]}));
+await assertSucceeds(setDoc(doc(alice,'users/alice/bggPlays/98'),{id:'98',gameId:'13',name:'Catan',username:'alice-bgg',date:'2026-10-12',quantity:1,players:[],location:'철수네',score:{id:'one',location:'철수네',note:'[ScoreCounter:one]',known:true}}));
+await assertFails(setDoc(doc(alice,'users/alice/bggPlays/97'),{id:'97',gameId:'13',name:'Catan',username:'alice-bgg',date:'2026-10-12',quantity:1,players:[],location:'x'.repeat(121)}));
  await assertFails(getDoc(doc(alice,'_bggLimits/alice')));await assertFails(setDoc(doc(alice,'_bggLimits/alice'),{count:0,start:0}));
  console.log('Firestore rules: 22 access/validation checks passed');
 }finally{await env.cleanup();}
