@@ -8,7 +8,8 @@ const ref=v=>typeof v==='string'||Number.isSafeInteger(v)?String(v):'';
 async function hash(value){const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');}
 function date(value){const s=String(value||'');const match=s.match(/^(\d{4})-?(\d{2})-?(\d{2})/);if(!match)throw Error('날짜 없음');const d=`${match[1]}-${match[2]}-${match[3]}`;if(new Date(d+'T00:00:00Z').toISOString().slice(0,10)!==d)throw Error('잘못된 날짜');return d;}
 function number(value){if(value===null||value===undefined||value===''||typeof value==='string'&&!value.trim())return null;if(typeof value!=='number'&&typeof value!=='string')throw Error('잘못된 점수');if(typeof value==='string'&&!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value.trim()))throw Error('잘못된 점수');const n=Number(value);if(!Number.isFinite(n)||Math.abs(n)>Number.MAX_SAFE_INTEGER)throw Error('점수 범위 초과');return n;}
-export function mergeImported(existing,incoming){const map=new Map(existing.map(p=>[p.id,p]));let duplicates=0;const added=[];for(const play of incoming){if(map.has(play.id)){duplicates++;continue;}map.set(play.id,play);added.push(play);}return {records:[...map.values()],added,duplicates};}
+// 같은 ID는 중복으로 두되, 기존 기록에 장소가 없고 가져온 기록에 있으면 장소만 채운다(updated).
+export function mergeImported(existing,incoming){const map=new Map(existing.map(p=>[p.id,p]));let duplicates=0;const added=[],updated=[];for(const play of incoming){const old=map.get(play.id);if(old){duplicates++;if(!old.location&&play.location){const next={...old,location:play.location};map.set(play.id,next);updated.push(next);}continue;}map.set(play.id,play);added.push(play);}return {records:[...map.values()],added,duplicates,updated};}
 export async function parseImport(raw){
  if(typeof raw!=='string'||new TextEncoder().encode(raw).byteLength>MAX_IMPORT_BYTES)throw Error('20MB 이하의 JSON 파일을 선택해주세요.');
  let data;try{data=JSON.parse(raw.replace(/^\uFEFF/,''));}catch{throw Error('JSON 파일을 읽을 수 없습니다. 압축을 풀고 JSON 파일을 선택해주세요.');}
@@ -24,6 +25,7 @@ export async function parseImport(raw){
   if(data.games.length>50000||data.players.length>50000)throw Error('게임 또는 플레이어 목록이 너무 큽니다.');
   const games=new Map(data.games.filter(g=>g&&ref(g.id)).map(g=>[ref(g.id),g]));
   const people=new Map(data.players.filter(p=>p&&ref(p.id)).map(p=>[ref(p.id),p]));
+  const places=new Map((Array.isArray(data.locations)?data.locations:[]).filter(l=>l&&ref(l.id)&&text(l.name)).map(l=>[ref(l.id),text(l.name).slice(0,120)]));
   for(const [index,p] of source.entries()){
    try{
     if(!p||typeof p!=='object')throw Error('잘못된 플레이 기록');
@@ -49,11 +51,11 @@ export async function parseImport(raw){
     const occurrence=occurrences.get(fingerprint)||0;occurrences.set(fingerprint,occurrence+1);
     const identity=text(p.uuid)?'uuid:'+text(p.uuid).toLowerCase():fingerprint+'#'+occurrence;
     const id='bgstats:'+(await hash(identity)).slice(0,48);
-    const record=createPlay({game:{name,bggId},date:when,rule,players},id);record.createdAt=when+'T12:00:00.000Z';records.push(record);
+    const location=places.get(ref(p.locationRefId))||'';const record=createPlay({game:{name,bggId},date:when,rule,players,location},id);record.createdAt=when+'T12:00:00.000Z';records.push(record);
     if(index%200===199)await new Promise(resolve=>setTimeout(resolve,0));
    }catch(error){reject(error.message||'읽을 수 없는 기록');}
   }
  }
- return {format:score?'Score':'Board Game Stats',gameImages,records,total:source.length,skipped,reasons:[...reasons].map(([reason,count])=>({reason,count})),scope:score?'Score 게임 기록':'게임명·날짜·플레이어·점수·승자 (메모·장소·사진·컬렉션·도전과제 제외)'};
+ return {format:score?'Score':'Board Game Stats',gameImages,records,total:source.length,skipped,reasons:[...reasons].map(([reason,count])=>({reason,count})),scope:score?'Score 게임 기록':'게임명·날짜·장소·플레이어·점수·승자 (메모·사진·컬렉션·도전과제 제외)'};
 }
 export function exportBackup(records){if(records.some(p=>!isPlay(p)))throw Error('백업할 기록을 확인해주세요.');return JSON.stringify({format:'score-backup',version:1,exportedAt:new Date().toISOString(),records:records.map(p=>({...createPlay(p,p.id),createdAt:p.createdAt}))},null,2);}

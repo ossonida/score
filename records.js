@@ -8,7 +8,7 @@ import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} fr
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
 import {personStats} from './social-insights.js?v=117';
-import {readPlacePrefs,placeSuggestions} from './places.js?v=1';
+import {readPlacePrefs,placeSuggestions} from './places.js?v=2';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
@@ -19,7 +19,7 @@ import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,name
 import {renderStatsDashboard} from './stats-dashboard.js?v=98';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=4';
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
-import {mergeImported} from './data-transfer.js?v=66';
+import {mergeImported} from './data-transfer.js?v=67';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=166';
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
@@ -496,9 +496,9 @@ window.ScoreRecords={
   if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 파일을 다시 선택해주세요.');
   if(!Array.isArray(incoming)||incoming.some(p=>!isPlay(p)))throw Error('기록 형식을 확인해주세요.');
   const result=mergeImported(records,incoming.map(normalizeStoredPlay)),old=records,oldPending=new Set(pending);records=result.records;
-  if(scopeUid())for(const p of result.added)pending.add(p.id);
+  if(scopeUid())for(const p of [...result.added,...result.updated])pending.add(p.id);
   try{persist();}catch(error){records=old;pending=oldPending;throw Error('기기 저장 공간이 부족해 가져오지 못했습니다. 기존 기록은 유지됩니다.');}
-  updateButtons();renderHistory();return {added:result.added.length,duplicates:result.duplicates};
+  updateButtons();renderHistory();return {added:result.added.length,duplicates:result.duplicates,updated:result.updated.length};
  }
 };
 for(const button of document.querySelectorAll('[data-record-close]'))button.onclick=()=>close(button.dataset.recordClose);

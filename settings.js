@@ -1,9 +1,9 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=159';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=187';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=66';
-import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=1';
+import './records.js?v=188';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=67';
+import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=2';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
@@ -54,11 +54,11 @@ $('importFile').addEventListener('change',async event=>{
   const result=await parseImport(await file.text());if(serial!==reading)return;
   if(!contextMatches(context))throw Error('계정이 변경됐습니다. 파일을 다시 선택해주세요.');
   const merged=mergeImported(api.context().records,result.records);preview={...result,context};
-  $('importSummary').textContent=`${result.format} · 전체 ${result.total}개 중 새 기록 ${merged.added.length}개 · 중복 ${merged.duplicates}개 · 제외 ${result.skipped}개`;
+  $('importSummary').textContent=`${result.format} · 전체 ${result.total}개 중 새 기록 ${merged.added.length}개 · 중복 ${merged.duplicates}개${merged.updated.length?` (장소 채움 ${merged.updated.length}개)`:''} · 제외 ${result.skipped}개`;
   $('importScope').textContent=result.scope;
   $('importWarnings').replaceChildren(...result.reasons.map(({reason,count})=>{const p=document.createElement('p');p.textContent=`${reason}: ${count}개`;return p;}));
   $('importExamples').replaceChildren(...result.records.slice(0,4).map(p=>{const row=document.createElement('p');row.textContent=`${p.date} · ${p.game.name} · ${p.players.length}명`;return row;}));
-  $('importPreview').hidden=false;window.ScoreAnalytics?.feature('data_transfer','import_previewed');$('confirmImport').disabled=!merged.added.length;status(merged.added.length?'미리보기를 확인한 뒤 가져오기를 눌러주세요.':'추가할 새 기록이 없습니다.');
+  $('importPreview').hidden=false;window.ScoreAnalytics?.feature('data_transfer','import_previewed');$('confirmImport').disabled=!merged.added.length&&!merged.updated.length;status(merged.added.length?'미리보기를 확인한 뒤 가져오기를 눌러주세요.':'추가할 새 기록이 없습니다.');
  }catch(error){if(serial===reading){clearPreview();status(error.message||'파일을 읽지 못했습니다.');}}
  finally{busy=false;update();}
 });
