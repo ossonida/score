@@ -8,6 +8,7 @@ import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} fr
 import {enrichGames} from './bgg-details-client.js?v=65';
 import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
 import {personStats} from './social-insights.js?v=117';
+import {readPlacePrefs,placeSuggestions} from './places.js?v=1';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
@@ -172,7 +173,7 @@ function updateRecordStorage(){
 function openSave({finish=false,showDialog=true,withoutScores=false,scorelessDetails=false}={}){
  if(withoutScores&&!scorelessDetails){startScorelessRecord();return;}
  recordFlow=withoutScores?'scoreless':finish?'finish':'setup';$('recentGamesSection').open=withoutScores;recordDraftVersion++;recordLoginPending=false;snapshot=api.getPlayers();snapshotScope=key();
- const config=scorelessDetails?pendingScoreless:finish?activeSession:null;const draft=readDraft();$('playWithoutScores').checked=withoutScores||Boolean(config?.noScores);$('playGame').value=config?.game?.name||'';$('playBggId').value=config?.game?.bggId||'';$('openBggWebsite').hidden=Boolean(config?.game&&isScoreGame(config.game));$('playDate').value=config?.date||today();$('playLocation').value=config?.location||draft.location||'';const selectedRule=config?.rule||draft.rule;$('playRule').value=['highest','lowest'].includes(selectedRule)?selectedRule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(config?.game?.name,config?.game?.bggId,undefined,config?.game);$('gameSearchStatus').textContent=bggSearchUrl?'게임이 검색되지 않으면 아래서 BGG게임 ID를 입력해 수동으로 추가하세요.':'한글·영문으로 검색하거나 직접 입력하세요.';renderRecentGames();renderSnapshot();updateRecordStorage();updateGameOptions();if(showDialog){show('savePlayDialog');$('savePlayDialog').focus?.({preventScroll:true});}
+ const config=scorelessDetails?pendingScoreless:finish?activeSession:null;const draft=readDraft();$('playWithoutScores').checked=withoutScores||Boolean(config?.noScores);$('playGame').value=config?.game?.name||'';$('playBggId').value=config?.game?.bggId||'';$('openBggWebsite').hidden=Boolean(config?.game&&isScoreGame(config.game));$('playDate').value=config?.date||today();$('playLocation').value=config?.location||draft.location||readPlacePrefs(key()).primary||'';const selectedRule=config?.rule||draft.rule;$('playRule').value=['highest','lowest'].includes(selectedRule)?selectedRule:'highest';$('playError').textContent='';$('bggResults').replaceChildren();showSelectedGame(config?.game?.name,config?.game?.bggId,undefined,config?.game);$('gameSearchStatus').textContent=bggSearchUrl?'게임이 검색되지 않으면 아래서 BGG게임 ID를 입력해 수동으로 추가하세요.':'한글·영문으로 검색하거나 직접 입력하세요.';renderRecentGames();renderSnapshot();updateRecordStorage();updateGameOptions();if(showDialog){show('savePlayDialog');$('savePlayDialog').focus?.({preventScroll:true});}
 }
 $('playWithoutScores').onchange=renderSnapshot;
 $('recordLogin').onclick=async()=>{if($('savePlayForm').reportValidity?.()===false)return;if(!snapshot.length){message('playError','플레이어를 먼저 추가해주세요.');return;}const button=$('recordLogin');button.disabled=true;button.setAttribute('aria-busy','true');recordLoginPending=true;try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 이 기기에 먼저 저장할 수 있습니다.');await login();}catch(error){recordLoginPending=false;message('playError',friendly(error));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
@@ -295,9 +296,8 @@ function checkRecordContext(context){if(context.key!==key()||context.epoch!==acc
 function mergeCandidates(personKey){const profile=readIdentity(key()),own=new Set([profile?.primary,...(profile?.aliases||[])]),found=new Map();for(const play of records){const seen=new Set();for(const p of play.players){const k=nameKey(p.name);if(!k||p.anonymous||k===personKey||own.has(k)||seen.has(k))continue;seen.add(k);const item=found.get(k)||{key:k,name:p.name.trim(),count:0};item.count++;found.set(k,item);}}return [...found.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));}
 function mergePlayerName(fromKey,toName,context){checkRecordContext(context);const changed=[],next=records.map(play=>{let updated=play;for(const p of play.players)if(nameKey(p.name)===fromKey)updated=editRecordedPlayer(updated,p.id,'name',toName);if(updated!==play)changed.push(play.id);return updated;});if(!changed.length)return 0;const old=records,oldPending=new Set(pending);records=next;if(scopeUid())for(const id of changed)pending.add(id);try{persist();}catch{records=old;pending=oldPending;throw Error('저장하지 못했습니다. 기기 저장 공간을 확인해주세요.');}renderHistory();updateButtons();return changed.length;}
 function confirmMergeName(fromKey,toName){const from=mergeCandidates(statsPerson?.key).find(n=>n.key===fromKey);if(!from)return;const context={key:key(),epoch:accountEpoch};api.confirm('이름 합치기',from.name+' 이름이 들어간 기록 '+from.count+'개를 '+toName+'(으)로 바꿀까요? 되돌릴 수 없습니다.',()=>{try{const count=mergePlayerName(fromKey,toName,context);notify('기록 '+count+'개에서 '+from.name+'을(를) '+toName+'(으)로 합쳤습니다.');}catch(error){notify(error.message);}});}
-// 장소 추천: 이 계정 기록에 쓴 장소를 자주 쓴 순(같으면 최근 순)으로 보여 주고, 아직 안 쓴 기본 장소를 뒤에 붙인다.
-const defaultLocations=['집','보드게임 카페','모임 장소','온라인'];
-function fillLocationChoices(){const used=new Map();for(const p of records){const place=typeof p.location==='string'?p.location.trim():'';if(!place)continue;const item=used.get(place)||{place,count:0,last:''};item.count++;if(p.date>item.last)item.last=p.date;used.set(place,item);}const list=[...used.values()].sort((a,b)=>b.count-a.count||b.last.localeCompare(a.last)).slice(0,30).map(x=>x.place);for(const place of defaultLocations)if(!used.has(place))list.push(place);$('savedLocations').replaceChildren(...list.map(place=>{const option=node('option');option.value=place;return option;}));}
+// 장소 추천: 기본 장소 → 이 계정 기록·BGG 플레이에서 많이 쓴 장소(숨김 제외) → 아직 안 쓴 기본 추천(places.js).
+function fillLocationChoices(){const list=placeSuggestions(records,window.ScoreBggAccount?.state().plays||[],readPlacePrefs(key()));$('savedLocations').replaceChildren(...list.map(place=>{const option=node('option');option.value=place;return option;}));}
 function updateRecordedPlayer(playId,personId,field,value,context,expected){
  checkRecordContext(context);const original=records.find(p=>p.id===playId);if(!original)throw Error('기록을 찾을 수 없습니다.');if(expected&&expected!==original)throw Error('기록이 변경됐습니다. 다시 열어서 수정해주세요.');
  let updated=editRecordedPlayer(original,personId,field,value);if(updated===original)return updated;if(field==='name'&&meIn(original,readIdentity(key()))?.id===personId)updated={...updated,players:updated.players.map(p=>({...p,isSelf:p.id===personId}))};const old=records,oldPending=new Set(pending);records=records.map(p=>p.id===playId?updated:p);if(scopeUid())pending.add(playId);
@@ -472,6 +472,15 @@ window.ScoreRecords={
   try{persist();}catch{records=old;pending=oldPending;throw Error('저장 공간이 부족해 지정하지 못했습니다.');}
   try{rememberIdentity(key(),updated.players.find(p=>p.isSelf));}catch{}
   renderHistory();updateButtons();notify('이 경기의 내 플레이어 지정을 저장했습니다.');return updated;
+ },
+ // 장소 이름 바꾸기: 이 계정 기록에서 장소가 from인 기록을 모두 to로 바꾸고 한 번에 저장한다(같은 이름이 있으면 합쳐진다).
+ renameLocation:(from,to,context)=>{
+  if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
+  to=String(to??'').trim();if(!to||to.length>120)throw Error('장소를 1~120자로 입력해주세요.');
+  const changed=[],next=records.map(p=>{if((p.location||'').trim()!==from||p.location===to)return p;changed.push(p.id);return {...p,location:to};});if(!changed.length)return 0;
+  const old=records,oldPending=new Set(pending);records=next;if(scopeUid())for(const id of changed)pending.add(id);
+  try{persist();}catch{records=old;pending=oldPending;throw Error('저장하지 못했습니다. 기기 저장 공간을 확인해주세요.');}
+  renderHistory();updateButtons();return changed.length;
  },
  scope:()=>({key:key(),epoch:accountEpoch}),
  context:()=>({ready:authReady||!!offlineUid,key:key(),epoch:accountEpoch,records:records.map(p=>({...p,game:{...p.game},players:p.players.map(person=>({...person}))}))}),

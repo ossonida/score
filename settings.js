@@ -1,13 +1,33 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=159';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=185';
+import './records.js?v=186';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=66';
+import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=1';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
-function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+// 장소 관리: 설정이 보일 때만 그린다. 기본·숨김은 계정별 기기 설정, 이름 바꾸기는 이 계정 기록을 고친다.
+let placesOpen=false;
+function placeButton(text,onClick,pressed){const b=document.createElement('button');b.type='button';b.textContent=text;if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));b.onclick=onClick;return b;}
+function renderPlaces(context){
+ if(currentView()!=='settings')return;const list=$('placeList'),prefs=readPlacePrefs(context.key),hidden=new Set(prefs.hidden),places=placeStats(context.records,window.ScoreBggAccount?.state().plays||[]);
+ const ordered=[...places.filter(p=>!hidden.has(p.place)),...places.filter(p=>hidden.has(p.place))],save=next=>{savePlacePrefs(context.key,next);renderPlaces(api.context());};
+ list.replaceChildren();if(!places.length){const empty=document.createElement('p');empty.className='settings-note';empty.textContent='아직 장소가 들어간 기록이 없습니다. 기록을 저장할 때 장소를 입력하면 여기에 모입니다.';list.append(empty);return;}
+ const row=item=>{const box=document.createElement('div'),copy=document.createElement('div'),name=document.createElement('strong'),meta=document.createElement('small'),actions=document.createElement('div'),isHidden=hidden.has(item.place),isPrimary=prefs.primary===item.place;
+  box.className='place-row'+(isHidden?' is-hidden':'');copy.className='place-copy';actions.className='place-actions';name.textContent=item.place;meta.textContent=[item.records?'기록 '+item.records+'회':'',item.bgg?'BGG '+item.bgg+'회':'','최근 '+item.last].filter(Boolean).join(' · ')+(isPrimary?' · 기본 장소':'')+(isHidden?' · 숨김':'');copy.append(name,meta);
+  actions.append(placeButton('기본',()=>{save({...prefs,primary:isPrimary?'':item.place,hidden:prefs.hidden.filter(x=>x!==item.place)});$('placeStatus').textContent=isPrimary?'기본 장소를 해제했습니다.':item.place+'을(를) 기본 장소로 정했습니다.';},isPrimary),placeButton(isHidden?'보이기':'숨기기',()=>{save({...prefs,primary:!isHidden&&isPrimary?'':prefs.primary,hidden:isHidden?prefs.hidden.filter(x=>x!==item.place):[...prefs.hidden,item.place]});$('placeStatus').textContent=item.place+(isHidden?'을(를) 다시 추천합니다.':'을(를) 추천에서 숨겼습니다.');}));
+  box.append(copy,actions);
+  if(item.records){const form=document.createElement('form'),input=document.createElement('input'),submit=document.createElement('button');form.className='place-rename';form.hidden=true;input.maxLength=120;input.value=item.place;input.setAttribute('aria-label',item.place+' 새 이름');submit.type='submit';submit.textContent='바꾸기';form.append(input,submit);
+   actions.append(placeButton('이름 바꾸기',()=>{form.hidden=!form.hidden;if(!form.hidden)input.focus?.();}));
+   form.onsubmit=event=>{event.preventDefault();const to=input.value.trim();if(!to||to===item.place){form.hidden=true;return;}const merge=places.some(p=>p.place===to),confirm=window.ScoreCounter?.confirm,run=()=>{try{const count=api.renameLocation(item.place,to,{key:context.key,epoch:context.epoch});const next=readPlacePrefs(context.key);savePlacePrefs(context.key,{primary:next.primary===item.place?to:next.primary,hidden:next.hidden.filter(x=>x!==item.place)});$('placeStatus').textContent='기록 '+count+'개의 장소를 '+to+'(으)로 바꿨습니다.';renderPlaces(api.context());}catch(error){$('placeStatus').textContent=error.message;}};
+    const message=item.place+' 장소가 들어간 기록 '+item.records+'개를 '+to+(merge?'(이미 있는 장소)와 합칠까요?':'(으)로 바꿀까요?')+' 되돌릴 수 없으며 이미 BGG로 내보낸 플레이는 바뀌지 않습니다.';if(confirm)confirm('장소 이름 바꾸기',message,run);else run();};box.append(form);}
+  return box;};
+ for(const item of ordered.slice(0,placesOpen?ordered.length:20))list.append(row(item));
+ if(!placesOpen&&ordered.length>20)list.append(placeButton('장소 '+(ordered.length-20)+'개 더 보기',()=>{placesOpen=true;renderPlaces(api.context());}));
+}
+function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);renderPlaces(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 function route(){const view=currentView();
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['games','gamesScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
@@ -19,7 +39,7 @@ function route(){const view=currentView();
 // 하단 메뉴: 다른 화면이면 이동하고, 이미 보고 있는 화면의 버튼을 다시 누르면 그 화면 맨 위로 올린다.
 const currentView=()=>location.hash==='#games'?'games':location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
 function openView(view){if(currentView()===view){window.scrollTo?.({top:0,behavior:'smooth'});return;}location.hash=view;}
-for(const [view,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).onclick=()=>openView(view);window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);
+for(const [view,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).onclick=()=>openView(view);window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-bgg:changed',()=>{if(currentView()==='settings')renderPlaces(api.context());});window.addEventListener('score-identity:changed',update);
 $('importData').onclick=()=>{if(!busy)$('importFile').click();};
 $('importFile').addEventListener('change',async event=>{
  const file=event.target.files?.[0];event.target.value='';if(!file||busy)return;const serial=++reading,context=api.context();clearPreview();busy=true;update();status('파일을 확인하고 있습니다…');

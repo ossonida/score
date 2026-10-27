@@ -579,6 +579,18 @@ test('the save dialog suggests places already used, most used first, then unused
  const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records,pending:[]})]]));a.bridge.openFinish();
  assert.deepEqual(a.get('savedLocations').children.map(o=>o.value),['보드게임 카페','A카페','철수네','집','모임 장소','온라인']);
 });
+test('settings place management sets a default, hides suggestions and renames places in records',async()=>{
+ const play=(id,date,location)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',location,players:[{id:'a',name:'하늘',color:'#52c7ef',score:10}]});
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('p1','2026-10-01','우리집'),play('p2','2026-10-02','우리집'),play('p3','2026-10-03','집')],pending:[]})]]);
+ const a=await app(store,false,'',{initialHash:'#settings',entry:'settings.js'});a.vm.window.dispatchEvent(new Event('hashchange'));
+ const rows=()=>a.get('placeList').children,name=r=>r.children[0].children[0].textContent,btn=(r,text)=>r.children[1].children.find(b=>b.textContent===text);
+ assert.deepEqual(rows().map(name),['우리집','집']);
+ btn(rows()[1],'기본').onclick();assert.equal(JSON.parse(store.get('score.places.v1.score.plays.v1.guest')).primary,'집');assert.equal(btn(rows()[1],'기본').attributes['aria-pressed'],'true');
+ btn(rows()[0],'숨기기').onclick();assert.deepEqual(JSON.parse(store.get('score.places.v1.score.plays.v1.guest')).hidden,['우리집']);
+ const form=rows()[1].children[2];form.children[0].value='집';btn(rows()[1],'이름 바꾸기').onclick();form.onsubmit({preventDefault(){}});
+ assert.deepEqual(JSON.parse(store.get('score.plays.v1.guest')).records.map(p=>p.location),['집','집','집'],'renaming into an existing place merges them');
+ assert.deepEqual(rows().map(name),['집']);assert.deepEqual(JSON.parse(store.get('score.places.v1.score.plays.v1.guest')).hidden,[]);
+});
 test('stats view, chosen game and period survive a refresh in the same tab',async()=>{
  const session=new Map(),a=await app(new Map(),false,'',{me:'하늘',session});await save(a);
  a.get('statsGames').onclick();const game=a.get('recordFilter').value;assert.ok(game);

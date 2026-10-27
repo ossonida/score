@@ -16,3 +16,4 @@ test('plays exported by Score Counter carry the record id, note, location and co
  assert.deepEqual(marked.score,{id:'abc-1',location:'Cafe & Co',note:'Recorded with Score Counter\nScenario 3\n[ScoreCounter:abc-1]',known:true});assert.equal(marked.players[0].color,'#52c7ef');
  assert.equal('score' in plain,false,'plays without the marker stay unchanged');assert.equal('color' in plain.players[0],false);
 });
+test('every BGG play keeps its trimmed location, not only plays exported by Score',()=>{const result=playsData({plays:{'@_total':'2',play:[{'@_id':'1','@_date':'2026-10-10','@_quantity':'1','@_location':' 철수네 &amp; 카페 ',item:{'@_objectid':'13','@_name':'Catan'}},{'@_id':'2','@_date':'2026-10-11','@_quantity':'1',item:{'@_objectid':'13','@_name':'Catan'}}]}});assert.equal(result.items[0].location,'철수네 & 카페');assert.equal('location' in result.items[1],false);});

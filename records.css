@@ -393,3 +393,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 /* 협력 캠페인 · 시나리오 레벨 0~7 한 줄 */
 .coop-level-options{flex-wrap:nowrap;gap:6px}
 .coop-difficulty-options.coop-level-options button{flex:1 1 0;min-width:0;padding:0}
+
+/* 설정 · 장소 관리 */
+#settingsPlacesCard .place-list{display:grid;margin-top:8px}#settingsPlacesCard .place-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 0;border-bottom:1px solid #26384f}#settingsPlacesCard .place-row:last-child{border-bottom:0}#settingsPlacesCard .place-row.is-hidden .place-copy{opacity:.55}
+#settingsPlacesCard .place-copy{display:grid;gap:2px;flex:1;min-width:150px}#settingsPlacesCard .place-copy strong{font-size:15px;font-weight:500;color:#f6f7fb;overflow-wrap:anywhere}#settingsPlacesCard .place-copy small{font-size:12px;color:#8fa9c8}
+#settingsPlacesCard .place-actions{display:flex;gap:6px;flex:none}#settingsPlacesCard .place-actions button,#settingsPlacesCard .place-list>button{min-height:36px;padding:6px 12px;border:1px solid #26384f;border-radius:10px;background:#0d1522;color:#b7d3f5;font-size:13px}#settingsPlacesCard .place-actions button[aria-pressed=true]{background:#223c5d;color:#e4f0ff;border-color:#3a5b86}
+#settingsPlacesCard .place-rename{display:flex;gap:8px;width:100%}#settingsPlacesCard .place-rename[hidden]{display:none}#settingsPlacesCard .place-rename input{flex:1;min-width:0;min-height:40px}#settingsPlacesCard .place-rename button{flex:none;min-height:40px;padding:0 14px}#settingsPlacesCard .place-list>button{margin-top:8px}
