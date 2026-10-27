@@ -90,8 +90,32 @@ html.scoreless-board-mode body #homeScreen .cards{padding-bottom:8px!important}
 #statsScreen .personal-hero .personal-metrics span{font-size:13px;white-space:nowrap;letter-spacing:-.3px}
 @media(max-width:480px){#statsScreen .personal-hero{padding:16px 14px}#statsScreen .personal-hero .personal-metrics{gap:6px}#statsScreen .personal-hero .personal-metrics strong{font-size:clamp(18px,5.4vw,25px);font-weight:500;line-height:1.2}#statsScreen .personal-hero .personal-metrics span{font-size:12px}}
 
-#statsScreen .rival-card .insight-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}#statsScreen .rival-card .insight-metrics span{white-space:nowrap;letter-spacing:-.4px}
-@media(max-width:480px){#statsScreen .rival-card{padding-inline:14px}#statsScreen .rival-card .insight-metrics{gap:6px}#statsScreen .rival-card .insight-metrics strong{font-size:clamp(18px,5.4vw,25px)}#statsScreen .rival-card .insight-metrics span{font-size:12px}}
+/* 상대 전적 카드(게임별 통계·기간 분석)와 ○○와의 전적 화면 */
+#statsScreen .opponent-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}#statsScreen .opponent-head h3{flex:1;margin:0}
+#statsScreen .opponent-summary{flex:none;font-size:12px;color:#8fa9c8}#statsScreen .opponent-summary.win,#statsScreen .opponent-highlight .win{color:#9acbff}#statsScreen .opponent-summary.lose,#statsScreen .opponent-highlight .lose{color:#ff8a8a}
+#statsScreen .opponent-highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:8px 0 4px}
+#statsScreen .opponent-highlight{display:grid;gap:3px;min-height:0;padding:10px 12px;border:0;border-radius:10px;background:#0b111c;color:inherit;text-align:left}#statsScreen .opponent-highlight small{font-size:11px;color:#8fa9c8}
+#statsScreen .opponent-highlight-line{display:flex;align-items:baseline;gap:6px;min-width:0}#statsScreen .opponent-highlight-line strong{font-size:15px;color:#f6f7fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#statsScreen .opponent-highlight-line span{flex:none;font-size:13px;font-weight:500}
+#statsScreen .opponent-row,#statsScreen .person-game-row{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:12px 0;border:0;border-bottom:1px solid #26384f;border-radius:0;background:transparent;color:inherit;text-align:left}#statsScreen .opponent-list>:last-child,#statsScreen .person-card>.person-game-row:last-child{border-bottom:0}
+#statsScreen .opponent-dot{flex:none;width:12px;height:12px;border-radius:50%;background:#52c7ef}
+#statsScreen .opponent-copy{display:grid;gap:2px;flex:1;min-width:0}#statsScreen .opponent-copy strong{font-size:15px;font-weight:500;color:#f6f7fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#statsScreen .opponent-copy small,#statsScreen .opponent-copy span{font-size:12px;color:#8fa9c8}
+#statsScreen .opponent-record{display:grid;gap:2px;flex:none;text-align:right}#statsScreen .opponent-record strong{font-size:14px;font-weight:500;color:#f2f7ff}#statsScreen .opponent-record small{font-size:12px;color:#9acbff}
+#statsScreen .opponent-chevron{flex:none;font-size:20px;color:#8fa9c8}
+#statsScreen .opponent-more,#statsScreen .person-all{min-height:40px;padding:8px 0;border:0;background:transparent;color:#9acbff;font-size:13px}#statsScreen .person-all{min-height:32px;padding:4px 0;font-size:12px}
+#statsScreen .person-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}#statsScreen .person-head .opponent-dot{width:14px;height:14px}
+#statsScreen .person-back{flex:none;width:40px;height:40px;min-height:0;padding:0;border:0;border-radius:10px;background:#0b111c;color:#f6f7fb;font-size:24px;line-height:1}
+#statsScreen .person-title{min-width:0}#statsScreen .person-title h2{margin:0;font-size:20px;font-weight:700;color:#f6f7fb}#statsScreen .person-since{margin:2px 0 0;font-size:12px;color:#8fa9c8}
+#statsScreen .person-scope{display:flex;gap:6px;margin:0 -14px 14px;padding:0 14px;overflow-x:auto;scrollbar-width:none}#statsScreen .person-scope::-webkit-scrollbar{display:none}
+#statsScreen .person-scope button{flex:none;min-height:32px;padding:6px 15px;border:1px solid #26384f;border-radius:16px;background:#0d1522;color:#8fa6c3;font-size:13px;font-weight:500;line-height:1}#statsScreen .person-scope button[aria-pressed=true]{background:#223c5d;color:#e4f0ff}
+#statsScreen .person-summary .insight-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}#statsScreen .person-summary .insight-metrics span{white-space:nowrap;letter-spacing:-.4px;overflow:hidden;text-overflow:ellipsis}#statsScreen .person-summary strong.win{color:#9acbff}#statsScreen .person-summary strong.lose{color:#ff8a8a}
+#statsScreen .person-bar{display:flex;gap:3px;height:8px;margin-top:16px}#statsScreen .person-bar span{min-width:6px;border-radius:4px}#statsScreen .person-bar-me{background:#52c7ef}#statsScreen .person-bar-tie{background:#5d6f88}#statsScreen .person-bar-them{background:#ffcc00}
+#statsScreen .person-legend{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:#a6bad3}
+#statsScreen .person-card{margin-top:14px}#statsScreen .person-flow{display:flex;gap:8px;margin:8px 0 2px}
+#statsScreen .person-dot{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;font-size:13px;font-weight:700;color:#f6f7fb}#statsScreen .person-dot.ahead{background:#287dff}#statsScreen .person-dot.behind{background:#c2364d}#statsScreen .person-dot.tied{background:#5d6f88}
+#statsScreen .person-game-row .overview-game-art{flex:none}#statsScreen .person-tag{flex:none;padding:4px 10px;border-radius:11px;font-size:12px;font-weight:500;white-space:nowrap}#statsScreen .person-tag.win{background:#287dff2e;color:#9acbff}#statsScreen .person-tag.lose{background:#ff8a8a1f;color:#ff8a8a}#statsScreen .person-tag.even{background:#1b2a3e;color:#a6bad3}
+#statsScreen .person-coop{display:flex;align-items:center;gap:12px;margin-top:8px}#statsScreen .person-coop>strong{flex:none;font-size:24px;font-weight:500;color:#f2f7ff}
+#statsScreen .person-duel .overview-game-name{display:grid;gap:2px}#statsScreen .person-duel .overview-game-name small{font-size:12px;color:#8fa9c8}#statsScreen .person-result{font-weight:700}#statsScreen .person-result.ahead{color:#9acbff}#statsScreen .person-result.behind{color:#ff8a8a}#statsScreen .person-result.tied,#statsScreen .person-result.unknown{color:#a6bad3}
+@media(max-width:480px){#statsScreen .person-summary{padding-inline:14px}#statsScreen .person-summary .insight-metrics{gap:6px}#statsScreen .person-summary .insight-metrics strong{font-size:clamp(18px,5.4vw,25px)}#statsScreen .person-summary .insight-metrics span{font-size:12px}}
 
 .game-title-copy{display:grid;gap:8px;min-width:0;flex:1}.game-overview .game-type-label{margin:0;color:#a6bad3;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 

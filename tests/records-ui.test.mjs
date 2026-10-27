@@ -537,6 +537,21 @@ test('manual cloud sync downloads everything once, then nothing when unchanged a
 });
 test('signed-out users can wipe the app data on this device while other site data and the cloud stay',async()=>{const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[],pending:[]})],['score.plays.v1.user.one',JSON.stringify({records:[],pending:['x']})],['score.lastUser.v1','one'],['pointer.players.v1','[]'],['other.site.key','keep']]);const a=await app(store);assert.equal(a.get('deviceDataClear').hidden,false);a.get('deviceDataClear').onclick();assert.deepEqual([...store.keys()],['other.site.key']);assert.equal(a.vm.reloaded,1);});
 test('the device wipe is hidden and inert while signed in',async()=>{const store=new Map([['score.plays.v1.user.one',JSON.stringify({records:[],pending:[]})]]);const a=await app(store,true);await a.changeAuth({uid:'one'});assert.equal(a.get('deviceDataClear').hidden,true);a.get('deviceDataClear').onclick();assert.ok(store.has('score.plays.v1.user.one'));assert.equal(a.vm.reloaded,undefined);});
+test('opponent records open a person view from game stats and period analysis, and back returns to the same view',async()=>{
+ const play=(id,date,mine,theirs,extra={})=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:mine},{id:'b',name:'바다',color:'#ffcc00',score:theirs}],...extra});
+ const records=[play('p1','2026-10-01',10,8),play('p2','2026-10-02',5,9),play('p3','2026-10-03',7,7),play('p4','2026-10-04',30,20,{game:{name:'브라스',bggId:'28720'}}),play('c1','2026-10-05',null,null,{rule:'cooperative',cooperativeResult:'success',game:{name:'팬데믹',bggId:'30549'}})];
+ const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records,pending:[]})]]),false,'',{me:'하늘',initialHash:'#stats'}),walk=e=>[e,...(e.children||[]).flatMap(walk)],find=cls=>walk(a.get('statsInsights')).filter(e=>e.className===cls);
+ a.get('statsGames').onclick();a.get('recordFilter').value='bgg:13';a.get('recordFilter').onchange();
+ assert.equal(find('insight-card opponent-card').length,1,'game stats show the opponent card instead of the rival picker');assert.equal(find('opponent-row').length,1);
+ find('opponent-row')[0].onclick();
+ assert.ok(walk(a.get('statsInsights')).some(e=>e.textContent==='바다와의 전적'),'person title uses the right particle');
+ const chips=find('person-scope')[0].children;assert.equal(chips[0].textContent,'전체 게임');assert.equal(chips.find(c=>c.attributes['aria-pressed']==='true').textContent,'카탄 3','opened scoped to the chosen game');
+ assert.equal(a.get('gameFilterSection').hidden,true);assert.equal(a.get('recordList').children.length,3,'record list shows the games played with that person');assert.equal(find('person-game-row').length,0,'per-game card is hidden in a game scope');
+ chips[0].onclick();assert.equal(find('person-game-row').length,2);assert.equal(find('insight-card person-card').length,4,'flow, per-game, cooperative and recent cards');assert.equal(a.get('recordList').children.length,4);
+ find('person-back')[0].onclick();assert.equal(find('insight-card opponent-card').length,1);assert.equal(a.get('statsGames').attributes['aria-selected'],'true');assert.equal(a.get('recordFilter').value,'bgg:13');
+ a.get('statsAll').onclick();assert.equal(find('insight-card opponent-card').length,1,'period analysis shows the opponent card');find('opponent-row')[0].onclick();assert.equal(find('person-scope')[0].children[0].attributes['aria-pressed'],'true','period entry opens all games');
+ a.get('statsRecent').onclick();assert.equal(find('person-head').length,0,'switching stats tabs closes the person view');
+});
 test('stats view, chosen game and period survive a refresh in the same tab',async()=>{
  const session=new Map(),a=await app(new Map(),false,'',{me:'하늘',session});await save(a);
  a.get('statsGames').onclick();const game=a.get('recordFilter').value;assert.ok(game);
