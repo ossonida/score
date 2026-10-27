@@ -6,7 +6,7 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=152';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=153';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=167';
+import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
 import {personStats} from './social-insights.js?v=117';
 import {renderGameTitle} from './personal-dashboard.js?v=159';
 import {collectionMenu} from './collection-menu.js?v=2';
@@ -14,7 +14,7 @@ import {restorablePlay} from './bgg-restore.js?v=1';
 import {latestPlayDate} from './stats-overview.js?v=164';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
-import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity} from './personal-stats.js?v=115';
+import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=115';
 import {renderStatsDashboard} from './stats-dashboard.js?v=98';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=4';
 import {renderPeriodDashboard} from './period-dashboard.js?v=4';
@@ -291,6 +291,10 @@ function openRecordEditor(play,person,field){
  $('recordEditHint').textContent=field==='cooperativeResult'?'경기 전체의 성공·실패를 수정합니다.':field==='sharedScore'?'공동 점수는 선택 사항입니다. 비우면 삭제합니다.':recordMode(play)==='team'&&resultMode?'팀 전체에 같은 결과를 적용합니다. 승리 선택 시 다른 팀은 패배, 무승부 선택 시 모든 팀은 무승부가 됩니다.':resultMode?'승리·무승부·패배 또는 순위를 지정할 수 있습니다. 같은 순위를 지정하면 공동 순위가 됩니다.':field==='score'?'새 점수로 순위·승자를 다시 계산합니다. 비워두면 점수 없음으로 저장됩니다.':(play.players.length<=1?'마지막 플레이어입니다. 경기 전체 삭제는 기록 삭제를 이용해주세요.':'이 경기에 저장된 이름을 수정하거나 플레이어를 삭제합니다.');$('recordEditError').textContent='';show('recordEditDialog');(resultMode?result:input).focus({preventScroll:true});if(!resultMode)input.select?.();
 }
 function checkRecordContext(context){if(context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 기록을 다시 열어주세요.');}
+// 다른 이름 합치기: 이 계정의 모든 기록에서 이름 키가 같은 플레이어를 새 이름으로 강제로 바꾸고 한 번에 저장한다.
+function mergeCandidates(personKey){const profile=readIdentity(key()),own=new Set([profile?.primary,...(profile?.aliases||[])]),found=new Map();for(const play of records){const seen=new Set();for(const p of play.players){const k=nameKey(p.name);if(!k||p.anonymous||k===personKey||own.has(k)||seen.has(k))continue;seen.add(k);const item=found.get(k)||{key:k,name:p.name.trim(),count:0};item.count++;found.set(k,item);}}return [...found.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));}
+function mergePlayerName(fromKey,toName,context){checkRecordContext(context);const changed=[],next=records.map(play=>{let updated=play;for(const p of play.players)if(nameKey(p.name)===fromKey)updated=editRecordedPlayer(updated,p.id,'name',toName);if(updated!==play)changed.push(play.id);return updated;});if(!changed.length)return 0;const old=records,oldPending=new Set(pending);records=next;if(scopeUid())for(const id of changed)pending.add(id);try{persist();}catch{records=old;pending=oldPending;throw Error('저장하지 못했습니다. 기기 저장 공간을 확인해주세요.');}renderHistory();updateButtons();return changed.length;}
+function confirmMergeName(fromKey,toName){const from=mergeCandidates(statsPerson?.key).find(n=>n.key===fromKey);if(!from)return;const context={key:key(),epoch:accountEpoch};api.confirm('이름 합치기',from.name+' 이름이 들어간 기록 '+from.count+'개를 '+toName+'(으)로 바꿀까요? 되돌릴 수 없습니다.',()=>{try{const count=mergePlayerName(fromKey,toName,context);notify('기록 '+count+'개에서 '+from.name+'을(를) '+toName+'(으)로 합쳤습니다.');}catch(error){notify(error.message);}});}
 function updateRecordedPlayer(playId,personId,field,value,context,expected){
  checkRecordContext(context);const original=records.find(p=>p.id===playId);if(!original)throw Error('기록을 찾을 수 없습니다.');if(expected&&expected!==original)throw Error('기록이 변경됐습니다. 다시 열어서 수정해주세요.');
  let updated=editRecordedPlayer(original,personId,field,value);if(updated===original)return updated;if(field==='name'&&meIn(original,readIdentity(key()))?.id===personId)updated={...updated,players:updated.players.map(p=>({...p,isSelf:p.id===personId}))};const old=records,oldPending=new Set(pending);records=records.map(p=>p.id===playId?updated:p);if(scopeUid())pending.add(playId);
@@ -352,7 +356,7 @@ function renderHistory(){
  saveStatsState(select.value);$('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
  $('gameFilterSection').hidden=statsView!=='games'||!!statsPerson;$('periodFilterSection').hidden=statsView!=='all'||!!statsPerson;$('gameDetailTabs').hidden=statsView!=='games'||!!statsPerson;
  $('statsDetailsTitle').textContent=person?`${withParticle(person.name)}의 기록 ${filtered.length}개 보기`:statsView==='recent'?'이날의 기록 보기':statsView==='all'?`선택 기간의 기록 ${filtered.length}개 보기`:'이 게임의 플레이어 성적 · 기록';
- if(statsPerson){const scoped=person?.games.find(g=>g.key===statsPerson.game);renderPersonView($('statsInsights'),person,{game:statsPerson.game,gameName:scoped?gameNames(scoped.game).ko:'',onScope:game=>{statsPerson={...statsPerson,game};$('statsDetails').open=false;renderHistory();},onBack:closeStatsPerson,onRecord:openStatsRecord,onAll:()=>{$('statsDetails').open=true;$('statsDetails').scrollIntoView?.({behavior:'smooth',block:'start'});}});}
+ if(statsPerson){const scoped=person?.games.find(g=>g.key===statsPerson.game);renderPersonView($('statsInsights'),person,{game:statsPerson.game,gameName:scoped?gameNames(scoped.game).ko:'',onScope:game=>{statsPerson={...statsPerson,game};$('statsDetails').open=false;renderHistory();},onBack:closeStatsPerson,onRecord:openStatsRecord,onAll:()=>{$('statsDetails').open=true;$('statsDetails').scrollIntoView?.({behavior:'smooth',block:'start'});},mergeNames:person?mergeCandidates(statsPerson.key):[],onMerge:from=>confirmMergeName(from,person.name.trim())});}
  else if(statsView==='games'){
   const bggCollection=window.ScoreBggAccount?.state().collection||[];
   if(filtered.length){renderStatsDashboard($('statsInsights'),filtered,today(),openStatsRecord,true,{scope:key(),allRecords:mine,titleAction:collectionAction,onIdentityChange:()=>window.dispatchEvent?.(new Event('score-identity:changed'))});renderGameOpponents($('statsInsights'),filtered,{scope:key(),onPerson:person=>openStatsPerson(person,select.value)});renderGameExpansions($('statsInsights'),filtered[0].game,bggCollection,filtered);loadExpansionNames((metadata(filtered[0].game)?.expansions||[]).slice(0,30),renderHistory);}

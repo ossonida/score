@@ -562,6 +562,17 @@ test('phone or browser back closes only the person view and the back button reus
  find('opponent-row')[0].onclick();find('person-back')[0].onclick();assert.equal(stack.length,1,'‹ goes back through the same step');assert.equal(find('person-head').length,0);
  find('opponent-row')[0].onclick();a.get('statsAll').onclick();assert.equal(stack.at(-1).scorePerson,false,'switching tabs releases the step');popped();assert.equal(find('person-head').length,0);
 });
+test('merging another name rewrites every record to the person name, even when both names share a record',async()=>{
+ const play=(id,date,other,extra=[])=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:10},{id:'b',name:other,color:'#ffcc00',score:8},...extra]});
+ const records=[play('p1','2026-10-01','케이'),play('p2','2026-10-02','상교'),play('p3','2026-10-03','상교 ',[{id:'c',name:'케이',color:'#ff6b6b',score:5}]),play('p4','2026-10-04','바다')],store=new Map([['score.plays.v1.guest',JSON.stringify({records,pending:[]})]]);
+ const a=await app(store,false,'',{me:'하늘',initialHash:'#stats'}),walk=e=>[e,...(e.children||[]).flatMap(walk)],find=cls=>walk(a.get('statsInsights')).filter(e=>e.className===cls);
+ a.get('statsGames').onclick();a.get('recordFilter').value='bgg:13';a.get('recordFilter').onchange();find('opponent-row').find(r=>r.children[0].children[0].textContent==='케이').onclick();
+ const select=find('person-merge-row')[0].children[0];
+ assert.deepEqual(select.children.map(o=>o.value),['상교','바다'],'candidates exclude me and the person, most used first');
+ select.value='상교';find('person-merge-button')[0].onclick();
+ const saved=JSON.parse(store.get('score.plays.v1.guest')).records;assert.deepEqual(saved.map(p=>p.players.map(x=>x.name).join(',')),['하늘,케이','하늘,케이','하늘,케이,케이','하늘,바다']);
+ assert.ok(!walk(a.get('statsInsights')).some(e=>e.textContent?.startsWith?.('상교')),'merged name disappears from the person view');
+});
 test('stats view, chosen game and period survive a refresh in the same tab',async()=>{
  const session=new Map(),a=await app(new Map(),false,'',{me:'하늘',session});await save(a);
  a.get('statsGames').onclick();const game=a.get('recordFilter').value;assert.ok(game);
