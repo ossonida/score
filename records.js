@@ -31,6 +31,10 @@ let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history'
 let activePeriodUnit='month',activePeriodOffset=0,activeCustomPeriod=null,periodFormOpen=false;
 let statsGameTarget='';
 let statsGameTargetGame=null;
+// 통계 보기(최근 기록·기간 분석·게임별 통계), 선택 게임, 기간은 이 탭의 세션에 기억해 새로고침해도 유지한다.
+const statsStateKey='score.statsView.v1';let savedStatsGame='';
+try{const saved=JSON.parse(globalThis.sessionStorage?.getItem(statsStateKey)||'null');if(saved&&['recent','all','games'].includes(saved.view)){statsView=saved.view;mode=saved.view==='games'?'stats':'history';savedStatsGame=statsGameTarget=typeof saved.game==='string'?saved.game:'';if(['month','year','all'].includes(saved.unit)){activePeriodUnit=saved.unit;activePeriodOffset=Number.isInteger(saved.offset)&&saved.offset<=0?saved.offset:0;}else if(saved.unit==='custom'&&saved.custom&&typeof saved.custom==='object'){activePeriodUnit='custom';activeCustomPeriod=saved.custom;}}}catch{}
+function saveStatsState(game){if(statsView==='games')savedStatsGame=game||'';try{globalThis.sessionStorage?.setItem(statsStateKey,JSON.stringify({view:statsView,game:savedStatsGame,unit:activePeriodUnit,offset:activePeriodOffset,custom:activePeriodUnit==='custom'?activeCustomPeriod:null}));}catch{}}
 let recordRevision=0,cloudState='idle',cloudError='',authReady=!cloudConfigured();
 function recoveryKey(){return key()+'.recovery';}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
@@ -323,7 +327,7 @@ function renderHistory(){
  const recentDate=latestPlayDate(records),period=statsView==='all'?selectedPeriod():null;
  const filtered=(statsView==='recent'?records.filter(p=>p.date===recentDate):statsView==='games'?mine.filter(p=>gameKey(p.game)===select.value):recordsInPeriod(mine,period.current)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
  for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']]){$(id).setAttribute('aria-selected',String(statsView===view));$(id).setAttribute('tabindex',statsView===view?'0':'-1');}
- $('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
+ saveStatsState(select.value);$('statsPanel').setAttribute('aria-labelledby',statsView==='recent'?'statsRecent':statsView==='all'?'statsAll':'statsGames');
  $('gameFilterSection').hidden=statsView!=='games';$('periodFilterSection').hidden=statsView!=='all';$('gameDetailTabs').hidden=statsView!=='games';
  $('statsDetailsTitle').textContent=statsView==='recent'?'이날의 기록 보기':statsView==='all'?`선택 기간의 기록 ${filtered.length}개 보기`:'이 게임의 플레이어 성적 · 기록';
  if(statsView==='games'){

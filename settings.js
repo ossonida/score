@@ -1,14 +1,14 @@
 import {readIdentity} from './personal-stats.js?v=115';
 import {renderIdentitySettings} from './personal-dashboard.js?v=157';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=174';
+import './records.js?v=175';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=66';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
 function contextMatches(context){const now=api.context();return context.key===now.key&&context.epoch===now.epoch;}
 function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmImport').disabled=true;}
 function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
-function route(){const view=location.hash==='#games'?'games':location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
+function route(){const view=currentView();
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['games','gamesScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
  delete document.documentElement.dataset.initialView;
@@ -16,7 +16,10 @@ function route(){const view=location.hash==='#games'?'games':location.hash==='#s
  for(const [name,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).setAttribute('aria-current',view===name?'page':'false');
  if(view==='settings')update();if(view==='stats')api.renderHistory();
 }
-$('navGames').onclick=()=>{location.hash='games';};$('navHome').onclick=()=>{location.hash='home';};$('navStats').onclick=()=>{location.hash='stats';};$('navSettings').onclick=()=>{location.hash='settings';};window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);
+// 하단 메뉴: 다른 화면이면 이동하고, 이미 보고 있는 화면의 버튼을 다시 누르면 그 화면 맨 위로 올린다.
+const currentView=()=>location.hash==='#games'?'games':location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
+function openView(view){if(currentView()===view){window.scrollTo?.({top:0,behavior:'smooth'});return;}location.hash=view;}
+for(const [view,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).onclick=()=>openView(view);window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-identity:changed',update);
 $('importData').onclick=()=>{if(!busy)$('importFile').click();};
 $('importFile').addEventListener('change',async event=>{
  const file=event.target.files?.[0];event.target.value='';if(!file||busy)return;const serial=++reading,context=api.context();clearPreview();busy=true;update();status('파일을 확인하고 있습니다…');
