@@ -558,6 +558,9 @@ export const koreanAliases={
     "전지적 추리시점 블루",
     "전지적추리시점 블루"
   ],
+  "455881": [
+    "니하르"
+  ],
   "236457": [
     "서쪽 왕국의 건축가",
     "서왕국의 건축가"
@@ -644,6 +647,14 @@ export const koreanAliases={
   ]
 };
 export const wikidataGames=[
+  {
+    "id": "455881",
+    "name": "Níjar",
+    "aliases": [
+      "니하르",
+      "Nijar"
+    ]
+  },
   {
     "id": "427087",
     "name": "Perspectives Blue",

@@ -1,4 +1,4 @@
-import {koreanAliases,wikidataGames} from './korean-game-names.js?v=165';
+import {koreanAliases,wikidataGames} from './korean-game-names.js?v=166';
 import {scoreGames,searchScoreGames,isScoreGame} from './score-games.js?v=167';
 // Curated public game names and exact aliases, not the complete live BGG database.
 const bundledGames = [
@@ -1258,7 +1258,8 @@ const wikiById=new Map(wikidataGames.map(g=>[g.id,g]));
 export const starterGames=bundledGames.map(g=>({...g,aliases:[...new Set([...g.aliases,...(koreanAliases[g.id]||[]),...(wikiById.get(g.id)?.aliases||[])])]}));
 // Additional public titles are searchable without silently reassigning existing saved records.
 export const searchCatalog=[...starterGames,...wikidataGames.filter(g=>!starterGames.some(s=>s.id===g.id)).map(g=>({...g,source:'한글 게임 목록'}))];
-export function normalizeGameQuery(value){return String(value).normalize('NFKC').toLocaleLowerCase().replace(/[\s:–—-]+/g,'');}
+// 검색·이름 비교용: 악센트를 떼어(Níjar → nijar) 비교한다. 한글은 NFD로 나눴다가 NFKC로 다시 합치므로 그대로다.
+export function normalizeGameQuery(value){return String(value).normalize('NFD').replace(/\p{M}/gu,'').normalize('NFKC').toLocaleLowerCase().replace(/[\s:–—-]+/g,'');}
 export function searchLocalGames(query,plays=[]){
  const q=normalizeGameQuery(query);if(!q)return [];
  const map=new Map();

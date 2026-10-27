@@ -15,3 +15,7 @@ test('Caverna Korean aliases resolve to the original game and translate only exa
  for(const name of ['카베르나','카 베 르 나','카베르나: 동굴 속 농부들']){assert.equal(searchLocalGames(name)[0].id,'102794');assert.equal(resolveGame({name,bggId:''}).bggId,'102794');assert.equal(bggSearchQuery(name),'Caverna: The Cave Farmers');}
  assert.equal(bggSearchQuery('카베르나 확장'),'카베르나 확장');assert.equal(bggSearchQuery('알 수 없는 게임'),'알 수 없는 게임');
 });
+test('search ignores accents and finds Níjar by its Korean name',()=>{
+ const row={game:{name:'Níjar',bggId:'455881'},count:0};
+ for(const q of ['nijar','NIJAR','Níjar','니하르','니하'])assert.equal(searchableGameGroups([row],q).length,1,q);
+});

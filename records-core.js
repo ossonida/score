@@ -1,4 +1,4 @@
-import {resolveGame,matchGameRecords} from './game-catalog.js?v=165';
+import {resolveGame,matchGameRecords} from './game-catalog.js?v=166';
 import {decodeXmlText} from './bgg-validation.js?v=129';
 export function gameKey(game) {
   return game.bggId ? `bgg:${game.bggId}` : `name:${game.name.trim().normalize('NFKC').toLocaleLowerCase()}`;

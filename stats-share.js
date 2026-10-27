@@ -6,7 +6,7 @@ import {gameImageUrl,safeGameImage} from './game-artwork.js?v=171';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=164';
 import {nameKey} from './personal-stats.js?v=115';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {starterGames} from './game-catalog.js?v=165';
+import {starterGames} from './game-catalog.js?v=166';
 import {summarizeStats} from './stats-insights.js?v=66';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
