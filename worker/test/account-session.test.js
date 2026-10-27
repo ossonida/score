@@ -109,3 +109,7 @@ test('a rejected delete counts as done when the play is already gone from that d
  s.data.set('post:alice:bgstats:gone',{status:'sent',fingerprint:'x',bggPlayId:'555'});s.data.set('post:alice:bgstats:here',{status:'sent',fingerprint:'x',bggPlayId:'111'});
  const gone=await s.session.fetch(req('/delete-play',{playId:'555',recordId:'bgstats:gone',date:'2026-09-25',expectedUsername:'alice'}));assert.equal(gone.status,200);assert.equal(s.data.has('post:alice:bgstats:gone'),false);
  const here=await s.session.fetch(req('/delete-play',{playId:'111',recordId:'bgstats:here',date:'2026-09-25',expectedUsername:'alice'}));assert.equal(here.status,422);assert.equal(s.data.has('post:alice:bgstats:here'),true);});
+
+test('updating a play already deleted on BGG keeps the login and clears the mapping',async()=>{const s=setup(async(url,init)=>{if(String(url).includes('xmlapi2/plays'))return new Response('<plays></plays>');if(String(url).includes('geekplay.php'))return new Response(JSON.stringify({error:'You cannot edit this play'}));return loginResponse();});s.env.BGG_API_TOKEN='token';await login(s.session);
+ const key='post:alice:'+play.id;s.data.set(key,{status:'sent',fingerprint:'old',bggPlayId:'555'});
+ const r=await s.session.fetch(req('/post',{play,expectedUsername:'alice',update:true}));assert.equal(r.status,410);assert.equal((await r.json()).code,'BGG_PLAY_GONE');assert.equal(s.data.get(key).bggPlayId,'');assert.equal((await(await s.session.fetch(req('/status'))).json()).connected,true,'login is kept');});

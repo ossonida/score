@@ -1,6 +1,6 @@
-import './records.js?v=191';
+import './records.js?v=192';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=173';
-import {bggLinkRequest} from './bgg-link-client.js?v=68';
+import {bggLinkRequest} from './bgg-link-client.js?v=69';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=98';
 import {bgStatsLinks,bgStatsDuplicates} from './bgstats-link.js?v=4';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
@@ -26,7 +26,9 @@ $('bggLinkLogout').onclick=async()=>{if(!user||busy)return;const owner=user.uid,
 async function postPlay(play,context){
  if(!user||!state.connected)throw Error('설정에서 BGG에 먼저 로그인해주세요.');const owner=user.uid,version=epoch,key=owner+':'+play.id,expectedUsername=state.username;if(posting.has(key))return;
  const now=api.scope();if(now.key!==context.key||now.epoch!==context.epoch)throw Error('계정이 변경됐습니다. 다시 선택해주세요.');
- posting.add(key);notify();try{const result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:Boolean(state.uploads?.[play.id]?.bggPlayId)}});if(version!==epoch)return;state.uploads={...state.uploads,[play.id]:result};notify();return result;}catch(error){if(version===epoch&&error.code==='BGG_POST_UNCERTAIN'){state.uploads={...state.uploads,[play.id]:{...state.uploads?.[play.id],status:'unknown'}};notify();}if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}finally{posting.delete(key);if(version===epoch)notify();}
+ posting.add(key);notify();try{let result;try{result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:Boolean(state.uploads?.[play.id]?.bggPlayId)}});}catch(error){if(error.code!=='BGG_PLAY_GONE')throw error;
+  // BGG에서 지워진 플레이를 업데이트하려던 경우: 연결을 비우고 새 플레이로 한 번 다시 올린다.
+  const next={...state.uploads};delete next[play.id];state.uploads=next;result=await bggLinkRequest('link-post',{uid:owner,body:{play,expectedUsername,update:false}});}if(version!==epoch)return;state.uploads={...state.uploads,[play.id]:result};notify();return result;}catch(error){if(version===epoch&&error.code==='BGG_POST_UNCERTAIN'){state.uploads={...state.uploads,[play.id]:{...state.uploads?.[play.id],status:'unknown'}};notify();}if(version===epoch&&['BGG_LOGIN_REQUIRED','BGG_ACCOUNT_CHANGED'].includes(error.code)){state.connected=false;render();notify();}throw error;}finally{posting.delete(key);if(version===epoch)notify();}
 }
 // BGG에 보낸 기록이 있는 게임 중 가져온 BGG 컬렉션에서 아직 하고 싶은 게임인 것을 BGG에서 해제합니다(한 번에 최대 20개).
 async function clearPlayedWantToPlay(context,only){
