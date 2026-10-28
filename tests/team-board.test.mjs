@@ -197,3 +197,20 @@ test('role mode toggles the hidden side, opens the editor on long press, and kee
  board().querySelectorAll('.role-rename')[0].onclick();const hiddenName=names().children[0];hiddenName.value='첩자';hiddenName.onchange();assert.equal(context.resultEntry.roleSides[0].name,'첩자');assert.deepEqual(context.players.map(p=>p.teamName),['첩자','첩자','시민']);
  names().children[1].value='첩자';names().children[1].onchange();assert.equal(context.resultEntry.roleSides[1].name,"시민");
 });
+test('mighty board picks lead, bid, trump and friend, scores zero-sum rounds, undoes and updates the save CTA',()=>{
+ const a=fixture('coop');a.context.players.push({id:'d1',name:'하늘',color:'#e86b70',score:null});vm.runInContext(between('// 마이티 기록(Figma','function renderResultBoard'),a.context);
+ Object.assign(a.context.resultEntry,{mode:'mighty',mightyRounds:[],mightyPick:vm.runInContext('mightyBlankPick()',a.context)});a.context.render();
+ const all=()=>{const list=[];const visit=n=>{list.push(n);for(const child of n.children||[])visit(child);};visit(a.get('cards'));return list;};
+ const rows=()=>all().filter(n=>String(n.className).split(' ').includes('mighty-chips')),tap=(row,text)=>rows()[row].children.find(b=>b.textContent===text).onclick(),find=label=>all().find(n=>n.attributes?.['aria-label']===label);
+ const totals=()=>all().filter(n=>n.className==='mighty-total').map(n=>n.textContent),entry=a.context.resultEntry;
+ assert.equal(a.get('saveScorelessPlay').disabled,true);assert.equal(a.get('saveScorelessPlay').textContent,'판 결과 선택');assert.equal(find('이번 판 성공').disabled,true);
+ tap(0,'솔');find('공약 1 높이기').onclick();tap(1,'♠');assert.deepEqual(rows()[2].children.map(b=>b.textContent),['겨울','누리','퍼니','하늘','노프렌드'],'friend excludes the lead');
+ tap(2,'누리');assert.equal(find('이번 판 성공').children[1].textContent,'주공 +4 · 프렌드 +2');find('이번 판 성공').onclick();
+ assert.deepEqual(totals(),['+4','−2','+2','−2','−2']);assert.deepEqual(JSON.parse(JSON.stringify(entry.mightyPick)),{lead:'',friend:null,bid:13,trump:''},'picks reset after a round');
+ tap(0,'퍼니');tap(1,'♦');tap(2,'노프렌드');find('이번 판 실패').onclick();
+ assert.deepEqual(totals(),['+5','−1','+3','−6','−1']);
+ for(const round of entry.mightyRounds)assert.equal(Object.values(round.points).reduce((x,y)=>x+y,0),0);
+ const chips=all().filter(n=>String(n.className).split(' ').includes('mission-chip')).map(n=>n.textContent);assert.deepEqual(chips,['1판 · 솔+누리 14♠ ✓','2판 · 퍼니 노프렌드 13♦ ✗']);
+ assert.equal(a.get('saveScorelessPlay').disabled,false);assert.equal(a.get('saveScorelessPlay').textContent,'끝내고 저장 · 2판');assert.equal(a.get('scorelessBoardMode').textContent,'마이티 기록');
+ find('마지막 판 되돌리기').onclick();assert.deepEqual(totals(),['+4','−2','+2','−2','−2']);
+});
