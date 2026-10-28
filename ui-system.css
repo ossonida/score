@@ -51,7 +51,7 @@ dialog .actions .danger{margin-right:0}
 #savePlayDialog .save-result{padding-top:16px}
 #savePlayDialog .record-row>div>label{margin-top:0}
 #savePlayDialog .save-layout h3{margin-bottom:12px;color:#b6c6dd}
-#savePlayDialog .game-result-detail{min-width:44px;min-height:44px;display:grid;place-items:center;padding:8px}
+#savePlayDialog .game-result-detail,#addGameDialog .game-result-detail{min-width:44px;min-height:44px;display:grid;place-items:center;padding:8px}
 #savePlayDialog .recent-games-disclosure{margin-block:8px;padding:0 12px}
 #savePlayDialog .recent-games-disclosure summary{min-height:34px;display:list-item;align-content:center;padding:10px 0;font-size:13px}
 #savePlayDialog .recent-games{margin:0 0 12px;gap:8px}
@@ -179,10 +179,10 @@ dialog .actions .danger{margin-right:0}
 .game-search img{position:absolute;left:17px;top:12px;pointer-events:none}
 .game-search input{width:100%;height:49px;box-sizing:border-box;padding:0 16px 0 64px;border:1px solid #293c55;border-radius:12px;background:#0b111c;color:#f6f7fb;font-size:13px;font-weight:500}
 .game-search input::placeholder{color:#75839b}
-.library-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.library-search-row button{height:44px;padding:0 16px;border-radius:10px}
-#librarySearchResults{max-height:min(360px,35dvh);overflow:auto;overscroll-behavior:contain}
-#librarySearchResults .library-choice{display:flex;align-items:center;gap:12px;width:100%;background:transparent;border-radius:0;border-bottom:1px solid #29364b;color:#e4edf9;text-align:left;padding:12px 0;min-width:0}
-.library-choice .library-art{flex-basis:40px;width:40px;height:48px}.library-choice-mark{font-size:22px;flex:none;color:#83baff}
+
+
+
+
 @media(max-width:600px){#gamesScreen{padding-top:max(16px,env(safe-area-inset-top,0px));padding-inline:14px}}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.bottom-nav>button{width:100%;min-width:0}
 #gamesScreen{display:block;height:auto;min-height:calc(100svh - var(--bottom-nav-height))}

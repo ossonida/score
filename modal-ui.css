@@ -23,14 +23,14 @@ dialog .record-actions button,dialog .actions button{padding:10px 16px;border-ra
 #savePlayForm>.record-actions{position:sticky;bottom:-20px;z-index:2;padding:12px 0 4px;background:var(--popup-surface);border-top:1px solid var(--popup-line)}
 #savePlayForm>.record-actions button{flex:1}
 #savePlayDialog{max-width:460px}
-#savePlayDialog details{margin-top:8px;padding:8px 10px;border:1px solid var(--popup-line);border-radius:10px}
-#savePlayDialog summary{margin:0;cursor:pointer}
-#savePlayDialog details input{margin-top:8px}
+#savePlayDialog details,#addGameDialog details{margin-top:8px;padding:8px 10px;border:1px solid var(--popup-line);border-radius:10px}
+#savePlayDialog summary,#addGameDialog summary{margin:0;cursor:pointer}
+#savePlayDialog details input,#addGameDialog details input{margin-top:8px}
 #savePlayDialog .record-snapshot{gap:6px;margin:12px 0;max-height:68px}
-#savePlayDialog .record-results{max-height:min(180px,calc(var(--keyboard-height,100dvh)*.27));margin-top:8px}
-#savePlayDialog .game-result-choice{padding:9px 10px;gap:10px}
-#savePlayDialog .game-result-info strong{font-size:14px}
-#savePlayDialog .game-result-cover{width:34px;height:40px;font-size:23px}
+#savePlayDialog .record-results,#addGameDialog .record-results{max-height:min(180px,calc(var(--keyboard-height,100dvh)*.27));margin-top:8px}
+#savePlayDialog .game-result-choice,#addGameDialog .game-result-choice{padding:9px 10px;gap:10px}
+#savePlayDialog .game-result-info strong,#addGameDialog .game-result-info strong{font-size:14px}
+#savePlayDialog .game-result-cover,#addGameDialog .game-result-cover{width:34px;height:40px;font-size:23px}
 #historyDialog{max-width:650px}
 #historyDialog .record-tabs{gap:6px;padding:4px;background:#0b111c;border:1px solid var(--popup-line);border-radius:12px}
 #historyDialog .record-tabs button{border-radius:8px;background:transparent;font-size:14px;min-height:40px}

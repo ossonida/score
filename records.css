@@ -315,6 +315,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 /* 사용한 확장: 경기 기록 저장 1단계 확장 선택 · 기록 카드 확장 시트 · 게임별 통계 사용 횟수 */
 #recordGameStep.choosing-expansions>.record-row,#recordGameStep.choosing-expansions>#recentGamesSection,#recordGameStep.choosing-expansions>#bggResults,#recordGameStep.choosing-expansions>#bggResultsHint{display:none!important}
 #bggResults:empty+#bggResultsHint{display:none}
+#addGameDialog{max-width:460px}#addGameDialog .game-result-row:has([aria-pressed=true]){box-shadow:inset 0 0 0 2px #8fc4ff}#addGameDialog .game-result-choice:disabled{opacity:.55}
 .expansion-results-hint{margin:8px 0 0}
 .expansion-step{display:grid;gap:12px;margin-top:4px}
 .expansion-base{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid #237bff;border-radius:10px;background:#237bff29}

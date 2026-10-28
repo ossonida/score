@@ -46,7 +46,7 @@ function installFeatureListeners(){
   else if(id==='bggLinkLogin')pendingBgg='link';
   else if(id==='bggLinkLogout')pendingBgg='unlink';
   else if(target.classList.contains('library-row'))analytics.track('statistics_viewed',{entry_point:'game_library'});
-  else if(target.classList.contains('library-choice'))queueMicrotask(()=>analytics.track('feature_used',{feature:'game_library',action:'game_added'}));
+  else if(id==='registerLibraryGame')queueMicrotask(()=>{if(!document.getElementById('addGameDialog')?.open)analytics.track('feature_used',{feature:'game_library',action:'game_added'});});
   else if(id==='installApp')pendingInstall=true;
   else if(target.classList.contains('recent-share-save')||target.classList.contains('recent-share-send'))analytics.track('feature_used',{feature:'statistics',action:'share_completed'});
   else if(target.closest?.('#savePlayDialog')&&target.hasAttribute('data-record-close'))pendingEnd=false;
