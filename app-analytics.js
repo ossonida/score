@@ -110,6 +110,8 @@ else void gate.onAuthState(null);
 
 // 이용 분석 안내: 처음 한 번 화면 아래에 띄우고, 확인하거나 끄면 이 기기에서 다시 띄우지 않는다. 설정의 스위치도 같은 값을 쓴다.
 window.ScoreAnalyticsConsent={enabled:()=>gate.enabled(),set:on=>gate.setEnabled(on)};
+// 개인정보처리방침(다른 창)에서 이용 분석 체크를 바꾸면 열려 있는 앱에도 바로 반영한다.
+window.addEventListener('storage',event=>{if(event.key!=='score.analytics.optout.v1')return;gate.setEnabled(event.newValue!=='1');const box=document.getElementById('analyticsNotice');if(box)box.hidden=true;window.dispatchEvent(new Event('score-analytics:changed'));});
 (()=>{const noticeKey='score.analytics.notice.v1',box=document.getElementById('analyticsNotice');let seen;try{seen=localStorage.getItem(noticeKey)==='1';}catch{seen=true;}if(!box||seen||!gate.enabled())return;
  const done=on=>{try{localStorage.setItem(noticeKey,'1');}catch{}if(!on)gate.setEnabled(false);box.hidden=true;window.dispatchEvent(new Event('score-analytics:changed'));};
  document.getElementById('analyticsNoticeOk').onclick=()=>done(true);document.getElementById('analyticsNoticeOff').onclick=()=>done(false);box.hidden=false;})();

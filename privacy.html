@@ -13,6 +13,7 @@ main{max-width:760px;margin:0 auto;padding:32px 16px 64px}h1{font-size:26px;marg
 p,li{color:var(--text)}.muted{color:var(--muted);font-size:14px}a{color:var(--accent)}ul,ol{padding-left:22px}
 table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{background:var(--card)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.consent{display:flex;align-items:flex-start;gap:12px;margin:12px 0;cursor:pointer}.consent input{flex:none;width:22px;height:22px;margin:3px 0 0}.consent .muted{display:block}
 @media (max-width:520px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px}td{border:0;border-bottom:1px solid var(--line)}td:last-child{border-bottom:0}}
 </style>
 </head>
@@ -57,16 +58,17 @@ table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}th,td{bord
 <tr><td>Cloudflare, Inc. (Workers)</td><td>BGG 연동 서버 운영 / BGG 사용자명·세션·업로드 연결 정보, 요청 IP</td><td>미국 등 전 세계 데이터센터 · BGG 기능 사용 시 · 암호화된 네트워크 전송</td></tr>
 </tbody>
 </table>
-<p>국외 이전을 원하지 않으면 로그인·BGG 연동을 사용하지 않고(기기 저장만 사용), 설정에서 이용 분석을 끌 수 있습니다. 이 경우에도 점수 기록 기능은 그대로 사용할 수 있습니다.</p>
+<p>국외 이전을 원하지 않으면 로그인·BGG 연동을 사용하지 않고(기기 저장만 사용), 5번에서 이용 분석을 끌 수 있습니다. 이 경우에도 점수 기록 기능은 그대로 사용할 수 있습니다.</p>
 
 <h2>5. 쿠키 등 자동 수집 장치와 거부 방법</h2>
-<p>서비스는 이용 통계를 위해 Google Analytics 쿠키(또는 앱 인스턴스 식별자)를 사용합니다. 처음 방문할 때 안내가 표시되며, <strong>설정 › 개인정보 › 이용 분석 허용</strong>을 끄면 즉시 수집이 중단됩니다. 브라우저 설정에서 쿠키를 차단할 수도 있습니다.</p>
+<p>서비스는 이용 통계를 위해 Google Analytics 쿠키(또는 앱 인스턴스 식별자)를 사용합니다. 처음 방문할 때 안내가 표시되며, 아래 <strong>이용 분석 허용</strong> 체크를 해제하면 이 기기에서 즉시 수집이 중단됩니다. 브라우저 설정에서 쿠키를 차단할 수도 있습니다.</p>
+<label class="box consent" for="analyticsEnabled"><input id="analyticsEnabled" type="checkbox" checked><span><strong>이용 분석 허용</strong><span class="muted">Google Analytics로 어떤 기능을 많이 쓰는지 집계합니다. 이름·게임 기록 같은 입력 내용은 보내지 않습니다. 이 기기에만 적용됩니다.</span></span></label>
 
 <h2 id="delete">6. 이용자의 권리와 계정·데이터 삭제 방법</h2>
 <p>이용자는 언제든지 자신의 개인정보를 열람·정정·삭제하거나 처리 정지를 요구할 수 있습니다.</p>
 <div class="box">
 <ol>
-<li><strong>앱에서 삭제:</strong> 설정 › 개인정보 › <strong>계정과 클라우드 데이터 삭제</strong>를 누르면 클라우드 기록·닉네임 설정·BGG 정보, BGG 연결 정보, Google 로그인 계정이 모두 삭제됩니다. 보안을 위해 같은 Google 계정으로 다시 로그인하라는 요청이 나올 수 있습니다.</li>
+<li><strong>앱에서 삭제:</strong> 로그인한 상태에서 설정 화면 맨 아래 <strong>계정 삭제</strong>를 누르면 클라우드 기록·닉네임 설정·BGG 정보, BGG 연결 정보, Google 로그인 계정이 모두 삭제됩니다. Google 계정은 두고 데이터만 지우려면 <strong>클라우드 데이터 삭제</strong>를 누르세요. 보안을 위해 같은 Google 계정으로 다시 로그인하라는 요청이 나올 수 있습니다.</li>
 <li><strong>앱을 사용할 수 없는 경우:</strong> 로그인에 사용한 Google 계정 이메일로 <a href="mailto:bgame.wiki@gmail.com?subject=Score%20Counter%20계정%20삭제%20요청">bgame.wiki@gmail.com</a>에 "계정 삭제 요청"을 보내 주세요. 본인 확인 후 10일 이내에 처리하고 결과를 알려 드립니다.</li>
 <li>개별 기록은 기록 화면에서 하나씩 삭제할 수 있고, 기기에만 저장된 기록은 앱 데이터를 지우면 삭제됩니다.</li>
 </ol>
@@ -95,5 +97,9 @@ table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}th,td{bord
 <p>이 방침이 바뀌면 시행 7일 전부터 이 페이지에 알립니다.</p>
 <p class="muted">시행일: 2026년 10월 27일</p>
 </main>
+<script>
+// 앱과 같은 값(score.analytics.optout.v1)을 쓴다. 바꾸면 첫 방문 안내도 다시 띄우지 않는다.
+(()=>{const box=document.getElementById('analyticsEnabled'),key='score.analytics.optout.v1';try{box.checked=localStorage.getItem(key)!=='1';}catch{box.disabled=true;return;}box.onchange=()=>{try{localStorage.setItem(key,box.checked?'0':'1');localStorage.setItem('score.analytics.notice.v1','1');}catch{}};})();
+</script>
 </body>
 </html>

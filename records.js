@@ -483,9 +483,9 @@ window.ScoreRecords={
   renderHistory();updateButtons();return changed.length;
  },
  // 계정 삭제: 클라우드·BGG 연결·로그인 계정을 지운 뒤 로그아웃하고 이 기기의 그 계정 저장값을 정리한다(로그인 전 기록은 남김).
- deleteAccount:async(context,step)=>{
+ deleteAccount:async(context,step,{account=true}={})=>{
   const uid=scopeUid();if(!uid||context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
-  const {deleteAccountData}=await import('./account-delete.js?v=4');const removed=await deleteAccountData(uid,step);
+  const {deleteAccountData}=await import('./account-delete.js?v=5');const removed=await deleteAccountData(uid,step,{account});
   try{await logout();}catch{}
   for(const name of Object.keys(localStorage))if(name.includes(uid))localStorage.removeItem(name);
   if(localStorage.getItem('score.lastUser.v1')===uid)localStorage.removeItem('score.lastUser.v1');return removed;
