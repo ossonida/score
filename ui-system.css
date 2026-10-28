@@ -90,6 +90,9 @@ dialog .actions .danger{margin-right:0}
 #settingsAccountCard .record-row{align-items:end;gap:8px}
 #settingsAccountCard #bggImport{width:100%}
 #settingsAccountCard input,#settingsIdentityCard select{height:44px;border-radius:var(--ui-radius);font-size:16px}
+/* 계정 제목 줄: 로그인 계정명은 같은 줄 오른쪽 끝, 로그인 전 안내는 다음 줄 */
+#settingsAccountCard .account-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}#settingsAccountCard .account-heading h2{margin:0}#settingsAccountCard #accountName{flex-basis:100%;margin:0}#settingsAccountCard #accountName.is-account{flex-basis:auto;min-width:0;text-align:right}#settingsAccountCard #accountName[hidden]{display:none}
+#settingsIdentityCard select{appearance:none;-webkit-appearance:none;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9L12 15L18 9' stroke='white' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:24px 24px}
 #settingsScreen .identity-form>button{justify-self:stretch;width:100%}
 #settingsScreen .transfer-actions{gap:8px;margin-top:12px}
 #settingsScreen #importData{justify-content:space-between;text-align:left;width:100%}
