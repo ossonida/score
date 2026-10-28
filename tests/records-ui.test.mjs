@@ -663,6 +663,6 @@ test('per-game statistics lead with side win rates for role-style team records',
  const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('r1','2026-10-01','마피아',true),play('r2','2026-10-02','시민',false),play('r3','2026-10-03','시민',true)],pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
  const a=await app(store);a.bridge.openGameStats({name:'역할테스트',bggId:''});
  const text=node=>[node.textContent||'',...(node.children||[]).map(text)].join(' ');const all=text(a.get('statsInsights'));
- assert.match(all,/3회\s+플레이\s+66.7%\s+전체 승률\s+50%\s+시민 승률\s+2회\s+100%\s+마피아 승률\s+1회/);assert.match(all,/역할전 · 결과 확인 3회/);assert.doesNotMatch(all,/팀전 승률|팀 승리|무승부|진영별 기록/);
+ assert.match(all,/3회\s+플레이\s+66.7%\s+전체 승률\s+50%\s+시민 승률 2회\s+100%\s+마피아 승률 1회/);assert.doesNotMatch(all,/팀전 승률|팀 승리|무승부|진영별 기록|결과 확인|통계 집계 기준/);
 });
 test('role mode names other hidden-role games mafia and citizens by default',async()=>{const a=await app();a.vm.window.ScoreCounter.clearPlayers();a.bridge.startWithGame();a.get('playGame').value='시계탑에 흐른 피';await a.get('savePlayForm').onsubmit({preventDefault(){}});a.get('scorelessSetupForm').onsubmit({preventDefault(){}});a.get('scorelessWinMode').onclick();a.get('scorelessRoleWinMode').onclick();assert.deepEqual(a.players().map(p=>p.teamName),['시민','시민']);});
