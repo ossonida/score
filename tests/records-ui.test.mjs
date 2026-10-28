@@ -665,3 +665,4 @@ test('per-game statistics split team and role records by my side name',async()=>
  const text=node=>[node.textContent||'',...(node.children||[]).map(text)].join(' ');const all=text(a.get('statsInsights'));
  assert.match(all,/진영별 기록/);assert.match(all,/시민\s+2회\(66.7%\) · 1승 · 승률 50%/);assert.match(all,/마피아\s+1회\(33.3%\) · 1승 · 승률 100%/);
 });
+test('role mode names other hidden-role games mafia and citizens by default',async()=>{const a=await app();a.vm.window.ScoreCounter.clearPlayers();a.bridge.startWithGame();a.get('playGame').value='시계탑에 흐른 피';await a.get('savePlayForm').onsubmit({preventDefault(){}});a.get('scorelessSetupForm').onsubmit({preventDefault(){}});a.get('scorelessWinMode').onclick();a.get('scorelessRoleWinMode').onclick();assert.deepEqual(a.players().map(p=>p.teamName),['시민','시민']);});
