@@ -32,3 +32,9 @@ test('mighty personal stats count lead, friend and opponent results, partners an
  assert.deepEqual(m.partners.map(p=>[p.name,p.kind,p.count,p.wins]),[['하늘','mine',2,2],['소담','theirs',2,0],['소담','mine',1,1]]);
  assert.equal(mightyStats([{play:{...a,mightyRounds:undefined},person:a.players[0]}]).plays,0);
 });
+
+test('the next-round sessionId survives createPlay so backups keep round series',()=>{
+ const base={game:{name:'Catan'},date:'2026-10-24',rule:'highest',players:[{id:'a',name:'A',color:'#ffffff',score:1}]};
+ assert.equal(createPlay({...base,sessionId:'00000000-0000-4000-8000-000000000000'}).sessionId,'00000000-0000-4000-8000-000000000000');
+ assert.throws(()=>createPlay({...base,sessionId:'a b'}),/연속 판/);assert.equal('sessionId' in createPlay(base),false);
+});
