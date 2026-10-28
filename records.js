@@ -1,33 +1,33 @@
-import {renderRecordParticipants,renderModeStats} from './record-view.js?v=134';
-import {recordMode,modeLabels} from './records-core.js?v=154';
+import {renderRecordParticipants,renderModeStats} from './record-view.js?v=135';
+import {recordMode,modeLabels} from './records-core.js?v=155';
 import {missionName} from './mission-names.js?v=4';
-import {readGameLibrary} from './game-library.js?v=102';
+import {readGameLibrary} from './game-library.js?v=103';
 import {enhanceGamePicker} from './game-picker.js?v=64';
-import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=152';
-import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=153';
+import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=153';
+import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=154';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=168';
-import {personStats} from './social-insights.js?v=117';
+import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=169';
+import {personStats} from './social-insights.js?v=118';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=7';
-import {renderGameTitle} from './personal-dashboard.js?v=163';
+import {renderGameTitle} from './personal-dashboard.js?v=164';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
-import {latestPlayDate} from './stats-overview.js?v=164';
+import {latestPlayDate} from './stats-overview.js?v=165';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=66';
-import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=116';
-import {renderStatsDashboard} from './stats-dashboard.js?v=98';
-import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=4';
-import {renderPeriodDashboard} from './period-dashboard.js?v=4';
-import {mergeImported} from './data-transfer.js?v=68';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=67';
+import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=117';
+import {renderStatsDashboard} from './stats-dashboard.js?v=99';
+import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=5';
+import {renderPeriodDashboard} from './period-dashboard.js?v=5';
+import {mergeImported} from './data-transfer.js?v=69';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups} from './game-catalog.js?v=166';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches,aliasSearchName} from './game-aliases.js?v=1';
 import {isScoreGame,scoreGameType} from './score-games.js?v=167';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=154';
-import * as cloudApi from './cloud-records.js?v=173';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=155';
+import * as cloudApi from './cloud-records.js?v=174';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=173';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=174';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {decodeXmlText} from './bgg-validation.js?v=129';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
@@ -202,7 +202,7 @@ $('savePlayForm').onsubmit=async event=>{event.preventDefault();const intent=sav
  if(recordFlow==='setup'){pendingGame=checkedGame({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,location:$('playLocation').value,noScores:$('playWithoutScores').checked});rememberGame();rememberSearchAlias();close('savePlayDialog');$('gamePlayerCount').value=String(api.getPlayers().length||2);$('gamePlayersError').textContent='';show('gamePlayersDialog');$('gamePlayerCount').focus();return;}
 
  if(recordFlow==='scoreless'){
-  checkScorelessContext();const config=checkedGame({game:selectedGame(),date:$('playDate').value,rule:scorelessMode==='coop'?'cooperative':'highest',location:$('playLocation').value,noScores:true}),players=scorelessResultPlayers(),entry=api.getResultEntry(),play=createPlay({...config,players,...pickedExpansions(),...(scorelessMode==='coop'?{cooperativeResult:entry.cooperativeResult,...(entry.sharedScore!==undefined?{sharedScore:entry.sharedScore}:{}),...(Array.isArray(entry.missionAttempts)?{missionAttempts:entry.missionAttempts}:{}),...(entry.coopKind==='difficulty'?{difficulty:entry.difficulty}:{}),...(entry.coopKind==='campaign'?{scenario:entry.scenario,...(validScenarioLevel(entry.scenarioLevel)?{scenarioLevel:entry.scenarioLevel}:{})}:{})}:{})});const nextRound=intent==='next'&&['win','team','rank'].includes(scorelessMode);if(nextRound&&!scorelessSeries)scorelessSeries={id:crypto.randomUUID(),saved:0};if(scorelessSeries)play.sessionId=scorelessSeries.id;pendingScoreless={...pendingScoreless,...config};rememberGame();const before=records,oldPending=new Set(pending);records=[play,...records];if(scopeUid())pending.add(play.id);try{persist();}catch{records=before;pending=oldPending;throw Error('브라우저 저장 공간을 사용할 수 없습니다. 기록을 저장하지 못했어요.');}rememberSearchAlias();close('savePlayDialog');if(nextRound){scorelessSeries.saved++;api.clearResults?.();savedNotice(scorelessSeries.saved+'판째 저장했습니다.');}else{scorelessSeries=null;savedNotice('게임 기록을 저장했습니다.');}showScorelessBoard(scorelessMode,{navigate:false});persistScorelessDraft('board');updateButtons();renderHistory();return true;
+  checkScorelessContext();const config=checkedGame({game:selectedGame(),date:$('playDate').value,rule:scorelessMode==='coop'?'cooperative':'highest',location:$('playLocation').value,noScores:true}),players=scorelessResultPlayers(),entry=api.getResultEntry(),play=createPlay({...config,players,...pickedExpansions(),...(scorelessMode==='mighty'?{mightyRounds:entry.mightyRounds}:{}),...(scorelessMode==='coop'?{cooperativeResult:entry.cooperativeResult,...(entry.sharedScore!==undefined?{sharedScore:entry.sharedScore}:{}),...(Array.isArray(entry.missionAttempts)?{missionAttempts:entry.missionAttempts}:{}),...(entry.coopKind==='difficulty'?{difficulty:entry.difficulty}:{}),...(entry.coopKind==='campaign'?{scenario:entry.scenario,...(validScenarioLevel(entry.scenarioLevel)?{scenarioLevel:entry.scenarioLevel}:{})}:{})}:{})});const nextRound=intent==='next'&&['win','team','rank'].includes(scorelessMode);if(nextRound&&!scorelessSeries)scorelessSeries={id:crypto.randomUUID(),saved:0};if(scorelessSeries)play.sessionId=scorelessSeries.id;pendingScoreless={...pendingScoreless,...config};rememberGame();const before=records,oldPending=new Set(pending);records=[play,...records];if(scopeUid())pending.add(play.id);try{persist();}catch{records=before;pending=oldPending;throw Error('브라우저 저장 공간을 사용할 수 없습니다. 기록을 저장하지 못했어요.');}rememberSearchAlias();close('savePlayDialog');if(nextRound){scorelessSeries.saved++;api.clearResults?.();savedNotice(scorelessSeries.saved+'판째 저장했습니다.');}else{scorelessSeries=null;savedNotice('게임 기록을 저장했습니다.');}showScorelessBoard(scorelessMode,{navigate:false});persistScorelessDraft('board');updateButtons();renderHistory();return true;
  }
  if(!snapshot.length)throw Error('함께한 사람을 한 명 이상 추가해주세요.');const noScores=$('playWithoutScores').checked;const selfId=selectedSelf(snapshot,key());const savedPlayers=snapshot.map(p=>{const next={...p};if(noScores){next.score=null;delete next.winner;delete next.rank;}return next;});const play=createPlay({game:selectedGame(),date:$('playDate').value,rule:$('playRule').value,location:$('playLocation').value,players:savingPlayers(savedPlayers,selfId),...pickedExpansions()},recordFlow==='finish'?activeSession?.recordId:undefined);
  if(recordFlow!=='scoreless')rememberGame();const before=records;const oldPending=new Set(pending);const previous=records.find(p=>p.id===play.id);if(previous)play.createdAt=previous.createdAt;records=[play,...records.filter(p=>p.id!==play.id)];if(scopeUid())pending.add(play.id);
@@ -509,7 +509,7 @@ window.ScoreRecords={
  // 계정 삭제: 클라우드·BGG 연결·로그인 계정을 지운 뒤 로그아웃하고 이 기기의 그 계정 저장값을 정리한다(로그인 전 기록은 남김).
  deleteAccount:async(context,step,{account=true}={})=>{
   const uid=scopeUid();if(!uid||context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
-  const {deleteAccountData}=await import('./account-delete.js?v=5');const removed=await deleteAccountData(uid,step,{account});
+  const {deleteAccountData}=await import('./account-delete.js?v=6');const removed=await deleteAccountData(uid,step,{account});
   try{await logout();}catch{}
   for(const name of Object.keys(localStorage))if(name.includes(uid))localStorage.removeItem(name);
   if(localStorage.getItem('score.lastUser.v1')===uid)localStorage.removeItem('score.lastUser.v1');return removed;

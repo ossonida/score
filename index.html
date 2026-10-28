@@ -197,7 +197,7 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=179">
+<link rel="stylesheet" href="./records.css?v=180">
 <link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js">
 <link rel="stylesheet" href="./modal-ui.css?v=66">
 <link rel="stylesheet" href="./ui-system.css?v=111">
@@ -252,7 +252,7 @@ html[data-initial-view=settings] #navSettings,html[data-initial-view=games] #nav
 <div class="record-head"><h2 id="scorelessSetupTitle">함께한 플레이 인원</h2><button class="score-close" type="button" data-record-close="scorelessSetupDialog" aria-label="닫기">×</button></div>
 <p id="scorelessSetupGame" class="finish-note"></p>
 <section id="scorelessCountStep"><section id="scorelessSavedPlayers" class="saved-player-section" hidden><p class="saved-player-heading">기존 플레이어 선택</p><div id="scorelessPlayerChips" class="saved-player-chips" role="group" aria-label="함께할 기존 플레이어"></div></section><label class="field" for="scorelessCount">총 플레이 인원</label><div class="bulk-count-stepper" role="group" aria-label="함께한 플레이 인원"><button id="scorelessCountMinus" type="button" aria-label="플레이 인원 한 명 줄이기">−</button><div class="bulk-count-number"><output id="scorelessCount" aria-live="polite">2</output><span>명</span></div><button id="scorelessCountPlus" type="button" aria-label="플레이 인원 한 명 늘리기">＋</button></div><p id="scorelessCountNote" class="record-note">선택한 플레이어를 포함해 총 인원을 정하세요.</p><div class="record-actions"><button type="button" class="secondary" data-record-close="scorelessSetupDialog">취소</button><button class="primary" type="submit">기록 방식 선택</button></div></section>
-<section id="scorelessModeStep" hidden><div class="scoreless-mode-options"><button id="scoreModeOption" class="scoreless-mode-option" type="button"><strong>점수 기록</strong><span>플레이어별 점수를 계산합니다.</span></button><button id="scorelessWinMode" class="scoreless-mode-option" type="button"><strong>승패 기록</strong><span>승리·무승부·패배 선택</span></button><button id="scorelessRankMode" class="scoreless-mode-option" type="button"><strong>순위 기록</strong><span>위에서부터 1위 · 손잡이로 순서 변경</span></button><button id="scorelessCoopMode" class="scoreless-mode-option" type="button"><strong>협력 기록</strong><span>성공·실패·점수 · 미션 · 난이도 · 캠페인 중 선택</span></button><button id="scorelessMightyMode" class="scoreless-mode-option" type="button"><strong>마이티 기록</strong><span>주공·공약·프렌드 · 점수 자동 누적</span></button></div><div class="record-actions"><button id="scorelessModeBack" type="button" class="secondary">인원 다시 선택</button></div></section>
+<section id="scorelessModeStep" hidden><div class="scoreless-mode-options"><button id="scoreModeOption" class="scoreless-mode-option" type="button"><strong>점수 기록</strong><span>플레이어별 점수를 계산합니다.</span></button><button id="scorelessWinMode" class="scoreless-mode-option" type="button"><strong>승패 기록</strong><span>개인/팀 또는 마피아 승패를 입력합니다.</span></button><button id="scorelessRankMode" class="scoreless-mode-option" type="button"><strong>순위 기록</strong><span>점수 없는 순위만 기록합니다.</span></button><button id="scorelessCoopMode" class="scoreless-mode-option" type="button"><strong>협력 기록</strong><span>미션·난이도·캠페인이 있는 협력 게임을 기록합니다.</span></button><button id="scorelessMightyMode" class="scoreless-mode-option" type="button"><strong>마이티 기록</strong><span>주공·공약·프렌드 · 점수 자동 누적</span></button></div><div class="record-actions"><button id="scorelessModeBack" type="button" class="secondary">인원 다시 선택</button></div></section>
 <section id="scorelessCoopTypeStep" hidden><div id="scorelessCoopRecent" class="coop-recent-choices" hidden></div><div class="scoreless-mode-options"><button id="scorelessCoopScoreMode" class="scoreless-mode-option" type="button"><strong>성공·실패·점수형</strong><span>경기 전체 성공·실패와 공동 점수(선택)</span></button><button id="scorelessMissionMode" class="scoreless-mode-option" type="button"><strong>미션형</strong><span>플레이하며 미션마다 성공·실패 · 미션 진행이 쌓입니다</span></button><button id="scorelessCoopDifficultyMode" class="scoreless-mode-option" type="button"><strong>난이도형</strong><span>판데믹처럼 난이도를 고르고 성공·실패 기록</span></button><button id="scorelessCoopCampaignMode" class="scoreless-mode-option" type="button"><strong>캠페인형</strong><span>글룸헤이븐처럼 시나리오 번호와 성공·실패 · 시도 횟수는 자동</span></button></div><div class="record-actions"><button id="scorelessCoopTypeBack" type="button" class="secondary">기록 방식으로</button></div></section>
 <section id="scorelessWinTypeStep" hidden><div class="scoreless-mode-options"><button id="scorelessSoloWinMode" class="scoreless-mode-option" type="button"><strong>개인전</strong><span>플레이어별 승리·무승부·패배 선택</span></button><button id="scorelessTeamWinMode" class="scoreless-mode-option" type="button"><strong>팀전</strong><span>2~4팀을 구성해 팀별 결과 선택</span></button><button id="scorelessRoleWinMode" class="scoreless-mode-option" type="button"><strong>역할전</strong><span>스파이·마피아처럼 숨은 역할 진영과 나머지 진영</span></button></div><div class="record-actions"><button id="scorelessWinTypeBack" type="button" class="secondary">기록 방식으로</button></div></section>
 <section id="scorelessTeamStep" hidden><div class="team-setup-controls"><span>팀 수</span><div class="team-count-stepper" role="group" aria-label="팀 수"><button id="teamCountMinus" type="button" aria-label="팀 한 개 줄이기">−</button><output id="teamCount" aria-live="polite">2</output><button id="teamCountPlus" type="button" aria-label="팀 한 개 늘리기">＋</button></div></div><p class="record-note">플레이어를 누르면 다음 팀으로 이동합니다.</p><div id="teamAssignments" class="team-assignment-list"></div><div class="record-actions"><button id="scorelessTeamBack" type="button" class="secondary">개인전·팀전 선택</button><button id="startTeamResult" type="button" class="primary">팀전 기록 시작</button></div></section>
@@ -629,11 +629,11 @@ render();
 </script>
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
-<script type="module" src="./app-analytics.js?v=170"></script>
-<script type="module" src="./records.js?v=209"></script>
-<script type="module" src="./bgg-account.js?v=178"></script>
-<script type="module" src="./bgg-link.js?v=184"></script>
-<script type="module" src="./settings.js?v=140"></script>
-<script type="module" src="./games-screen.js?v=188"></script>
+<script type="module" src="./app-analytics.js?v=171"></script>
+<script type="module" src="./records.js?v=210"></script>
+<script type="module" src="./bgg-account.js?v=179"></script>
+<script type="module" src="./bgg-link.js?v=185"></script>
+<script type="module" src="./settings.js?v=141"></script>
+<script type="module" src="./games-screen.js?v=189"></script>
 </body>
 </html>

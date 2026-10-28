@@ -1,5 +1,5 @@
 import {safeGameImage} from './game-artwork.js?v=171';
-import {createPlay,isPlay} from './records-core.js?v=154';
+import {createPlay,isPlay} from './records-core.js?v=155';
 export const MAX_IMPORT_BYTES=20*1024*1024,MAX_IMPORT_RECORDS=10000;
 const colors=['#52c7ef','#ffcc00','#b44cdb','#45d9a0','#ff9461','#b19be6','#087fff','#ff2496'];
 const yes=v=>v===true||v===1;

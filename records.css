@@ -309,6 +309,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .scoreless-result-card .name .mighty-role{margin-left:8px;font-size:12px;font-weight:700;opacity:.75}
 .scoreless-card-actions.mighty-actions{display:flex;align-items:center;justify-content:flex-end;padding:0 4px;background:transparent}
 .mighty-total{font-size:24px;font-weight:700;color:var(--ink)}
+#statsScreen .mighty-hero .personal-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 10px}
+#statsScreen .mighty-hero .personal-metrics strong{font-size:30px}
+.mighty-recent .game-score-row span{grid-column:1;font-size:12px}
+.mighty-recent .game-score-row small{grid-column:1;grid-row:2;min-width:0;text-align:left;font-size:11px;color:#8fb5e6}
+.mighty-recent .game-score-row strong{grid-column:2;grid-row:1/3;font-size:15px;font-weight:700}
+.mighty-recent .game-score-row strong.is-plus{color:#5fe0a1}
+.mighty-recent .game-score-row strong.is-minus{color:#ff8a8a}
 .mighty-chips button.is-wide{flex:0 0 auto;padding:0 8px}.mission-resume{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.mission-resume[hidden]{display:none}.mission-resume-chip{min-height:36px;padding:0 12px;border:1px solid #f2c14e8c;border-radius:999px;background:#f2c14e1a;color:#f8d98a;font-size:13px;font-weight:700}.mission-resume-chip[aria-pressed=true]{background:#f2c14e40}.record-mission-result{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.record-mission-summary{font-size:13px;color:#aab6ca}
 /* 협력 기록 방식: 성공·실패 버튼, 난이도 선택, 최근 협력 게임 칩 */
 .coop-outcome-actions button{min-height:48px;border-radius:10px;font-size:16px;font-weight:700}

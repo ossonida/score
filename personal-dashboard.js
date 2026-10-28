@@ -1,9 +1,10 @@
-import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=154';
+import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=155';
 import {missionName,missionRange} from './mission-names.js?v=4';
-import {renderModeStats,cooperativeStats} from './record-view.js?v=134';
+import {renderModeStats,cooperativeStats} from './record-view.js?v=135';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
 import {renderGameArtwork} from './game-artwork.js?v=171';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=116';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=117';
+import {mightyStats} from './mighty-stats.js?v=1';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const ruleName=rule=>modeLabels[rule]||rule;
@@ -27,6 +28,20 @@ export function renderIdentitySettings(container,records,scope,onChange){
 export function renderGameTitle(game,action){const names=gameNames(game),title=el('div',undefined,'game-title-row'),art=el('a',undefined,'game-artwork');if(game?.bggId){art.href='https://boardgamegeek.com/boardgame/'+game.bggId;art.target='_blank';art.rel='noopener noreferrer';art.setAttribute('aria-label',names.ko+' · BGG에서 보기');}renderGameArtwork(art,game);const copy=el('div',undefined,'game-title-copy'),info=metadata(game),types=info?.domains.map(d=>domainLabels[d]).filter(Boolean)||[];if(!types.length)types.push(info?'유형 미지정':'유형 정보 없음');if(info?.cooperative)types.push('협동');copy.append(el('h2',names.ko||'게임 통계'));if(names.en)copy.append(el('p',names.en,'game-alt-name'));copy.append(el('p',types.join(' · '),'game-type-label'));title.append(art,copy);const extra=action?.(game);if(extra)title.append(extra);return title;}
 // 역할전처럼 이 게임의 팀전 기록이 모두 이름 있는 2진영이면 진영별 승률을 첫 요약에 보여 준다(기본 팀 이름 A~D팀은 제외).
 function roleSides(entries){const rows=new Map();for(const x of entries){const name=(x.person.teamName||'').trim();if(!name||/^[A-D]팀$/.test(name)||new Set(x.play.players.map(p=>p.teamId)).size!==2)return null;const key=name.normalize('NFKC').toLocaleLowerCase(),row=rows.get(key)||{name,tries:0,known:0,wins:0};row.tries++;if(x.known){row.known++;if(x.won)row.wins++;}rows.set(key,row);}return rows.size?[...rows.values()].sort((a,b)=>b.tries-a.tries).slice(0,2):null;}
+// 마이티 판 내역이 있는 게임: 누적 점수·포지션별 성적·프렌드 궁합(Figma 51:623).
+const signed=v=>v>0?'+'+num(v):v<0?'−'+num(Math.abs(v)):'0',percent=rate=>rate===null?'—':num(Math.round(rate*100))+'%';
+function renderMighty(content,m,onOpen){
+ const hero=el('section',undefined,'insight-hero personal-hero mighty-hero'),metrics=el('div',undefined,'insight-metrics personal-metrics');
+ for(const [value,label]of [[signed(m.total)+'점','누적 점수'],[percent(m.lead.rate),'주공 성공률'],[percent(m.friend.rate),'프렌드 승률'],[percent(m.opponent.rate),'야당 방어율']]){const box=el('div');box.append(el('strong',value),el('span',label));metrics.append(box);}
+ hero.append(metrics);note(hero,[`${num(m.plays)}회`,`${num(m.rounds)}판`,`주공 ${num(m.lead.tries)}판`,...(m.lead.averageBid!==null?[`평균 공약 ${num(m.lead.averageBid)}`]:[]),...(m.lead.bestBid!==null?[`최고 성공 ${m.lead.bestBid}`]:[])].join(' · '));content.append(hero);
+ const layout=el('div',undefined,'personal-sections'),recent=section('최근 경기','personal-recent mighty-recent');
+ for(const g of m.recent){const button=el('button',undefined,'game-score-row');button.type='button';button.append(el('span',`${g.play.date} · ${g.play.players.length}인`),el('strong',`${signed(g.points)}점 · ${g.rank}위`,g.points<0?'is-minus':'is-plus'),el('small',`${g.rounds}판 · ${g.leadTries?`주공 ${g.leadWins}/${g.leadTries} 성공`:'주공 안 함'}`));button.onclick=()=>onOpen(g.play.id);recent.append(button);}
+ layout.append(recent);
+ const positions=section('포지션별 성적','personal-sizes');for(const [label,r,word,wins]of [['주공',m.lead,'성공',m.lead.wins],['프렌드',m.friend,'승리',m.friend.wins],['야당',m.opponent,'방어',m.opponent.defends]]){const line=el('div',undefined,'personal-comparison');line.append(el('strong',label),el('span',r.tries?`${num(r.tries)}판 · ${word} ${num(wins)} · ${percent(r.rate)}`:'아직 없음'));positions.append(line);}layout.append(positions);
+ if(m.partners.length){const friends=section('프렌드 궁합','personal-sizes');for(const p of m.partners){const line=el('div',undefined,'personal-comparison');line.append(el('strong',p.name),el('span',`${p.kind==='mine'?'내가 프렌드로':'나를 프렌드로'} ${num(p.count)}번 · ${num(p.wins)}승`));friends.append(line);}layout.append(friends);}
+ content.append(layout);
+ const methods=el('details',undefined,'stats-methods');methods.append(el('summary','통계 집계 기준'));note(methods,'주공 성공률은 내가 주공인 판, 프렌드 승률은 프렌드로 지목된 판, 야당 방어율은 야당일 때 주공 실패 비율입니다. 누적 점수는 저장된 판 점수의 합입니다.');content.append(methods);
+}
 export function renderPersonalGame(container,records,onOpen,{scope='guest',allRecords=records,onIdentityChange=()=>{},titleAction}={}){
  const previousRule=container.querySelector('.personal-rule')?.value;
  container.replaceChildren();
@@ -51,6 +66,7 @@ export function renderPersonalGame(container,records,onOpen,{scope='guest',allRe
   const s=personalGame(records,profile,rule.value);content.replaceChildren();
   if(s.ambiguous)note(content,`이름이 중복된 ${s.ambiguous}개 기록은 제외했습니다. 내 플레이어 지정을 확인해주세요.`);
   if(!s.total){note(content,'이 게임에 내 기록이 없습니다. 내 플레이어 지정을 확인해주세요.');return;}
+  const mightyEntries=s.entries.filter(x=>Array.isArray(x.play.mightyRounds)&&x.play.mightyRounds.length);if(mightyEntries.length){renderMighty(content,mightyStats(mightyEntries),onOpen);return;}
   const hero=el('section',undefined,'insight-hero personal-hero'),metrics=el('div',undefined,'insight-metrics personal-metrics');
   const scored=['highest','lowest'].includes(s.rule),coop=s.rule==='cooperative',ranked=s.rule==='rank';
   const hasMissions=play=>Array.isArray(play.missionAttempts)&&play.missionAttempts.length>0,missionPlays=coop?s.entries.map(x=>x.play).filter(hasMissions):[],m=missionPlays.length?cooperativeStats(missionPlays).missions:null,missionGame=missionPlays[0]?.game;const coopPlays=coop?s.entries.map(x=>x.play):[],coopKindOf=kind=>coopPlays.some(p=>playCoopKind(p)===kind),ck=!coop||m?'':coopKindOf('difficulty')?'difficulty':coopKindOf('campaign')?'campaign':'score',diff=ck==='difficulty'?coopDifficultyStats(coopPlays):null,camp=ck==='campaign'?coopCampaignStats(coopPlays):null;

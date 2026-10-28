@@ -1,6 +1,6 @@
-import './records.js?v=209';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=173';
-import {bggLinkRequest} from './bgg-link-client.js?v=70';
+import './records.js?v=210';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=174';
+import {bggLinkRequest} from './bgg-link-client.js?v=71';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=100';
 import {bgStatsLinks,bgStatsDuplicates,orphanPlayLinks} from './bgstats-link.js?v=5';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
@@ -43,7 +43,7 @@ const clearText=result=>!result?'':result.unavailable?'BGG가 컬렉션을 준�
 async function clearAfterExport(context){try{return clearText(await clearPlayedWantToPlay(context));}catch{return '하고 싶은 게임 해제를 확인하지 못했습니다';}}
 $('bggExport').onclick=async()=>{
  if(!user||!state.connected||busy)return;const context=api.context(),version=epoch;busy=true;render();let plan;
- let duplicates=[];try{const records=api.bggRecords(),remote=window.ScoreBggAccount?.state()||{},plays=remote.plays||[],links=bgStatsLinks(records,plays);duplicates=bgStatsDuplicates(records,links,plays,state.uploads);const dupIds=new Set(duplicates.map(d=>d.recordId)),kept=records.filter(r=>!dupIds.has(r.id));plan=await planBggExport(kept,state.uploads,20,state.username,orphanPlayLinks(kept,plays,state.uploads,links),{plays,fullAt:remote.playsFullAt});}catch{$('bggLinkMessage').textContent='내보낼 기록을 확인하지 못했습니다. 다시 시도해주세요.';}finally{if(version===epoch){busy=false;render();}}
+ let duplicates=[];try{const records=api.bggRecords(),remote=window.ScoreBggAccount?.state()||{},plays=remote.plays||[],links=bgStatsLinks(records,plays);duplicates=bgStatsDuplicates(records,links,plays,state.uploads);const dupIds=new Set(duplicates.map(d=>d.recordId)),kept=records.filter(r=>!dupIds.has(r.id));plan=await planBggExport(kept,state.uploads,20,state.username,orphanPlayLinks(kept,plays,state.uploads,links),{plays,fullAt:plays.some(p=>String(p?.username||'').toLowerCase()===String(state.username||'').toLowerCase())?remote.playsFullAt:0});}catch{$('bggLinkMessage').textContent='내보낼 기록을 확인하지 못했습니다. 다시 시도해주세요.';}finally{if(version===epoch){busy=false;render();}}
  if(!plan||version!==epoch||!user||!state.connected)return;const excluded=[];
  if(plan.already)excluded.push(`변경 없음 ${plan.already}개`);if(plan.fromBgStats)excluded.push(`BG Stats가 이미 BGG에 올림 ${plan.fromBgStats}개`);adoptPlays=plan.adopt||new Map();verifyPlays=plan.verify||new Set();if(plan.scoreGame)excluded.push(`Score 자체 게임 ${plan.scoreGame}개`);if(plan.missingGame)excluded.push(`BGG 게임 정보 없음 ${plan.missingGame}개`);
  if(!plan.records.length&&!duplicates.length){$('bggLinkMessage').textContent=plan.total?`내보낼 새 기록이나 수정된 기록이 없습니다.${excluded.length?' '+excluded.join(' · '):''}`:'Score에 저장된 기록이 없습니다.';const message=$('bggLinkMessage').textContent;busy=true;render();const cleared=plan.total?await clearAfterExport(context):'',edited=await sendCollectionEdits(context).catch(()=>'컬렉션 반영을 확인하지 못했습니다');busy=false;render();if(version===epoch){$('bggLinkMessage').textContent=[message,cleared,edited].filter(Boolean).join(' ');if(cleared||edited)window.ScoreBggAccount?.expectUpdates?.();}return;}
