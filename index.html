@@ -197,7 +197,7 @@ dialog .swatch{width:28px;height:28px}
 <meta name="apple-mobile-web-app-title" content="Score Counter">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="stylesheet" href="./select2-4.0.13.min.css">
-<link rel="stylesheet" href="./records.css?v=175">
+<link rel="stylesheet" href="./records.css?v=176">
 <link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js"><link rel="modulepreload" crossorigin href="https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js">
 <link rel="stylesheet" href="./modal-ui.css?v=66">
 <link rel="stylesheet" href="./ui-system.css?v=111">
@@ -246,7 +246,7 @@ html[data-initial-view=settings] #navSettings,html[data-initial-view=games] #nav
 <p id="scorelessHint" class="record-note" hidden>다음 화면에서 함께한 인원과 승패 또는 순위를 선택합니다.</p>
 <label id="scoreModeField" class="record-no-scores"><input id="playWithoutScores" type="checkbox">점수 없이 기록</label>
 <p id="recordAnonymousHint" class="record-note" hidden>수정하지 않은 자동 이름은 익명으로 저장됩니다.</p><div id="playSnapshot" class="record-snapshot" aria-label="저장할 이름과 점수" hidden></div></section></div><p id="playError" class="record-error" role="alert"></p>
-<p id="recordStorageHint" class="record-note" role="status"></p><button id="recordLogin" type="button" class="bgg-web-link">로그인해서 저장</button><div class="record-actions"><button id="recordCancel" class="secondary" type="button" data-record-close="savePlayDialog">취소</button><button id="reselectGame" class="secondary" type="button" hidden>게임 다시 선택</button><button id="commitPlay" class="primary" type="submit">플레이어 추가</button></div></form></dialog>
+<p id="recordStorageHint" class="record-note" role="status"></p><button id="recordLogin" type="button" class="bgg-web-link">로그인해서 저장</button><div class="record-actions"><button id="recordCancel" class="secondary" type="button" data-record-close="savePlayDialog">취소</button><button id="reselectGame" class="secondary" type="button" hidden>게임 다시 선택</button><button id="saveNextRound" class="secondary" type="button" hidden>저장하고 다음 판</button><button id="commitPlay" class="primary" type="submit">플레이어 추가</button></div></form></dialog>
 
 <dialog id="scorelessSetupDialog" class="record-dialog scoreless-setup-dialog"><form id="scorelessSetupForm">
 <div class="record-head"><h2 id="scorelessSetupTitle">함께한 플레이 인원</h2><button class="score-close" type="button" data-record-close="scorelessSetupDialog" aria-label="닫기">×</button></div>
@@ -582,6 +582,7 @@ setCoopValues:values=>{if(resultEntry?.mode!=='coop'||Array.isArray(resultEntry.
 setMissionNamer:namer=>{missionNamer=typeof namer==='function'?namer:null;render();},
 setMissionStart:value=>{if(!Array.isArray(resultEntry?.missionAttempts)||resultEntry.missionAttempts.length)return;resultEntry.missionCurrent=missionNumber(value);render();},
 endResultEntry:()=>{if(!resultEntry)return;players=resultEntry.previousPlayers.map(p=>({...p}));resultEntry=null;editing=null;scoring=null;swipedId=null;render();},
+clearResults:()=>{if(!resultEntry||resultEntry.mode==='coop')return;const sides=resultEntry.roleSides;players.forEach((p,index)=>{delete p.winner;delete p.draw;if(resultEntry.mode==='rank'){p.rank=index+1;p.winner=index===0;}if(sides){p.teamId=sides[1].id;p.teamName=sides[1].name;}});editing=null;swipedId=null;render();},
 clearPlayers:()=>{localStorage.setItem(KEY,'[]');players=[];swipedId=null;render();},
 startPlayers:(count,names=[])=>{if(!Number.isInteger(count)||count<1||count>100)throw Error('플레이어는 1~100명으로 지정해주세요.');const before=players;try{players=generatedPlayers(count,0,names);localStorage.setItem(KEY,JSON.stringify(players));}catch(error){players=before;throw error;}swipedId=null;render();},
 setSelf:(id,scope)=>{players=players.map(p=>({...p,isSelf:p.id===id,selfScope:scope}));save();},
@@ -594,10 +595,10 @@ render();
 <script src="./jquery-3.7.1.min.js"></script>
 <script src="./select2-4.0.13.min.js"></script>
 <script type="module" src="./app-analytics.js?v=170"></script>
-<script type="module" src="./records.js?v=202"></script>
+<script type="module" src="./records.js?v=203"></script>
 <script type="module" src="./bgg-account.js?v=177"></script>
 <script type="module" src="./bgg-link.js?v=182"></script>
 <script type="module" src="./settings.js?v=137"></script>
-<script type="module" src="./games-screen.js?v=181"></script>
+<script type="module" src="./games-screen.js?v=182"></script>
 </body>
 </html>
