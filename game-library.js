@@ -22,6 +22,12 @@ export function gameCollectionView(records,saved=[],collection=[],view='all',bgg
  if(view==='wantToPlay')return rows.filter(row=>row.wantToPlay&&!row.played);
  return view==='all'?rows:rows.filter(row=>row[view]);
 }
+// 내 목록에서 지운다. 기록이나 BGG에서 온 게임은 목록에 남으므로 화면에서 먼저 막는다.
+export function removeLibraryGame(scope,key,records=[],storage=localStorage){
+ const saved=readGameLibrary(scope,storage),next=saved.filter(game=>gameKey(resolveGame(game,records))!==key);
+ if(next.length===saved.length)return false;
+ storage.setItem(storageKey(scope),JSON.stringify(next));return true;
+}
 export function addLibraryGame(scope,game,records=[],storage=localStorage){
  if(!valid(game))throw Error('게임 이름과 BGG ID를 확인해주세요.');
  const resolved=resolveGame(clean(game),records),key=gameKey(resolved),saved=readGameLibrary(scope,storage);

@@ -1,7 +1,7 @@
-import './records.js?v=197';
+import './records.js?v=198';
 import {searchLocalGames,bggSearchQuery,resolveGame,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=166';
 import {gameKey} from './records-core.js?v=154';
-import {readGameLibrary,libraryGames,addLibraryGame,gameCollectionView} from './game-library.js?v=100';
+import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=101';
 import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=171';
 import {idToken} from './cloud-records.js?v=173';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -24,13 +24,27 @@ function artwork(game){const wrap=el('span',undefined,'library-art'),placeholder
 let stale=true,renderToken=0,showRow=()=>null;
 function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;const context=api.context(),scope=context.key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList');$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();renderIndex([]);$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view,bggState().plays||[]),query=$('gameSearch').value.trim(),q=normalizeGameQuery(query),games=(query?all.filter(row=>searchableGameGroups([row],query).length||normalizeGameQuery(gameNames(row.game).ko).includes(q)):[...all]).map(row=>({...row,label:gameNames(row.game).ko}));if(view!=='played')games.sort((a,b)=>a.label.localeCompare(b.label,'ko'));list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
  $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':view==='played'?'아직 플레이한 게임이 없습니다. 기록을 저장하거나 BGG 정보를 가져오면 표시됩니다.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':'설정에서 BGG 컬렉션을 가져오면 '+viewLabels[view]+'이 표시됩니다.';
- const token=++renderToken;let rendered=0;const append=limit=>{const end=Math.min(games.length,limit);for(let index=rendered;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index];const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);list.append(row);}rendered=Math.max(rendered,end);},addRows=()=>{if(token!==renderToken)return;append(rendered+(rendered?60:30));if(rendered<games.length)setTimeout(addRows,0);};
+ const token=++renderToken;let rendered=0;const append=limit=>{const end=Math.min(games.length,limit);for(let index=rendered;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index],item=el('div',undefined,'library-item'),behind=el('span','삭제','library-delete');behind.setAttribute('aria-hidden','true');const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);rowData.set(row,games[index]);item.append(behind,row);list.append(item);}rendered=Math.max(rendered,end);},addRows=()=>{if(token!==renderToken)return;append(rendered+(rendered?60:30));if(rendered<games.length)setTimeout(addRows,0);};
  // 색인 이동은 아직 나눠 붙이지 않은 줄까지 바로 그린 뒤 그 줄을 돌려준다.
  showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(view==='played'?[]:indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
 // 우측 초성·알파벳 색인: 누르거나 끌면 가리키는 글자의 첫 게임으로 즉시 스크롤한다.
 let indexItems=[],indexKeyNow='';
+// 게임 삭제: 줄을 왼쪽으로 밀거나 길게 누르면 확인 후 내 목록에서 지운다. 기록·BGG 정보가 있는 게임은 이유만 알린다.
+const rowData=new WeakMap();let press=null,suppressClick=0;
+function askDelete(data){if(!data)return;const context=api.context(),{key,label}=data;
+ if(data.count>0){$('gamesMessage').textContent=label+' · 경기 기록이 있는 게임은 삭제할 수 없습니다.';return;}
+ if(data.bggPlays||data.owned||data.wishlist||data.wantToPlay||data.preordered){$('gamesMessage').textContent=label+' · BGG에서 가져온 게임은 BGG 컬렉션에서 정리해주세요.';return;}
+ window.ScoreCounter.confirm('게임 삭제',label+'을(를) 내 게임 목록에서 삭제할까요?',()=>{if(!current(context))return;let removed=false;try{removed=removeLibraryGame(context.key,key,context.records);}catch{}render();$('gamesMessage').textContent=removed?label+' · 삭제했습니다.':label+' · 삭제하지 못했습니다.';});}
+function resetPress(){if(!press)return;clearTimeout(press.timer);press.item.classList.remove('library-swiping');press.row.style.transform='';press=null;}
+$('gamesList').addEventListener('pointerdown',e=>{const row=e.target.closest?.('.library-row');if(!row||e.isPrimary===false||(e.pointerType==='mouse'&&e.button!==0))return;resetPress();press={row,item:row.parentElement,id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,horizontal:false};press.timer=setTimeout(()=>{const data=rowData.get(row);resetPress();suppressClick=Date.now()+600;askDelete(data);},600);});
+$('gamesList').addEventListener('pointermove',e=>{if(!press||e.pointerId!==press.id)return;const dx=e.clientX-press.x,dy=e.clientY-press.y;if(Math.hypot(dx,dy)>8)clearTimeout(press.timer);if(!press.horizontal){if(Math.abs(dy)>12&&Math.abs(dy)>Math.abs(dx)*1.3){resetPress();return;}if(dx>-8||Math.abs(dx)<Math.abs(dy))return;press.horizontal=true;press.item.classList.add('library-swiping');press.row.setPointerCapture?.(e.pointerId);}if(e.cancelable)e.preventDefault();press.dx=Math.max(-120,Math.min(0,dx));press.row.style.transform=`translateX(${press.dx}px)`;});
+const endPress=(e,cancelled)=>{if(!press||e.pointerId!==press.id)return;const {row,horizontal,dx}=press;resetPress();if(!horizontal)return;suppressClick=Date.now()+400;if(!cancelled&&dx<=-64)askDelete(rowData.get(row));};
+$('gamesList').addEventListener('pointerup',e=>endPress(e,false));$('gamesList').addEventListener('pointercancel',e=>endPress(e,true));
+$('gamesList').addEventListener('click',e=>{if(Date.now()<suppressClick){e.preventDefault();e.stopImmediatePropagation();}},true);
+$('gamesList').addEventListener('contextmenu',e=>{if(e.target.closest?.('.library-row'))e.preventDefault();});
+$('gamesList').addEventListener('keydown',e=>{const row=e.target.closest?.('.library-row');if(row&&e.key==='Delete'){e.preventDefault();askDelete(rowData.get(row));}});
 function renderIndex(entries){const nav=$('gameIndex');indexItems=entries.length>1?entries:[];nav.hidden=!indexItems.length;$('gamesList').classList.toggle('has-index',!nav.hidden);nav.replaceChildren(...indexItems.map(item=>{const button=el('button',item.key);button.type='button';button.setAttribute('aria-label',item.key+'(으)로 시작하는 게임으로 이동');button.onclick=()=>jumpTo(item);return button;}));}
 function jumpTo(item){const row=showRow(item.index);if(!row)return;row.scrollIntoView({block:'start'});}
 function indexAt(y){const nav=$('gameIndex'),box=nav.getBoundingClientRect();return indexItems[Math.max(0,Math.min(indexItems.length-1,Math.floor((y-box.top)/box.height*indexItems.length)))];}

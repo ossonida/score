@@ -187,7 +187,8 @@ dialog .actions .danger{margin-right:0}
 .bottom-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}.bottom-nav>button{width:100%;min-width:0}
 #gamesScreen{display:block;height:auto;min-height:calc(100svh - var(--bottom-nav-height))}
 
-.library-art{position:relative}.library-art .library-art-fallback{display:grid;place-items:center;position:absolute;inset:0}.library-art>span:last-child{position:absolute;inset:0;background:#172334}.library-art>[hidden]{display:none!important}.library-art img{color:transparent}
+.library-art{position:relative}
+.library-item{position:relative;overflow:hidden}.library-delete{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;padding-right:24px;background:#b92542;color:#fff;font-weight:700;font-size:15px;visibility:hidden}.library-swiping>.library-delete{visibility:visible}.library-item>.library-row{position:relative;background:#080a10;touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;transition:transform .2s ease}.library-swiping>.library-row{transition:none}@media(prefers-reduced-motion:reduce){.library-item>.library-row{transition:none}}.library-art .library-art-fallback{display:grid;place-items:center;position:absolute;inset:0}.library-art>span:last-child{position:absolute;inset:0;background:#172334}.library-art>[hidden]{display:none!important}.library-art img{color:transparent}
 
 /* Keep every required BGG attribution compact and consistently sized. */
 .bgg-attribution,#addGameDialog .bgg-attribution{width:68px;min-height:26px;padding:3px 4px;border-radius:5px;margin:10px 0}
