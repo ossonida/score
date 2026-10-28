@@ -658,3 +658,10 @@ test('save and next round keeps the board, clears results, links rounds by sessi
  b.get('savePlay').onclick();assert.equal(b.get('recordDetailsStep').hidden,false);await b.get('savePlayForm').onsubmit({preventDefault(){}});
  const records=b.bridge.context().records;assert.equal(records.length,2);assert.equal(records[0].sessionId,first.sessionId);assert.doesNotMatch(b.get('scorelessBoardTitle').textContent,/판째/);
 });
+test('per-game statistics split team and role records by my side name',async()=>{
+ const play=(id,date,mine,won)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'역할테스트',bggId:''},rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score:null,teamId:mine==='마피아'?'team-1':'team-2',teamName:mine,winner:won},{id:'b',name:'철수',color:'#ffcc00',score:null,teamId:mine==='마피아'?'team-2':'team-1',teamName:mine==='마피아'?'시민':'마피아',winner:!won}]});
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('r1','2026-10-01','마피아',true),play('r2','2026-10-02','시민',false),play('r3','2026-10-03','시민',true)],pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
+ const a=await app(store);a.bridge.openGameStats({name:'역할테스트',bggId:''});
+ const text=node=>[node.textContent||'',...(node.children||[]).map(text)].join(' ');const all=text(a.get('statsInsights'));
+ assert.match(all,/진영별 기록/);assert.match(all,/시민\s+2회\(66.7%\) · 1승 · 승률 50%/);assert.match(all,/마피아\s+1회\(33.3%\) · 1승 · 승률 100%/);
+});
