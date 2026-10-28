@@ -184,3 +184,15 @@ test('mission board taps log failures and successes, advance missions, undo and 
  const texts=[];const visit=n=>{if(String(n.className||'').split(' ').includes('mission-chip'))texts.push(n.textContent);for(const child of n.children||[])visit(child);};visit(a.get('cards'));assert.deepEqual(texts,['미션 1 · ✗ ✓','미션 3 · ✗']);
  for(let i=0;i<3;i++)find('마지막 미션 결과 되돌리기').onclick();assert.equal(entry.cooperativeResult,undefined);assert.equal(entry.missionCurrent,1);assert.equal(a.get('saveScorelessPlay').disabled,true);
 });
+test('role mode toggles the hidden side, enables side wins only with both sides filled, and renames sides',()=>{
+ const {context,get}=fixture('team');
+ context.players.splice(0,context.players.length,{id:'p1',name:'가',color:'#ffcc00',score:null,teamId:'team-2',teamName:'시민'},{id:'p2',name:'나',color:'#52c7ef',score:null,teamId:'team-2',teamName:'시민'},{id:'p3',name:'다',color:'#45d9a0',score:null,teamId:'team-2',teamName:'시민'});
+ context.resultEntry.roleSides=[{id:'team-1',name:'스파이'},{id:'team-2',name:'시민'}];context.render();
+ const board=()=>get('cards').children[0],wins=()=>board().querySelectorAll('.scoreless-result-choice'),people=()=>board().querySelectorAll('.role-player');
+ assert.equal(board().className,'role-result');assert.equal(people().length,3);assert.deepEqual(wins().map(b=>b.disabled),[true,true]);assert.equal(get('savePlay').disabled,true);
+ people()[0].onclick();assert.deepEqual(context.players.map(p=>[p.teamId,p.teamName]),[['team-1','스파이'],['team-2','시민'],['team-2','시민']]);assert.deepEqual(wins().map(b=>b.disabled),[false,false]);
+ wins()[0].onclick();assert.deepEqual(context.players.map(p=>p.winner),[true,false,false]);assert.equal(get('savePlay').disabled,false);
+ people()[1].onclick();assert.deepEqual(context.players.map(p=>p.winner),[undefined,undefined,undefined]);assert.equal(get('savePlay').disabled,true);
+ const input=board().children[2].children[0].children[0];input.value='첩자';input.onchange();assert.equal(context.resultEntry.roleSides[0].name,'첩자');assert.deepEqual(context.players.map(p=>p.teamName),['첩자','첩자','시민']);
+ const other=board().children[2].children[1].children[0];other.value='첩자';other.onchange();assert.equal(context.resultEntry.roleSides[1].name,'시민');
+});
