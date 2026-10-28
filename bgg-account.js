@@ -110,7 +110,7 @@ function setCollectionStatus(game,status){if(!user)return false;const id=String(
  collection=withStatus(collection,id,name,status);try{localStorage.setItem(key('collection'),JSON.stringify(collection));localStorage.setItem(key('collectionPending'),'true');localStorage.setItem(key('collectionEdits'),JSON.stringify(edits));}catch{}render();return true;}
 // BGG에 반영한 대기 변경만 지운다. 보내는 동안 다시 바뀐 항목은 남긴다.
 function clearCollectionEdits(ids,sent){const edits=collectionEdits();for(const id of ids)if(JSON.stringify(edits[id])===JSON.stringify(sent[id]))delete edits[id];try{localStorage.setItem(key('collectionEdits'),JSON.stringify(edits));}catch{}}
-window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item}))}),clearWantToPlay,setCollectionStatus,collectionEdits:()=>user?collectionEdits():{},clearCollectionEdits,editable:()=>!!user,expectUpdates};
+window.ScoreBggAccount={state:()=>({collection:collection.map(item=>({...item})),plays:plays.map(item=>({...item})),playsFullAt:Number(cached('playsFullAt',0))||0}),clearWantToPlay,setCollectionStatus,collectionEdits:()=>user?collectionEdits():{},clearCollectionEdits,editable:()=>!!user,expectUpdates};
 
 if(cloudConfigured())showCached(rememberedUid());render();
 if(cloudConfigured())connectCloud(async next=>{

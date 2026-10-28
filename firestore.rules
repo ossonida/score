@@ -53,7 +53,7 @@ service cloud.firestore {
       function owns() { return request.auth != null && request.auth.uid == uid; }
       function valid() {
         let p = request.resource.data;
-        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','scenarioLevel','expansions','bggPlayId','updatedAt'])
+        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','scenarioLevel','expansions','bggPlayId','sessionId','updatedAt'])
           && (!('updatedAt' in p) || p.updatedAt == request.time)
           && p.keys().hasAll(['id','game','date','rule','createdAt','players'])
           && p.id == playId && p.id is string && p.id.matches('^[A-Za-z0-9_.:-]{1,100}$')
@@ -71,6 +71,7 @@ service cloud.firestore {
           && (!('scenarioLevel' in p) || 'scenario' in p && p.scenarioLevel is int && p.scenarioLevel >= 0 && p.scenarioLevel <= 7)
           && (!('location' in p) || p.location is string && p.location.size() <= 120)
           && (!('bggPlayId' in p) || p.bggPlayId is string && p.bggPlayId.matches('^[1-9][0-9]{0,19}$'))
+          && (!('sessionId' in p) || p.sessionId is string && p.sessionId.matches('^[A-Za-z0-9_-]{1,64}$'))
           && (!('expansions' in p) || p.expansions is list && p.expansions.size() > 0 && p.expansions.size() <= 30)
           && p.players is list && p.players.size() > 0 && p.players.size() <= 100;
       }

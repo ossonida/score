@@ -31,3 +31,12 @@ test('bulk export continues record errors but stops when the session or result i
  assert.deepEqual(result,{sent:1,unchanged:0,failed:2,lastError:'wait'});
 });
 test('Score native games are explicitly excluded from BGG export',async()=>{const native=play('native','');native.game.name='홀덤';const plan=await planBggExport([native,play('bgg')],{},20,'alice');assert.deepEqual(plan.records.map(item=>item.id),['bgg']);assert.equal(plan.scoreGame,1);assert.equal(plan.missingGame,0);});
+
+test('unchanged records whose BGG play is missing from a later full import are sent again for the worker to verify',async()=>{
+ const records=[play('gone'),play('there'),play('fresh'),{...play('older'),date:'2020-01-01'}];const [fg,ft,ff,old]=await Promise.all(records.map(r=>bggPlayFingerprint(r,'alice')));
+ const uploads={gone:{status:'sent',bggPlayId:'91',fingerprint:fg,sentAt:100},there:{status:'sent',bggPlayId:'92',fingerprint:ft,sentAt:100},fresh:{status:'sent',bggPlayId:'93',fingerprint:ff,sentAt:900},older:{status:'sent',bggPlayId:'94',fingerprint:old}};
+ const remote={plays:[{id:'92',date:'2026-10-01'}],fullAt:500};
+ const plan=await planBggExport(records,uploads,20,'alice',new Map(),remote);
+ assert.deepEqual(plan.records.map(p=>p.id),['gone']);assert.deepEqual([...plan.verify],['gone']);assert.equal(plan.missing,1);assert.equal(plan.already,3,'present, sent after the import, or older than the imported range');
+ assert.equal((await planBggExport(records,uploads,20,'alice')).records.length,0,'no import, no verify');
+});

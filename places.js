@@ -1,5 +1,5 @@
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {bgStatsLinks} from './bgstats-link.js?v=4';
+import {bgStatsLinks} from './bgstats-link.js?v=5';
 // 장소 관리: 기록과 BGG 플레이의 장소를 모으고, 계정별 기본·숨김 설정(이 기기 저장)으로 추천 목록을 만든다.
 export const defaultPlaces=['집','보드게임 카페','모임 장소','온라인'];
 const prefKey=scope=>'score.places.v1.'+scope;

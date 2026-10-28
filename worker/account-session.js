@@ -120,7 +120,7 @@ export class BggSessions{
   const url=new URL(request.url),path=url.pathname;
   if(path==='/status'&&request.method==='GET'){
    const session=await this.session();if(!session)return json(200,{ready:true,connected:false});
-   const prefix='post:'+encodeURIComponent(session.username.toLowerCase())+':',entries=await this.state.storage.list({prefix,limit:1000}),uploads={};for(const [key,value]of entries)uploads[key.slice(prefix.length)]={status:value.status,bggPlayId:value.bggPlayId||'',fingerprint:value.fingerprint||''};
+   const prefix='post:'+encodeURIComponent(session.username.toLowerCase())+':',entries=await this.state.storage.list({prefix,limit:1000}),uploads={};for(const [key,value]of entries)uploads[key.slice(prefix.length)]={status:value.status,bggPlayId:value.bggPlayId||'',fingerprint:value.fingerprint||'',sentAt:Number(value.sentAt)||0};
    return json(200,{ready:true,connected:true,username:session.username,expiresAt:session.expiresAt,uploads});
   }
   // Internal-only route; the outer Worker never forwards this endpoint to clients.
@@ -181,10 +181,11 @@ export class BggSessions{
   const key='post:'+encodeURIComponent(session.username.toLowerCase())+':'+play.id;let previous=await this.state.storage.get(key);const fingerprint=await playFingerprint(play,session.username);
   // BG Stats가 올린 원본을 이 기록으로 업데이트: 그 날짜의 내 BGG 플레이에 원본이 실제로 있을 때만. 원본이 지워졌으면 BGG에 이 경기가 없으므로 새 플레이로 올린다.
   if(!previous?.bggPlayId&&body.adoptPlayId!==undefined){const adopt=String(body.adoptPlayId);if(!idPattern.test(adopt))return fail('INVALID_BODY');const check=await playStillThere(fetcher,this.env,session,play.date,adopt);if(!check.checked)return fail('BGG_POST_UNCERTAIN',409);if(check.exists)previous={status:'adopt',fingerprint:'',bggPlayId:adopt};}
-  if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}previous={status:'failed',fingerprint:'',bggPlayId:''};}
-  if(previous?.status==='sent'&&previous.fingerprint===fingerprint)return json(200,{posted:true,unchanged:true,status:'sent',bggPlayId:previous.bggPlayId,fingerprint});
+  if((previous?.status==='pending'||previous?.status==='unknown')&&!previous?.bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(!recovered.checked)return fail('BGG_POST_UNCERTAIN',409);if(recovered.id){const sentAt=Date.now();await this.state.storage.put(key,{status:'sent',sentAt,fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,sentAt,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}if(Date.now()-(Number(previous.at)||0)<3600000)return fail('BGG_POST_UNCERTAIN',409);previous={status:'failed',fingerprint:'',bggPlayId:''};}
+  // verify: 앱이 가져온 BGG 플레이에 이 번호가 없다고 알려 온 경우. 그 날짜의 BGG 플레이에 정말 없을 때만 연결을 비우고 새 플레이로 올린다.
+  if(previous?.status==='sent'&&previous.fingerprint===fingerprint){const check=body.verify===true&&previous.bggPlayId?await playStillThere(fetcher,this.env,session,play.date,previous.bggPlayId):{checked:false};if(!check.checked||check.exists)return json(200,{posted:true,unchanged:true,status:'sent',bggPlayId:previous.bggPlayId,fingerprint,sentAt:Number(previous.sentAt)||0});previous={status:'failed',fingerprint:'',bggPlayId:''};await this.state.storage.put(key,previous);}
   if(previous?.bggPlayId&&body.update!==true)return fail('BGG_UPDATE_REQUIRED',409);
-  const bggPlayId=previous?.bggPlayId||'';await this.state.storage.put(key,{status:'pending',fingerprint,bggPlayId});
+  const bggPlayId=previous?.bggPlayId||'';await this.state.storage.put(key,{status:'pending',at:Date.now(),fingerprint,bggPlayId});
   // 업데이트하려던 플레이가 BGG에서 이미 지워졌으면 로그인 문제로 보지 않고 연결을 비운다(앱이 새 플레이로 다시 올린다).
   const gone=async()=>{if(!bggPlayId)return false;const check=await playStillThere(fetcher,this.env,session,play.date,bggPlayId);if(!check.checked||check.exists)return false;await this.state.storage.put(key,{status:'failed',fingerprint:'',bggPlayId:''});return true;};
   try{
@@ -196,7 +197,7 @@ export class BggSessions{
    const raw=await readSmallText(response);let data;try{data=JSON.parse(raw);}catch{if(/must\s+login|not\s+permitted|cannot\s+edit|can't.*play/i.test(raw)){if(await gone())return fail('BGG_PLAY_GONE',410);await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}if(/messagebox\s+error/i.test(raw)){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});return fail('BGG_POST_REJECTED',422);}throw Error('UNCERTAIN');}
    if(typeof data.error==='string'&&data.error){await this.state.storage.put(key,{status:'failed',fingerprint,bggPlayId});if(/login|not permitted|cannot edit|can't.*play/i.test(data.error)){if(await gone())return fail('BGG_PLAY_GONE',410);await this.state.storage.delete('session');return fail('BGG_LOGIN_REQUIRED',401);}return fail('BGG_POST_REJECTED',422);}
    const id=String(data.playid||'');if(!/^[1-9][0-9]{0,9}$/.test(id)||(bggPlayId&&id!==String(bggPlayId)))throw Error('UNCERTAIN');
-   await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:id});return json(200,{posted:true,status:'sent',bggPlayId:id,fingerprint});
-  }catch{if(!bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(recovered.id){await this.state.storage.put(key,{status:'sent',fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}}await this.state.storage.put(key,{status:'unknown',fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
+   const sentAt=Date.now();await this.state.storage.put(key,{status:'sent',sentAt,fingerprint,bggPlayId:id});return json(200,{posted:true,sentAt,status:'sent',bggPlayId:id,fingerprint});
+  }catch{if(!bggPlayId){const recovered=await findScorePlay(fetcher,this.env,session,play);if(recovered.id){const sentAt=Date.now();await this.state.storage.put(key,{status:'sent',sentAt,fingerprint,bggPlayId:recovered.id});return json(200,{posted:true,sentAt,recovered:true,status:'sent',bggPlayId:recovered.id,fingerprint});}}await this.state.storage.put(key,{status:'unknown',at:Date.now(),fingerprint,bggPlayId});return fail('BGG_POST_UNCERTAIN',409);}
  }
 }

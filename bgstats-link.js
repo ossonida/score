@@ -11,6 +11,14 @@ export function bgStatsLinks(records,bggPlays=[]){
  const links=new Map();for(const r of records){if(typeof r?.bggPlayId==='string'&&r.bggPlayId){links.set(r.id,r.bggPlayId);continue;}if(typeof r?.id!=='string'||!r.id.startsWith('bgstats:'))continue;const list=pool.get(keyOf(r.game?.bggId,r.date,r.players));if(list?.length)links.set(r.id,list.shift());}
  return links;
 }
+// 다른 기록 ID로 BGG에 올라간 같은 경기: BGG에 보낸 번호가 없는 기록을 같은 게임·날짜·참가자 이름·점수의 BGG 플레이 중
+// 어떤 기록과도 연결되지 않은 것(Score 표시가 있으면 그 기록이 이 기기에 없는 것)과 하나씩 짝짓는다. links에 더해 돌려준다.
+export function orphanPlayLinks(records,bggPlays=[],uploads={},links=new Map()){
+ const ids=new Set(records.map(r=>r?.id)),used=new Set([...links.values(),...Object.values(uploads||{}).map(u=>u?.bggPlayId)].filter(Boolean).map(String)),pool=new Map();
+ for(const p of bggPlays){if(!p||used.has(String(p.id))||p.score?.id&&ids.has(p.score.id))continue;const k=keyOf(p.gameId,p.date,p.players);if(!k)continue;if(!pool.has(k))pool.set(k,[]);pool.get(k).push(String(p.id));}
+ const next=new Map(links);for(const r of records){if(!r?.id||next.has(r.id)||uploads?.[r.id]?.bggPlayId)continue;const list=pool.get(keyOf(r.game?.bggId,r.date,r.players));if(list?.length)next.set(r.id,list.shift());}
+ return next;
+}
 // BG Stats 원본이 BGG에 있는데 Score가 같은 기록을 다시 올린 중복 플레이(BGG 플레이 ID 목록).
 export function duplicateScoreUploads(records,bggPlays=[]){const links=bgStatsLinks(records,bggPlays);return bggPlays.filter(p=>p?.score?.id&&links.has(p.score.id)).map(p=>({bggPlayId:String(p.id),recordId:p.score.id,original:links.get(p.score.id),date:p.date,name:p.name}));}
 // 내보내기 정리 대상: BG Stats 원본(links의 값)이 지금 BGG에 있는데 이 앱이 따로 올린 플레이가 있는 기록.

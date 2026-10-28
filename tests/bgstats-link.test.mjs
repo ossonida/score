@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {bgStatsLinks,duplicateScoreUploads,bgStatsDuplicates} from '../bgstats-link.js';
+import {bgStatsLinks,duplicateScoreUploads,bgStatsDuplicates,orphanPlayLinks} from '../bgstats-link.js';
 import {placeStats} from '../places.js';
 import {planBggExport} from '../bgg-export.js';
 const record=(id,date,location,scores=[10,7])=>({id,date,rule:'highest',location,game:{name:'Ants',bggId:'13'},players:[{id:'a',name:'나',score:scores[0]},{id:'b',name:'민수',score:scores[1]}]});
@@ -20,3 +20,10 @@ test('a stored BGG play number links the record even when names were renamed lat
 test('duplicates are only Score uploads whose BG Stats original is still on BGG',()=>{const records=[{id:'bgstats:a'},{id:'bgstats:b'},{id:'bgstats:c'}],links=new Map([['bgstats:a','100'],['bgstats:b','200'],['bgstats:c','300']]),plays=[{id:'100'},{id:'900'},{id:'300'}],uploads={'bgstats:a':{bggPlayId:'900'},'bgstats:b':{bggPlayId:'901'}};
  assert.deepEqual(bgStatsDuplicates(records,links,plays,uploads),[{recordId:'bgstats:a',playId:'900',original:'100',date:undefined}],'b keeps its upload because its original was deleted; c was never uploaded');});
 test('linked BG Stats records without an upload are planned as updates of their BGG original',async()=>{const records=[record('bgstats:a','2026-09-25','B1')],plan=await planBggExport(records,{},20,'',new Map([['bgstats:a','100']]));assert.equal(plan.records.length,1);assert.equal(plan.adopting,1);assert.equal(plan.adopt.get('bgstats:a'),'100');assert.equal(plan.fromBgStats,0);});
+test('a re-created record updates the same match uploaded under an old record ID instead of posting a duplicate',async()=>{
+ const records=[record('new-1','2026-10-24','B1'),record('new-2','2026-10-24','B1'),record('kept','2026-10-24','B1'),record('sent','2026-10-24','B1')];
+ const plays=[bgg('801','2026-10-24','B1',{score:{id:'gone-1'}}),bgg('802','2026-10-24','B1',{score:{id:'kept'}}),bgg('803','2026-10-24','B1',{score:{id:'gone-2'}}),bgg('804','2026-10-24','B1')];
+ const uploads={sent:{status:'sent',bggPlayId:'804',fingerprint:'x'}},links=orphanPlayLinks(records,plays,uploads,bgStatsLinks(records,plays));
+ assert.deepEqual([...links],[['new-1','801'],['new-2','803']],'plays of records still here or already mapped are not reused');
+ const plan=await planBggExport(records.slice(0,2),{},20,'alice',links);assert.equal(plan.adopting,2);assert.equal(plan.adopt.get('new-1'),'801');
+});
