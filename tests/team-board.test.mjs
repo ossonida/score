@@ -79,6 +79,22 @@ test('team and individual result buttons render 승 무 패 and update the selec
  }
 });
 
+// 개인전: 한 사람의 승·무·패를 고르면 나머지 사람 결과도 채워져 바로 저장할 수 있다(실제 결과 보드로 확인).
+test('an individual result choice fills every player result and enables SAVE',()=>{
+ const label=player=>player.draw===true?'무':player.winner===true?'승':'패';
+ const choices=(a,index)=>a.teams()[index].children[1].children[1].children;
+ for(const [choice,expected] of [[0,['승','패','패','패']],[2,['패','승','승','승']],[1,['무','무','무','무']]]){
+  const a=fixture('win');choices(a,0)[choice].onclick();
+  assert.deepEqual(a.context.players.map(label),expected);
+  assert.equal(a.get('scorelessBoardMode').textContent,'개인전 승패 기록 · 4/4');
+  assert.equal(a.get('savePlay').disabled,false);
+ }
+ const changed=fixture('win');choices(changed,0)[0].onclick();
+ const second=changed.teams().findIndex(card=>card.dataset.playerId==='a2');choices(changed,second)[0].onclick();
+ assert.deepEqual(changed.context.players.map(label),['패','승','패','패']);
+ assert.equal(changed.get('savePlay').disabled,false);
+});
+
 test('team colors use distinct existing random player colors and survive rendering and draft restoration',()=>{
  const a=fixture(),before=a.teams().map(team=>team.style['--team-color']);
  assert.deepEqual(before,['#ffcc00','#52c7ef','#45d9a0']);

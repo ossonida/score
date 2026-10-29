@@ -85,12 +85,6 @@ test('cooperative results restore the draft, save, edit and sync without persona
  assert.equal(c.bridge.context().records[0].cooperativeResult,'failure');
  assert.equal(c.bridge.context().records[0].id,saved.id);
 });
-test('an individual result choice fills every player result and enables SAVE',async()=>{
- const label=player=>player.draw===true?'무':player.winner===true?'승':'패';
- const choices=root=>{const found=[];const visit=node=>{if(String(node.className||'').includes('scoreless-result-choice'))found.push(node);for(const child of node.children||[])visit(child);};visit(root);return found;};
- for(const [choice,expected]of [[0,['승','패','패']],[2,['패','승','승']],[1,['무','무','무']]]){const a=await app();await beginScoreless(a,'승패 테스트','3','win');choices(a.get('cards'))[choice].onclick();assert.deepEqual(a.players().map(label),expected);assert.equal(a.get('scorelessBoardMode').textContent,'개인전 승패 기록 · 3/3');assert.equal(a.get('savePlay').disabled,false);}
- const changed=await app();await beginScoreless(changed,'승패 변경 테스트','3','win');choices(changed.get('cards'))[0].onclick();choices(changed.get('cards'))[3].onclick();assert.deepEqual(changed.players().map(label),['패','승','패']);assert.equal(changed.get('savePlay').disabled,false);
-});
 test('mode-specific cards hide absent scores, sort joint ranks and edit whole teams',async()=>{
  const a=await app(new Map(),false,'',{me:'플레이어0'}),make=(id,players)=>({id,date:'2026-10-20',createdAt:'2026-10-20T00:00:00Z',game:{name:'테스트',bggId:''},rule:'highest',players:players.map((p,i)=>({id:String(i),name:'플레이어'+i,color:'#123456',score:null,...p}))});
  const team=make('team',[{teamId:'team-1',teamName:'A팀',winner:true},{teamId:'team-1',teamName:'A팀',winner:true},{teamId:'team-2',teamName:'B팀',winner:false}]);

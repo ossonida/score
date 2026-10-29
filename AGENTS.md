@@ -42,7 +42,6 @@
 - `npm run build`는 Android `dist/` 패키징이며 GitHub Pages 검증이 아니다. 웹 검증은 테스트로 한다.
 - 소스 대부분이 한 줄이 긴 압축 형태다. 줄 전체를 출력하지 말고 `grep -o ".\{0,80\}키워드.\{0,120\}"`처럼 주변만 자른다. 일괄 치환은 파일명 일부가 겹치는지(예: `records.js`와 `cloud-records.js`) 확인한다.
 - 모듈 `?v=` 버전은 index.html과 모든 import에서 같아야 한다(`tests/asset-versions.test.mjs`). `sw.js` 캐시 목록은 손으로 고치지 말고 버전·파일 변경 후 `npm run sw:assets`로 다시 만든다(`tests/performance-guards.test.mjs`가 옛 버전 누적·2MB 초과를 막는다).
-- 알려진 기존 실패: `tests/records-ui.test.mjs`의 "an individual result choice fills every player result and enables SAVE".
 
 ## 검증과 소통
 
