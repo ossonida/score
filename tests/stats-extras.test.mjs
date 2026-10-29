@@ -101,3 +101,12 @@ test('hold\'em and mafia count once per day in stats: scores summed, else most w
  const night=out.find(p=>p.game.name==='마피아');assert.deepEqual(night.players.map(p=>[p.name,p.winner]),[['나',true],['민수',false],['지영',false]]);
  assert.ok(out.some(p=>p.id==='h4'&&!p.sessionIds));assert.equal(out.filter(p=>p.game.name==='카탄').length,2);
 });
+
+test('period view also counts family and party games once per day, not strategy or co-op',async()=>{
+ const {countSessions,isPartyPlay}=await import('../stats-extras.js');
+ const g=(id,bggId,name)=>play(id,'2026-10-03',name,{game:{name,bggId}});
+ assert.ok(isPartyPlay(g('b','11','보난자')));assert.ok(!isPartyPlay(g('c','13','카탄')));assert.ok(!isPartyPlay({...g('p','11','보난자'),rule:'cooperative'}));
+ const out=countSessions([g('b1','11','보난자'),g('b2','11','보난자'),g('c1','13','카탄'),g('c2','13','카탄')],isPartyPlay);
+ assert.deepEqual(out.map(p=>p.sessionIds||p.id),[['b1','b2'],'c1','c2']);
+ assert.deepEqual(countSessions([g('h1','','홀덤'),g('h2','','홀덤')]).map(p=>p.sessionIds),[['h1','h2']]);
+});

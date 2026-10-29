@@ -1,5 +1,6 @@
 import {gameKey,winnerIds} from './records-core.js?v=155';
 import {meIn,nameKey} from './personal-stats.js?v=117';
+import {gameTypeList} from './stats-overview.js?v=165';
 
 const order=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const chronological=records=>records.filter(play=>play.date).sort(order);
@@ -63,9 +64,11 @@ export function playDays(records){
 // 합친 판: 판마다 모든 점수가 있으면 사람별 점수 합계, 아니면 그날 가장 많이 이긴 사람이 우승. sessionIds에 원래 기록 id.
 const SESSION_GAME=/홀덤|hold[’']?em|마피아|mafia/i;
 export const isSessionGame=game=>SESSION_GAME.test(String(game?.name||''));
-export function countSessions(records){
+// 기간 분석에서만 하루 한 판으로 세는 가벼운 게임: BGG 유형이 가족·파티·어린이이고 전략이 아닌 경쟁 게임.
+export const isPartyPlay=play=>{if(play.rule==='cooperative')return false;const types=gameTypeList(play);return !types.includes('strategy')&&types.some(type=>['family','party','children'].includes(type));};
+export function countSessions(records,same=play=>isSessionGame(play.game)){
  const groups=new Map(),out=[];
- for(const play of records){if(!play.date||!isSessionGame(play.game)){out.push(play);continue;}const key=play.date+'\u0000'+gameKey(play.game);let group=groups.get(key);if(!group){group=[];groups.set(key,group);out.push(group);}group.push(play);}
+ for(const play of records){if(!play.date||!same(play)){out.push(play);continue;}const key=play.date+'\u0000'+gameKey(play.game);let group=groups.get(key);if(!group){group=[];groups.set(key,group);out.push(group);}group.push(play);}
  return out.map(item=>Array.isArray(item)?mergeSession(item):item);
 }
 function mergeSession(list){
@@ -77,5 +80,6 @@ function mergeSession(list){
   if(scored)row.score+=person.score;if(wins.has(person.id))row.wins++;if(person.isSelf===true)row.isSelf=true;people.set(key,row);}}
  const most=Math.max(0,...[...people.values()].map(row=>row.wins));
  const players=[...people.values()].map(({winner,teamId,rank,draw,wins,isSelf,...person})=>({...person,...(isSelf?{isSelf:true}:{}),...(!scored&&rule!=='cooperative'&&most>0?{winner:wins===most}:{})}));
- return {...first,createdAt:rounds.at(-1).createdAt,rule,players,...(rule==='cooperative'?{cooperativeResult:rounds.at(-1).cooperativeResult}:{}),sessionIds:rounds.map(round=>round.id),sessionRounds:rounds.length};
+ const ids=rounds.flatMap(round=>round.sessionIds||[round.id]);
+ return {...first,createdAt:rounds.at(-1).createdAt,rule,players,...(rule==='cooperative'?{cooperativeResult:rounds.at(-1).cooperativeResult}:{}),sessionIds:ids,sessionRounds:ids.length};
 }
