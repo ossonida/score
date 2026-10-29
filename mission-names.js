@@ -13,7 +13,7 @@ export function missionRange(game,first,last){
 }
 // 공유 표지용 짧은 표기: 시나리오 게임은 "1-1~4막 4승"(시나리오-막 구간 · 클리어 수), 그 밖은 "미션 1 → 3 클리어"입니다.
 export function missionCleared(game,first,last,cleared){
- const format=missionFormat(game);if(!format||!valid(first)||!valid(last))return `${missionRange(game,first,last)} 클리어`;
+ const format=missionFormat(game);if(!format||!valid(first)||!valid(last))return `${missionRange(game,first,last)}${Number.isInteger(cleared)?` · ${cleared}개`:''} 클리어`;
  const a=place(format,Number(first)),b=place(format,Number(last)),span=last===first?`${a.scenario}-${a.act}막`:a.scenario===b.scenario?`${a.scenario}-${a.act}~${b.act}막`:`${a.scenario}-${a.act}~${b.scenario}-${b.act}막`;
  return Number.isInteger(cleared)?`${span} ${cleared}승`:span;
 }

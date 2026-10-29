@@ -110,7 +110,7 @@ test('scenario games show missions as scenario and act while other games keep mi
  const {missionName,missionRange,missionCleared}=await import('../mission-names.js');
  assert.equal(missionName({name:'전지적 추리 시점'},1),'시나리오 1 · 1막');assert.equal(missionName({name:'전지적 추리시점'},6),'시나리오 2 · 2막');assert.equal(missionName('전지적추리시점',12),'시나리오 3 · 4막');
  assert.equal(missionRange({name:'전지적 추리 시점'},3,5),'시나리오 1 · 3막 → 시나리오 2 · 1막');assert.equal(missionRange({name:'전지적 추리 시점'},5,7),'시나리오 2 · 1→3막');
- assert.equal(missionCleared({name:'전지적 추리 시점'},1,4,4),'1-1~4막 4승');assert.equal(missionCleared({name:'전지적 추리 시점'},2,2,1),'1-2막 1승');assert.equal(missionCleared({name:'전지적 추리 시점'},3,5,3),'1-3~2-1막 3승');assert.equal(missionCleared({name:'딥씨 크루'},1,3,3),'미션 1 → 3 클리어');
+ assert.equal(missionCleared({name:'전지적 추리 시점'},1,4,4),'1-1~4막 4승');assert.equal(missionCleared({name:'전지적 추리 시점'},2,2,1),'1-2막 1승');assert.equal(missionCleared({name:'전지적 추리 시점'},3,5,3),'1-3~2-1막 3승');assert.equal(missionCleared({name:'딥씨 크루'},1,3,3),'미션 1 → 3 · 3개 클리어');
  assert.equal(missionName({name:'딥씨 크루'},3),'미션 3');assert.equal(missionRange({name:'딥씨 크루'},1,2),'미션 1 → 2');assert.equal(missionName(null,4),'미션 4');
 });
 

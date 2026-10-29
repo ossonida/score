@@ -126,7 +126,7 @@ test('days without MVP or a close game show one winners-by-game card instead of 
 test('mission sessions show their cleared range on the shared cover instead of winners',()=>{
  const mission=(id,attempts)=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:'딥씨 크루',bggId:''},rule:'cooperative',cooperativeResult:attempts.some(a=>a.result==='success')?'success':'failure',missionAttempts:attempts,players:[{id:'a',name:'하늘',score:null}]});
  const data=recentShareData([mission('1',[{mission:4,result:'success'},{mission:5,result:'failure'}]),mission('2',[{mission:5,result:'success'}])],null,'ko-KR');
- assert.deepEqual(data.games.map(game=>[game.count,game.winners,game.mission]),[[2,[],'미션 4 → 5 클리어']]);
+ assert.deepEqual(data.games.map(game=>[game.count,game.winners,game.mission]),[[2,[],'미션 4 → 5 · 2개 클리어']]);
  assert.equal(recentShareData([mission('3',[{mission:7,result:'failure'}])],null,'en-US').games[0].mission,'Mission 7 in progress');
 });
 
@@ -135,9 +135,9 @@ test('co-op plays add a co-op card after MVP and close game, up to three cards i
  const coop=(id,game,result,extra={})=>({id,date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:game,bggId:''},rule:'cooperative',cooperativeResult:result,players:[{id:'a',name:'하늘',score:null},{id:'b',name:'바다',score:null}],...extra});
  const mission=coop('m','전지적 추리시점','success',{missionAttempts:[1,2,3,4].map(mission=>({mission,result:'success'}))});
  const one=recentShareData([mission],null,'ko-KR').cards.find(card=>card.kind==='coop');
- assert.deepEqual({headline:one.headline,detail:one.detail},{headline:'전지적 추리시점',detail:'1-1~4막 4승'});
+ assert.deepEqual({title:one.title,headline:one.headline,detail:one.detail},{title:'협력 게임 · 전지적 추리시점',headline:'미션 4개 클리어',detail:'한 번에 4개 · 4번 도전'});
  const two=recentShareData([mission,coop('p','판데믹','failure'),coop('q','판데믹','success')],null,'ko-KR').cards.find(card=>card.kind==='coop');
- assert.equal(two.headline,'협력 게임 2개');assert.equal(two.detail,'전지적 추리시점 1-1~4막 4승 · 판데믹 2판 중 1번 성공');const plain=recentShareData([coop('p','판데믹','failure')],null,'ko-KR');assert.equal(plain.cards.find(card=>card.kind==='coop').detail,'실패');assert.equal(plain.games[0].mission,'실패');
+ assert.equal(two.headline,'협력 게임 2개');assert.equal(two.detail,'전지적 추리시점 미션 4개 클리어 · 판데믹 2판 중 1번 성공');const plain=recentShareData([coop('p','판데믹','failure')],null,'ko-KR');assert.equal(plain.cards.find(card=>card.kind==='coop').detail,'실패');assert.equal(plain.games[0].mission,'실패');
  const kinds=recentShareData([coop('s','하나비','success',{sharedScore:21}),coop('d','판데믹','success',{difficulty:'영웅'}),coop('c1','글룸헤이븐','failure',{scenario:3,date:'2026-10-09'}),coop('c2','글룸헤이븐','success',{scenario:3})],null,'ko-KR');
  assert.deepEqual(kinds.games.map(game=>game.mission),['성공 · 21점','영웅 난이도 성공','시나리오 3 성공 (2번째 시도)']);
  assert.equal(kinds.cards.find(card=>card.kind==='coop').detail,'하나비 성공 · 21점 · 판데믹 영웅 난이도 성공 · 글룸헤이븐 시나리오 3 성공 (2번째 시도)');
@@ -161,4 +161,19 @@ test('busy days start the side layout higher so covers and cards grow into the f
  const normal=shareCoverLayout(8,2),busy=shareCoverLayout(8,2,false,164);
  assert.equal(busy.cells[0].y,164);assert.equal(busy.metrics[0].y,164);assert.ok(busy.cells[0].h>normal.cells[0].h);assert.ok(busy.cards[0].h>normal.cards[0].h);assert.ok(Math.abs(busy.cards[1].y+busy.cards[1].h-1260)<1);
  const wide=shareCoverLayout(12,2,false,164);assert.equal(wide.cards[0].y,330);assert.ok(wide.cells.at(-1).y+wide.cells.at(-1).h<=1290.5);assert.equal(wide.others.y+wide.others.h,1285);
+});
+
+test('a mission day shows cleared count, range, new best, the toughest mission and what is still in progress',async()=>{
+ const {missionDay}=await import('../stats-share.js');
+ const play=(id,date,time,attempts)=>({id,date,createdAt:date+'T'+time+':00Z',game:{name:'더 크루',bggId:''},rule:'cooperative',cooperativeResult:'success',missionAttempts:attempts,players:[{id:'a',name:'하늘',score:null}]});
+ const ok=mission=>({mission,result:'success'}),fail=mission=>({mission,result:'failure'});
+ const records=[play('late','2026-10-11','21:00',[ok(8),fail(9)]),play('early','2026-10-11','19:00',[ok(5),fail(6),fail(6),ok(6),ok(7)]),play('old','2026-10-01','19:00',[ok(4),ok(5)])];
+ assert.deepEqual(missionDay([ok(5),fail(6),fail(6),ok(6),ok(7),ok(8),fail(9)],5),{cleared:4,tries:7,firstTry:3,firstCleared:5,lastCleared:8,toughest:{mission:6,tries:3,cleared:true},pending:9,best:true});
+ const data=recentShareData(records,null,'ko-KR'),card=data.cards[0];
+ assert.equal(card.kind,'coop','4 cleared and a new best lead the cards');
+ assert.deepEqual([card.title,card.headline,card.detail],['협력 게임 · 더 크루','미션 4개 클리어','최고 기록 갱신 · 미션 9 도전 중']);
+ assert.equal(data.games[0].mission,'미션 5 → 8 · 4개 클리어');
+ const en=recentShareData(records,null,'en-US');assert.equal(en.cards[0].detail,'New best · Now on mission 9');assert.equal(en.cards[0].title,'Co-op · 더 크루');
+ assert.equal(recentShareData([play('y','2026-10-12','10:00',[ok(1),fail(2),fail(2),ok(2)])],null,'ko-KR').cards[0].detail,'미션 2 3번 만에 · 한 번에 1개');assert.equal(en.cards[0].headline,'4 missions cleared');
+ assert.equal(recentShareData([play('x','2026-10-12','10:00',[fail(3),fail(3)])],null,'ko-KR').cards[0].headline,'미션 3 도전 중');
 });
