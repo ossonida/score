@@ -96,14 +96,14 @@ export function pickDayCards(records,date,locale){
  return cards;
 }
 
-function roundRect(ctx,x,y,w,h,r){
+export function roundRect(ctx,x,y,w,h,r){
  const radius=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+radius,y);ctx.arcTo(x+w,y,x+w,y+h,radius);ctx.arcTo(x+w,y+h,x,y+h,radius);ctx.arcTo(x,y+h,x,y,radius);ctx.arcTo(x,y,x+w,y,radius);ctx.closePath();
 }
-function fillRound(ctx,x,y,w,h,r,fill){roundRect(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();}
+export function fillRound(ctx,x,y,w,h,r,fill){roundRect(ctx,x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();}
 function coverProxy(url){if(!url)return '';const endpoint=new URL(bggSearchUrl);endpoint.searchParams.set('action','cover');endpoint.searchParams.set('url',url);return endpoint.href;}
 export function shareImageSource(url,base=globalThis.location?.href){if(!url)return '';if(safeGameImage(url))return coverProxy(url);try{const local=new URL(url,base);return base&&local.origin===new URL(base).origin?local.href:'';}catch{return '';}}
-function loadImage(url){const source=shareImageSource(url);return new Promise(resolve=>{if(!source){resolve(null);return;}const image=new Image();let done=false;const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value);};const timer=setTimeout(()=>finish(null),12000);image.crossOrigin='anonymous';image.decoding='async';image.referrerPolicy='no-referrer';image.onload=()=>finish(image);image.onerror=()=>finish(null);image.src=source;});}
-function fitText(ctx,text,maxWidth,maxSize,minSize=24){let size=maxSize;for(;size>minSize;size-=2){ctx.font=`700 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=maxWidth)break;}return size;}
+export function loadImage(url){const source=shareImageSource(url);return new Promise(resolve=>{if(!source){resolve(null);return;}const image=new Image();let done=false;const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolve(value);};const timer=setTimeout(()=>finish(null),12000);image.crossOrigin='anonymous';image.decoding='async';image.referrerPolicy='no-referrer';image.onload=()=>finish(image);image.onerror=()=>finish(null);image.src=source;});}
+export function fitText(ctx,text,maxWidth,maxSize,minSize=24){let size=maxSize;for(;size>minSize;size-=2){ctx.font=`700 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=maxWidth)break;}return size;}
 function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
  const words=String(text).split(/\s+/),lines=[];let line='';
  for(const word of words){const next=line?line+' '+word:word;if(ctx.measureText(next).width<=maxWidth||!line)line=next;else{lines.push(line);line=word;if(lines.length===maxLines)break;}}
@@ -111,7 +111,7 @@ function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
  if(lines.length===maxLines&&words.join(' ')!==lines.join(' ')){while(lines[maxLines-1].length>1&&ctx.measureText(lines[maxLines-1]+'…').width>maxWidth)lines[maxLines-1]=lines[maxLines-1].slice(0,-1);lines[maxLines-1]+='…';}
  lines.forEach((value,index)=>ctx.fillText(value,x,y+index*lineHeight));return lines.length;
 }
-function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.measureText(value).width<=maxWidth)return value;while(value.length>1&&ctx.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);return value+'…';}
+export function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.measureText(value).width<=maxWidth)return value;while(value.length>1&&ctx.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);return value+'…';}
 // 표지가 10개 이상이면 위·아래 그라데이션 대신 표지 전체에 한 가지 농도의 그늘을 깝니다.
 // 표지는 칸을 꽉 채우되, 세로로 남는 부분은 위쪽 15% 지점을 기준으로 잘라 상자 위쪽의 게임 제목·로고가 보이게 합니다.
 function drawCover(ctx,image,game,x,y,w,h,flat=false){
@@ -129,11 +129,11 @@ function drawCover(ctx,image,game,x,y,w,h,flat=false){
  // 우승자는 표지 위쪽 가운데 정렬.
  if(label){const room=w-44;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+w/2,labelY);}
 }
-function drawBackground(ctx){
+export function drawBackground(ctx){
  const gradient=ctx.createLinearGradient(0,0,WIDTH,HEIGHT);gradient.addColorStop(0,'#07111f');gradient.addColorStop(.56,'#10243e');gradient.addColorStop(1,'#0d4a5c');ctx.fillStyle=gradient;ctx.fillRect(0,0,WIDTH,HEIGHT);
  ctx.save();ctx.globalAlpha=.08;ctx.fillStyle='#72d4ff';for(const [x,y,r]of [[930,70,250],[90,950,300],[990,1110,180],[380,590,120]]){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}ctx.restore();
 }
-function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false}={}){
+export function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false}={}){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign=center?'center':'left';const left=center?x+w/2:x+34,text=String(value);
  ctx.fillStyle=muted?'rgba(225,239,255,.68)':'#fff';let size=72;for(;size>36;size-=4){ctx.font=`800 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=w-40)break;}ctx.fillText(clippedText(ctx,text,w-40),left,y+h/2+14);
  ctx.fillStyle='#9fc8f7';const room=w-(center?28:56);for(let size=26;size>=18;size-=2){ctx.font=`600 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(label).width<=room)break;}ctx.fillText(clippedText(ctx,label,room),left,y+h/2+58);
@@ -236,18 +236,3 @@ export function periodShareData(records,model,profile,locale){
  const place=placeCounts(plays)[0];if(place)cards.push({kind:'place',title:words.recapPlace,headline:place.place,detail:words.playsUnit(place.count)});
  return {locale:lang,copy:words,date:end,label,title:words.recapTitle(label),fileName:`score-${start}-${end}.png`,playCount:plays.length,dayCount:new Set(plays.map(play=>play.date)).size,peopleCount:attendanceCount(plays,profile),games:[...games.values()].sort((a,b)=>b.count-a.count),cards,typeMix:plays.reduce((mix,play)=>{mix[shareGameType(play)]++;return mix;},{strategy:0,family:0,coop:0})};
 }
-// 배치: 제목 → 지표 3칸 → 많이 한 게임 표지(최대 3개) → 카드 줄(1~2장) → 아래 칸(세 번째 카드, 없으면 그 밖의 게임, 없으면 게임 성격 비율). 카드가 없으면 표지가 아래까지 차지한다.
-export async function createPeriodShareImage(data){
- const words=data?.copy||shareCopy(data?.locale);if(!data?.playCount)throw Error(words.recapEmpty);
- const canvas=document.createElement('canvas');canvas.width=WIDTH;canvas.height=HEIGHT;const ctx=canvas.getContext('2d');drawBackground(ctx);
- const gap=24,cards=data.cards.slice(0,3),shown=data.games.slice(0,3),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl))),coverTop=416,coverH=cards.length?380:844,cardY=820,bottom={x:72,y:1040,w:936,h:220};
- ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 30px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText('SCORE COUNTER',72,71);
- ctx.fillStyle='#fff';fitText(ctx,data.title,936,53,40);ctx.fillText(clippedText(ctx,data.title,936),72,168);
- const metricW=(936-gap*2)/3;[[data.playCount,words.recapPlays],[data.dayCount,words.recapDays],[data.games.length,words.recapGames]].forEach(([value,label],index)=>metric(ctx,{x:72+index*(metricW+gap),y:214,w:metricW,h:172},value,label,{center:true}));
- const coverW=(936-gap*(shown.length-1))/shown.length;shown.forEach((game,index)=>drawCover(ctx,images[index],game,72+index*(coverW+gap),coverTop,coverW,coverH,!images[index]));
- const row=cards.slice(0,2),cardW=(936-gap*(row.length-1))/Math.max(1,row.length);row.forEach((card,index)=>dayCard(ctx,card,{x:72+index*(cardW+gap),y:cardY,w:cardW,h:196}));
- const rest=data.games.slice(shown.length).map(game=>({game:{name:`${game.game.name} · ${words.playsUnit(game.count)}`}}));
- if(cards[2])dayCard(ctx,cards[2],bottom);else if(cards.length&&rest.length)otherGames(ctx,rest,words.otherGames,words,bottom);else if(cards.length)typesCard(ctx,data.typeMix,words,bottom);
- return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error(words.createFailed)),'image/png'));
-}
-export async function openPeriodShare(records,model,profile){const data=periodShareData(records,model,profile);return showShare({...data,dialogTitle:data.copy.recapDialog,previewAlt:data.copy.recapPreviewAlt},createPeriodShareImage);}

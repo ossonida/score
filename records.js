@@ -6,7 +6,7 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=153';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=154';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=174';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=175';
 import {personStats} from './social-insights.js?v=118';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=165';
@@ -18,7 +18,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=117';
 import {renderStatsDashboard} from './stats-dashboard.js?v=100';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=5';
-import {renderPeriodDashboard} from './period-dashboard.js?v=6';
+import {renderPeriodDashboard} from './period-dashboard.js?v=7';
 import {mergeImported} from './data-transfer.js?v=69';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=166';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches,aliasSearchName} from './game-aliases.js?v=1';

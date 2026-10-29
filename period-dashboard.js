@@ -1,7 +1,7 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=5';
 import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=1';
 import {readIdentity} from './personal-stats.js?v=117';
-import {openPeriodShare} from './stats-share.js?v=147';
+import {openRecapShare} from './recap-share.js?v=2';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;
@@ -55,7 +55,7 @@ export function renderPeriodDashboard(container,records,model,{scope,onGame,onRe
  container.replaceChildren();const selected=recordsInPeriod(records,model.current),current=summarizePeriod(records,model.current),previous=model.previous?summarizePeriod(records,model.previous):null;
  const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head');head.append(el('h2',model.title));
  // 결산 공유: 기록이 있는 기간만, 최근 기록 공유와 같은 창.
- if(selected.length){const share=el('button','결산 공유','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openPeriodShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
+ if(selected.length){const share=el('button','결산 공유','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
  head.append(el('p',rangeLabel(model.current),'period-range'));hero.append(head);metrics(hero,current,previous,model.label);container.append(hero);
  if(!selected.length){container.append(el('p','선택한 기간에 저장된 기록이 없습니다.','insight-empty'));return;}
  const days=Math.round((utc(model.current.end)-utc(model.current.start))/DAY)+1;
