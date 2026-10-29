@@ -1515,6 +1515,9 @@ function dictionary(){return /*<dict>*/{
 "{0} · 우승":"{0} · winner",
 "{0} 게임별 통계 보기":"View game stats: {0}",
 "{0} 표지":"{0} cover",
-"BGG에서 보기":"View on BGG"
+"BGG에서 보기":"View on BGG",
+"이전 플레이한 날":"Previous play day",
+"다음 플레이한 날":"Next play day",
+"플레이한 날 {0}/{1}":"Play day {0}/{1}"
 }/*</dict>*/;}
 })(typeof window!=='undefined'?window:globalThis);

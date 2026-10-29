@@ -4,7 +4,7 @@ import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-o
 import {readIdentity,meIn} from './personal-stats.js?v=117';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=145';
+import {formatRecentRecordTitle,openRecentShare,coopOutcome} from './stats-share.js?v=146';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
@@ -36,11 +36,12 @@ function modeScoreCard(subset,profile){
  if(rows.some(row=>row.expected!==null))note(section,'기대 승률은 경기 인원(팀전은 팀 수)으로 나눈 평균 확률이며 막대의 노란 세로선입니다.');
  return section;
 }
-export function renderOverview(container,records,{scope,view,onGame,onRecord,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',summary=true}){
+// 최근 기록: records는 고른 날까지의 기록이다(그날이 가장 최근 날). dayNav가 있으면 이전·다음 플레이한 날로 이동한다.
+export function renderOverview(container,records,{scope,view,onGame,onRecord,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',summary=true,dayNav=null}){
  container.replaceChildren();const profile=readIdentity(scope),day=latestPlayDate(records),subset=view==='recent'?records.filter(p=>p.date===day):records,s=overviewStats(subset,profile);
  const hero=el('section',undefined,'insight-hero overview-summary'),heading=el('div',undefined,'overview-summary-heading');heading.append(el('h2',view==='recent'?(day?formatRecentRecordTitle(day):'최근 게임기록'):title));hero.append(heading);
  if(!s.total&&view==='recent'){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings';hero.append(link);container.append(hero);return;}
- if(view==='recent'){hero.className+=' recent-summary';const share=el('button','공유하기','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openRecentShare(records,profile);}finally{share.disabled=false;}};heading.append(share);metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.gameCount,'플레이한 게임'],[bggCollection.filter(game=>game.owned).length,'보유게임'],[bggCollection.filter(game=>game.wishlist||game.wantToPlay).length,'하고 싶은 게임']]);note(hero,footnote);}if(summary)container.append(hero);if(!s.total)return;
+ if(view==='recent'){hero.className+=' recent-summary';const share=el('button','공유하기','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openRecentShare(records,profile);}finally{share.disabled=false;}};heading.append(share);if(dayNav&&dayNav.total>1)hero.append(recentDayNav(dayNav));metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.gameCount,'플레이한 게임'],[bggCollection.filter(game=>game.owned).length,'보유게임'],[bggCollection.filter(game=>game.wishlist||game.wantToPlay).length,'하고 싶은 게임']]);note(hero,footnote);}if(summary)container.append(hero);if(!s.total)return;
  if(view==='all')container.append(modeScoreCard(subset,profile));
  if(view==='recent')renderHighlights(container,records,profile,onRecord);
  if(view==='all'){
@@ -52,10 +53,19 @@ export function renderOverview(container,records,{scope,view,onGame,onRecord,bgg
  const criteria=el('details',undefined,'stats-methods');criteria.append(el('summary','집계 기준'));note(criteria,'플레이 횟수는 저장된 경기 수 기준입니다. 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.');if(view==='all')note(criteria,'게임 분류는 서로 다른 게임 수 기준이며, BGG 유형이 여러 개인 게임은 추리 → 협동 → 전략 → 가족/파티 → 스포츠 순으로 한 묶음에만 넣습니다. 협동은 BGG의 Cooperative Game 메커니즘 기준입니다. BGG 정보가 없는 게임은 미분류로 표시합니다.');container.append(criteria);
 }
 function highlightRow(card,play,title,detail,onRecord){const button=el('button',undefined,'overview-game-row');button.type='button';const text=el('span',undefined,'overview-game-name');text.append(el('strong',title),el('small',play.game.name+' · '+detail));button.append(text);button.onclick=()=>onRecord(play.id);card.append(button);}
+function recentDayNav({index,total,onDay,days}){
+ const nav=el('div',undefined,'period-navigator recent-day-nav'),prev=el('button','‹'),next=el('button','›'),label=el('strong',`플레이한 날 ${index+1}/${total}`);
+ prev.type=next.type='button';prev.setAttribute('aria-label','이전 플레이한 날');next.setAttribute('aria-label','다음 플레이한 날');label.setAttribute('aria-live','polite');
+ prev.disabled=index<=0;next.disabled=index>=total-1;prev.onclick=()=>onDay(days[index-1]);next.onclick=()=>onDay(days[index+1]);
+ nav.append(prev,label,next);return nav;
+}
+// 그날 내용이 있는 카드만 만든다(빈 안내 카드 없음). 협력 기록이 있으면 협력 게임 카드에 결과 한 줄씩 보여 준다.
 function renderHighlights(container,records,profile,onRecord){
- const data=recentHighlights(records,profile),winners=el('section',undefined,'insight-card');winners.append(el('h3','이날의 승자'));for(const {play,players}of data.winners)highlightRow(winners,play,players.map(p=>p.anonymous?'익명의 플레이어':p.name).join(' · '),recordMode(play)==='team'?[...new Set(players.map(p=>p.teamName))].join(' · ')+' 승리':players.length>1?'공동 우승':'우승',onRecord);if(!data.winners.length)note(winners,'승자를 확인할 수 있는 경쟁 경기 기록이 없습니다.');container.append(winners);
- const close=el('section',undefined,'insight-card');close.append(el('h3','가장 접전이었던 경기'));for(const {play,gap}of data.closest)highlightRow(close,play,gap===0?'공동 1위':gap.toLocaleString('ko-KR')+'점 차이','1·2위 점수 차이',onRecord);if(!data.closest.length)note(close,'전체 점수와 승자를 확인할 수 있는 경기가 없습니다.');else note(close,'게임마다 점수 체계가 달라 단순 점수 차이로 비교합니다.');container.append(close);
- const best=el('section',undefined,'insight-card');best.append(el('h3','개인 최고점'));for(const {play,me,improved}of data.personal)highlightRow(best,play,me.score.toLocaleString('ko-KR')+'점', (play.rule==='lowest'?'이날 최저점':'이날 최고점')+(improved?' · 개인 기록 갱신':''),onRecord);if(!data.personal.length)note(best,'내 플레이어와 점수가 지정된 경쟁 기록이 필요합니다.');else note(best,'이날의 내 최고 성적을 게임별로 표시합니다. 낮은 점수 승리 게임은 최저점 기준입니다.');container.append(best);
+ const data=recentHighlights(records,profile),day=latestPlayDate(records),coop=records.filter(p=>p.date===day&&p.rule==='cooperative');
+ if(data.winners.length){const winners=el('section',undefined,'insight-card');winners.append(el('h3','이날의 승자'));for(const {play,players}of data.winners)highlightRow(winners,play,players.map(p=>p.anonymous?'익명의 플레이어':p.name).join(' · '),recordMode(play)==='team'?[...new Set(players.map(p=>p.teamName))].join(' · ')+' 승리':players.length>1?'공동 우승':'우승',onRecord);container.append(winners);}
+ if(coop.length){const card=el('section',undefined,'insight-card');card.append(el('h3','협력 게임'));for(const play of coop)highlightRow(card,play,coopOutcome(play,records),'협력',onRecord);container.append(card);}
+ if(data.closest.length){const close=el('section',undefined,'insight-card');close.append(el('h3','가장 접전이었던 경기'));for(const {play,gap}of data.closest)highlightRow(close,play,gap===0?'공동 1위':gap.toLocaleString('ko-KR')+'점 차이','1·2위 점수 차이',onRecord);note(close,'게임마다 점수 체계가 달라 단순 점수 차이로 비교합니다.');container.append(close);}
+ if(data.personal.length){const best=el('section',undefined,'insight-card');best.append(el('h3','개인 최고점'));for(const {play,me,improved}of data.personal)highlightRow(best,play,me.score.toLocaleString('ko-KR')+'점', (play.rule==='lowest'?'이날 최저점':'이날 최고점')+(improved?' · 개인 기록 갱신':''),onRecord);note(best,'이날의 내 최고 성적을 게임별로 표시합니다. 낮은 점수 승리 게임은 최저점 기준입니다.');container.append(best);}
 }
 // 게임별 통계: 선택한 게임 기록만으로 나의 라이벌 카드를 덧붙입니다.
 // 게임별 통계 · 나의 라이벌 아래에 BGG에 등록된 이 게임의 확장판을 보여 줍니다(BGG 게임 정보를 받아 둔 경우).

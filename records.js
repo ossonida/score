@@ -6,7 +6,7 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=153';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=154';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=171';
+import {renderOverview,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=172';
 import {personStats} from './social-insights.js?v=118';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=165';
@@ -34,7 +34,7 @@ import {bggSearchUrl} from './firebase-config.js?v=64';
 import {decodeXmlText} from './bgg-validation.js?v=129';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let expansionPick=null,expansionSerial=0,expansionEditing=null;
-let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history',statsView='recent',statsPerson=null,accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
+let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history',statsView='recent',recentDay='',recentLatest='',statsPerson=null,accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
 let activePeriodUnit='month',activePeriodOffset=0,activeCustomPeriod=null,periodFormOpen=false;
 let statsGameTarget='';
 let statsGameTargetGame=null;
@@ -377,7 +377,10 @@ function renderHistory(){
  select.value=groups.some(g=>g.key===selected)?selected:(statsView==='games'?allGroups[0]?.key||'':'');
  if(statsGameTargetGame&&gameKey(statsGameTargetGame)===selected)select.value=selected;
  enhanceGamePicker(select,groups);
- const recentDate=latestPlayDate(records),period=statsView==='all'?selectedPeriod():null;
+ // 최근 기록: 고른 플레이한 날(더 최근 날의 기록이 생기면 가장 최근 날로).
+ const playDays=statsView==='recent'?[...new Set(records.map(p=>p.date).filter(Boolean))].sort():[];
+ if(statsView==='recent'){const latest=playDays.at(-1)||'';if(latest!==recentLatest||!playDays.includes(recentDay)){recentLatest=latest;recentDay=latest;}}
+ const recentDate=statsView==='recent'?recentDay:latestPlayDate(records),period=statsView==='all'?selectedPeriod():null;
  let filtered=(statsView==='recent'?records.filter(p=>p.date===recentDate):statsView==='games'?mine.filter(p=>gameKey(p.game)===select.value):recordsInPeriod(mine,period.current)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt.localeCompare(a.createdAt));
  const person=statsPerson&&personStats(mine,readIdentity(key()),statsPerson.key,statsPerson.game);if(statsPerson)filtered=person?person.plays:[];
  for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']]){$(id).setAttribute('aria-selected',String(statsView===view));$(id).setAttribute('tabindex',statsView===view?'0':'-1');}
@@ -393,7 +396,7 @@ function renderHistory(){
    if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game,collectionAction),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
  }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),mine,period);if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
- else renderOverview($('statsInsights'),records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});
+ else renderOverview($('statsInsights'),statsView==='recent'?records.filter(p=>p.date<=recentDate):records,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[],dayNav:statsView==='recent'?{days:playDays,index:playDays.indexOf(recentDate),total:playDays.length,onDay:day=>{recentDay=day;renderHistory();}}:null});
  $('statsDetailCount').textContent=statsView==='all'?'':`${filtered.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!filtered.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
 if(statsView==='games'&&mode==='stats'&&!statsPerson){for(const g of gameStats(filtered)){const article=node('article',undefined,'record-item');article.append(node('h3',g.game.name),node('p',g.count+'회 플레이'));renderModeStats(article,filtered.filter(p=>gameKey(p.game)===g.key));box.append(article);}return;}

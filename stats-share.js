@@ -46,6 +46,9 @@ export function localizedGameName(game,locale){
 
 function scoreGameEnglishName(name){const own=scoreGames.find(g=>g.name===name||g.aliases.includes(name));return own?own.aliases.find(alias=>!/[가-힣]/.test(alias))||'':'';}
 
+// 협력 기록 한 판의 결과 한 줄(공유 이미지와 같은 문구). 미션형은 그 판의 미션 진행.
+export function coopOutcome(play,records,locale){const words=copy[shareLanguage(locale)];return Array.isArray(play.missionAttempts)&&play.missionAttempts.length?words.missionCover(missionSummary(play.missionAttempts),play.game):words.coopCover(play,scenarioAttempt(records,play));}
+
 // 공유용 게임 성격 3분류: 협동 → 가족/파티(BGG 유형에 가족·파티·어린이가 하나라도 있으면, 전략+가족도 가족) → 전략.
 // BGG 유형이 없는 게임은 가족/파티로 봅니다. 무거운 전략 게임은 대부분 BGG 유형이 있기 때문입니다.
 // BGG는 전략이지만 모임에서 가볍게 즐기는 게임은 아래 목록으로 가족/파티에 넣습니다(BGG ID 또는 공백 뺀 이름).
