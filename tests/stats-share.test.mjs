@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {formatRecentRecordTitle,localizedGameName,recentShareData,shareLanguage} from '../stats-share.js';
+import {formatRecentRecordTitle,localizedGameName,recentShareData,shareCopy,shareLanguage} from '../stats-share.js';
 
 const play=(id,date,game,name='카탄')=>({id,date,createdAt:date+'T12:00:00Z',game:{name,bggId:game},rule:'highest',players:[{id:'a',name:'하늘',score:10,winner:true,isSelf:true},{id:'b',name:'바다',score:8,winner:false}]});
 
@@ -176,4 +176,12 @@ test('a mission day shows cleared count, range, new best, the toughest mission a
  const en=recentShareData(records,null,'en-US');assert.equal(en.cards[0].detail,'New best · Now on mission 9');assert.equal(en.cards[0].title,'Co-op · 더 크루');
  assert.equal(recentShareData([play('y','2026-10-12','10:00',[ok(1),fail(2),fail(2),ok(2)])],null,'ko-KR').cards[0].detail,'미션 2 3번 만에 · 한 번에 1개');assert.equal(en.cards[0].headline,'4 missions cleared');
  assert.equal(recentShareData([play('x','2026-10-12','10:00',[fail(3),fail(3)])],null,'ko-KR').cards[0].headline,'미션 3 도전 중');
+});
+
+test('recent share can leave out winners: no trophies, MVP, close game or winners card',()=>{
+ const plays=[scoredPlay('a','카탄',{하늘:10,바다:9}),scoredPlay('b','카탄',{하늘:12,바다:5}),scoredPlay('c','아줄',{하늘:30,바다:20})];
+ const shown=recentShareData(plays,null,'ko-KR'),hidden=recentShareData(plays,null,'ko-KR',{winners:false});
+ assert.ok(shown.cards.length>0&&shown.games.some(game=>game.winners.length));
+ assert.deepEqual(hidden.cards,[]);assert.ok(hidden.games.every(game=>game.winners.length===0));assert.equal(hidden.playCount,3);
+ assert.equal(shareCopy('en-US').showWinners,'Show winners');
 });
