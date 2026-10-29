@@ -21,6 +21,8 @@ export function computeAssets(){
   for(const m of src.matchAll(/(?:import|export)\s*(?:[^'"();]*?from\s*)?\(?\s*['"](\.\/[^'"]+\.js(?:\?v=\d+)?)['"]/g)){const next=local(m[1]);if(!assets.has(next)){assets.add(next);queue.push(next);}}
   // Images and other files a module references by literal path.
   for(const m of src.matchAll(/['"](\.\/(?:assets\/)?[\w./-]+\.(?:webp|png|svg|jpg|jpeg|json))['"]/g))if(exists(local(m[1])))assets.add(local(m[1]));
+  // Classic scripts a script writes in by literal versioned path (i18n.js → i18n-en.js).
+  for(const m of src.matchAll(/src="(\.\/[\w.-]+\.js\?v=\d+)"/g))if(exists(local(m[1])))assets.add(local(m[1]));
  }
  const manifest=JSON.parse(read('manifest.webmanifest'));
  for(const icon of manifest.icons||[])if(exists(icon.src))assets.add(local(icon.src));

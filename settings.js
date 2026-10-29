@@ -1,7 +1,7 @@
 import {readIdentity} from './personal-stats.js?v=117';
 import {renderIdentitySettings} from './personal-dashboard.js?v=165';
 import {rememberGameImages} from './game-artwork.js?v=171';
-import './records.js?v=211';
+import './records.js?v=212';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=69';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=7';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
@@ -71,5 +71,8 @@ $('confirmImport').onclick=()=>{
 let identityStamp='';
 function identityVersion(context){return JSON.stringify([context.key,context.epoch,readIdentity(context.key),context.records.map(p=>[p.id,p.players.map(x=>[x.name,x.anonymous])])]);}
 function renderSelf(context){const stamp=identityVersion(context);if(stamp===identityStamp)return;identityStamp=stamp;renderIdentitySettings($('identityEditor'),context.records,context.key,()=>{window.ScoreAnalytics?.feature('settings','identity_changed');identityStamp=identityVersion(api.context());window.dispatchEvent(new Event('score-identity:changed'));api.renderHistory();});}
+
+// 언어: 자동(한국 접속은 한국어, 그 밖은 영어) 또는 직접 고른 언어. 바꾸면 새로고침해 첫 화면부터 그 언어로 그린다.
+if(window.ScoreI18n){$('languageSelect').value=window.ScoreI18n.preference;$('languageSelect').onchange=event=>window.ScoreI18n.setPreference(event.target.value);}
 
 update();route();window.ScoreStartup?.ready('route');

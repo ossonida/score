@@ -18,7 +18,7 @@ const copy={
 let current=null;
 
 export function shareLanguage(locale){
- const value=Array.isArray(locale)?locale[0]:locale||globalThis.navigator?.languages?.[0]||globalThis.navigator?.language||'ko-KR';
+ const value=Array.isArray(locale)?locale[0]:locale||globalThis.ScoreI18n?.lang||globalThis.navigator?.languages?.[0]||globalThis.navigator?.language||'ko-KR';
  return /^ko(?:-|$)/i.test(String(value))?'ko':'en';
 }
 

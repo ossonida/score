@@ -27,7 +27,7 @@ function cached(part,fallback){try{return JSON.parse(localStorage.getItem(key(pa
 function cloudFailure(error){return String(error?.code||error?.message||'').includes('permission')?'Firebase 보안 규칙에서 BGG 저장 권한을 확인해야 합니다.':'네트워크 또는 Firebase 설정을 확인해주세요.';}
 function status(text){$('bggAccountStatus').textContent=text;}
 // BGG가 컬렉션 자료를 만든 시각(pubdate)을 짧게 보여 줍니다.
-const basisText=pubdate=>{const time=new Date(pubdate);return pubdate&&Number.isFinite(time.getTime())?'BGG 자료 기준 '+time.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';};
+const basisText=pubdate=>{const time=new Date(pubdate);return pubdate&&Number.isFinite(time.getTime())?'BGG 자료 기준 '+time.toLocaleString(globalThis.ScoreI18n?.locale||'ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';};
 let updates=null,checking=false,checkedAt=0;
 // BGG 연동 영역이 열려 있으면 BGG 자료가 이 기기 저장분과 다른지 조용히 확인합니다(10분에 한 번).
 
