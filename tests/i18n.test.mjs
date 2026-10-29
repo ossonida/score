@@ -40,5 +40,6 @@ test('the English dictionary translates fixed, templated and joined messages but
  assert.equal(t('기록 12회 · 최근 2026-10-01'),'12 plays · Last 2026-10-01');
  assert.equal(t('내보낼 새 기록이나 수정된 기록이 없습니다. 변경 없음 3개 · Score 자체 게임 2개는 제외됩니다.'),'No new or edited records to export. 3 unchanged · 2 Score-only games are excluded.');
  assert.equal(t('2026년 10월'),'Oct 2026');assert.equal(t('3승 2패'),'3W 2L');
- assert.equal(t('하늘'),'하늘');assert.equal(t('Score Counter'),'Score Counter');
+ assert.equal(t('하늘'),'하늘');
+ assert.equal(t('하늘섬'),'하늘섬');assert.equal(t('우리집 게임'),'우리집 게임');assert.equal(t('보난자 · 우승'),'보난자 · winner');t.addNames([['하늘섬','Sky Island'],['설정','Nope']]);assert.equal(t('하늘섬'),'Sky Island');assert.equal(t('하늘섬 · 4인'),'Sky Island · 4P');assert.equal(t('설정'),'Settings');assert.equal(t('Score Counter'),'Score Counter');
 });

@@ -2,6 +2,8 @@ import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {bgStatsLinks} from './bgstats-link.js?v=5';
 // 장소 관리: 기록과 BGG 플레이의 장소를 모으고, 계정별 기본·숨김 설정(이 기기 저장)으로 추천 목록을 만든다.
 export const defaultPlaces=['집','보드게임 카페','모임 장소','온라인'];
+// 영어 화면에서는 추천 기본 장소도 영어로 저장되게 한다.
+const englishPlaces=['Home','Board game café','Meetup','Online'];
 const prefKey=scope=>'score.places.v1.'+scope;
 const cleanPrefs=value=>({primary:typeof value?.primary==='string'?value.primary.slice(0,120):'',hidden:Array.isArray(value?.hidden)?[...new Set(value.hidden.filter(x=>typeof x==='string'&&x&&x.length<=120))].slice(0,500):[]});
 export function readPlacePrefs(scope){return readStoredJson(prefKey(scope),cleanPrefs(null),cleanPrefs);}
@@ -20,6 +22,6 @@ export function placeStats(records,bggPlays=[]){
 export function placeSuggestions(records,bggPlays,prefs){
  const hidden=new Set(prefs.hidden),used=placeStats(records,bggPlays),list=used.map(x=>x.place).filter(place=>!hidden.has(place)).slice(0,30);
  if(prefs.primary&&!hidden.has(prefs.primary)){const at=list.indexOf(prefs.primary);if(at>=0)list.splice(at,1);list.unshift(prefs.primary);}
- for(const place of defaultPlaces)if(!hidden.has(place)&&!used.some(x=>x.place===place)&&!list.includes(place))list.push(place);
+ for(const place of globalThis.ScoreI18n?.lang==='en'?englishPlaces:defaultPlaces)if(!hidden.has(place)&&!used.some(x=>x.place===place)&&!list.includes(place))list.push(place);
  return list;
 }

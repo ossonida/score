@@ -1,6 +1,6 @@
 import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=155';
-import {metadata,bggId} from './bgg-metadata.js?v=171';
-import {scoreGameType} from './score-games.js?v=167';
+import {metadata,bggId,gameNames} from './bgg-metadata.js?v=171';
+import {scoreGameType,scoreGames} from './score-games.js?v=167';
 import {missionCleared,missionName} from './mission-names.js?v=4';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=171';
 import {attendanceCount,latestPlayDate} from './stats-overview.js?v=165';
@@ -36,11 +36,15 @@ export function formatRecentRecordTitle(date,locale='ko-KR'){
  return `${['January','February','March','April','May','June','July','August','September','October','November','December'][month-1]} ${day} Game Record`;
 }
 
+// 영어: 기본 목록 이름 → 가져온 BGG 영어 이름 → Score 자체 게임의 영어 이름 → 저장된 이름 순.
 export function localizedGameName(game,locale){
- const known=catalogById.get(String(game?.bggId||''));if(!known)return String(game?.name||'');
- if(shareLanguage(locale)==='en')return known.name;
+ const known=catalogById.get(String(game?.bggId||''));
+ if(shareLanguage(locale)==='en')return known?.name||gameNames(game).en||scoreGameEnglishName(game?.name)||String(game?.name||'');
+ if(!known)return String(game?.name||'');
  return known.aliases.find(name=>/[가-힣]/.test(name))||game.name||known.name;
 }
+
+function scoreGameEnglishName(name){const own=scoreGames.find(g=>g.name===name||g.aliases.includes(name));return own?own.aliases.find(alias=>!/[가-힣]/.test(alias))||'':'';}
 
 // 공유용 게임 성격 3분류: 협동 → 가족/파티(BGG 유형에 가족·파티·어린이가 하나라도 있으면, 전략+가족도 가족) → 전략.
 // BGG 유형이 없는 게임은 가족/파티로 봅니다. 무거운 전략 게임은 대부분 BGG 유형이 있기 때문입니다.

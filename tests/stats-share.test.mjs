@@ -17,6 +17,7 @@ test('recent share data localizes known games and attaches winners to each game'
  assert.equal(ko.date,'2026-10-10');assert.equal(ko.playCount,2);assert.equal(ko.peopleCount,2);assert.deepEqual(ko.games.map(row=>[row.game.name,row.winners]),[['카탄',['하늘']],['보난자',['바다']]]);
  assert.equal(en.title,'October 10 Game Record');assert.deepEqual(en.games.map(row=>row.game.name),['CATAN','Bohnanza']);assert.equal(en.copy.otherGames,'Other games');assert.equal(ko.copy.otherGames,'그 밖의 게임');
  assert.equal(localizedGameName({name:'직접 입력 게임',bggId:''},'en-US'),'직접 입력 게임');
+ assert.equal(localizedGameName({name:'볼링'},'en-US'),'Bowling');assert.equal(localizedGameName({name:'볼링'},'ko-KR'),'볼링');
 });
 
 test('share covers load app assets directly and only proxy BGG covers',async()=>{

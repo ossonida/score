@@ -1,6 +1,6 @@
 // 영어 화면: 코드의 한국어 문구는 그대로 두고, 그려진 화면의 글자와 안내 속성(placeholder·aria-label·title·alt)만 사전으로 바꾼다.
 // 사전 키의 {0}·{1}은 바뀌는 값 자리다. 같은 문구 → ' · '가 든 값 자리 문구 → ' · ' 나누기 → 값 자리 문구 → 조각·숫자 단위 순으로 찾는다.
-// 사전에 없는 한글(플레이어 이름 등)은 그대로 둔다. translate="no" 안은 바꾸지 않는다.
+// 사전에 없는 한글(플레이어·게임 이름 등)은 그대로 둔다. 짧은 낱말 조각은 문구 전체가 번역될 때만 바꿔, 입력한 이름 속 단어(예: '우리집 게임')는 건드리지 않는다. translate="no" 안은 바꾸지 않는다.
 (function(root){
 'use strict';
 var HANGUL=/[가-힣]/,HANGUL_ALL=/[가-힣]/g,MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -31,18 +31,20 @@ function createTranslator(dict){
  Object.keys(dict).forEach(function(key){
   var value=dict[key];
   if(/\{\d+\}/.test(key)){
-   var order=[],source='^'+escape(key).replace(/\\\{(\d+)\\\}/g,function(_,n){order.push(Number(n));return '([\\s\\S]+?)';})+'$';
+   var order=[],source='^'+escape(key).replace(/\\\{(\d+)\\\}/g,function(_,n){order.push(Number(n));return '([\\s\\S]*?)';})+'$';
    patterns.push({re:new RegExp(source),order:order,out:value,weight:key.replace(/\{\d+\}/g,'').length,dotted:key.indexOf(' · ')>=0});
   }else{exact.set(key,value);if(key.length>=2)fragments.push(key);}
  });
  patterns.sort(function(a,b){return b.weight-a.weight;});
  fragments.sort(function(a,b){return b.length-a.length;});
- var fragmentRe=fragments.length?new RegExp(fragments.map(escape).join('|'),'g'):null;
- function loose(text){
-  var out=fragmentRe?text.replace(fragmentRe,function(found){return exact.get(found);}):text;
+ var longFragments=fragments.filter(function(key){return key.length>=4;});
+ var fragmentRe=fragments.length?new RegExp(fragments.map(escape).join('|'),'g'):null,longRe=longFragments.length?new RegExp(longFragments.map(escape).join('|'),'g'):null,longTest=longRe&&new RegExp(longRe.source);
+ function replaceWith(re,text){
+  var out=re?text.replace(re,function(found){return exact.get(found);}):text;
   for(var i=0;i<UNITS.length;i++)out=out.replace(UNITS[i][0],UNITS[i][1]);
   return out;
  }
+ function loose(text){var all=replaceWith(fragmentRe,text);return HANGUL.test(all)?replaceWith(longRe,text):all;}
  // 결과와 함께 사전으로 정확히 맞췄는지(good)를 돌려준다. 조각 치환만으로 만든 결과는 값 자리 확인에 쓰지 않는다.
  function core(text,depth){
   if(!HANGUL.test(text))return {out:text,good:true};
@@ -52,38 +54,46 @@ function createTranslator(dict){
   if(memo.size>8000)memo.clear();
   known=match(text,depth);memo.set(text,known);return known;
  }
- // 후보 중 한글이 가장 적게 남는 것(같으면 사전으로 맞춘 것, 그다음 먼저 찾은 것)을 쓴다. 사전으로 맞춰 한글이 남지 않으면 바로 끝낸다.
+ // ' · '로 나눈 조각 중 이어 붙이면 사전 문구가 되는 것(예: '점수 · 높은 점수 승리')은 다시 합친다.
+ function joinKnown(pieces){var out=[];for(var i=0;i<pieces.length;i++){var end=i;for(var j=pieces.length-1;j>i;j--)if(exact.has(pieces.slice(i,j+1).join(' · '))){end=j;break;}out.push(pieces.slice(i,end+1).join(' · '));i=end;}return out;}
+ // 사전으로 맞춘 결과(good) 중 한글이 가장 적게 남는 것(같으면 먼저 찾은 것)을 쓴다. 남은 한글은 이름 등 입력값이다.
+ // 맞춘 결과가 없을 때만 조각 치환까지 포함해 한글이 가장 적게 남는 후보를 쓴다.
  function match(text,depth){
-  var best=null,bestScore=Infinity,bestGood=false,dotted=text.indexOf(' · ')>0,i;
-  function consider(candidate,good){var score=hangulCount(candidate);if(score<bestScore||score===bestScore&&good&&!bestGood){best=candidate;bestScore=score;bestGood=good;}return score===0&&good;}
-  // 값 자리가 사전으로 맞았거나 사전에 없는 값(사람 이름 등) 그대로일 때만 맞춘 결과(good)로 본다.
+  var good=null,goodScore=Infinity,any=null,anyScore=Infinity,dotted=text.indexOf(' · ')>0,i;
+  function consider(candidate,isGood){var score=hangulCount(candidate);if(isGood&&score<goodScore){good=candidate;goodScore=score;}if(score<anyScore){any=candidate;anyScore=score;}return isGood&&score===0;}
+  // 값 자리가 사전으로 맞았거나 사전에 없는 값(사람 이름 등) 그대로일 때만 맞춘 결과로 본다. 4글자 이상 사전 문구가 든 값은 이름으로 보지 않는다.
+  // '{0}승'·'{0}점'처럼 글자가 짧은 문구는 값 자리에 한글이 없을 때(숫자 등)만 쓴다.
   function apply(p){
-   var m=p.re.exec(text);if(!m)return false;
-   var good=true,values=p.order.map(function(_,at){
+   var m=p.re.exec(text);if(!m||p.weight<=2&&m.slice(1).some(function(value){return HANGUL.test(value);}))return false;
+   var fine=true,values=p.order.map(function(_,at){
     var raw=m[at+1],lead=/^\s*/.exec(raw)[0],trail=/\s*$/.exec(raw)[0],value=raw.trim(),result=core(value,depth+1);
-    if(!result.good&&result.out!==value)good=false;
+    if(!result.good&&(result.out!==value||longTest&&longTest.test(value)))fine=false;
     return lead+result.out+trail;
    });
-   return consider(p.out.replace(/\{(\d+)\}/g,function(_,n){var at=p.order.indexOf(Number(n));return at<0?'':values[at];}),good);
+   return consider(p.out.replace(/\{(\d+)\}/g,function(_,n){var at=p.order.indexOf(Number(n));return at<0?'':values[at];}),fine);
   }
-  function done(){return {out:best,good:bestGood};}
+  function done(){return good!==null?{out:good,good:true}:{out:any,good:false};}
   if(dotted){
    for(i=0;i<patterns.length;i++)if(patterns[i].dotted&&apply(patterns[i]))return done();
-   var parts=text.split(' · ').map(function(part){return core(part,depth+1);});
-   if(consider(parts.map(function(part){return part.out;}).join(' · '),parts.every(function(part){return part.good;})))return done();
+   var raws=joinKnown(text.split(' · ')),parts=raws.map(function(part){return core(part,depth+1);});
+   if(consider(parts.map(function(part){return part.out;}).join(' · '),parts.every(function(part,at){return part.good||part.out===raws[at]&&!(longTest&&longTest.test(raws[at]));})))return done();
   }
   for(i=0;i<patterns.length;i++)if(!(dotted&&patterns[i].dotted)&&apply(patterns[i]))return done();
-  consider(loose(text),false);
+  if(good===null)consider(loose(text),false);
   return done();
  }
- return function translate(text){
+ // 화면에서 쓰는 이름 쌍(한글 → 영어)을 더한다. 사전에 이미 있는 문구는 바꾸지 않는다.
+ function addNames(pairs){var added=0;pairs.forEach(function(pair){var ko=String(pair[0]||'').replace(/\s+/g,' ').trim(),en=pair[1];if(HANGUL.test(ko)&&en&&!HANGUL.test(en)&&!exact.has(ko)){exact.set(ko,en);added++;}});if(added){cache.clear();memo.clear();}return added;}
+ translate.addNames=addNames;
+ return translate;
+ function translate(text){
   if(typeof text!=='string'||!HANGUL.test(text))return text;
   var hit=cache.get(text);if(hit!==undefined)return hit;
   var parts=/^(\s*)([\s\S]*?)(\s*)$/.exec(text),out=parts[1]+core(parts[2].replace(/\s+/g,' '),0).out+parts[3];
   if(cache.size>8000)cache.clear();
   cache.set(text,out);cache.set(out,out);
   return out;
- };
+ }
 }
 var i18n=root.ScoreI18n;
 if(!i18n)return;
@@ -91,6 +101,7 @@ i18n.createTranslator=createTranslator;i18n.dict=dictionary();
 if(i18n.lang!=='en'||typeof document==='undefined')return;
 var translate=createTranslator(i18n.dict),SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,NOSCRIPT:1},ATTRS=['placeholder','aria-label','title','alt'];
 i18n.t=translate;
+i18n.addNames=function(pairs){if(translate.addNames(pairs)&&document.body)walk(document.body);};
 function excluded(element){return !element||SKIP[element.nodeName]===1||!!(element.closest&&element.closest('[translate="no"]'));}
 function text(node){if(!HANGUL.test(node.data)||excluded(node.parentElement))return;var next=translate(node.data);if(next!==node.data)node.data=next;}
 function attrs(element){for(var i=0;i<ATTRS.length;i++){var value=element.getAttribute(ATTRS[i]);if(value&&HANGUL.test(value)&&!excluded(element)){var next=translate(value);if(next!==value)element.setAttribute(ATTRS[i],next);}}}
@@ -1500,6 +1511,10 @@ function dictionary(){return /*<dict>*/{
 "플레이 {0}회":"{0} plays",
 "승률 {0}%{1}":"Win rate {0}%{1}",
 "성공률 {0}%{1}":"Success rate {0}%{1}",
-"1위률 {0}%{1}":"1st place rate {0}%{1}"
+"1위률 {0}%{1}":"1st place rate {0}%{1}",
+"{0} · 우승":"{0} · winner",
+"{0} 게임별 통계 보기":"View game stats: {0}",
+"{0} 표지":"{0} cover",
+"BGG에서 보기":"View on BGG"
 }/*</dict>*/;}
 })(typeof window!=='undefined'?window:globalThis);

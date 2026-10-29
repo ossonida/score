@@ -4,7 +4,7 @@ import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-o
 import {readIdentity,meIn} from './personal-stats.js?v=117';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=144';
+import {formatRecentRecordTitle,openRecentShare} from './stats-share.js?v=145';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
