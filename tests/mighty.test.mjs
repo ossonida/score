@@ -25,7 +25,8 @@ test('mighty rounds are kept on highest-score records and rejected when malforme
 test('mighty personal stats count lead, friend and opponent results, partners and recent games',()=>{
  const a=play('m1','2026-10-17'),b=play('m2','2026-10-24',rounds.slice(0,2));
  const m=mightyStats([a,b].map(p=>({play:p,person:p.players[0]})));
- assert.equal(m.plays,2);assert.equal(m.rounds,6);assert.equal(m.total,19+1);
+ assert.equal(m.plays,2);assert.equal(m.rounds,6);assert.equal(m.total,19+1)
+ assert.equal(m.average,20/6);
  assert.deepEqual({tries:m.lead.tries,wins:m.lead.wins,best:m.lead.bestBid,avg:m.lead.averageBid},{tries:3,wins:3,best:16,avg:(14+16+14)/3});
  assert.deepEqual([m.friend.tries,m.friend.wins,m.opponent.tries,m.opponent.defends],[2,0,1,1]);
  assert.equal(m.recent[0].play.id,'m2','newest first');assert.equal(m.recent[0].points,1);assert.equal(m.recent[0].rank,2,'ties share the better rank');assert.deepEqual([m.recent[1].leadWins,m.recent[1].leadTries,m.recent[1].rank],[2,2,1]);

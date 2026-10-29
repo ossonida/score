@@ -19,5 +19,5 @@ export function mightyStats(entries){
  }
  const rate=(wins,tries)=>tries?wins/tries:null;
  games.sort((a,b)=>(b.play.date+(b.play.createdAt||'')).localeCompare(a.play.date+(a.play.createdAt||'')));
- return {plays:list.length,rounds,total,lead:{...lead,rate:rate(lead.wins,lead.tries),averageBid:lead.tries?lead.bidSum/lead.tries:null},friend:{...friend,rate:rate(friend.wins,friend.tries)},opponent:{...opponent,rate:rate(opponent.defends,opponent.tries)},recent:games.slice(0,3),partners:[...partners.values()].sort((a,b)=>b.count-a.count||b.wins-a.wins||a.name.localeCompare(b.name)).slice(0,5)};
+ return {plays:list.length,rounds,total,average:rounds?total/rounds:null,lead:{...lead,rate:rate(lead.wins,lead.tries),averageBid:lead.tries?lead.bidSum/lead.tries:null},friend:{...friend,rate:rate(friend.wins,friend.tries)},opponent:{...opponent,rate:rate(opponent.defends,opponent.tries)},recent:games.slice(0,3),partners:[...partners.values()].sort((a,b)=>b.count-a.count||b.wins-a.wins||a.name.localeCompare(b.name)).slice(0,5)};
 }
