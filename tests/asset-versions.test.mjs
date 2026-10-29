@@ -40,6 +40,9 @@ test('service worker parses and serves cached shell files, index and Firebase SD
   assert.equal((await run({method:'GET',url:asset,mode:'cors'})).body,'cached asset');
   assert.equal(fetched.includes(asset),false);
   assert.equal((await run({method:'GET',url:base+'#stats',mode:'navigate'})).body,'cached index');
+  const shell=stores.get(cacheName).get(index);
+  assert.equal(await run({method:'GET',url:base+'privacy.html',mode:'navigate'}),undefined,'other pages load from the network');
+  assert.equal(stores.get(cacheName).get(index),shell,'privacy page never replaces the cached index');
   const sdk='https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
   assert.equal((await run({method:'GET',url:sdk,mode:'cors'})).body,'network');
   fetched.length=0;assert.equal((await run({method:'GET',url:sdk,mode:'cors'})).body,'network');assert.deepEqual(fetched,[]);
