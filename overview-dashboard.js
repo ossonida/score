@@ -4,8 +4,8 @@ import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-o
 import {readIdentity,meIn} from './personal-stats.js?v=117';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,openRecentShare,coopOutcome} from './stats-share.js?v=148';
-import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=1';
+import {formatRecentRecordTitle,openRecentShare,coopOutcome} from './stats-share.js?v=149';
+import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=2';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
@@ -51,7 +51,7 @@ export function renderOverview(container,records,{scope,view,onGame,onRecord,bgg
  }
  const games=el('section',undefined,'insight-card overview-games');games.append(el('h3',view==='recent'?'이날 플레이한 게임':'많이 플레이한 게임'));
  for(const group of s.games.slice(0,view==='recent'?s.games.length:8)){const button=el('button',undefined,'overview-game-row'),cover=el('span',undefined,'overview-game-art');button.type='button';renderGameArtwork(cover,group.game);const text=el('span',undefined,'overview-game-name');text.append(el('strong',group.game.name),el('small',[...group.types].map(t=>typeLabels[t]).join(' · ')));button.append(cover,text,el('span',`${num(group.count)}회`));button.onclick=()=>onGame(group.key);games.append(button);}container.append(games);
- const criteria=el('details',undefined,'stats-methods');criteria.append(el('summary','집계 기준'));note(criteria,'플레이 횟수는 저장된 경기 수 기준입니다. 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.');if(view==='all')note(criteria,'게임 분류는 서로 다른 게임 수 기준이며, BGG 유형이 여러 개인 게임은 추리 → 협동 → 전략 → 가족/파티 → 스포츠 순으로 한 묶음에만 넣습니다. 협동은 BGG의 Cooperative Game 메커니즘 기준입니다. BGG 정보가 없는 게임은 미분류로 표시합니다.');container.append(criteria);
+ const criteria=el('details',undefined,'stats-methods');criteria.append(el('summary','집계 기준'));note(criteria,'플레이 횟수는 저장된 경기 수 기준입니다(홀덤·마피아는 하루에 여러 판을 해도 한 판으로 세고 점수는 그날 합계). 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.');if(view==='all')note(criteria,'게임 분류는 서로 다른 게임 수 기준이며, BGG 유형이 여러 개인 게임은 추리 → 협동 → 전략 → 가족/파티 → 스포츠 순으로 한 묶음에만 넣습니다. 협동은 BGG의 Cooperative Game 메커니즘 기준입니다. BGG 정보가 없는 게임은 미분류로 표시합니다.');container.append(criteria);
 }
 function highlightRow(card,play,title,detail,onRecord){const button=el('button',undefined,'overview-game-row');button.type='button';const text=el('span',undefined,'overview-game-name');text.append(el('strong',title),el('small',play.game.name+' · '+detail));button.append(text);button.onclick=()=>onRecord(play.id);card.append(button);}
 function recentDayNav({index,total,onDay,days}){

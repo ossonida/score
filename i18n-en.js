@@ -758,7 +758,7 @@ function dictionary(){return /*<dict>*/{
 "이날 플레이한 게임":"Games played this day",
 "많이 플레이한 게임":"Most played",
 "집계 기준":"How it's counted",
-"플레이 횟수는 저장된 경기 수 기준입니다. 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.":"Play counts are based on saved plays. My wins count only competitive plays with my player and a known winner, including shared wins. Co-op games are excluded from individual wins.",
+"플레이 횟수는 저장된 경기 수 기준입니다(홀덤·마피아는 하루에 여러 판을 해도 한 판으로 세고 점수는 그날 합계). 내 우승은 내 플레이어와 승자가 확인된 경쟁 경기만 세며 공동 승리도 포함합니다. 협동 게임은 개인 우승 횟수에서 제외합니다.":"Play counts are based on saved plays (Hold'em and Mafia count as one play per day, with that day's total score). My wins count only competitive plays with my player and a known winner, including shared wins. Co-op games are excluded from individual wins.",
 "게임 분류는 서로 다른 게임 수 기준이며, BGG 유형이 여러 개인 게임은 추리 → 협동 → 전략 → 가족/파티 → 스포츠 순으로 한 묶음에만 넣습니다. 협동은 BGG의 Cooperative Game 메커니즘 기준입니다. BGG 정보가 없는 게임은 미분류로 표시합니다.":"Categories count distinct games. Games with several BGG types go into one group in this order: Deduction → Co-op → Strategy → Family/Party → Sports. Co-op follows BGG's Cooperative Game mechanic. Games without BGG info are Unclassified.",
 "이날의 승자":"Winners of the day",
 "익명의 플레이어":"Anonymous player",

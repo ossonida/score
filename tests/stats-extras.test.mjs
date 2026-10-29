@@ -90,3 +90,14 @@ test('period recap data names the period and fills the cards',()=>{
  assert.equal(periodShareLabel(monthModel,'en-US'),'October 2026');
  assert.equal(periodShareData(records,monthModel,null,'en-US').title,'October 2026 Recap');
 });
+
+test('hold\'em and mafia count once per day in stats: scores summed, else most wins',async()=>{
+ const {countSessions}=await import('../stats-extras.js');
+ const hand=(id,date,a,b,extra={})=>play(id,date,'홀덤',{players:[{id:'a',name:'나',score:a,isSelf:true},{id:'b',name:'민수',score:b}],...extra});
+ const mafia=(id,date,winA)=>play(id,date,'마피아',{rule:'highest',players:[{id:'x',name:'나',score:null,winner:winA},{id:'y',name:'민수',score:null,winner:!winA},{id:'z',name:'지영',score:null,winner:!winA}]});
+ const out=countSessions([hand('h1','2026-10-01',10,-10),hand('h2','2026-10-01',-30,30),hand('h3','2026-10-01',5,-5),hand('h4','2026-10-02',1,2),mafia('m1','2026-10-01',true),mafia('m2','2026-10-01',true),mafia('m3','2026-10-01',false),play('c1','2026-10-01'),play('c2','2026-10-01')]);
+ assert.equal(out.length,5);
+ const day=out.find(p=>p.sessionIds?.includes('h1'));assert.deepEqual(day.sessionIds,['h1','h2','h3']);assert.deepEqual(day.players.map(p=>[p.name,p.score,p.isSelf===true]),[['나',-15,true],['민수',15,false]]);
+ const night=out.find(p=>p.game.name==='마피아');assert.deepEqual(night.players.map(p=>[p.name,p.winner]),[['나',true],['민수',false],['지영',false]]);
+ assert.ok(out.some(p=>p.id==='h4'&&!p.sessionIds));assert.equal(out.filter(p=>p.game.name==='카탄').length,2);
+});

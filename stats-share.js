@@ -8,7 +8,7 @@ import {nameKey} from './personal-stats.js?v=117';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames} from './game-catalog.js?v=166';
 import {summarizeStats} from './stats-insights.js?v=67';
-import {firstPlays,placeCounts} from './stats-extras.js?v=1';
+import {firstPlays,placeCounts} from './stats-extras.js?v=2';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));

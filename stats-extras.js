@@ -58,3 +58,24 @@ export function playDays(records){
  for(const date of dates){const count=counts.get(date);if(!busiest||count>busiest.count)busiest={date,count};run=prev&&nextDay(prev)===date?run+1:1;streak=Math.max(streak,run);prev=date;}
  return {counts,busiest,streak};
 }
+
+// 하루에 여러 판을 이어서 하는 게임(홀덤·마피아)은 통계에서 날짜마다 한 판으로 센다(기록 자체는 그대로).
+// 합친 판: 판마다 모든 점수가 있으면 사람별 점수 합계, 아니면 그날 가장 많이 이긴 사람이 우승. sessionIds에 원래 기록 id.
+const SESSION_GAME=/홀덤|hold[’']?em|마피아|mafia/i;
+export const isSessionGame=game=>SESSION_GAME.test(String(game?.name||''));
+export function countSessions(records){
+ const groups=new Map(),out=[];
+ for(const play of records){if(!play.date||!isSessionGame(play.game)){out.push(play);continue;}const key=play.date+'\u0000'+gameKey(play.game);let group=groups.get(key);if(!group){group=[];groups.set(key,group);out.push(group);}group.push(play);}
+ return out.map(item=>Array.isArray(item)?mergeSession(item):item);
+}
+function mergeSession(list){
+ if(list.length===1)return list[0];
+ const rounds=[...list].sort(order),first=rounds[0],rule=rounds.every(round=>round.rule===first.rule)?first.rule:'highest',people=new Map();
+ const scored=rule!=='cooperative'&&rounds.every(round=>round.players.length&&!round.players.some(person=>person.teamId)&&round.players.every(person=>typeof person.score==='number'&&Number.isFinite(person.score)));
+ for(const round of rounds){const wins=new Set(winnerIds(round));for(const person of round.players){
+  const key=person.anonymous===true||!String(person.name||'').trim()?`\u0000${round.id}\u0000${person.id}`:nameKey(person.name),row=people.get(key)||{...person,id:`s${people.size}`,score:scored?0:null,wins:0,isSelf:false};
+  if(scored)row.score+=person.score;if(wins.has(person.id))row.wins++;if(person.isSelf===true)row.isSelf=true;people.set(key,row);}}
+ const most=Math.max(0,...[...people.values()].map(row=>row.wins));
+ const players=[...people.values()].map(({winner,teamId,rank,draw,wins,isSelf,...person})=>({...person,...(isSelf?{isSelf:true}:{}),...(!scored&&rule!=='cooperative'&&most>0?{winner:wins===most}:{})}));
+ return {...first,createdAt:rounds.at(-1).createdAt,rule,players,...(rule==='cooperative'?{cooperativeResult:rounds.at(-1).cooperativeResult}:{}),sessionIds:rounds.map(round=>round.id),sessionRounds:rounds.length};
+}

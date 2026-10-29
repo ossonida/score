@@ -1,4 +1,4 @@
-import './records.js?v=218';
+import './records.js?v=219';
 import {connectCloud,cloudConfigured} from './cloud-records.js?v=174';
 import {bggLinkRequest} from './bgg-link-client.js?v=71';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=100';
