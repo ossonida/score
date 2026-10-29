@@ -8,19 +8,19 @@ import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRe
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
 const plural=(n,one,many)=>`${n.toLocaleString('en-US')} ${n===1?one:many}`;
 const COPY={
- ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',mask:'이름 가리기',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
+ ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',scopeLabel:'공유 범위',scopePublic:'공개 SNS용',scopeFriends:'친구 공유용',scopePublicHint:'이름을 가리고 점수 비교는 뺍니다.',scopeFriendsHint:'실명과 라이벌 대결·점수까지 넣습니다.',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
   title:label=>`${label} 결산`,plays:'플레이',days:'플레이한 날',games:'서로 다른 게임',swipe:'넘겨서 더 보기 →',topOf:preset=>preset==='month'?'이달의 게임':preset==='year'?'올해의 게임':'가장 많이 한 게임',
   wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 빠진 게임',sinceFirst:n=>`처음 해 본 뒤 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
-  peopleTitle:'함께한 사람들',rival:'라이벌 · 가장 팽팽했던 상대',rivalDetail:(n,d)=>d?`${n}판 중 ${d}승 차`:`${n}판 동안 동률`,mostWins:'최다 우승',together:'가장 많이 함께한 사람',bestRate:'승률 1위',winsN:n=>`${n}승`,
+  peopleTitle:'함께한 사람들',peopleCount:'함께한 사람',groupPlays:'여럿이 한 판',rival:'라이벌 · 가장 팽팽했던 상대',rivalDetail:(n,d)=>d?`${n}판 중 ${d}승 차`:`${n}판 동안 동률`,mostWins:'최다 우승',together:'가장 많이 함께한 사람',bestRate:'승률 1위',winsN:n=>`${n}승`,
   calendarTitle:'플레이 달력',busiest:'가장 많이 한 날',streak:'최장 연속',daysN:n=>`${n}일`,dayPlays:n=>`하루에 ${n}판`,weekdayTitle:'요일별',weekdays:['일','월','화','수','목','금','토'],month:m=>`${m}월`,
   highlightsTitle:'이 기간의 순간들',bestScore:'최고 점수',points:n=>`${n.toLocaleString('ko-KR')}점`,closest:'가장 아슬아슬했던 판',wonBy:n=>`${n}점 차`,milestone:'달성 기록',
   ms:{plays:n=>`통산 ${n}번째 플레이`,days:n=>`플레이한 날 ${n}일째`,games:n=>`서로 다른 게임 ${n}개째`,game:(n,g)=>`${g} ${n}번째 플레이`},medalTop:{plays:'통산',days:'플레이한 날',games:'서로 다른 게임'},medalBottom:{plays:'번째 플레이',days:'일째',games:'개째',game:'번째 플레이'},
   trait:{milestone:t=>`${t} 달성`,firsts:n=>`새 게임 ${n}개를 시작`,focus:(g,n)=>`${g} ${n}판 집중`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
   firstsTitle:n=>`처음 해본 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'처음 해본 게임',countN:n=>`${n}개`},
- en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',mask:'Hide names',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
+ en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',scopeLabel:'Share with',scopePublic:'Public',scopeFriends:'Friends',scopePublicHint:'Names hidden, no score comparisons.',scopeFriendsHint:'Real names, rivals and scores included.',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
   title:label=>`${label} Recap`,plays:'Plays',days:'Play days',games:'Games',swipe:'Swipe for more →',topOf:preset=>preset==='month'?'Game of the month':preset==='year'?'Game of the year':'Top game',
   wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'New favorite',sinceFirst:n=>`${plural(n,'play','plays')} since first try`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
-  peopleTitle:'Play partners',rival:'Rival · closest match-up',rivalDetail:(n,d)=>d?`${plural(d,'win','wins')} apart over ${plural(n,'game','games')}`:`Tied over ${plural(n,'game','games')}`,mostWins:'Most wins',together:'Most games together',bestRate:'Best win rate',winsN:n=>plural(n,'win','wins'),
+  peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Rival · closest match-up',rivalDetail:(n,d)=>d?`${plural(d,'win','wins')} apart over ${plural(n,'game','games')}`:`Tied over ${plural(n,'game','games')}`,mostWins:'Most wins',together:'Most games together',bestRate:'Best win rate',winsN:n=>plural(n,'win','wins'),
   calendarTitle:'Play calendar',busiest:'Busiest day',streak:'Longest streak',daysN:n=>plural(n,'day','days'),dayPlays:n=>`${plural(n,'play','plays')} in a day`,weekdayTitle:'By weekday',weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],month:m=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
   highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Closest game',wonBy:n=>`Won by ${n}`,milestone:'Milestone',
   ms:{plays:n=>`Play #${n}`,days:n=>`Play day #${n}`,games:n=>`Game #${n} tried`,game:(n,g)=>`${g} play #${n}`},medalTop:{plays:'Total plays',days:'Play days',games:'Games tried'},medalBottom:{plays:'reached',days:'reached',games:'reached',game:'plays'},
@@ -34,8 +34,9 @@ export function maskName(name){const chars=Array.from(String(name||'').trim());r
 
 const byDate=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const MS_RANK={plays:4,days:3,games:2,game:1};
-export function recapData(records,model,profile,{locale,mask=true}={}){
- const lang=shareLanguage(locale),words=COPY[lang],range=model.current,plays=records.filter(play=>play.date&&play.date>=range.start&&play.date<=range.end).sort(byDate);
+// 공유 범위: public(기본)은 이름을 가리고 라이벌 대결·접전 점수를 뺀다, friends는 실명과 대결·점수 포함.
+export function recapData(records,model,profile,{locale,scope='public'}={}){
+ const mask=scope!=='friends',lang=shareLanguage(locale),words=COPY[lang],range=model.current,plays=records.filter(play=>play.date&&play.date>=range.start&&play.date<=range.end).sort(byDate);
  const firsts=model.preset==='all'?[]:firstPlays(records,range),newKeys=new Set(firsts.map(item=>item.key)),games=new Map();
  for(const play of plays){const key=gameKey(play.game),entry=games.get(key)||{key,game:play.game,name:localizedGameName(play.game,lang),count:0,imageUrl:gameImageUrl(play.game),isNew:newKeys.has(key)};entry.count++;games.set(key,entry);}
  const list=[...games.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),gameOf=play=>games.get(gameKey(play.game)),newGames=list.filter(game=>game.isNew),allNew=list.length>1&&newGames.length===list.length;
@@ -58,14 +59,14 @@ export function recapData(records,model,profile,{locale,mask=true}={}){
  const rows=[...people.values()],others=rows.filter(row=>!row.isSelf),together=[...versus.values()];
  const mostWins=[...rows].sort((a,b)=>b.wins-a.wins||a.plays-b.plays)[0],rated=rows.filter(row=>row.known>=5).map(row=>({...row,rate:row.wins/row.known})).sort((a,b)=>b.rate-a.rate||b.known-a.known)[0];
  const partner=together.length?[...together].sort((a,b)=>b.shared-a.shared)[0]:[...others].sort((a,b)=>b.plays-a.plays)[0];
- const rival=together.filter(vs=>vs.shared>=3).sort((a,b)=>Math.abs(a.mine-a.theirs)-Math.abs(b.mine-b.theirs)||b.shared-a.shared)[0]||null;
+ const rival=mask?null:together.filter(vs=>vs.shared>=3).sort((a,b)=>Math.abs(a.mine-a.theirs)-Math.abs(b.mine-b.theirs)||b.shared-a.shared)[0]||null;
  const personRows=[mostWins?.wins&&{icon:'🏆',name:mostWins.name,title:words.mostWins,value:words.winsN(mostWins.wins)},partner&&{icon:'🤝',name:partner.name,title:words.together,value:words.playsN(partner.shared??partner.plays)},rated&&rated.wins&&{icon:'🔥',name:rated.name,title:words.bestRate,value:`${Math.round(rated.rate*100)}%`}].filter(Boolean);
  const marks=milestones(records,range).sort((a,b)=>MS_RANK[b.kind]-MS_RANK[a.kind]||b.count-a.count),markTitle=mark=>mark.kind==='game'?words.ms.game(mark.count,gameOf(mark.play)?.name||''):words.ms[mark.kind](mark.count);
  const coop=plays.filter(play=>play.rule==='cooperative'),coopWins=coop.filter(play=>play.cooperativeResult==='success').length,coopLosses=coop.filter(play=>play.cooperativeResult==='failure').length;
  const previous=model.previous?records.filter(play=>play.date>=model.previous.start&&play.date<=model.previous.end).length:null,calendarDays=Math.round((Date.parse(range.end)-Date.parse(range.start))/86400000)+1;
  const label=periodShareLabel(model,lang),focus=list[0]&&list[0].count>=5&&list[0].count/plays.length>=.6?list[0]:null;
- const focusWinners=focus?(()=>{const counts=new Map();for(const play of plays){if(gameKey(play.game)!==focus.key||play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),me=meIn(play,profile);for(const person of play.players){if(!wins.has(person.id)||person.anonymous===true||!String(person.name||'').trim())continue;const self=me?.id===person.id,key=self?SELF:nameKey(person.name),row=counts.get(key)||{name:shown(person,self),wins:0};row.wins++;counts.set(key,row);}}return [...counts.values()].sort((a,b)=>b.wins-a.wins).slice(0,5);})():[];
- return {lang,words,model,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
+ const focusWinners=focus?(()=>{const counts=new Map();for(const play of plays){if(gameKey(play.game)!==focus.key||play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),me=meIn(play,profile);for(const person of play.players){if(!wins.has(person.id)||person.anonymous===true||!String(person.name||'').trim())continue;const self=me?.id===person.id,key=self?SELF:nameKey(person.name),row=counts.get(key)||{name:shown(person,self),wins:0};row.wins++;counts.set(key,row);}}return [...counts.values()].sort((a,b)=>b.wins-a.wins).slice(0,3);})():[];
+ return {lang,words,model,scope,mask,peopleCount:others.length,groupPlays:plays.filter(play=>play.players.length>1).length,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
 }
 
 // 여러 장 구성: 데이터가 없는 장은 뺀다. 표지 격자는 게임 9개 이상(한 장 12칸, 18개 이상이면 두 장).
@@ -148,10 +149,11 @@ function peopleSlide(ctx,data){
   line(ctx,'VS',X+CW/2,y+180,120,{size:40,weight:800,color:'#82bfff',align:'center'});
   const results=rival.results.slice(-20),gap=8,dot=(CW-68-gap*(results.length-1))/results.length;results.forEach((result,index)=>fillRound(ctx,X+34+index*(dot+gap),y+290,dot,18,9,result==='w'?'#4fa3ff':result==='l'?'rgba(255,255,255,.2)':'#9fc8f7'));
   line(ctx,words.rivalDetail(rival.shared,Math.abs(rival.mine-rival.theirs)),X+34,y+360,CW-68,{size:26,weight:600,color:'#b8cde6'});y+=h+24;}
- const rows=data.personRows,h=rows.length*128+24;box(ctx,X,y,CW,h);
- rows.forEach((row,index)=>{const top=y+12+index*128;fillRound(ctx,X+30,top+22,84,84,42,'#2c4c74');line(ctx,row.icon,X+72,top+78,80,{size:40,align:'center'});ctx.font=`800 40px ${FONT}`;const valueW=ctx.measureText(row.value).width;
+ if(!data.rival){const w=(CW-24)/2;[[data.peopleCount,words.peopleCount],[data.groupPlays,words.groupPlays]].forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+24),y,w,h:172},value.toLocaleString(data.lang==='ko'?'ko-KR':'en-US'),label,{center:true}));y+=196;}
+ const rows=data.personRows,rowH=data.rival?128:150,shift=(rowH-128)/2,h=rows.length*rowH+24;box(ctx,X,y,CW,h);
+ rows.forEach((row,index)=>{const top=y+12+index*rowH+shift;fillRound(ctx,X+30,top+22,84,84,42,'#2c4c74');line(ctx,row.icon,X+72,top+78,80,{size:40,align:'center'});ctx.font=`800 40px ${FONT}`;const valueW=ctx.measureText(row.value).width;
   line(ctx,row.name,X+140,top+62,CW-200-valueW,{size:36,min:20,weight:800});line(ctx,row.title,X+140,top+100,CW-200-valueW,{size:24,min:16,weight:600,color:'#9fb8d6'});line(ctx,row.value,X+CW-30,top+80,valueW+4,{size:40,weight:800,align:'right'});
-  if(index<rows.length-1){ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(X+30,top+127,CW-60,1);}});
+  if(index<rows.length-1){ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(X+30,top-shift+rowH-1,CW-60,1);}});
 }
 const LEVELS=['rgba(255,255,255,.07)','#1d4f7a','#2c7bbf','#4fa3ff','#9fe7ff'],DAY=86400000,utc=value=>Date.parse(value+'T00:00:00Z'),iso=time=>new Date(time).toISOString().slice(0,10);
 function calendarSlide(ctx,data){
@@ -172,7 +174,7 @@ function calendarSlide(ctx,data){
 function highlightItems(data){
  const words=data.words,items=[],name=play=>data.gameOf(play)?.name||'';
  if(data.best)items.push({game:data.gameOf(data.best.play),title:words.bestScore,headline:words.points(data.best.score),detail:`${name(data.best.play)} · ${data.best.who} · ${date(data,data.best.play.date)}`});
- if(data.close)items.push({game:data.gameOf(data.close.play),title:words.closest,headline:words.wonBy(data.close.gap),detail:`${name(data.close.play)} · ${data.close.scores.join(' : ')} · ${date(data,data.close.play.date)}`});
+ if(data.close)items.push({game:data.gameOf(data.close.play),title:words.closest,headline:words.wonBy(data.close.gap),detail:[name(data.close.play),data.mask?'':data.close.scores.join(' : '),date(data,data.close.play.date)].filter(Boolean).join(' · ')});
  for(const mark of data.marks.slice(0,2))items.push({icon:'🎉',title:words.milestone,headline:data.markTitle(mark),detail:`${name(mark.play)} · ${date(data,mark.play.date)}`});
  if(items.length<4&&data.days.busiest)items.push({icon:'📅',title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
  return items.slice(0,4);
@@ -222,21 +224,22 @@ export async function createRecapSingle(data){
  return toBlob(node,words);
 }
 
-// 결산 공유 창: 형식(여러 장·한 장)과 이름 가리기를 한 상태에서 그리고, 바뀌면 이미지를 다시 만든다.
+// 결산 공유 창: 형식(여러 장·한 장)과 공유 범위(공개·친구)를 한 상태에서 그리고, 바뀌면 이미지를 다시 만든다.
 let session=null;
 const fileName=(state,index,count)=>`score-${state.model.current.start}-${state.model.current.end}${count>1?`-${index+1}`:''}.png`;
 function release(state){for(const url of state.urls||[])URL.revokeObjectURL(url);state.urls=[];state.files=[];}
 function paint(dialog,state){
  const words=COPY[state.lang],ready=state.phase==='ready',files=state.files,canShare=ready&&typeof navigator.share==='function'&&(!navigator.canShare||navigator.canShare({files}));
  for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=state.phase==='creating';}
- const mask=dialog.querySelector('.recap-mask input');mask.checked=state.mask;mask.disabled=state.phase==='creating';
+ for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=state.phase==='creating';}
+ dialog.querySelector('.recap-scope-hint').textContent=state.scope==='friends'?words.scopeFriendsHint:words.scopePublicHint;
  dialog.querySelector('.recent-share-status').textContent=state.phase==='creating'?words.creating:state.phase==='error'?state.error:state.format==='set'&&files.length>1?words.readySet(files.length):words.readySingle;
  const strip=dialog.querySelector('.recap-strip');strip.classList.toggle('is-single',files.length<=1);strip.replaceChildren(...state.urls.map((url,index)=>{const image=document.createElement('img');image.src=url;image.alt=words.previewAlt(index+1);image.className='recap-preview';return image;}));
  const save=dialog.querySelector('.recent-share-save'),send=dialog.querySelector('.recent-share-send');save.disabled=!ready;send.disabled=!canShare;send.hidden=ready&&!canShare;
 }
 async function build(dialog,state){
  const token=++state.token;release(state);state.phase='creating';paint(dialog,state);
- try{const data=recapData(state.records,state.model,state.profile,{locale:state.lang,mask:state.mask}),blobs=state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)];
+ try{const data=recapData(state.records,state.model,state.profile,{locale:state.lang,scope:state.scope}),blobs=state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)];
   if(token!==state.token||session!==state||!dialog.open)return;state.files=blobs.map((blob,index)=>new File([blob],fileName(state,index,blobs.length),{type:'image/png'}));state.urls=blobs.map(blob=>URL.createObjectURL(blob));state.title=data.title;state.phase='ready';}
  catch(error){if(token!==state.token)return;state.phase='error';state.error=error?.message||COPY[state.lang].createFailed;}
  paint(dialog,state);
@@ -244,19 +247,19 @@ async function build(dialog,state){
 function ensureRecapDialog(){
  let dialog=document.getElementById('recapShareDialog');if(dialog)return dialog;
  dialog=document.createElement('dialog');dialog.id='recapShareDialog';dialog.className='recent-share-dialog recap-share-dialog';
- dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-format" role="radiogroup"><button type="button" role="radio" data-format="set"><strong></strong><small></small></button><button type="button" role="radio" data-format="single"><strong></strong><small></small></button></div><label class="recap-mask"><input type="checkbox"><span></span></label><p class="record-note recent-share-status" role="status" aria-live="polite"></p><div class="recap-strip"></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
+ dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-format" role="radiogroup"><button type="button" role="radio" data-format="set"><strong></strong><small></small></button><button type="button" role="radio" data-format="single"><strong></strong><small></small></button></div><div class="recap-scope" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div><p class="recap-scope-hint"></p><p class="record-note recent-share-status" role="status" aria-live="polite"></p><div class="recap-strip"></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
  const close=()=>dialog.close();dialog.querySelector('.score-close').onclick=close;dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.addEventListener('close',()=>{if(session){session.token++;release(session);}session=null;dialog.querySelector('.recap-strip').replaceChildren();});
  for(const button of dialog.querySelectorAll('.recap-format button'))button.onclick=()=>{if(!session||session.format===button.dataset.format)return;session.format=button.dataset.format;build(dialog,session);};
- dialog.querySelector('.recap-mask input').onchange=event=>{if(!session)return;session.mask=event.target.checked;build(dialog,session);};
+ for(const button of dialog.querySelectorAll('.recap-scope button'))button.onclick=()=>{if(!session||session.scope===button.dataset.scope)return;session.scope=button.dataset.scope;build(dialog,session);};
  dialog.querySelector('.recent-share-save').onclick=async()=>{const files=session?.files||[],urls=session?.urls||[];for(const [index,file]of files.entries()){const link=document.createElement('a');link.href=urls[index];link.download=file.name;document.body.append(link);link.click();link.remove();if(index<files.length-1)await new Promise(resolve=>setTimeout(resolve,350));}};
  dialog.querySelector('.recent-share-send').onclick=async()=>{const state=session;if(!state?.files.length)return;try{await navigator.share({files:state.files,title:state.title,text:`${state.title} · Score Counter`});}catch(error){if(error?.name!=='AbortError'&&session===state){state.phase='error';state.error=COPY[state.lang].shareFailed;paint(dialog,state);state.phase='ready';}}};
  document.body.append(dialog);return dialog;
 }
 export async function openRecapShare(records,model,profile){
  const dialog=ensureRecapDialog(),lang=shareLanguage(),words=COPY[lang];if(session){session.token++;release(session);}
- const state={records,model,profile,lang,format:'set',mask:true,token:0,files:[],urls:[],phase:'creating'};session=state;
+ const state={records,model,profile,lang,format:'set',scope:'public',token:0,files:[],urls:[],phase:'creating'};session=state;
  dialog.lang=lang;dialog.querySelector('h2').textContent=words.dialog;dialog.querySelector('.score-close').setAttribute('aria-label',words.close);dialog.querySelector('.recap-format').setAttribute('aria-label',words.dialog);
  const [set,single]=dialog.querySelectorAll('.recap-format button');set.querySelector('strong').textContent=words.formatSet;set.querySelector('small').textContent=words.formatSetHint;single.querySelector('strong').textContent=words.formatSingle;single.querySelector('small').textContent=words.formatSingleHint;
- dialog.querySelector('.recap-mask span').textContent=words.mask;dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
+ const [open,friends]=dialog.querySelectorAll('.recap-scope button');open.textContent=words.scopePublic;friends.textContent=words.scopeFriends;dialog.querySelector('.recap-scope').setAttribute('aria-label',words.scopeLabel);dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
  if(!dialog.open)dialog.showModal();await build(dialog,state);
 }

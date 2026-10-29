@@ -11,13 +11,15 @@ test('mask keeps the first letter and hides the rest with up to three stars',()=
  assert.equal(maskName('민수'),'민*');assert.equal(maskName('김민수'),'김**');assert.equal(maskName('Christopher'),'C***');assert.equal(maskName('J'),'J*');assert.equal(maskName(''),'');
 });
 
-test('recap data hides other names, keeps me and finds the rival',()=>{
+test('public recap hides other names and the rival, friends recap shows them',()=>{
  const records=[play('1','2026-10-01'),play('2','2026-10-02','카탄',{players:[{id:'a',name:'나',score:20,winner:false},{id:'b',name:'김민수',score:25,winner:true}]}),play('3','2026-10-03'),play('4','2026-10-04','카탄',{players:[{id:'a',name:'나',score:9,winner:false},{id:'b',name:'김민수',score:10,winner:true}]})];
  const data=recapData(records,month,profile,{locale:'ko-KR'});
- assert.deepEqual([data.rival.name,data.rival.mine,data.rival.theirs,data.rival.results.join('')],['김**',2,2,'wlwl']);
+ assert.equal(data.rival,null,'public recap leaves out head-to-head');assert.ok(data.mask);
+ const friends=recapData(records,month,profile,{locale:'ko-KR',scope:'friends'});
+ assert.deepEqual([friends.rival.name,friends.rival.mine,friends.rival.theirs,friends.rival.results.join('')],['김민수',2,2,'wlwl']);
  assert.ok(data.personRows.every(row=>row.name!=='김민수'));
  assert.deepEqual([data.close.gap,data.best.score,data.best.who],[1,30,'나']);
- assert.equal(recapData(records,month,profile,{locale:'ko-KR',mask:false}).rival.name,'김민수');
+ assert.ok(data.personRows.some(row=>row.name==='김**'));
 });
 
 test('carousel plan adds the cover wall for 9+ games and a second page for 18+',()=>{
