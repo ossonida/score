@@ -428,3 +428,29 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #settingsPlacesCard .place-copy{display:grid;gap:2px;flex:1;min-width:150px}#settingsPlacesCard .place-copy strong{font-size:15px;font-weight:500;color:#f6f7fb;overflow-wrap:anywhere}#settingsPlacesCard .place-copy small{font-size:12px;color:#8fa9c8}
 #settingsPlacesCard .place-actions{display:flex;gap:6px;flex:none}#settingsPlacesCard .place-actions button,#settingsPlacesCard .place-list>button{min-height:36px;padding:6px 12px;border:1px solid #26384f;border-radius:10px;background:#0d1522;color:#b7d3f5;font-size:13px}#settingsPlacesCard .place-actions button[aria-pressed=true]{background:#223c5d;color:#e4f0ff;border-color:#3a5b86}
 #settingsPlacesCard .place-rename{display:flex;gap:8px;width:100%}#settingsPlacesCard .place-rename[hidden]{display:none}#settingsPlacesCard .place-rename input{flex:1;min-width:0;min-height:40px}#settingsPlacesCard .place-rename button{flex:none;min-height:40px;padding:0 14px}#settingsPlacesCard .place-list>button{margin-top:8px}
+/* 기간 분석: 결산 공유 · 플레이 달력 · 플레이 장소, 게임별 통계: 게임 순위 */
+.period-summary-head>.period-range{flex-basis:100%}
+.play-calendar .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px}
+.play-calendar .calendar-weekday{font-size:11px;color:#8fa6c3;text-align:center;padding-bottom:2px}
+.play-calendar .calendar-day{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:42px;border-radius:8px;background:#162336;color:#8fa6c3}
+.play-calendar .calendar-day b{font-size:12px;font-weight:500}
+.play-calendar .calendar-day small{font-size:10px;line-height:1.2;color:inherit}
+.play-calendar .calendar-day[data-level="1"]{background:#1d3d63;color:#cfe4ff}
+.play-calendar .calendar-day[data-level="2"]{background:#24558c;color:#e4f0ff}
+.play-calendar .calendar-day[data-level="3"]{background:#2f6fb5;color:#fff}
+.play-calendar .calendar-day[data-level="4"]{background:#4d9cff;color:#fff}
+.play-calendar .calendar-months{display:grid;gap:3px;margin-top:12px}
+.play-calendar .calendar-month{display:flex;align-items:center;gap:6px}
+.play-calendar .calendar-month-label{flex:0 0 30px;font-size:11px;color:#8fa6c3;text-align:right}
+.play-calendar .calendar-month-days{display:grid;grid-template-columns:repeat(31,minmax(0,1fr));gap:2px;flex:1;min-width:0}
+.play-calendar .calendar-month-days>span{aspect-ratio:1;min-height:0;border-radius:2px}
+.play-calendar .calendar-month-days>.calendar-blank{background:transparent}
+.play-calendar .calendar-facts{display:flex;flex-wrap:wrap;gap:4px 14px;margin:12px 0 0;font-size:13px;color:#b9cee8}
+.place-bars{display:grid;gap:10px;margin-top:8px}
+.place-bar{display:grid;grid-template-columns:minmax(0,7em) 1fr auto;align-items:center;gap:10px;font-size:13px;color:#b9cee8}
+.place-bar>strong{font-weight:500;color:#f2f7ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place-bar-track{height:8px;border-radius:4px;background:#1b2a3e;overflow:hidden}
+.place-bar-fill{display:block;height:100%;border-radius:4px;background:#4d9cff}
+#statsScreen .leaderboard-rank{flex:0 0 22px;font-size:15px;font-weight:700;color:#9acbff;text-align:center}
+#statsScreen .leaderboard-row.is-self{background:rgba(77,156,255,.08)}
+#statsScreen .leaderboard-me{margin-left:6px;padding:1px 6px;border-radius:6px;background:#24558c;color:#e4f0ff;font-size:11px;vertical-align:1px}

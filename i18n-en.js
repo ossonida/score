@@ -1518,6 +1518,24 @@ function dictionary(){return /*<dict>*/{
 "BGG에서 보기":"View on BGG",
 "이전 플레이한 날":"Previous play day",
 "다음 플레이한 날":"Next play day",
-"플레이한 날 {0}/{1}":"Play day {0}/{1}"
+"플레이한 날 {0}/{1}":"Play day {0}/{1}",
+"결산 공유":"Share recap",
+"플레이 달력":"Play calendar",
+"가장 많이 한 날 {0} · {1}판":"Busiest day {0} · {1} games",
+"최장 연속 {0}일":"Longest streak {0} days",
+"처음 해본 게임":"First plays",
+"{0} 첫 플레이":"First played {0}",
+"외 {0}개":"+{0} more",
+"플레이 장소":"Places",
+"{0}곳":"{0} places",
+"달성 기록":"Milestones",
+"통산 {0}번째 플레이":"Play #{0} overall",
+"플레이한 날 {0}일째":"Play day #{0}",
+"서로 다른 게임 {0}개째":"{0} different games",
+"이 게임 {0}번째 플레이":"Play #{0} of this game",
+"이날의 달성":"Milestones this day",
+"달성":"Reached",
+"게임 순위":"Leaderboard",
+"{0}명 더 보기":"Show {0} more"
 }/*</dict>*/;}
 })(typeof window!=='undefined'?window:globalThis);

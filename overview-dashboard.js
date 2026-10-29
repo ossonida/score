@@ -4,7 +4,8 @@ import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-o
 import {readIdentity,meIn} from './personal-stats.js?v=117';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,openRecentShare,coopOutcome} from './stats-share.js?v=146';
+import {formatRecentRecordTitle,openRecentShare,coopOutcome} from './stats-share.js?v=147';
+import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=1';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
@@ -61,7 +62,8 @@ function recentDayNav({index,total,onDay,days}){
 }
 // 그날 내용이 있는 카드만 만든다(빈 안내 카드 없음). 협력 기록이 있으면 협력 게임 카드에 결과 한 줄씩 보여 준다.
 function renderHighlights(container,records,profile,onRecord){
- const data=recentHighlights(records,profile),day=latestPlayDate(records),coop=records.filter(p=>p.date===day&&p.rule==='cooperative');
+ const data=recentHighlights(records,profile),day=latestPlayDate(records),coop=records.filter(p=>p.date===day&&p.rule==='cooperative'),reached=day?milestones(records,{start:day,end:day}):[];
+ if(reached.length){const card=el('section',undefined,'insight-card');card.append(el('h3','이날의 달성'));for(const item of reached)highlightRow(card,item.play,milestoneTitle(item),'달성',onRecord);container.append(card);}
  if(data.winners.length){const winners=el('section',undefined,'insight-card');winners.append(el('h3','이날의 승자'));for(const {play,players}of data.winners)highlightRow(winners,play,players.map(p=>p.anonymous?'익명의 플레이어':p.name).join(' · '),recordMode(play)==='team'?[...new Set(players.map(p=>p.teamName))].join(' · ')+' 승리':players.length>1?'공동 우승':'우승',onRecord);container.append(winners);}
  if(coop.length){const card=el('section',undefined,'insight-card');card.append(el('h3','협력 게임'));for(const play of coop)highlightRow(card,play,coopOutcome(play,records),'협력',onRecord);container.append(card);}
  if(data.closest.length){const close=el('section',undefined,'insight-card');close.append(el('h3','가장 접전이었던 경기'));for(const {play,gap}of data.closest)highlightRow(close,play,gap===0?'공동 1위':gap.toLocaleString('ko-KR')+'점 차이','1·2위 점수 차이',onRecord);note(close,'게임마다 점수 체계가 달라 단순 점수 차이로 비교합니다.');container.append(close);}
@@ -90,6 +92,15 @@ function opponentCard(records,profile,onPerson,period=false){
 }
 // 게임별 통계: 집계 기준 바로 위(나의 라이벌이 있던 자리)에 상대 전적을 넣는다.
 export function renderGameOpponents(container,records,{scope,onPerson}){const card=opponentCard(records,readIdentity(scope),onPerson);if(card.style)card.style.marginTop='14px';const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);}
+// 게임별 통계: 상대 전적 위에 이 게임 경쟁 기록의 플레이어 순위를 넣는다. 다른 사람 줄은 그 사람과의 이 게임 전적을 연다.
+function leaderboardRow(r,index,onPerson){const row=el(r.isSelf?'div':'button',undefined,'opponent-row leaderboard-row'+(r.isSelf?' is-self':'')),copy=el('span',undefined,'opponent-copy'),name=el('strong',r.name),record=el('span',undefined,'opponent-record');if(r.isSelf)name.append(el('span','나','leaderboard-me'));copy.append(name,el('small',r.plays+'판'));record.append(el('strong',r.wins+'승'),el('small',r.rate===null?'결과 없음':'승률 '+percent(r.rate)+'%'));row.append(el('span',String(index+1),'leaderboard-rank'),copy,record);if(!r.isSelf){row.type='button';row.setAttribute('aria-label',withParticle(r.name)+'의 전적 보기');row.onclick=()=>onPerson(r.key);}return row;}
+export function renderGameLeaderboard(container,records,{scope,onPerson}){
+ const list=gameLeaderboard(records,readIdentity(scope));if(list.length<2)return;
+ const card=el('section',undefined,'insight-card leaderboard-card'),head=el('div',undefined,'opponent-head'),box=el('div',undefined,'leaderboard-list');head.append(el('h3','게임 순위'),el('span',list.length+'명','opponent-summary'));card.append(head,box);if(card.style)card.style.marginTop='14px';
+ list.slice(0,8).forEach((r,index)=>box.append(leaderboardRow(r,index,onPerson)));
+ if(list.length>8){const more=el('button',(list.length-8)+'명 더 보기','opponent-more');more.type='button';more.onclick=()=>{list.slice(8).forEach((r,index)=>box.append(leaderboardRow(r,index+8,onPerson)));more.remove();};card.append(more);}
+ const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);
+}
 // 기간 분석: 기간 요약 바로 아래에 선택 기간의 상대 전적을 넣는다.
 export function renderPeriodOpponents(container,records,{scope,onPerson}){const card=opponentCard(records,readIdentity(scope),onPerson,true),first=[...(container.children||[])][0];if(first?.after)first.after(card);else container.append(card);}
 // ○○와의 전적(전체 기간). stats는 personStats 결과이며, 범위 칩·게임 줄은 onScope, 최근 대결은 onRecord로 기록을 연다.
