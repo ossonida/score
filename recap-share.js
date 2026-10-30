@@ -100,7 +100,7 @@ export function cover(ctx,image,name,x,y,w,h,radius=24){
 export function shade(ctx,x,y,w,h,radius,from=.5){ctx.save();roundRect(ctx,x,y,w,h,radius);ctx.clip();const gradient=ctx.createLinearGradient(0,y+h*from,0,y+h);gradient.addColorStop(0,'rgba(4,10,20,0)');gradient.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.restore();}
 export function badges(ctx,game,x,y,w,size=24){if(game.count>1)pill(ctx,`×${game.count}`,x+w-14,y+14,{size});if(game.isNew)pill(ctx,'NEW',x+14,y+14,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:size-2});}
 function tile(ctx,images,game,x,y,w,h,caption,size=28){cover(ctx,images.get(game.key),game.name,x,y,w,h);if(caption&&images.get(game.key)){shade(ctx,x,y,w,h,24,.55);line(ctx,caption,x+22,y+h-26,w-44,{size,min:16});}badges(ctx,game,x,y,w);}
-export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTER',X,71,500,{size:30,color:'#82bfff'});if(total>1)line(ctx,`${page} / ${total}`,X+CW,71,200,{size:26,weight:600,color:'rgba(255,255,255,.5)',align:'right'});}
+export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTER',X,71,500,{size:30,color:'#82bfff'});}
 function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:56,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
 export function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
 export function card(ctx,{title,headline,detail},x,y,w,h){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:26,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+34,w-64,{size:48,min:22,weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:24,min:15,weight:600,color:'#b8cde6'});}
@@ -129,7 +129,7 @@ function wallSlide(ctx,data,images,page,total,second){
   else{ctx.fillStyle='#0c1a2c';ctx.fillRect(x,y,w,h);}
  }
  const gradient=ctx.createLinearGradient(0,H-430,0,H);gradient.addColorStop(0,'rgba(5,12,24,0)');gradient.addColorStop(.55,'rgba(5,12,24,.94)');gradient.addColorStop(1,'rgba(5,12,24,.98)');ctx.fillStyle=gradient;ctx.fillRect(0,H-430,W,430);
- line(ctx,'SCORE COUNTER',X,H-128,500,{size:28,color:'#82bfff'});line(ctx,`${page} / ${total}`,X+CW,H-128,200,{size:26,weight:600,color:'rgba(255,255,255,.55)',align:'right'});
+ line(ctx,'SCORE COUNTER',X,H-128,500,{size:28,color:'#82bfff'});
  line(ctx,words.wall(data.label,data.games.length,data.plays.length),X,H-62,CW,{size:56,min:28,weight:800});
 }
 function topSlide(ctx,data,images){
