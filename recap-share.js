@@ -1,4 +1,5 @@
 import {gameKey,winnerIds} from './records-core.js?v=155';
+import {isPro,proOnlyText,markProLock} from './pro-access.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=4';
@@ -246,17 +247,17 @@ const fileName=(state,index,count)=>`${state.fileBase}${count>1?`-${index+1}`:''
 function release(state){for(const url of state.urls||[])URL.revokeObjectURL(url);state.urls=[];state.files=[];}
 function paint(dialog,state){
  const words=COPY[state.lang],ready=state.phase==='ready',busy=state.phase==='creating',files=state.files,canShare=ready&&typeof navigator.share==='function'&&(!navigator.canShare||navigator.canShare({files}));
- for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;}
- for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;}
+ for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;markProLock(button,button.dataset.format==='set'&&!isPro());}
+ for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;markProLock(button,button.dataset.scope==='friends'&&!isPro());}
  dialog.querySelector('.recap-scope-hint').textContent=state.scope==='friends'?words.scopeFriendsHint:words.scopePublicHint;dialog.querySelector('.recap-format-hint').textContent=state.format==='set'?state.setHint:state.singleHint;
- const winners=dialog.querySelector('.recap-winners'),toggle=winners.querySelector('input');winners.hidden=state.winners===undefined;toggle.checked=state.winners!==false;toggle.disabled=busy;
+ const winners=dialog.querySelector('.recap-winners'),toggle=winners.querySelector('input');winners.hidden=state.winners===undefined;toggle.checked=state.winners!==false;toggle.disabled=busy;markProLock(dialog.querySelector('.recap-full .recap-option-label'),!isPro());
  const full=dialog.querySelector('.recap-full'),fullToggle=full.querySelector('input');full.hidden=state.full===undefined||state.scope!=='friends'||state.winners===false;fullToggle.checked=state.full===true;fullToggle.disabled=busy;
- dialog.querySelector('.recent-share-status').textContent=busy?words.creating:state.phase==='error'?state.error:files.length>1?words.readySet(files.length):words.readySingle;
+ dialog.querySelector('.recent-share-status').textContent=state.notice&&!busy?state.notice:busy?words.creating:state.phase==='error'?state.error:files.length>1?words.readySet(files.length):words.readySingle;
  const strip=dialog.querySelector('.recap-strip');strip.classList.toggle('is-single',files.length<=1);strip.replaceChildren(...state.urls.map((url,index)=>{const image=document.createElement('img');image.src=url;image.alt=words.previewAlt(index+1);image.className='recap-preview';return image;}));
  const save=dialog.querySelector('.recent-share-save'),send=dialog.querySelector('.recent-share-send');save.disabled=!ready;send.disabled=!canShare;send.hidden=ready&&!canShare;
 }
 async function build(dialog,state){
- const token=++state.token;release(state);state.phase='creating';paint(dialog,state);
+ const token=++state.token;release(state);state.notice='';state.phase='creating';paint(dialog,state);
  try{const {blobs,title}=await state.make(state);
   if(token!==state.token||session!==state||!dialog.open)return;state.files=blobs.map((blob,index)=>new File([blob],fileName(state,index,blobs.length),{type:'image/png'}));state.urls=blobs.map(blob=>URL.createObjectURL(blob));state.title=title;state.phase='ready';}
  catch(error){if(token!==state.token)return;state.phase='error';state.error=error?.message||COPY[state.lang].createFailed;}
@@ -267,10 +268,12 @@ function ensureShareDialog(){
  dialog=document.createElement('dialog');dialog.id='recapShareDialog';dialog.className='recent-share-dialog recap-share-dialog';
  dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-preview-area"><div class="recap-strip"></div><p class="recent-share-status" role="status" aria-live="polite"></p></div><div class="recap-options"><div class="recap-option"><p class="recap-option-head"><strong data-label="format"></strong><small class="recap-format-hint"></small></p><div class="recap-format recap-segment" role="radiogroup"><button type="button" role="radio" data-format="set"></button><button type="button" role="radio" data-format="single"></button></div></div><div class="recap-option"><p class="recap-option-head"><strong data-label="scope"></strong><small class="recap-scope-hint"></small></p><div class="recap-scope recap-segment" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div></div><label class="recap-switch recap-winners" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label><label class="recap-switch recap-full" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
  const close=()=>dialog.close();dialog.querySelector('.score-close').onclick=close;dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.addEventListener('close',()=>{if(session){session.token++;release(session);}session=null;dialog.querySelector('.recap-strip').replaceChildren();});
- for(const button of dialog.querySelectorAll('.recap-format button'))button.onclick=()=>{if(!session||session.format===button.dataset.format)return;session.format=button.dataset.format;build(dialog,session);};
- for(const button of dialog.querySelectorAll('.recap-scope button'))button.onclick=()=>{if(!session||session.scope===button.dataset.scope)return;session.scope=button.dataset.scope;build(dialog,session);};
+ // Pro 잠금: 바꾸지 않고 상태 줄에 안내만.
+ const locked=()=>{session.notice=proOnlyText();paint(dialog,session);};
+ for(const button of dialog.querySelectorAll('.recap-format button'))button.onclick=()=>{if(!session||session.format===button.dataset.format)return;if(button.dataset.format==='set'&&!isPro())return locked();session.format=button.dataset.format;build(dialog,session);};
+ for(const button of dialog.querySelectorAll('.recap-scope button'))button.onclick=()=>{if(!session||session.scope===button.dataset.scope)return;if(button.dataset.scope==='friends'&&!isPro())return locked();session.scope=button.dataset.scope;build(dialog,session);};
  dialog.querySelector('.recap-winners input').onchange=event=>{if(!session||session.winners===undefined)return;session.winners=event.target.checked;build(dialog,session);};
- dialog.querySelector('.recap-full input').onchange=event=>{if(!session||session.full===undefined)return;session.full=event.target.checked;build(dialog,session);};
+ dialog.querySelector('.recap-full input').onchange=event=>{if(!session||session.full===undefined)return;if(!isPro()){event.target.checked=false;return locked();}session.full=event.target.checked;build(dialog,session);};
  dialog.querySelector('.recent-share-save').onclick=async()=>{const files=session?.files||[],urls=session?.urls||[];for(const [index,file]of files.entries()){const link=document.createElement('a');link.href=urls[index];link.download=file.name;document.body.append(link);link.click();link.remove();if(index<files.length-1)await new Promise(resolve=>setTimeout(resolve,350));}};
  dialog.querySelector('.recent-share-send').onclick=async()=>{const state=session;if(!state?.files.length)return;try{await navigator.share({files:state.files,title:state.title,text:`${state.title} · Score Counter`});}catch(error){if(error?.name!=='AbortError'&&session===state){state.phase='error';state.error=COPY[state.lang].shareFailed;paint(dialog,state);state.phase='ready';}}};
  document.body.append(dialog);return dialog;
@@ -278,7 +281,7 @@ function ensureShareDialog(){
 // heading: 창 제목, setHint/singleHint: 형식 버튼 설명, winners·full: undefined면 그 옵션을 숨긴다(full은 친구 공유용·우승자 표시일 때만 보임).
 export async function openShareDialog({heading,setHint,singleHint,fileBase,winners,full,make}){
  const dialog=ensureShareDialog(),lang=shareLanguage(),words=COPY[lang];if(session){session.token++;release(session);}
- const state={lang,fileBase,make,setHint,singleHint,format:'set',scope:'public',winners,full,token:0,files:[],urls:[],phase:'creating'};session=state;
+ const state={lang,fileBase,make,setHint,singleHint,format:isPro()?'set':'single',scope:'public',winners,full,token:0,files:[],urls:[],phase:'creating'};session=state;
  dialog.lang=lang;dialog.querySelector('h2').textContent=heading;dialog.querySelector('.score-close').setAttribute('aria-label',words.close);dialog.querySelector('.recap-format').setAttribute('aria-label',heading);
  const [set,single]=dialog.querySelectorAll('.recap-format button');set.textContent=words.formatSet;single.textContent=words.formatSingle;dialog.querySelector('[data-label=format]').textContent=words.formatLabel;dialog.querySelector('[data-label=scope]').textContent=words.scopeLabel;
  const [open,friends]=dialog.querySelectorAll('.recap-scope button');open.textContent=words.scopePublic;friends.textContent=words.scopeFriends;dialog.querySelector('.recap-scope').setAttribute('aria-label',words.scopeLabel);dialog.querySelector('.recap-winners .recap-option-label').textContent=words.showWinners;dialog.querySelector('.recap-full .recap-option-label').textContent=words.fullScores;dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
