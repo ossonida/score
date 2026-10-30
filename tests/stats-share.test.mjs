@@ -185,3 +185,11 @@ test('recent share can leave out winners: no trophies, MVP, close game or winner
  assert.deepEqual(hidden.cards,[]);assert.ok(hidden.games.every(game=>game.winners.length===0));assert.equal(hidden.playCount,3);
  assert.equal(shareCopy('en-US').showWinners,'Show winners');
 });
+
+test('recent share metric row leads with the day milestones and first plays',()=>{
+ const earlier=Array.from({length:9},(_,i)=>scoredPlay('o'+i,'카탄',{하늘:10,바다:i},{date:`2026-10-0${i+1}`}));
+ const today=[scoredPlay('t1','카탄',{하늘:10,바다:3},{date:'2026-10-12'}),scoredPlay('t2','아줄',{하늘:30,바다:20},{date:'2026-10-12'})];
+ assert.deepEqual(recentShareData([...earlier,...today],null,'ko-KR').highlights,[['10번째','통산 플레이'],['10일째','플레이한 날'],['첫 플레이','아줄']]);
+ assert.deepEqual(recentShareData([...earlier,...today],null,'en-US').highlights[0],['#10','Total plays']);
+ assert.deepEqual(recentShareData([scoredPlay('x','카탄',{하늘:1,바다:2})],null,'ko-KR').highlights,[['첫 플레이','카탄']]);
+});
