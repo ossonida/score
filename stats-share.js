@@ -3,12 +3,12 @@ import {metadata,bggId,gameNames} from './bgg-metadata.js?v=171';
 import {scoreGameType,scoreGames} from './score-games.js?v=167';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=171';
-import {attendanceCount,latestPlayDate} from './stats-overview.js?v=165';
+import {attendanceCount,latestPlayDate} from './stats-overview.js?v=166';
 import {nameKey} from './personal-stats.js?v=117';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames} from './game-catalog.js?v=166';
 import {summarizeStats} from './stats-insights.js?v=67';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=3';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=4';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -71,7 +71,7 @@ export function recentShareData(records,profile,locale,{winners:showWinners=true
   const ids=new Set(showWinners?winnerIds(play):[]);
   for(const person of play.players){
    if(!ids.has(person.id))continue;
-   const name=person.anonymous===true?words.anonymous:show(person.name.trim());if(name&&!entry.winners.some(saved=>nameKey(saved)===nameKey(name)))entry.winners.push(name);
+   if(person.anonymous===true)continue;const name=show(person.name.trim());if(name&&!entry.winners.some(saved=>nameKey(saved)===nameKey(name)))entry.winners.push(name);
   }
  }
  // 미션 기록은 저장 순서와 상관없이 시간순으로 모은다.

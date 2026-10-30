@@ -15,4 +15,4 @@ export function overviewStats(records,profile){
  return {total:records.length,gameCount:games.size,wins:myCount?(known||!myCompetitive?wins:null):null,myCount,known,unassigned,types,games:[...games.values()].sort((a,b)=>b.count-a.count||b.latest.localeCompare(a.latest)||a.game.name.localeCompare(b.game.name)),latest:latestPlayDate(records)};
 }
 
-export function attendanceCount(records,profile){const named=new Set();let anonymous=0;for(const play of records){const me=meIn(play,profile);let unknown=0;for(const person of play.players){if(person.id===me?.id)named.add('self');else if(person.anonymous)unknown++;else named.add('name:'+nameKey(person.name));}anonymous=Math.max(anonymous,unknown);}return named.size+anonymous;}
+export function attendanceCount(records,profile){const named=new Set();let anonymous=0;for(const play of records){const me=meIn(play,profile);let unknown=0;for(const person of play.players){if(person.id===me?.id)named.add('self');else if(person.anonymous)continue;else named.add('name:'+nameKey(person.name));}anonymous=Math.max(anonymous,unknown);}return named.size+anonymous;}

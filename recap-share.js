@@ -1,8 +1,8 @@
 import {gameKey,winnerIds} from './records-core.js?v=155';
 import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
-import {firstPlays,milestones,playDays} from './stats-extras.js?v=3';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=155';
+import {firstPlays,milestones,playDays} from './stats-extras.js?v=4';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=156';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -52,7 +52,7 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
    const key=self?SELF:nameKey(name),row=people.get(key)||{key,name:shown(person,self),isSelf:self,plays:0,wins:0,known:0};row.plays++;if(known){row.known++;if(wins.has(person.id))row.wins++;}people.set(key,row);
    if(me&&!self&&known){const vs=versus.get(key)||{key,name:row.name,shared:0,mine:0,theirs:0,results:[]},mine=wins.has(me.id),theirs=wins.has(person.id);vs.shared++;if(mine&&!theirs)vs.mine++;if(theirs&&!mine)vs.theirs++;vs.results.push(mine&&!theirs?'w':theirs&&!mine?'l':'d');versus.set(key,vs);}
   }
-  const scored=play.players.filter(person=>typeof person.score==='number'&&Number.isFinite(person.score));
+  const scored=play.players.filter(person=>person.anonymous!==true&&typeof person.score==='number'&&Number.isFinite(person.score));
   if(play.rule!=='lowest')for(const person of scored)if(!best||person.score>best.score)best={score:person.score,play,who:shown(person,me?.id===person.id)};
   if(scored.length>=2&&!play.players.some(person=>person.teamId)){const sorted=[...scored].sort((a,b)=>play.rule==='lowest'?a.score-b.score:b.score-a.score),gap=Math.abs(sorted[0].score-sorted[1].score),big=Math.max(Math.abs(sorted[0].score),Math.abs(sorted[1].score))>=10;if(gap>0&&big&&(!close||gap<=close.gap))close={gap,play,scores:[sorted[0].score,sorted[1].score]};if(gap>=10&&(!blow||gap>blow.gap))blow={gap,play,who:shown(sorted[0],me?.id===sorted[0].id)};}
   const table=play.players.length;if(table>=5&&(!crowd||table>crowd.count))crowd={count:table,play};

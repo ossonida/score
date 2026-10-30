@@ -193,3 +193,9 @@ test('recent share metric row leads with the day milestones and first plays',()=
  assert.deepEqual(recentShareData([...earlier,...today],null,'en-US').highlights[0],['#10','Total plays']);
  assert.deepEqual(recentShareData([scoredPlay('x','카탄',{하늘:1,바다:2})],null,'ko-KR').highlights,[['새로 기록','카탄']]);
 });
+
+test('anonymous players never show up as winners or count as people',()=>{
+ const play={id:'a',date:'2026-10-10',createdAt:'2026-10-10T12:00:00Z',game:{name:'카탄',bggId:''},rule:'highest',players:[{id:'p0',name:'익명의 플레이어',anonymous:true,score:30},{id:'p1',name:'하늘',score:20}]};
+ const data=recentShareData([play],null,'ko-KR');
+ assert.deepEqual(data.games[0].winners,[]);assert.equal(data.peopleCount,1);
+});
