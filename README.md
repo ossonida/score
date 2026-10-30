@@ -4,7 +4,7 @@ HTML, CSS, JavaScript로 만든 모바일 대응 포인트 카운터입니다. �
 
 ## 실행
 
-`index.html`을 브라우저에서 열거나, 이 폴더에서 `python3 -m http.server 8000`을 실행하고 `http://localhost:8000`을 여세요.
+`https://ossonida.github.io/score`을 여세요.
 
 ## 사용
 
