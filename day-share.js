@@ -3,7 +3,7 @@ import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {milestones,MILESTONES} from './stats-extras.js?v=3';
 import {shareLanguage,shareCopy,localizedGameName,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=155';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=15';
+import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=16';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -64,7 +64,7 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
   const low=plays[0].rule==='lowest',better=(a,b)=>low?a<b:a>b;let top=null,blow=null,close=null;const todayBest=new Map();
   for(const play of plays){const scored=play.players.filter(person=>named(person)&&typeof person.score==='number'&&Number.isFinite(person.score));if(!scored.length)continue;const sorted=[...scored].sort((a,b)=>low?a.score-b.score:b.score-a.score),winner=sorted[0];
    if(!top||better(winner.score,top.score))top={score:winner.score,name:who(play,winner).name};
-   if(sorted[1]){const gap=Math.abs(winner.score-sorted[1].score);if(gap>0&&(!blow||gap>blow.gap))blow={gap,name:who(play,winner).name};if(gap>0&&gap<=3&&(!close||gap<close.gap))close={gap,scores:[winner.score,sorted[1].score]};}
+   if(sorted[1]){const gap=Math.abs(winner.score-sorted[1].score);if(gap>0&&(!blow||gap>blow.gap))blow={gap,name:who(play,winner).name};if(gap>0&&gap<=3&&Math.max(Math.abs(winner.score),Math.abs(sorted[1].score))>=10&&(!close||gap<close.gap))close={gap,scores:[winner.score,sorted[1].score]};}
    for(const person of scored){const p=who(play,person),row=todayBest.get(p.key);if(!row||better(person.score,row.score))todayBest.set(p.key,{...p,score:person.score});}}
   if(top)stories.push({title:words.topScore,headline:words.points(top.score),detail:top.name});
   const pb=[...todayBest.values()].map(row=>{const prior=before.flatMap(play=>play.players.filter(person=>typeof person.score==='number'&&named(person)&&who(play,person).key===row.key).map(person=>person.score));return prior.length&&better(row.score,low?Math.min(...prior):Math.max(...prior))?{...row,prior:low?Math.min(...prior):Math.max(...prior)}:null;}).filter(Boolean).sort((a,b)=>(b.key==='\u0000self')-(a.key==='\u0000self'))[0];

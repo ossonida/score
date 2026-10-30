@@ -59,3 +59,10 @@ test('people slide data: wins out of plays, variety, streak, new faces; mileston
  assert.deepEqual([data.newFaces,data.avgPlayers],[0,3]);
  assert.equal(recapCopy('ko').markDetail('plays','10월1일','카탄'),'10월1일 · 그 판: 카탄');assert.equal(recapCopy('ko').markDetail('days','10월1일','카탄'),'10월1일');
 });
+
+test('closest finish skips single-digit games; biggest win needs 10+ points',()=>{
+ const small=[play('1','2026-10-01','카탄',{players:[{id:'a',name:'나',score:3,winner:true},{id:'b',name:'김민수',score:2,winner:false}]})];
+ assert.equal(recapData(small,month,profile,{locale:'ko'}).close,null);
+ const big=[play('2','2026-10-02','카탄',{players:[{id:'a',name:'나',score:40,winner:true},{id:'b',name:'김민수',score:12,winner:false}]})];
+ const data=recapData(big,month,profile,{locale:'ko'});assert.equal(data.close.gap,28);assert.deepEqual([data.blow.gap,data.blow.who],[28,'나']);
+});

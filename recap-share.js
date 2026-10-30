@@ -13,7 +13,7 @@ const COPY={
   wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 기록한 게임 1위',sinceFirst:n=>`기록 시작 후 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
   peopleTitle:'함께한 사람들',peopleCount:'함께한 사람',groupPlays:'여럿이 한 판',rival:'가장 많이 맞붙은 상대',rivalDetail:n=>`${n}판 맞대결 · 최근 결과`,mostWins:'가장 많이 이긴 사람',together:'나와 가장 많이 함께한 사람',bestRate:'가장 높은 승률 · 5판 이상',variety:'가장 다양한 게임을 함께한 사람',gamesN:n=>`${n}종`,streakBest:'이 기간 최장 연승',streakN:n=>`${n}연승`,winsOf:(w,n)=>`${w}승 / ${n}판`,newFaces:'새 얼굴',avgPlayers:'평균 인원',winsN:n=>`${n}승`,
   calendarTitle:'플레이 달력',busiest:'가장 많이 한 날',streak:'최장 연속',daysN:n=>`${n}일`,dayPlays:n=>`하루에 ${n}판`,weekdayTitle:'요일별',weekdays:['일','월','화','수','목','금','토'],month:m=>`${m}월`,
-  highlightsTitle:'이 기간의 순간들',bestScore:'최고 점수',points:n=>`${n.toLocaleString('ko-KR')}점`,closest:'가장 치열했던 판',wonBy:n=>`${n}점 차`,closeHead:(game,n)=>`${game} ${n}점 차 승부`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · 그 판: ${game}`:kind==='games'?`${day} · 그 게임: ${game}`:day,milestone:'달성 기록',
+  highlightsTitle:'이 기간의 순간들',bestScore:'최고 점수',points:n=>`${n.toLocaleString('ko-KR')}점`,closest:'가장 치열했던 판',blowout:'가장 큰 점수 차',blowHead:(game,n)=>`${game} ${n}점 차 압승`,crowdTitle:'가장 큰 판',crowdHead:(game,n)=>`${game} ${n}명`,wonBy:n=>`${n}점 차`,closeHead:(game,n)=>`${game} ${n}점 차 승부`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · 그 판: ${game}`:kind==='games'?`${day} · 그 게임: ${game}`:day,milestone:'달성 기록',
   ms:{plays:n=>`통산 ${n}번째 플레이`,days:n=>`플레이한 날 ${n}일째`,games:n=>`서로 다른 게임 ${n}개째`,game:(n,g)=>`${g} ${n}번째 플레이`},medalTop:{plays:'통산',days:'플레이한 날',games:'서로 다른 게임'},medalBottom:{plays:'번째 플레이',days:'일째',games:'개째',game:'번째 플레이'},
   trait:{milestone:t=>`${t} 달성`,firsts:n=>`새로 기록한 게임 ${n}개`,focus:(g,n)=>`${g} ${n}판 집중`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
   firstsTitle:n=>`새로 기록한 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'새로 기록한 게임',countN:n=>`${n}개`},
@@ -22,7 +22,7 @@ const COPY={
   wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'Top newly logged',sinceFirst:n=>`${plural(n,'play','plays')} since first logged`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
   peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Most-played opponent',rivalDetail:n=>`${plural(n,'game','games')} head to head · recent results`,mostWins:'Most wins',together:'Played most with me',bestRate:'Best win rate · 5+ games',variety:'Most games tried together',gamesN:n=>plural(n,'game','games'),streakBest:'Longest win streak',streakN:n=>`${n} in a row`,winsOf:(w,n)=>`${w} of ${n}`,newFaces:'New faces',avgPlayers:'Avg. players',winsN:n=>plural(n,'win','wins'),
   calendarTitle:'Play calendar',busiest:'Busiest day',streak:'Longest streak',daysN:n=>plural(n,'day','days'),dayPlays:n=>`${plural(n,'play','plays')} in a day`,weekdayTitle:'By weekday',weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],month:m=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
-  highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Closest finish',wonBy:n=>`Won by ${n}`,closeHead:(game,n)=>`${game}, decided by ${n}`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · that play: ${game}`:kind==='games'?`${day} · that game: ${game}`:day,milestone:'Milestone',
+  highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Closest finish',blowout:'Biggest win',blowHead:(game,n)=>`${game}, won by ${n}`,crowdTitle:'Biggest table',crowdHead:(game,n)=>`${game} · ${n} players`,wonBy:n=>`Won by ${n}`,closeHead:(game,n)=>`${game}, decided by ${n}`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · that play: ${game}`:kind==='games'?`${day} · that game: ${game}`:day,milestone:'Milestone',
   ms:{plays:n=>`Play #${n}`,days:n=>`Play day #${n}`,games:n=>`Game #${n} tried`,game:(n,g)=>`${g} play #${n}`},medalTop:{plays:'Total plays',days:'Play days',games:'Games tried'},medalBottom:{plays:'reached',days:'reached',games:'reached',game:'plays'},
   trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} games newly logged`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`},
   firstsTitle:n=>`Newly logged · ${n}`,winnersOf:g=>`${g} winners`,coopTitle:'Co-op',success:'Won',failure:'Lost',compare:'vs. last period',compareHead:d=>d?`${d>0?'+':''}${d} ${Math.abs(d)===1?'play':'plays'}`:'No change',compareDetail:(a,b)=>`${a} → ${plural(b,'play','plays')}`,firstsCard:'Newly logged',countN:n=>`${n} new`},
@@ -44,7 +44,7 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
  // 나는 기록에 적힌 닉네임 그대로(가리지 않음), 다른 사람은 공개용이면 가림.
  const shown=(person,self)=>self||!mask?String(person.name).trim():maskName(person.name);
  // 사람: 경쟁 기록의 이름 있는 플레이어. 나는 별칭과 상관없이 한 줄, 나와 같이 한 판은 상대 전적으로도 센다.
- const people=new Map(),versus=new Map();let best=null,close=null;
+ const people=new Map(),versus=new Map();let best=null,close=null,blow=null,crowd=null;
  for(const play of plays){
   if(play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),known=wins.size>0,me=meIn(play,profile);
   for(const person of play.players){
@@ -54,7 +54,8 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
   }
   const scored=play.players.filter(person=>typeof person.score==='number'&&Number.isFinite(person.score));
   if(play.rule!=='lowest')for(const person of scored)if(!best||person.score>best.score)best={score:person.score,play,who:shown(person,me?.id===person.id)};
-  if(scored.length>=2&&!play.players.some(person=>person.teamId)){const sorted=[...scored].sort((a,b)=>play.rule==='lowest'?a.score-b.score:b.score-a.score),gap=Math.abs(sorted[0].score-sorted[1].score);if(gap>0&&(!close||gap<=close.gap))close={gap,play,scores:[sorted[0].score,sorted[1].score]};}
+  if(scored.length>=2&&!play.players.some(person=>person.teamId)){const sorted=[...scored].sort((a,b)=>play.rule==='lowest'?a.score-b.score:b.score-a.score),gap=Math.abs(sorted[0].score-sorted[1].score),big=Math.max(Math.abs(sorted[0].score),Math.abs(sorted[1].score))>=10;if(gap>0&&big&&(!close||gap<=close.gap))close={gap,play,scores:[sorted[0].score,sorted[1].score]};if(gap>=10&&(!blow||gap>blow.gap))blow={gap,play,who:shown(sorted[0],me?.id===sorted[0].id)};}
+  const table=play.players.length;if(table>=5&&(!crowd||table>crowd.count))crowd={count:table,play};
  }
  const rows=[...people.values()],others=rows.filter(row=>!row.isSelf),together=[...versus.values()];
  const mostWins=[...rows].sort((a,b)=>b.wins-a.wins||a.plays-b.plays)[0],rated=rows.filter(row=>row.known>=5).map(row=>({...row,rate:row.wins/row.known})).sort((a,b)=>b.rate-a.rate||b.known-a.known)[0];
@@ -80,7 +81,7 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
  const label=periodShareLabel(model,lang),focus=list[0]&&list[0].count>=5&&list[0].count/plays.length>=.6?list[0]:null;
  const focusWinners=focus?(()=>{const counts=new Map();for(const play of plays){if(gameKey(play.game)!==focus.key||play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),me=meIn(play,profile);for(const person of play.players){if(!wins.has(person.id)||person.anonymous===true||!String(person.name||'').trim())continue;const self=me?.id===person.id,key=self?SELF:nameKey(person.name),row=counts.get(key)||{name:shown(person,self),wins:0};row.wins++;counts.set(key,row);}}return [...counts.values()].sort((a,b)=>b.wins-a.wins).slice(0,3);})():[];
  const selfNames=new Map();for(const play of plays){const me=meIn(play,profile),name=String(me?.name||'').trim();if(me&&name)selfNames.set(name,(selfNames.get(name)||0)+1);}
- return {lang,words,model,scope,mask,selfName:[...selfNames].sort((a,b)=>b[1]-a[1])[0]?.[0]||words.me,peopleCount:others.length,newFaces:others.filter(row=>!earlier.has(row.key)).length,avgPlayers:plays.length?Math.round(plays.reduce((sum,play)=>sum+play.players.length,0)/plays.length*10)/10:0,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
+ return {lang,words,model,scope,mask,selfName:[...selfNames].sort((a,b)=>b[1]-a[1])[0]?.[0]||words.me,peopleCount:others.length,newFaces:others.filter(row=>!earlier.has(row.key)).length,avgPlayers:plays.length?Math.round(plays.reduce((sum,play)=>sum+play.players.length,0)/plays.length*10)/10:0,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,blow,crowd,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
 }
 
 // 여러 장 구성: 데이터가 없는 장은 뺀다. 표지 격자는 게임 9개 이상(한 장 12칸, 18개 이상이면 두 장).
@@ -186,14 +187,18 @@ function highlightItems(data){
  const words=data.words,items=[],name=play=>data.gameOf(play)?.name||'';
  if(data.best)items.push({game:data.gameOf(data.best.play),title:words.bestScore,headline:words.points(data.best.score),detail:`${name(data.best.play)} · ${data.best.who} · ${date(data,data.best.play.date)}`});
  if(data.close)items.push({game:data.gameOf(data.close.play),title:words.closest,headline:words.closeHead(name(data.close.play),data.close.gap),detail:[data.mask?'':data.close.scores.join(' : '),date(data,data.close.play.date)].filter(Boolean).join(' · ')});
+ if(data.blow)items.push({game:data.gameOf(data.blow.play),title:words.blowout,headline:words.blowHead(name(data.blow.play),data.blow.gap),detail:`${data.blow.who} · ${date(data,data.blow.play.date)}`});
  for(const mark of data.marks.slice(0,2))items.push({icon:'🎉',title:words.milestone,headline:data.markTitle(mark),detail:words.markDetail(mark.kind,date(data,mark.play.date),name(mark.play))});
- if(items.length<4&&data.days.busiest)items.push({icon:'📅',title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
- return items.slice(0,4);
+ if(data.crowd)items.push({game:data.gameOf(data.crowd.play),title:words.crowdTitle,headline:words.crowdHead(name(data.crowd.play),data.crowd.count),detail:date(data,data.crowd.play.date)});
+ if(data.days.busiest)items.push({icon:'📅',title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
+ // 최대 5개: 최고 점수 · 치열 · 압승 · 달성 2 · 최다 인원 · 가장 많이 한 날 순서에서 앞의 다섯.
+ return items.slice(0,5);
 }
 function highlightsSlide(ctx,data,images){
  heading(ctx,data.words.highlightsTitle);
- highlightItems(data).forEach((item,index)=>{const y=250+index*244,h=220;box(ctx,X,y,CW,h);if(item.game)cover(ctx,images.get(item.game.key),item.game.name,X+30,y+30,160,160,20);else{fillRound(ctx,X+30,y+30,160,160,80,'#2c4c74');line(ctx,item.icon,X+110,y+132,120,{size:64,align:'center'});}
-  const left=X+222,room=CW-252;line(ctx,item.title,left,y+66,room,{size:26,weight:600,color:'#9fc8f7'});line(ctx,item.headline,left,y+134,room,{size:50,min:24,weight:800});line(ctx,item.detail,left,y+184,room,{size:24,min:15,weight:600,color:'#b8cde6'});});
+ const list=highlightItems(data),gap=18,h=Math.min(220,(1290-250-gap*(list.length-1))/list.length),thumb=h-50;
+ list.forEach((item,index)=>{const y=250+index*(h+gap);box(ctx,X,y,CW,h);if(item.game)cover(ctx,images.get(item.game.key),item.game.name,X+25,y+25,thumb,thumb,20);else{fillRound(ctx,X+25,y+25,thumb,thumb,thumb/2,'#2c4c74');line(ctx,item.icon,X+25+thumb/2,y+25+thumb*.68,thumb,{size:Math.round(thumb*.4),align:'center'});}
+  const left=X+thumb+56,room=CW-thumb-86;line(ctx,item.title,left,y+h*.3,room,{size:25,weight:600,color:'#9fc8f7'});line(ctx,item.headline,left,y+h*.62,room,{size:46,min:24,weight:800});line(ctx,item.detail,left,y+h*.86,room,{size:23,min:15,weight:600,color:'#b8cde6'});});
 }
 
 export async function createRecapSet(data){
