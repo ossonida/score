@@ -172,7 +172,7 @@ dialog .actions .danger{margin-right:0}
 #gamesScreen>.settings-heading p{margin:0}
 .game-view-tabs{display:flex;gap:5px;margin:-3px -14px 10px;padding:3px 14px;overflow-x:auto;scrollbar-width:none}
 .game-view-tabs::-webkit-scrollbar{display:none}
-.game-view-tabs button{flex:none;min-height:28px;padding:5px 15px;border:1px solid #26384f;border-radius:15px;background:#0d1522;color:#8fa6c3;font-size:13px;font-weight:500;line-height:1}
+.game-view-tabs button{flex:none;min-height:28px;padding:10px 15px;border:1px solid #26384f;border-radius:20px;background:#0d1522;color:#8fa6c3;font-size:14px;font-weight:500;line-height:1}
 .game-view-tabs button[aria-selected=true]{background:#223c5d;color:#e4f0ff}
 .game-view-tabs button:focus-visible{outline:2px solid #8fc3ff;outline-offset:2px}
 .game-search{position:relative;display:block;margin-bottom:13px}
