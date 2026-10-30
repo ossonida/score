@@ -1,7 +1,7 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=5';
 import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=3';
 import {readIdentity} from './personal-stats.js?v=117';
-import {openRecapShare} from './recap-share.js?v=12';
+import {openRecapShare} from './recap-share.js?v=13';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;
@@ -36,8 +36,8 @@ function calendar(subset,selected){
 }
 
 function newGames(container,records,selected,onGame){
- const list=firstPlays(records,selected);if(!list.length)return;const section=card('처음 해본 게임',`${list.length}개`);
- for(const {key,play}of list.slice(0,8))row(section,play.game.name,`${md(play.date)} 첫 플레이`,()=>onGame?.(key));
+ const list=firstPlays(records,selected);if(!list.length)return;const section=card('새로 기록한 게임',`${list.length}개`);
+ for(const {key,play}of list.slice(0,8))row(section,play.game.name,`${md(play.date)} 첫 기록`,()=>onGame?.(key));
  if(list.length>8)section.append(el('p',`외 ${list.length-8}개`,'insight-footnote'));container.append(section);
 }
 function places(container,subset){

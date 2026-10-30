@@ -2,7 +2,7 @@ import {gameKey,winnerIds} from './records-core.js?v=155';
 import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=3';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=154';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=155';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -10,22 +10,22 @@ const plural=(n,one,many)=>`${n.toLocaleString('en-US')} ${n===1?one:many}`;
 const COPY={
  ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',scopeLabel:'공유 범위',showWinners:'우승자 표시',fullScores:'순위·점수 전체 표시',dayDialog:'최근 기록 공유',daySetHint:'그날 전체 + 게임별',daySingleHint:'그날 요약 한 장',scopePublic:'공개 SNS용',scopeFriends:'친구 공유용',scopePublicHint:'이름을 가리고 점수 비교는 뺍니다.',scopeFriendsHint:'실명과 라이벌 대결·점수까지 넣습니다.',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
   title:label=>`${label} 결산`,plays:'플레이',days:'플레이한 날',games:'서로 다른 게임',swipe:'넘겨서 더 보기 →',topOf:preset=>preset==='month'?'이달의 게임':preset==='year'?'올해의 게임':'가장 많이 한 게임',
-  wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 빠진 게임',sinceFirst:n=>`처음 해 본 뒤 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
+  wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 기록한 게임 1위',sinceFirst:n=>`기록 시작 후 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
   peopleTitle:'함께한 사람들',peopleCount:'함께한 사람',groupPlays:'여럿이 한 판',rival:'라이벌 · 가장 팽팽했던 상대',rivalDetail:(n,d)=>d?`${n}판 중 ${d}승 차`:`${n}판 동안 동률`,mostWins:'최다 우승',together:'가장 많이 함께한 사람',bestRate:'승률 1위',winsN:n=>`${n}승`,
   calendarTitle:'플레이 달력',busiest:'가장 많이 한 날',streak:'최장 연속',daysN:n=>`${n}일`,dayPlays:n=>`하루에 ${n}판`,weekdayTitle:'요일별',weekdays:['일','월','화','수','목','금','토'],month:m=>`${m}월`,
   highlightsTitle:'이 기간의 순간들',bestScore:'최고 점수',points:n=>`${n.toLocaleString('ko-KR')}점`,closest:'가장 아슬아슬했던 판',wonBy:n=>`${n}점 차`,milestone:'달성 기록',
   ms:{plays:n=>`통산 ${n}번째 플레이`,days:n=>`플레이한 날 ${n}일째`,games:n=>`서로 다른 게임 ${n}개째`,game:(n,g)=>`${g} ${n}번째 플레이`},medalTop:{plays:'통산',days:'플레이한 날',games:'서로 다른 게임'},medalBottom:{plays:'번째 플레이',days:'일째',games:'개째',game:'번째 플레이'},
-  trait:{milestone:t=>`${t} 달성`,firsts:n=>`새 게임 ${n}개를 시작`,focus:(g,n)=>`${g} ${n}판 집중`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
-  firstsTitle:n=>`처음 해본 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'처음 해본 게임',countN:n=>`${n}개`},
+  trait:{milestone:t=>`${t} 달성`,firsts:n=>`새로 기록한 게임 ${n}개`,focus:(g,n)=>`${g} ${n}판 집중`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
+  firstsTitle:n=>`새로 기록한 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'새로 기록한 게임',countN:n=>`${n}개`},
  en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',scopeLabel:'Share with',showWinners:'Show winners',fullScores:'Full rankings & scores',dayDialog:'Share game day',daySetHint:'Day + each game',daySingleHint:'Day summary only',scopePublic:'Public',scopeFriends:'Friends',scopePublicHint:'Names hidden, no score comparisons.',scopeFriendsHint:'Real names, rivals and scores included.',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
   title:label=>`${label} Recap`,plays:'Plays',days:'Play days',games:'Games',swipe:'Swipe for more →',topOf:preset=>preset==='month'?'Game of the month':preset==='year'?'Game of the year':'Top game',
-  wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'New favorite',sinceFirst:n=>`${plural(n,'play','plays')} since first try`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
+  wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'Top newly logged',sinceFirst:n=>`${plural(n,'play','plays')} since first logged`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
   peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Rival · closest match-up',rivalDetail:(n,d)=>d?`${plural(d,'win','wins')} apart over ${plural(n,'game','games')}`:`Tied over ${plural(n,'game','games')}`,mostWins:'Most wins',together:'Most games together',bestRate:'Best win rate',winsN:n=>plural(n,'win','wins'),
   calendarTitle:'Play calendar',busiest:'Busiest day',streak:'Longest streak',daysN:n=>plural(n,'day','days'),dayPlays:n=>`${plural(n,'play','plays')} in a day`,weekdayTitle:'By weekday',weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],month:m=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
   highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Closest game',wonBy:n=>`Won by ${n}`,milestone:'Milestone',
   ms:{plays:n=>`Play #${n}`,days:n=>`Play day #${n}`,games:n=>`Game #${n} tried`,game:(n,g)=>`${g} play #${n}`},medalTop:{plays:'Total plays',days:'Play days',games:'Games tried'},medalBottom:{plays:'reached',days:'reached',games:'reached',game:'plays'},
-  trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} new games started`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`},
-  firstsTitle:n=>`First plays · ${n}`,winnersOf:g=>`${g} winners`,coopTitle:'Co-op',success:'Won',failure:'Lost',compare:'vs. last period',compareHead:d=>d?`${d>0?'+':''}${d} ${Math.abs(d)===1?'play':'plays'}`:'No change',compareDetail:(a,b)=>`${a} → ${plural(b,'play','plays')}`,firstsCard:'First plays',countN:n=>`${n} new`},
+  trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} games newly logged`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`},
+  firstsTitle:n=>`Newly logged · ${n}`,winnersOf:g=>`${g} winners`,coopTitle:'Co-op',success:'Won',failure:'Lost',compare:'vs. last period',compareHead:d=>d?`${d>0?'+':''}${d} ${Math.abs(d)===1?'play':'plays'}`:'No change',compareDetail:(a,b)=>`${a} → ${plural(b,'play','plays')}`,firstsCard:'Newly logged',countN:n=>`${n} new`},
 };
 export const recapCopy=lang=>COPY[shareLanguage(lang)];
 
@@ -77,7 +77,7 @@ export function recapPlan(data){
  if(data.model.preset!=='all'&&data.calendarDays<=366)plan.push('calendar');if(highlightItems(data).length>=2)plan.push('highlights');
  return plan;
 }
-// 한 장 본문: 달성 기록 → 처음 해본 게임(2개 이상) → 한 게임 집중 → 협력 게임(절반 이상) → 많이 한 게임.
+// 한 장 본문: 달성 기록 → 새로 기록한 게임(2개 이상) → 한 게임 집중 → 협력 게임(절반 이상) → 많이 한 게임.
 export function recapTrait(data){
  const mark=data.marks.find(item=>item.kind!=='game'||item.count>=25);if(mark)return {kind:'milestone',mark};
  if(data.firsts.length>=2)return {kind:'firsts'};if(data.focus)return {kind:'focus'};
@@ -195,7 +195,7 @@ export async function createRecapSet(data){
  return blobs;
 }
 
-// 한 장: 제목·특징 한 줄 → 지표 → 특징 본문 → 보조 카드 2장(지난 기간 비교 · 최다 우승 · 처음 해본 게임 · 많이 한 게임 · 연속 · 가장 많이 한 날 중 본문과 겹치지 않는 것).
+// 한 장: 제목·특징 한 줄 → 지표 → 특징 본문 → 보조 카드 2장(지난 기간 비교 · 최다 우승 · 새로 기록한 게임 · 많이 한 게임 · 연속 · 가장 많이 한 날 중 본문과 겹치지 않는 것).
 export async function createRecapSingle(data){
  const words=data.words;if(!data.plays.length)throw Error(words.empty);const images=await loadCovers(data.games),trait=recapTrait(data),[node,ctx]=canvas(),top=data.games[0];
  const sub=trait.kind==='milestone'?words.trait.milestone(data.markTitle(trait.mark)):trait.kind==='firsts'?words.trait.firsts(data.firsts.length):trait.kind==='focus'?words.trait.focus(data.focus.name,data.focus.count):trait.kind==='coop'?words.trait.coop(data.coop.wins,data.coop.total):words.trait.top(top.name);

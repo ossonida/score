@@ -62,14 +62,14 @@ test('period dashboard shows the calendar, milestones, first plays, places and t
  const records=[...daysFrom('2026-09-20',9,'카탄'),play('n1','2026-10-02','카탄',{location:'집'}),play('n2','2026-10-02','아줄',{location:'카페'}),play('n3','2026-10-05','카탄',{location:'집'})];
  const root=new Element('div');renderPeriodDashboard(root,records,monthModel,{scope:'none',onGame(){},onRecord(){}});
  const all=texts(root);
- for(const label of ['결산 공유','플레이 달력','달성 기록','처음 해본 게임','플레이 장소','가장 많이 한 날 10/2 · 2판'])assert.ok(all.includes(label),label);
+ for(const label of ['결산 공유','플레이 달력','달성 기록','새로 기록한 게임','플레이 장소','가장 많이 한 날 10/2 · 2판'])assert.ok(all.includes(label),label);
  assert.ok(!all.includes('플레이 빈도'),'calendar replaces the frequency bars for a month');
  assert.ok(all.includes('통산 10번째 플레이'));
  assert.equal(walk(root).filter(n=>n.className==='calendar-day').length,31);
  const yearRoot=new Element('div');renderPeriodDashboard(yearRoot,records,{...monthModel,title:'2026년',current:{start:'2026-01-01',end:'2026-12-31'}},{scope:'none'});
  assert.equal(walk(yearRoot).filter(n=>n.className==='calendar-month').length,12);
  const allRoot=new Element('div');renderPeriodDashboard(allRoot,records,{preset:'all',title:'전체 기간',label:'',current:{start:'2026-09-20',end:'2026-10-05'},previous:null},{scope:'none'});
- assert.ok(texts(allRoot).includes('플레이 빈도'));assert.ok(!texts(allRoot).includes('처음 해본 게임'));
+ assert.ok(texts(allRoot).includes('플레이 빈도'));assert.ok(!texts(allRoot).includes('새로 기록한 게임'));
  const empty=new Element('div');renderPeriodDashboard(empty,[],monthModel,{scope:'none'});assert.ok(!texts(empty).includes('결산 공유'));
 });
 

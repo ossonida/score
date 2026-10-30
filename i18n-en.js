@@ -1537,6 +1537,8 @@ function dictionary(){return /*<dict>*/{
 "달성":"Reached",
 "게임 순위":"Leaderboard",
 "{0}명 더 보기":"Show {0} more",
-"기간 분석에서는 가족·파티 게임(BGG 유형이 가족·파티·어린이이고 전략이 아닌 경쟁 게임)도 하루에 여러 판을 해도 한 판으로 셉니다.":"In Periods, family and party games (competitive games whose BGG type is Family, Party or Children's and not Strategy) also count as one play per day, however many you play."
+"기간 분석에서는 가족·파티 게임(BGG 유형이 가족·파티·어린이이고 전략이 아닌 경쟁 게임)도 하루에 여러 판을 해도 한 판으로 셉니다.":"In Periods, family and party games (competitive games whose BGG type is Family, Party or Children's and not Strategy) also count as one play per day, however many you play.",
+"새로 기록한 게임":"Newly logged",
+"{0} 첫 기록":"First logged {0}"
 }/*</dict>*/;}
 })(typeof window!=='undefined'?window:globalThis);

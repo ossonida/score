@@ -13,5 +13,5 @@
  document.documentElement.lang=lang;
  window.ScoreI18n={lang:lang,locale:lang==='ko'?'ko-KR':'en-US',preference:preference,t:function(text){return text;},
   setPreference:function(next){try{if(next==='ko'||next==='en')localStorage.setItem(KEY,next);else localStorage.removeItem(KEY);}catch(error){}location.reload();}};
- if(lang==='en')document.write('<script src="./i18n-en.js?v=7"><\/script>');
+ if(lang==='en')document.write('<script src="./i18n-en.js?v=8"><\/script>');
 })();
