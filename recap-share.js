@@ -120,19 +120,16 @@ function coverSlide(ctx,data,images,total){
  else{const big=Math.round((CW-gap)*.57),small=CW-gap-big,half=(h-gap)/2;tile(ctx,images,shown[0],X,top,big,h,hero,34);tile(ctx,images,shown[1],X+big+gap,top,small,half,shown[1].name,26);tile(ctx,images,shown[2],X+big+gap,top+half+gap,small,half,shown[2].name,26);}
  if(total>1)line(ctx,words.swipe,X,1300,CW,{size:24,weight:600,color:'rgba(255,255,255,.55)'});
 }
-// 표지 격자: 여백 없이 3×4칸, 아래 줄 위에 기간·게임 수·판 수 한 줄.
+// 표지 격자: 3×3 정사각형 9칸(가로를 꽉 채움) + 아래 글자 띠(표지와 겹치지 않음). 첫 장 0~8, 둘째 장 9~17. 장에 다 못 넣으면 마지막 칸 '+N 게임 더'.
 function wallSlide(ctx,data,images,page,total,second){
- const words=data.words,gap=6,w=(W-gap*2)/3,h=(H-gap*3)/4,start=second?12:0,rest=data.games.length-start,room=12;
- const overflow=!second&&data.games.length>12&&data.games.length<18||second&&rest>12,items=data.games.slice(start,start+(overflow?11:12));
+ const words=data.words,gap=6,size=(W-gap*2)/3,start=second?9:0,rest=data.games.length-start,items=data.games.slice(start,start+(rest>9&&(second||data.games.length<18)?8:9)),more=items.length<rest;
  ctx.fillStyle='#060d1a';ctx.fillRect(0,0,W,H);
- for(let index=0;index<room;index++){const x=(index%3)*(w+gap),y=Math.floor(index/3)*(h+gap),game=items[index];
-  if(game){cover(ctx,images.get(game.key),game.name,x,y,w,h,0);badges(ctx,game,x,y,w,26);}
-  else if(overflow&&index===items.length){fillRound(ctx,x,y,w,h,0,'#13233a');line(ctx,`+${data.games.length-start-items.length}`,x+w/2,y+h/2+10,w-40,{size:84,min:40,weight:800,align:'center'});line(ctx,words.moreGames,x+w/2,y+h/2+60,w-40,{size:28,weight:600,color:'#9fc8f7',align:'center'});}
-  else{ctx.fillStyle='#0c1a2c';ctx.fillRect(x,y,w,h);}
+ for(let index=0;index<9;index++){const x=(index%3)*(size+gap),y=Math.floor(index/3)*(size+gap),game=items[index];
+  if(game){cover(ctx,images.get(game.key),game.name,x,y,size,size,0);badges(ctx,game,x,y,size,26);}
+  else if(index===items.length&&more){fillRound(ctx,x,y,size,size,0,'#13233a');line(ctx,`+${data.games.length-start-items.length}`,x+size/2,y+size/2+10,size-40,{size:84,min:40,weight:800,align:'center'});line(ctx,words.moreGames,x+size/2,y+size/2+60,size-40,{size:28,weight:600,color:'#9fc8f7',align:'center'});}
+  else{ctx.fillStyle='#0c1a2c';ctx.fillRect(x,y,size,size);}
  }
- const gradient=ctx.createLinearGradient(0,H-430,0,H);gradient.addColorStop(0,'rgba(5,12,24,0)');gradient.addColorStop(.55,'rgba(5,12,24,.94)');gradient.addColorStop(1,'rgba(5,12,24,.98)');ctx.fillStyle=gradient;ctx.fillRect(0,H-430,W,430);
- line(ctx,'SCORE COUNTER',X,H-128,500,{size:28,color:'#82bfff'});
- line(ctx,words.wall(data.label,data.games.length,data.plays.length),X,H-62,CW,{size:56,min:28,weight:800});
+ const band=size*3+gap*2;line(ctx,'SCORE COUNTER',X,band+92,500,{size:28,color:'#82bfff'});line(ctx,words.wall(data.label,data.games.length,data.plays.length),X,band+170,CW,{size:56,min:28,weight:800});
 }
 function topSlide(ctx,data,images){
  const words=data.words,rows=data.games.slice(0,5),max=rows[0].count;heading(ctx,words.topTitle);
