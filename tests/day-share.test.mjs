@@ -27,10 +27,10 @@ test('score game: top score, personal best, blowout, close game and win chart; n
 
 test('first play and streak and new all-time leader for win/lose games',()=>{
  const first=gameStory([won('a','2026-10-10',10,['나','지영'],'지영')],'2026-10-10',K('할리갈리'),profile,{locale:'ko-KR'});
- assert.deepEqual(first.stories[0],{title:'첫 플레이',headline:'지* 첫 판 우승',detail:'10월10일'});assert.ok(first.isNew);
+ assert.deepEqual(first.stories[0],{title:'첫 플레이',headline:'오늘 처음 해봤어요',detail:'10월10일'});assert.ok(first.isNew);
  const raw=[won('o0','2026-09-30',10,['나','지영'],'지영'),won('o1','2026-10-01',10,['나','지영'],'지영'),won('o2','2026-10-02',10,['나','지영'],'나'),won('t1','2026-10-10',10,['나','지영'],'나'),won('t2','2026-10-10',11,['나','지영'],'나')];
  const story=gameStory(raw,'2026-10-10',K('할리갈리'),profile,{locale:'en-US'});
- assert.deepEqual(story.stories.map(item=>[item.title,item.headline]),[['Win streak','Me · 3 in a row'],['New all-time leader','Me']]);
+ assert.deepEqual(story.stories.map(item=>[item.title,item.headline]),[['Win streak','나 · 3 in a row'],['New all-time leader','나']]);
 });
 
 test('hidden-role games: most often mafia, wins by side and best liar',()=>{
@@ -62,4 +62,10 @@ test('full rankings: one play shows the ranking table, several plays one line ea
  const night={id:'n',date:'2026-10-10',createdAt:'2026-10-10T10:00:00Z',game:{name:'마피아',bggId:''},rule:'highest',players:['나','지영','민수'].map((name,i)=>({id:'p'+i,name,score:null,teamId:i?'team-2':'team-1',teamName:i?'시민':'마피아',winner:i>0}))};
  assert.equal(gameStory([night,{...night,id:'m',createdAt:'2026-10-10T11:00:00Z'}],'2026-10-10',K('마피아'),profile,{locale:'ko-KR',mask:false,full:true}).chart.rows[0].text,'시민 승 · 지영, 민수');
  assert.notEqual(gameStory([scored('a','2026-10-10',10,{나:61,Chris:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:true,full:true}).chart?.kind,'table','public never shows the full table');
+});
+
+test('my nickname is shown instead of "Me", unmasked even in public',()=>{
+ const play=(id,hour,winner)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'할리갈리',bggId:''},rule:'highest',players:[{id:'a',name:'Sky',isSelf:true,score:null,winner:winner==='Sky'},{id:'b',name:'Maple',score:null,winner:winner==='Maple'}]});
+ const story=gameStory([play('1',10,'Sky'),play('2',11,'Sky')],'2026-10-10',K('할리갈리'),null,{locale:'en-US'});
+ assert.deepEqual(story.chart.rows.map(row=>row.label),['Sky']);assert.equal(story.stories.find(item=>item.title==='Win streak').headline,'Sky · 2 in a row');
 });

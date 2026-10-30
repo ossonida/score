@@ -41,7 +41,8 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
  const list=[...games.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),gameOf=play=>games.get(gameKey(play.game)),newGames=list.filter(game=>game.isNew),allNew=list.length>1&&newGames.length===list.length;
  // 모든 게임이 처음이면(기록을 막 시작한 기간) NEW 표시는 의미가 없어 뺀다.
  if(allNew)for(const game of list)game.isNew=false;
- const shown=(person,self)=>self?words.me:mask?maskName(person.name):String(person.name).trim();
+ // 나는 기록에 적힌 닉네임 그대로(가리지 않음), 다른 사람은 공개용이면 가림.
+ const shown=(person,self)=>self||!mask?String(person.name).trim():maskName(person.name);
  // 사람: 경쟁 기록의 이름 있는 플레이어. 나는 별칭과 상관없이 한 줄, 나와 같이 한 판은 상대 전적으로도 센다.
  const people=new Map(),versus=new Map();let best=null,close=null;
  for(const play of plays){
@@ -65,7 +66,8 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
  const previous=model.previous?records.filter(play=>play.date>=model.previous.start&&play.date<=model.previous.end).length:null,calendarDays=Math.round((Date.parse(range.end)-Date.parse(range.start))/86400000)+1;
  const label=periodShareLabel(model,lang),focus=list[0]&&list[0].count>=5&&list[0].count/plays.length>=.6?list[0]:null;
  const focusWinners=focus?(()=>{const counts=new Map();for(const play of plays){if(gameKey(play.game)!==focus.key||play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),me=meIn(play,profile);for(const person of play.players){if(!wins.has(person.id)||person.anonymous===true||!String(person.name||'').trim())continue;const self=me?.id===person.id,key=self?SELF:nameKey(person.name),row=counts.get(key)||{name:shown(person,self),wins:0};row.wins++;counts.set(key,row);}}return [...counts.values()].sort((a,b)=>b.wins-a.wins).slice(0,3);})():[];
- return {lang,words,model,scope,mask,peopleCount:others.length,groupPlays:plays.filter(play=>play.players.length>1).length,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
+ const selfNames=new Map();for(const play of plays){const me=meIn(play,profile),name=String(me?.name||'').trim();if(me&&name)selfNames.set(name,(selfNames.get(name)||0)+1);}
+ return {lang,words,model,scope,mask,selfName:[...selfNames].sort((a,b)=>b[1]-a[1])[0]?.[0]||words.me,peopleCount:others.length,groupPlays:plays.filter(play=>play.players.length>1).length,label,title:words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
 }
 
 // 여러 장 구성: 데이터가 없는 장은 뺀다. 표지 격자는 게임 9개 이상(한 장 12칸, 18개 이상이면 두 장).
@@ -144,7 +146,7 @@ function topSlide(ctx,data,images){
 function peopleSlide(ctx,data){
  const words=data.words;let y=250;heading(ctx,words.peopleTitle);
  if(data.rival){const rival=data.rival,h=400;box(ctx,X,y,CW,h);line(ctx,words.rival,X+34,y+56,CW-68,{size:26,weight:600,color:'#9fc8f7'});
-  [[rival.mine,words.me,X+CW*.25],[rival.theirs,rival.name,X+CW*.75]].forEach(([value,name,cx])=>{line(ctx,String(value),cx,y+200,360,{size:120,min:60,weight:900,align:'center'});line(ctx,name,cx,y+252,360,{size:34,min:20,weight:700,color:'#cfe3ff',align:'center'});});
+  [[rival.mine,data.selfName,X+CW*.25],[rival.theirs,rival.name,X+CW*.75]].forEach(([value,name,cx])=>{line(ctx,String(value),cx,y+200,360,{size:120,min:60,weight:900,align:'center'});line(ctx,name,cx,y+252,360,{size:34,min:20,weight:700,color:'#cfe3ff',align:'center'});});
   line(ctx,'VS',X+CW/2,y+180,120,{size:40,weight:800,color:'#82bfff',align:'center'});
   const results=rival.results.slice(-20),gap=8,dot=(CW-68-gap*(results.length-1))/results.length;results.forEach((result,index)=>fillRound(ctx,X+34+index*(dot+gap),y+290,dot,18,9,result==='w'?'#4fa3ff':result==='l'?'rgba(255,255,255,.2)':'#9fc8f7'));
   line(ctx,words.rivalDetail(rival.shared,Math.abs(rival.mine-rival.theirs)),X+34,y+360,CW-68,{size:26,weight:600,color:'#b8cde6'});y+=h+24;}
