@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 globalThis.document={createElement:()=>({})};
-const {gameStory}=await import('../day-share.js');
+const {gameStory,dayStories}=await import('../day-share.js');
 const {gameKey}=await import('../records-core.js');
 const K=name=>gameKey({name,bggId:''});
 const profile={primary:'나',aliases:[]};
@@ -16,11 +16,11 @@ test('score game: top score, personal best, blowout, close game and win chart; n
   scored('t1','2026-10-10',10,{나:60,김민수:40}),scored('t2','2026-10-10',11,{나:30,김민수:31})];
  const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 2판 · 통산 5판');
- assert.deepEqual(titles(story),['오늘 최고점','개인 최고점 갱신','가장 큰 점수 차','가장 아슬아슬한 판','평소보다','이 멤버로','요즘 빠진 게임','많이 한 게임']);
+ assert.deepEqual(titles(story),['오늘 최고점','개인 최고점 갱신','가장 큰 점수 차','가장 아슬아슬한 판','평소보다','최근 흐름','이 멤버로','요즘 빠진 게임','많이 한 게임']);
  assert.deepEqual(story.stories[1],{title:'개인 최고점 갱신',headline:'나 60점',detail:'이전 42'});
  assert.equal(story.stories[3].detail,'','public hides the losing score');
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]),[['나',1],['김**',1]]);
- assert.equal(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false}).stories[3].detail,'31 : 30');
+ assert.equal(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false}).stories.find(item=>item.title==='가장 아슬아슬한 판').detail,'31 : 30');
  const quiet=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',winners:false});
  assert.equal(quiet.chart,null);assert.deepEqual(quiet.stories.map(item=>[item.title,item.headline]),[['이 멤버로','5번째 판'],['요즘 빠진 게임','이번 달 5번째'],['많이 한 게임','1위']]);
 });
@@ -68,4 +68,13 @@ test('my nickname is shown instead of "Me", unmasked even in public',()=>{
  const play=(id,hour,winner)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'할리갈리',bggId:''},rule:'highest',players:[{id:'a',name:'Sky',isSelf:true,score:null,winner:winner==='Sky'},{id:'b',name:'Maple',score:null,winner:winner==='Maple'}]});
  const story=gameStory([play('1',10,'Sky'),play('2',11,'Sky')],'2026-10-10',K('할리갈리'),null,{locale:'en-US'});
  assert.deepEqual(story.chart.rows.map(row=>row.label),['Sky']);assert.equal(story.stories.find(item=>item.title==='Win streak').headline,'Sky · 2 in a row');
+});
+
+test('light-day stories: revenge, head to head, recent form, next goal, weekly streak',()=>{
+ const duel=(id,date,hour,winner)=>({id,date,createdAt:at(date,hour),game:{name:'패치워크',bggId:''},rule:'highest',players:[{id:'a',name:'Sky',isSelf:true,score:null,winner:winner==='Sky'},{id:'b',name:'Maple',score:null,winner:winner==='Maple'}]});
+ const raw=[duel('1','2026-09-29',20,'Sky'),duel('2','2026-10-01',20,'Maple'),duel('3','2026-10-02',20,'Sky'),duel('4','2026-10-06',20,'Maple'),duel('5','2026-10-07',20,'Maple'),duel('6','2026-10-08',20,'Sky')];
+ const story=gameStory(raw,'2026-10-08',K('패치워크'),null,{locale:'ko-KR',mask:false});
+ assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]).slice(0,3),[['설욕전','지난번 패배 설욕','vs Maple'],['통산 전적','Sky 3 : 3 Maple',''],['최근 흐름','최근 5판 중 2승','○●○○●'],['다음 목표','패치워크 10판까지 4판','']].slice(0,3));
+ assert.ok(!gameStory(raw,'2026-10-08',K('패치워크'),null,{locale:'ko-KR'}).stories.some(item=>item.title==='설욕전'),'public leaves out revenge');
+ assert.deepEqual(dayStories(raw,'2026-10-08',{locale:'ko-KR'}).map(item=>item.headline),['2주 연속 게임 나이트','통산 10판까지 4판']);
 });
