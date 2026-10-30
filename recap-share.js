@@ -2,13 +2,13 @@ import {gameKey,winnerIds} from './records-core.js?v=155';
 import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=3';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric} from './stats-share.js?v=153';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=154';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
 const plural=(n,one,many)=>`${n.toLocaleString('en-US')} ${n===1?one:many}`;
 const COPY={
- ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',scopeLabel:'공유 범위',scopePublic:'공개 SNS용',scopeFriends:'친구 공유용',scopePublicHint:'이름을 가리고 점수 비교는 뺍니다.',scopeFriendsHint:'실명과 라이벌 대결·점수까지 넣습니다.',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
+ ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',scopeLabel:'공유 범위',showWinners:'우승자 표시',dayDialog:'최근 기록 공유',daySetHint:'그날 전체 + 게임별',daySingleHint:'그날 요약 한 장',scopePublic:'공개 SNS용',scopeFriends:'친구 공유용',scopePublicHint:'이름을 가리고 점수 비교는 뺍니다.',scopeFriendsHint:'실명과 라이벌 대결·점수까지 넣습니다.',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
   title:label=>`${label} 결산`,plays:'플레이',days:'플레이한 날',games:'서로 다른 게임',swipe:'넘겨서 더 보기 →',topOf:preset=>preset==='month'?'이달의 게임':preset==='year'?'올해의 게임':'가장 많이 한 게임',
   wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 빠진 게임',sinceFirst:n=>`처음 해 본 뒤 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
   peopleTitle:'함께한 사람들',peopleCount:'함께한 사람',groupPlays:'여럿이 한 판',rival:'라이벌 · 가장 팽팽했던 상대',rivalDetail:(n,d)=>d?`${n}판 중 ${d}승 차`:`${n}판 동안 동률`,mostWins:'최다 우승',together:'가장 많이 함께한 사람',bestRate:'승률 1위',winsN:n=>`${n}승`,
@@ -17,7 +17,7 @@ const COPY={
   ms:{plays:n=>`통산 ${n}번째 플레이`,days:n=>`플레이한 날 ${n}일째`,games:n=>`서로 다른 게임 ${n}개째`,game:(n,g)=>`${g} ${n}번째 플레이`},medalTop:{plays:'통산',days:'플레이한 날',games:'서로 다른 게임'},medalBottom:{plays:'번째 플레이',days:'일째',games:'개째',game:'번째 플레이'},
   trait:{milestone:t=>`${t} 달성`,firsts:n=>`새 게임 ${n}개를 시작`,focus:(g,n)=>`${g} ${n}판 집중`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
   firstsTitle:n=>`처음 해본 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'처음 해본 게임',countN:n=>`${n}개`},
- en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',scopeLabel:'Share with',scopePublic:'Public',scopeFriends:'Friends',scopePublicHint:'Names hidden, no score comparisons.',scopeFriendsHint:'Real names, rivals and scores included.',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
+ en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',scopeLabel:'Share with',showWinners:'Show winners',dayDialog:'Share game day',daySetHint:'Day + each game',daySingleHint:'Day summary only',scopePublic:'Public',scopeFriends:'Friends',scopePublicHint:'Names hidden, no score comparisons.',scopeFriendsHint:'Real names, rivals and scores included.',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
   title:label=>`${label} Recap`,plays:'Plays',days:'Play days',games:'Games',swipe:'Swipe for more →',topOf:preset=>preset==='month'?'Game of the month':preset==='year'?'Game of the year':'Top game',
   wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'New favorite',sinceFirst:n=>`${plural(n,'play','plays')} since first try`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
   peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Rival · closest match-up',rivalDetail:(n,d)=>d?`${plural(d,'win','wins')} apart over ${plural(n,'game','games')}`:`Tied over ${plural(n,'game','games')}`,mostWins:'Most wins',together:'Most games together',bestRate:'Best win rate',winsN:n=>plural(n,'win','wins'),
@@ -29,8 +29,7 @@ const COPY={
 };
 export const recapCopy=lang=>COPY[shareLanguage(lang)];
 
-// 이름 가리기: 첫 글자만 남기고 나머지는 *(최대 3개).
-export function maskName(name){const chars=Array.from(String(name||'').trim());return chars.length?chars[0]+'*'.repeat(Math.min(3,Math.max(1,chars.length-1))):'';}
+export {maskName};
 
 const byDate=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const MS_RANK={plays:4,days:3,games:2,game:1};
@@ -84,27 +83,27 @@ export function recapTrait(data){
 }
 
 const date=(data,value)=>formatShareDate(value,data.lang);
-function line(ctx,value,x,y,maxWidth,{size=28,min=18,weight=700,color='#fff',align='left'}={}){
+export function line(ctx,value,x,y,maxWidth,{size=28,min=18,weight=700,color='#fff',align='left'}={}){
  const text=String(value??'');let px=size;ctx.textAlign=align;ctx.textBaseline='alphabetic';ctx.fillStyle=color;
  for(;px>min;px-=2){ctx.font=`${weight} ${px}px ${FONT}`;if(ctx.measureText(text).width<=maxWidth)break;}
  ctx.font=`${weight} ${px}px ${FONT}`;ctx.fillText(clippedText(ctx,text,maxWidth),x,y);return px;
 }
-function pill(ctx,text,x,y,{align='right',fill='rgba(5,13,25,.82)',color='#e9f3ff',size=24}={}){
+export function pill(ctx,text,x,y,{align='right',fill='rgba(5,13,25,.82)',color='#e9f3ff',size=24}={}){
  ctx.font=`800 ${size}px ${FONT}`;const w=ctx.measureText(text).width+size*1.1,h=size*1.75,left=align==='right'?x-w:x;fillRound(ctx,left,y,w,h,h/2,fill);ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,left+w/2,y+h/2+1);ctx.textBaseline='alphabetic';
 }
-function cover(ctx,image,name,x,y,w,h,radius=24){
+export function cover(ctx,image,name,x,y,w,h,radius=24){
  ctx.save();roundRect(ctx,x,y,w,h,radius);ctx.clip();
  if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale;ctx.drawImage(image,(image.naturalWidth-sw)/2,(image.naturalHeight-sh)*.15,sw,sh,x,y,w,h);}
  else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);line(ctx,name,x+w/2,y+h/2+10,w-28,{size:Math.min(34,Math.round(w/6)),min:14,color:'#93bced',align:'center'});}
  ctx.restore();
 }
-function shade(ctx,x,y,w,h,radius,from=.5){ctx.save();roundRect(ctx,x,y,w,h,radius);ctx.clip();const gradient=ctx.createLinearGradient(0,y+h*from,0,y+h);gradient.addColorStop(0,'rgba(4,10,20,0)');gradient.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.restore();}
-function badges(ctx,game,x,y,w,size=24){if(game.count>1)pill(ctx,`×${game.count}`,x+w-14,y+14,{size});if(game.isNew)pill(ctx,'NEW',x+14,y+14,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:size-2});}
+export function shade(ctx,x,y,w,h,radius,from=.5){ctx.save();roundRect(ctx,x,y,w,h,radius);ctx.clip();const gradient=ctx.createLinearGradient(0,y+h*from,0,y+h);gradient.addColorStop(0,'rgba(4,10,20,0)');gradient.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.restore();}
+export function badges(ctx,game,x,y,w,size=24){if(game.count>1)pill(ctx,`×${game.count}`,x+w-14,y+14,{size});if(game.isNew)pill(ctx,'NEW',x+14,y+14,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:size-2});}
 function tile(ctx,images,game,x,y,w,h,caption,size=28){cover(ctx,images.get(game.key),game.name,x,y,w,h);if(caption&&images.get(game.key)){shade(ctx,x,y,w,h,24,.55);line(ctx,caption,x+22,y+h-26,w-44,{size,min:16});}badges(ctx,game,x,y,w);}
-function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTER',X,71,500,{size:30,color:'#82bfff'});if(total>1)line(ctx,`${page} / ${total}`,X+CW,71,200,{size:26,weight:600,color:'rgba(255,255,255,.5)',align:'right'});}
+export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTER',X,71,500,{size:30,color:'#82bfff'});if(total>1)line(ctx,`${page} / ${total}`,X+CW,71,200,{size:26,weight:600,color:'rgba(255,255,255,.5)',align:'right'});}
 function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:56,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
-function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
-function card(ctx,{title,headline,detail},x,y,w,h){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:26,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+34,w-64,{size:48,min:22,weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:24,min:15,weight:600,color:'#b8cde6'});}
+export function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
+export function card(ctx,{title,headline,detail},x,y,w,h){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:26,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+34,w-64,{size:48,min:22,weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:24,min:15,weight:600,color:'#b8cde6'});}
 function metrics(ctx,data,y,h){const words=data.words,gap=24,w=(CW-gap*2)/3;[[data.plays.length,words.plays],[data.dayCount,words.days],[data.games.length,words.games]].forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y,w,h},value.toLocaleString(data.lang==='ko'?'ko-KR':'en-US'),label,{center:true}));}
 const rangeText=data=>`${data.range.start.replace(/-/g,'.')} ~ ${data.range.end.replace(/-/g,'.')}`;
 function canvas(){const node=document.createElement('canvas');node.width=W;node.height=H;return [node,node.getContext('2d')];}
@@ -224,42 +223,49 @@ export async function createRecapSingle(data){
  return toBlob(node,words);
 }
 
-// 결산 공유 창: 형식(여러 장·한 장)과 공유 범위(공개·친구)를 한 상태에서 그리고, 바뀌면 이미지를 다시 만든다.
+// 공유 창(기간 결산·최근 기록 공용): 형식(여러 장·한 장)·공유 범위(공개·친구)·우승자 표시(최근 기록만)를 한 상태에서 그리고, 바뀌면 make(state)로 다시 만든다.
 let session=null;
-const fileName=(state,index,count)=>`score-${state.model.current.start}-${state.model.current.end}${count>1?`-${index+1}`:''}.png`;
+const fileName=(state,index,count)=>`${state.fileBase}${count>1?`-${index+1}`:''}.png`;
 function release(state){for(const url of state.urls||[])URL.revokeObjectURL(url);state.urls=[];state.files=[];}
 function paint(dialog,state){
- const words=COPY[state.lang],ready=state.phase==='ready',files=state.files,canShare=ready&&typeof navigator.share==='function'&&(!navigator.canShare||navigator.canShare({files}));
- for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=state.phase==='creating';}
- for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=state.phase==='creating';}
+ const words=COPY[state.lang],ready=state.phase==='ready',busy=state.phase==='creating',files=state.files,canShare=ready&&typeof navigator.share==='function'&&(!navigator.canShare||navigator.canShare({files}));
+ for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;}
+ for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;}
  dialog.querySelector('.recap-scope-hint').textContent=state.scope==='friends'?words.scopeFriendsHint:words.scopePublicHint;
- dialog.querySelector('.recent-share-status').textContent=state.phase==='creating'?words.creating:state.phase==='error'?state.error:state.format==='set'&&files.length>1?words.readySet(files.length):words.readySingle;
+ const winners=dialog.querySelector('.recap-winners'),toggle=winners.querySelector('input');winners.hidden=state.winners===undefined;toggle.checked=state.winners!==false;toggle.disabled=busy;
+ dialog.querySelector('.recent-share-status').textContent=busy?words.creating:state.phase==='error'?state.error:files.length>1?words.readySet(files.length):words.readySingle;
  const strip=dialog.querySelector('.recap-strip');strip.classList.toggle('is-single',files.length<=1);strip.replaceChildren(...state.urls.map((url,index)=>{const image=document.createElement('img');image.src=url;image.alt=words.previewAlt(index+1);image.className='recap-preview';return image;}));
  const save=dialog.querySelector('.recent-share-save'),send=dialog.querySelector('.recent-share-send');save.disabled=!ready;send.disabled=!canShare;send.hidden=ready&&!canShare;
 }
 async function build(dialog,state){
  const token=++state.token;release(state);state.phase='creating';paint(dialog,state);
- try{const data=recapData(state.records,state.model,state.profile,{locale:state.lang,scope:state.scope}),blobs=state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)];
-  if(token!==state.token||session!==state||!dialog.open)return;state.files=blobs.map((blob,index)=>new File([blob],fileName(state,index,blobs.length),{type:'image/png'}));state.urls=blobs.map(blob=>URL.createObjectURL(blob));state.title=data.title;state.phase='ready';}
+ try{const {blobs,title}=await state.make(state);
+  if(token!==state.token||session!==state||!dialog.open)return;state.files=blobs.map((blob,index)=>new File([blob],fileName(state,index,blobs.length),{type:'image/png'}));state.urls=blobs.map(blob=>URL.createObjectURL(blob));state.title=title;state.phase='ready';}
  catch(error){if(token!==state.token)return;state.phase='error';state.error=error?.message||COPY[state.lang].createFailed;}
  paint(dialog,state);
 }
-function ensureRecapDialog(){
+function ensureShareDialog(){
  let dialog=document.getElementById('recapShareDialog');if(dialog)return dialog;
  dialog=document.createElement('dialog');dialog.id='recapShareDialog';dialog.className='recent-share-dialog recap-share-dialog';
- dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-format" role="radiogroup"><button type="button" role="radio" data-format="set"><strong></strong><small></small></button><button type="button" role="radio" data-format="single"><strong></strong><small></small></button></div><div class="recap-scope" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div><p class="recap-scope-hint"></p><p class="record-note recent-share-status" role="status" aria-live="polite"></p><div class="recap-strip"></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
+ dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-format" role="radiogroup"><button type="button" role="radio" data-format="set"><strong></strong><small></small></button><button type="button" role="radio" data-format="single"><strong></strong><small></small></button></div><div class="recap-scope" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div><p class="recap-scope-hint"></p><label class="recent-share-option recap-winners" hidden><input type="checkbox"><span></span></label><p class="record-note recent-share-status" role="status" aria-live="polite"></p><div class="recap-strip"></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
  const close=()=>dialog.close();dialog.querySelector('.score-close').onclick=close;dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.addEventListener('close',()=>{if(session){session.token++;release(session);}session=null;dialog.querySelector('.recap-strip').replaceChildren();});
  for(const button of dialog.querySelectorAll('.recap-format button'))button.onclick=()=>{if(!session||session.format===button.dataset.format)return;session.format=button.dataset.format;build(dialog,session);};
  for(const button of dialog.querySelectorAll('.recap-scope button'))button.onclick=()=>{if(!session||session.scope===button.dataset.scope)return;session.scope=button.dataset.scope;build(dialog,session);};
+ dialog.querySelector('.recap-winners input').onchange=event=>{if(!session||session.winners===undefined)return;session.winners=event.target.checked;build(dialog,session);};
  dialog.querySelector('.recent-share-save').onclick=async()=>{const files=session?.files||[],urls=session?.urls||[];for(const [index,file]of files.entries()){const link=document.createElement('a');link.href=urls[index];link.download=file.name;document.body.append(link);link.click();link.remove();if(index<files.length-1)await new Promise(resolve=>setTimeout(resolve,350));}};
  dialog.querySelector('.recent-share-send').onclick=async()=>{const state=session;if(!state?.files.length)return;try{await navigator.share({files:state.files,title:state.title,text:`${state.title} · Score Counter`});}catch(error){if(error?.name!=='AbortError'&&session===state){state.phase='error';state.error=COPY[state.lang].shareFailed;paint(dialog,state);state.phase='ready';}}};
  document.body.append(dialog);return dialog;
 }
-export async function openRecapShare(records,model,profile){
- const dialog=ensureRecapDialog(),lang=shareLanguage(),words=COPY[lang];if(session){session.token++;release(session);}
- const state={records,model,profile,lang,format:'set',scope:'public',token:0,files:[],urls:[],phase:'creating'};session=state;
- dialog.lang=lang;dialog.querySelector('h2').textContent=words.dialog;dialog.querySelector('.score-close').setAttribute('aria-label',words.close);dialog.querySelector('.recap-format').setAttribute('aria-label',words.dialog);
- const [set,single]=dialog.querySelectorAll('.recap-format button');set.querySelector('strong').textContent=words.formatSet;set.querySelector('small').textContent=words.formatSetHint;single.querySelector('strong').textContent=words.formatSingle;single.querySelector('small').textContent=words.formatSingleHint;
- const [open,friends]=dialog.querySelectorAll('.recap-scope button');open.textContent=words.scopePublic;friends.textContent=words.scopeFriends;dialog.querySelector('.recap-scope').setAttribute('aria-label',words.scopeLabel);dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
+// heading: 창 제목, setHint/singleHint: 형식 버튼 설명, winners: undefined면 우승자 옵션을 숨긴다.
+export async function openShareDialog({heading,setHint,singleHint,fileBase,winners,make}){
+ const dialog=ensureShareDialog(),lang=shareLanguage(),words=COPY[lang];if(session){session.token++;release(session);}
+ const state={lang,fileBase,make,format:'set',scope:'public',winners,token:0,files:[],urls:[],phase:'creating'};session=state;
+ dialog.lang=lang;dialog.querySelector('h2').textContent=heading;dialog.querySelector('.score-close').setAttribute('aria-label',words.close);dialog.querySelector('.recap-format').setAttribute('aria-label',heading);
+ const [set,single]=dialog.querySelectorAll('.recap-format button');set.querySelector('strong').textContent=words.formatSet;set.querySelector('small').textContent=setHint;single.querySelector('strong').textContent=words.formatSingle;single.querySelector('small').textContent=singleHint;
+ const [open,friends]=dialog.querySelectorAll('.recap-scope button');open.textContent=words.scopePublic;friends.textContent=words.scopeFriends;dialog.querySelector('.recap-scope').setAttribute('aria-label',words.scopeLabel);dialog.querySelector('.recap-winners span').textContent=words.showWinners;dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
  if(!dialog.open)dialog.showModal();await build(dialog,state);
+}
+export function openRecapShare(records,model,profile){
+ const words=COPY[shareLanguage()];
+ return openShareDialog({heading:words.dialog,setHint:words.formatSetHint,singleHint:words.formatSingleHint,fileBase:`score-${model.current.start}-${model.current.end}`,make:async state=>{const data=recapData(records,model,profile,{locale:state.lang,scope:state.scope});return {blobs:state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)],title:data.title};}});
 }

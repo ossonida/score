@@ -6,7 +6,7 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=153';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=154';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=180';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=181';
 import {personStats} from './social-insights.js?v=118';
 import {countSessions,isPartyPlay} from './stats-extras.js?v=3';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
@@ -19,7 +19,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=117';
 import {renderStatsDashboard} from './stats-dashboard.js?v=101';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=5';
-import {renderPeriodDashboard} from './period-dashboard.js?v=13';
+import {renderPeriodDashboard} from './period-dashboard.js?v=14';
 import {mergeImported} from './data-transfer.js?v=69';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=166';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches,aliasSearchName} from './game-aliases.js?v=1';
@@ -398,7 +398,7 @@ function renderHistory(){
    if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game,collectionAction),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
  }else if(statsView==='all'){renderPeriodControls(period);renderPeriodDashboard($('statsInsights'),periodMine,period,{scope:key(),onGame:chooseStatsGame,onRecord:openStatsRecord});if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}}
- else renderOverview($('statsInsights'),statsView==='recent'?counted.filter(p=>p.date<=recentDate):counted,{scope:key(),view:statsView,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[],dayNav:statsView==='recent'?{days:playDays,index:playDays.indexOf(recentDate),total:playDays.length,onDay:day=>{recentDay=day;renderHistory();}}:null});
+ else renderOverview($('statsInsights'),statsView==='recent'?counted.filter(p=>p.date<=recentDate):counted,{scope:key(),view:statsView,shareRecords:statsView==='recent'?records.filter(p=>p.date<=recentDate):records,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[],dayNav:statsView==='recent'?{days:playDays,index:playDays.indexOf(recentDate),total:playDays.length,onDay:day=>{recentDay=day;renderHistory();}}:null});
  $('statsDetailCount').textContent=statsView==='all'?'':`${listed.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!listed.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
 if(statsView==='games'&&mode==='stats'&&!statsPerson){for(const g of gameStats(filtered)){const article=node('article',undefined,'record-item');article.append(node('h3',g.game.name),node('p',g.count+'회 플레이'));renderModeStats(article,filtered.filter(p=>gameKey(p.game)===g.key));box.append(article);}return;}
