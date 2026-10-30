@@ -53,3 +53,13 @@ test('co-op missions chart each attempt, hold\'em totals show only the leaders',
  const holdem=gameStory([hand('h1',10,30,-30),hand('h2',11,-10,10),hand('h3',12,5,-5)],'2026-10-10',K('홀덤'),profile,{locale:'ko-KR'});
  assert.deepEqual(holdem.chart.rows.map(row=>[row.label,row.text]),[['나','+25']]);assert.equal(holdem.stories.at(-1).headline,'나 +30');
 });
+
+test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
+ const one=gameStory([scored('a','2026-10-10',10,{나:61,Chris:40,민수:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true});
+ assert.equal(one.chart.kind,'table');assert.deepEqual(one.chart.rows.map(row=>[row.rank,row.name,row.text]),[[1,'나','61'],[2,'Chris','40'],[2,'민수','40']]);
+ const many=gameStory(Array.from({length:5},(_,i)=>scored('p'+i,'2026-10-10',10+i,{나:10+i,민수:12})),'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true});
+ assert.deepEqual([many.chart.rows[0].label,many.chart.rows[0].text,many.chart.more],['2판','민수 12 · 나 11','외 1판']);
+ const night={id:'n',date:'2026-10-10',createdAt:'2026-10-10T10:00:00Z',game:{name:'마피아',bggId:''},rule:'highest',players:['나','지영','민수'].map((name,i)=>({id:'p'+i,name,score:null,teamId:i?'team-2':'team-1',teamName:i?'시민':'마피아',winner:i>0}))};
+ assert.equal(gameStory([night,{...night,id:'m',createdAt:'2026-10-10T11:00:00Z'}],'2026-10-10',K('마피아'),profile,{locale:'ko-KR',mask:false,full:true}).chart.rows[0].text,'시민 승 · 지영, 민수');
+ assert.notEqual(gameStory([scored('a','2026-10-10',10,{나:61,Chris:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:true,full:true}).chart?.kind,'table','public never shows the full table');
+});

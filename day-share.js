@@ -3,7 +3,7 @@ import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {milestones} from './stats-extras.js?v=3';
 import {shareLanguage,shareCopy,localizedGameName,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=154';
-import {openShareDialog,recapCopy,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=10';
+import {openShareDialog,recapCopy,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=11';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -15,20 +15,21 @@ const COPY={
   topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차 압승`,closest:'가장 아슬아슬한 판',gap:n=>`${n}점 차`,usual:'평소보다',usualHead:d=>`우승 점수 ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`평균 ${a} → ${b}`,
   streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 1위 교체',winsChart:'오늘 우승',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 거짓말쟁이',liarDetail:(side,n)=>`${side} ${n}승`,
   missionChart:'미션별 도전',missionTitle:'오늘의 미션',difficultyChart:'난이도별 결과',coopToday:'오늘 협력 결과',coopRate:(w,n)=>`${n}판 중 ${w}번 성공`,sharedBest:'공동 점수 최고',newBest:'최고 기록 갱신',scenario:'시나리오',
-  chipsChart:'오늘 칩 합계',bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
+  chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
  en:{me:'Me',today:(n,total)=>`${plural(n,'play','plays')} today · ${total} all-time`,points:n=>`${n.toLocaleString('en-US')} pts`,playsN:n=>plural(n,'play','plays'),winsN:n=>plural(n,'win','wins'),
   first:'First play',firstWinner:who=>`${who} won the first game`,firstPlain:'Played it for the first time',milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
   topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Closest game',gap:n=>`${n}-point game`,usual:'vs. usual',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
   streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'New all-time leader',winsChart:'Wins today',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best liar',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
   missionChart:'Missions today',missionTitle:"Today's missions",difficultyChart:'By difficulty',coopToday:'Co-op today',coopRate:(w,n)=>`${w} of ${n} won`,sharedBest:'Best team score',newBest:'New best',scenario:'Scenario',
-  chipsChart:'Chip totals today',bigHand:'Biggest pot',todayTitle:"Today's play",more:n=>`+${n} more`},
+  chipsChart:'Chip totals today',results:"Today's results",gameN:n=>`Game ${n}`,sideWon:side=>`${side} won`,morePlays:n=>`+${n} more`,bigHand:'Biggest pot',todayTitle:"Today's play",more:n=>`+${n} more`},
 };
 const byTime=(a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const HIDDEN=/마피아|스파이|악|mafia|spy|evil|werewolf|늑대/i,HOLDEM=/홀덤|hold[’']?em/i;
 const average=list=>list.length?Math.round(list.reduce((sum,value)=>sum+value,0)/list.length):0;
 
 // 한 게임의 그날 이야기. raw: 원래 기록(홀덤·마피아도 판마다). 반환: 이름·표지·판 수·차트(bars | missions)·이야기 카드 목록.
-export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true}={}){
+// full: 순위·점수 전체 표시(친구 공유용·우승자 표시일 때만 의미). 경쟁 게임 차트를 결과표로 바꾼다.
+export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,full=false}={}){
  const lang=shareLanguage(locale),words=COPY[lang],share=shareCopy(lang),all=raw.filter(play=>play.date&&play.date<=date&&gameKey(play.game)===key).sort((a,b)=>a.date.localeCompare(b.date)||byTime(a,b)),plays=all.filter(play=>play.date===date),before=all.filter(play=>play.date<date);
  if(!plays.length)return null;
  const game=plays[0].game,name=localizedGameName(game,lang),stories=[];let chart=null;
@@ -80,13 +81,29 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true}={
   const leader=list=>{const rows=new Map();for(const play of list)for(const id of winnerIds(play)){const p=play.players.find(item=>item.id===id);if(!p||!named(p))continue;const k=who(play,p),row=rows.get(k.key)||{...k,wins:0};row.wins++;rows.set(k.key,row);}const sorted=[...rows.values()].sort((a,b)=>b.wins-a.wins);return sorted[0]&&(!sorted[1]||sorted[0].wins>sorted[1].wins)?sorted[0]:null;};
   const was=leader(before),now=leader(all);if(was&&now&&was.key!==now.key)stories.push({title:words.leader,headline:now.name,detail:words.winsN(now.wins)});
  }
+ if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(plays,kind,words,who,named,lang);if(results)chart=results;}
  if(!stories.length)stories.push({title:words.todayTitle,headline:words.playsN(plays.length),detail:formatShareDate(date,lang)});
  return {key,game,name,imageUrl:gameImageUrl(game),isNew:!before.length,today:plays.length,total:all.length,todayLine:words.today(plays.length,all.length),chart,stories};
 }
 
+// 결과표: 한 판이면 순위표(순위·이름·점수), 여러 판이면 판마다 한 줄(최근 4판). 팀·역할은 이긴 진영과 멤버.
+function resultsChart(plays,kind,words,who,named,lang){
+ const number=value=>(kind==='holdem'&&value>0?'+':'')+value.toLocaleString(lang==='ko'?'ko-KR':'en-US');
+ const ranked=play=>{const people=play.players.filter(named),mode=recordMode(play);
+  if(mode==='highest'||mode==='lowest'){const sorted=people.filter(person=>typeof person.score==='number').sort((a,b)=>mode==='lowest'?a.score-b.score:b.score-a.score);return sorted.map(person=>({rank:sorted.findIndex(other=>other.score===person.score)+1,name:who(play,person).name,text:number(person.score)}));}
+  if(mode==='rank')return people.filter(person=>Number.isInteger(person.rank)).sort((a,b)=>a.rank-b.rank).map(person=>({rank:person.rank,name:who(play,person).name,text:''}));
+  const wins=new Set(winnerIds(play));return [...people].sort((a,b)=>wins.has(b.id)-wins.has(a.id)).map(person=>({rank:wins.has(person.id)?1:2,name:who(play,person).name,text:wins.has(person.id)?'🏆':''}));};
+ const teamLine=play=>{const wins=new Set(winnerIds(play)),winners=play.players.filter(person=>wins.has(person.id)),side=String(winners[0]?.teamName||'').trim(),members=winners.filter(named).map(person=>who(play,person).name).join(', ');return side?`${words.sideWon(side)} · ${members}`:members;};
+ const team=kind==='role'||kind==='team';
+ if(plays.length===1&&!team){const rows=ranked(plays[0]).slice(0,6);return rows.length?{kind:'table',title:words.results,rows}:null;}
+ const shown=plays.slice(-4),offset=plays.length-shown.length,rows=shown.map((play,index)=>({label:words.gameN(offset+index+1),text:team?teamLine(play):ranked(play).map(row=>row.text&&row.text!=='🏆'?`${row.name} ${row.text}`:row.text?`${row.text} ${row.name}`:row.name).join(' · ')}));
+ return {kind:'plays',title:words.results,rows,more:offset?words.morePlays(offset):''};
+}
 // 게임 장 한 장: 표지(이름·오늘/통산) → 차트(있으면) → 이야기 카드 2장, 차트가 없으면 이야기 카드를 세로로 최대 4장.
 function drawChart(ctx,chart,x,y,w,h){
  box(ctx,x,y,w,h);line(ctx,chart.title,x+32,y+50,w-64,{size:26,weight:600,color:'#9fc8f7'});
+ if(chart.kind==='table'){const rowH=(h-80)/chart.rows.length;chart.rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2+10;line(ctx,String(row.rank),x+52,cy,60,{size:30,weight:800,color:row.rank===1?'#5fe0d0':'#82bfff',align:'center'});line(ctx,row.name,x+100,cy,w-330,{size:30,min:16,weight:800});if(row.text)line(ctx,row.text,x+w-32,cy,190,{size:30,min:16,weight:800,align:'right'});});return;}
+ if(chart.kind==='plays'){const rowH=(h-80)/(chart.rows.length+(chart.more?1:0));chart.rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2+10;line(ctx,row.label,x+32,cy,110,{size:24,weight:700,color:'#9fc8f7'});line(ctx,row.text,x+150,cy,w-182,{size:26,min:15,weight:700});});if(chart.more)line(ctx,chart.more,x+32,y+80+chart.rows.length*rowH+rowH/2+10,w-64,{size:22,weight:600,color:'#9fc8f7'});return;}
  if(chart.kind==='missions'){const rows=chart.rows.slice(-4),rowH=(h-80)/Math.max(rows.length,1),labelW=150;rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2;line(ctx,row.label,x+32,cy+10,labelW-12,{size:26,min:16,weight:700});const marks=row.marks.slice(-10),size=Math.min(40,rowH-12);marks.forEach((ok,i)=>{const mx=x+32+labelW+i*(size+10);fillRound(ctx,mx,cy-size/2,size,size,10,ok?'#2fa874':'#b9475a');line(ctx,ok?'✓':'✕',mx+size/2,cy+size*.3,size,{size:Math.round(size*.7),min:12,weight:800,align:'center'});});});return;}
  const rows=chart.rows.slice(0,4),max=Math.max(1,...rows.map(row=>row.value)),rowH=(h-80)/Math.max(rows.length,1),labelW=180,textW=150;
  rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2;line(ctx,row.label,x+32,cy+10,labelW-16,{size:28,min:16,weight:800});const barW=(w-64-labelW-textW)*row.value/max;fillRound(ctx,x+32+labelW,cy-12,Math.max(barW,8),24,12,index===0?'#5fe0d0':'#4fa3ff');line(ctx,row.text,x+w-32,cy+10,textW-12,{size:26,min:14,weight:700,align:'right'});});
@@ -95,7 +112,7 @@ function storyRow(ctx,story,x,y,w,h){box(ctx,x,y,w,h);line(ctx,story.title,x+32,
 export async function createGameSlide(story,image,page,total){
  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');frame(ctx,page,total);
  // 차트·카드 높이를 먼저 정하고 남는 세로 공간은 표지가 채운다.
- const top=112,bottom=1290,chartH=story.chart?Math.min(300,80+Math.min(4,story.chart.rows.length)*62):0,rows=story.chart?[]:story.stories.slice(0,4),rowH=150,content=story.chart?chartH+24+226:rows.length*rowH+14*(rows.length-1),coverH=Math.max(420,bottom-top-24-content);cover(ctx,image,story.name,X,top,CW,coverH,28);if(image)shade(ctx,X,top,CW,coverH,28,.5);
+ const top=112,bottom=1290,chartH=!story.chart?0:story.chart.kind==='table'?80+story.chart.rows.length*56:story.chart.kind==='plays'?80+(story.chart.rows.length+(story.chart.more?1:0))*56:Math.min(300,80+Math.min(4,story.chart.rows.length)*62),rows=story.chart?[]:story.stories.slice(0,4),rowH=150,content=story.chart?chartH+24+226:rows.length*rowH+14*(rows.length-1),coverH=Math.max(420,bottom-top-24-content);cover(ctx,image,story.name,X,top,CW,coverH,28);if(image)shade(ctx,X,top,CW,coverH,28,.5);
  if(story.isNew)pill(ctx,'NEW',X+20,top+20,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:24});
  line(ctx,story.name,X+32,top+coverH-74,CW-64,{size:54,min:28,weight:800});line(ctx,story.todayLine,X+32,top+coverH-28,CW-64,{size:28,min:18,weight:600,color:'#cfe3ff'});
  let y=top+coverH+24;
@@ -107,10 +124,10 @@ export async function createGameSlide(story,image,page,total){
 // records: 통계와 같은 기록(1장), raw: 원래 기록(게임 장). 둘 다 고른 날까지.
 export function openDayShare(records,profile,{raw=records}={}){
  const words=recapCopy();
- return openShareDialog({heading:words.dayDialog,setHint:words.daySetHint,singleHint:words.daySingleHint,fileBase:`score-${records.map(play=>play.date).filter(Boolean).sort().at(-1)||'day'}`,winners:true,make:async state=>{
+ return openShareDialog({heading:words.dayDialog,setHint:words.daySetHint,singleHint:words.daySingleHint,fileBase:`score-${records.map(play=>play.date).filter(Boolean).sort().at(-1)||'day'}`,winners:true,full:false,make:async state=>{
   const mask=state.scope!=='friends',data=recentShareData(records,profile,state.lang,{winners:state.winners,mask}),first=await createRecentShareImage(data);
   if(state.format!=='set')return {blobs:[first],title:data.title};
-  const stories=data.games.slice(0,MAX_GAMES).map(game=>gameStory(raw,data.date,game.key,profile,{locale:state.lang,mask,winners:state.winners})).filter(Boolean),images=await Promise.all(stories.map(story=>loadImage(story.imageUrl))),blobs=[first];
+  const stories=data.games.slice(0,MAX_GAMES).map(game=>gameStory(raw,data.date,game.key,profile,{locale:state.lang,mask,winners:state.winners,full:state.full&&!mask&&state.winners})).filter(Boolean),images=await Promise.all(stories.map(story=>loadImage(story.imageUrl))),blobs=[first];
   for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+2,stories.length+1));
   return {blobs,title:data.title};}});
 }
