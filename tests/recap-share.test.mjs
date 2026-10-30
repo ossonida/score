@@ -50,3 +50,12 @@ test('english recap copy stays short and pluralizes',()=>{
  assert.equal(words.compareHead(-1),'-1 play');assert.equal(words.compareHead(0),'No change');
  assert.equal(recapData([play('1','2026-10-01')],month,profile,{locale:'en-US'}).title,'October 2026 Recap');
 });
+
+test('people slide data: wins out of plays, variety, streak, new faces; milestones say what was reached',()=>{
+ const p=(id,date,game,winner)=>({id,date,createdAt:date+'T12:00:00Z',game:{name:game,bggId:''},rule:'highest',players:['나','김민수','지영'].map((name,i)=>({id:'p'+i,name,score:null,winner:name===winner}))});
+ const records=[p('old','2026-09-01','카탄','나'),...['카탄','아줄','스플렌더','카탄'].map((game,i)=>p('n'+i,'2026-10-0'+(i+1),game,'김민수'))];
+ const data=recapData(records,month,profile,{locale:'ko-KR'});
+ assert.deepEqual(data.personRows.map(row=>[row.title,row.name,row.value]),[['가장 많이 이긴 사람','김**','4승 / 4판'],['나와 가장 많이 함께한 사람','지*','4판']],'each row picks someone not shown yet');
+ assert.deepEqual([data.newFaces,data.avgPlayers],[0,3]);
+ assert.equal(recapCopy('ko').markDetail('plays','10월1일','카탄'),'10월1일 · 그 판: 카탄');assert.equal(recapCopy('ko').markDetail('days','10월1일','카탄'),'10월1일');
+});

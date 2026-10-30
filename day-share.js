@@ -3,7 +3,7 @@ import {meIn,nameKey} from './personal-stats.js?v=117';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {milestones,MILESTONES} from './stats-extras.js?v=3';
 import {shareLanguage,shareCopy,localizedGameName,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=155';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=14';
+import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=15';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -12,13 +12,13 @@ const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
 const COPY={
  ko:{me:'나',today:(n,total)=>`오늘 ${n}판 · 통산 ${total}판`,points:n=>`${n.toLocaleString('ko-KR')}점`,playsN:n=>`${n}판`,winsN:n=>`${n}승`,
   revenge:'설욕전',revengeHead:'지난번 패배 설욕',versus:who=>`vs ${who}`,h2h:'통산 전적',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'최근 흐름',formHead:(w,n)=>`최근 ${n}판 중 ${w}승`,goal:'다음 목표',goalHead:(g,n,left)=>`${g} ${n}판까지 ${left}판`,totalGoal:(n,left)=>`통산 ${n}판까지 ${left}판`,steady:'꾸준함',weeksHead:n=>`${n}주 연속 게임 나이트`,weekHead:n=>`이번 주 ${n}번째 게임 나이트`,comeback:'오랜만에',comebackHead:n=>`${n}일 만에 다시`,crew:'이 멤버로',crewHead:n=>`${n}번째 판`,month:'요즘 빠진 게임',monthHead:n=>`이번 달 ${n}번째`,favorite:'많이 한 게임',favoriteHead:n=>`${n}위`,crowd:'최다 인원',crowdHead:n=>`${n}명이 붙은 판`,milestone:'달성 기록',gamePlay:(game,n)=>`${game} ${n}번째 플레이`,
-  topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차 압승`,closest:'가장 아슬아슬한 판',gap:n=>`${n}점 차`,usual:'평소보다',usualHead:d=>`우승 점수 ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`평균 ${a} → ${b}`,
+  topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차 압승`,closest:'가장 치열했던 판',gap:n=>`${n}점 차 승부`,usual:'평소보다',usualHead:d=>`우승 점수 ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`평균 ${a} → ${b}`,
   streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 1위 교체',winsChart:'오늘 우승',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 거짓말쟁이',liarDetail:(side,n)=>`${side} ${n}승`,
   missionChart:'미션별 도전',missionTitle:'오늘의 미션',difficultyChart:'난이도별 결과',coopToday:'오늘 협력 결과',coopRate:(w,n)=>`${n}판 중 ${w}번 성공`,sharedBest:'공동 점수 최고',newBest:'최고 기록 갱신',scenario:'시나리오',
   chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
  en:{me:'Me',today:(n,total)=>`${plural(n,'play','plays')} today · ${total} all-time`,points:n=>`${n.toLocaleString('en-US')} pts`,playsN:n=>plural(n,'play','plays'),winsN:n=>plural(n,'win','wins'),
   revenge:'Revenge',revengeHead:'Payback for last time',versus:who=>`vs ${who}`,h2h:'Head to head',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'Recent form',formHead:(w,n)=>`${w} wins in last ${n}`,goal:'Next goal',goalHead:(g,n,left)=>`${left} more to ${n} ${g} plays`,totalGoal:(n,left)=>`${left} more to ${n} total plays`,steady:'Keeping it up',weeksHead:n=>`${n} weeks in a row`,weekHead:n=>`Game night #${n} this week`,comeback:'Back after a while',comebackHead:n=>`First time in ${n} days`,crew:'Same crew',crewHead:n=>`Game #${n} together`,month:'On a roll',monthHead:n=>`#${n} this month`,favorite:'Most played',favoriteHead:n=>`#${n} all-time`,crowd:'Biggest table',crowdHead:n=>`${n} players`,milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
-  topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Closest game',gap:n=>`${n}-point game`,usual:'vs. usual',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
+  topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Closest finish',gap:n=>`Decided by ${n}`,usual:'vs. usual',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
   streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'New all-time leader',winsChart:'Wins today',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best liar',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
   missionChart:'Missions today',missionTitle:"Today's missions",difficultyChart:'By difficulty',coopToday:'Co-op today',coopRate:(w,n)=>`${w} of ${n} won`,sharedBest:'Best team score',newBest:'New best',scenario:'Scenario',
   chipsChart:'Chip totals today',results:"Today's results",gameN:n=>`Game ${n}`,sideWon:side=>`${side} won`,morePlays:n=>`+${n} more`,bigHand:'Biggest pot',todayTitle:"Today's play",more:n=>`+${n} more`},
