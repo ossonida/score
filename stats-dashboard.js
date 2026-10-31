@@ -1,5 +1,5 @@
-import {renderPersonalGame} from './personal-dashboard.js?v=166';
-import {summarizeStats} from './stats-insights.js?v=67';
+import {renderPersonalGame} from './personal-dashboard.js?v=167';
+import {summarizeStats} from './stats-insights.js?v=68';
 const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const number=n=>n.toLocaleString('ko-KR',{maximumFractionDigits:2});
 export function renderStatsDashboard(container,records,today,onOpen,selectedGame=false,options={}){

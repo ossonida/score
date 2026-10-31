@@ -1,7 +1,7 @@
 import {signInNativeGoogle} from './native-auth-flow.js?v=64';
 import {validUsername,validBggItem} from './bgg-validation.js?v=129';
 import {firebaseConfig} from './firebase-config.js?v=64';
-import {validIdentity} from './personal-stats.js?v=117';
+import {validIdentity} from './personal-stats.js?v=118';
 let connection,storeConnection;
 const lastUserKey='score.lastUser.v1';
 export const mobileDevice=Boolean(globalThis.Capacitor?.isNativePlatform?.())||/Android|iPhone|iPad|iPod|Mobi/i.test(globalThis.navigator?.userAgent||'')||(/Macintosh/.test(globalThis.navigator?.userAgent||'')&&globalThis.navigator?.maxTouchPoints>1);

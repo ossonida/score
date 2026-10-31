@@ -53,7 +53,7 @@ service cloud.firestore {
       function owns() { return request.auth != null && request.auth.uid == uid; }
       function valid() {
         let p = request.resource.data;
-        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','scenarioLevel','expansions','bggPlayId','sessionId','mightyRounds','updatedAt'])
+        return p.keys().hasOnly(['id','game','date','rule','location','createdAt','players','cooperativeResult','sharedScore','missionAttempts','difficulty','scenario','scenarioLevel','ending','expansions','bggPlayId','sessionId','mightyRounds','updatedAt'])
           && (!('updatedAt' in p) || p.updatedAt == request.time)
           && p.keys().hasAll(['id','game','date','rule','createdAt','players'])
           && p.id == playId && p.id is string && p.id.matches('^[A-Za-z0-9_.:-]{1,100}$')
@@ -64,6 +64,7 @@ service cloud.firestore {
           && p.createdAt is string && p.createdAt.size() <= 40
           && p.rule in ['highest','lowest','cooperative']
           && (!('cooperativeResult' in p) || p.rule == 'cooperative' && p.cooperativeResult in ['success','failure'])
+          && (!('ending' in p) || p.rule == 'cooperative' && p.ending is string && p.ending.size() > 0 && p.ending.size() <= 40)
           && (!('sharedScore' in p) || p.rule == 'cooperative' && p.sharedScore is number && p.sharedScore >= -9007199254740991 && p.sharedScore <= 9007199254740991)
           && (!('missionAttempts' in p) || p.rule == 'cooperative' && 'cooperativeResult' in p && !('sharedScore' in p) && p.missionAttempts is list && p.missionAttempts.size() > 0 && p.missionAttempts.size() <= 300)
           && (!('difficulty' in p) || p.rule == 'cooperative' && 'cooperativeResult' in p && !('missionAttempts' in p) && p.difficulty is string && p.difficulty.size() > 0 && p.difficulty.size() <= 40)

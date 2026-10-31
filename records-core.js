@@ -25,8 +25,8 @@ export function missionSummary(list){
 export function missionLabel(list){const s=missionSummary(list);return s?`미션 ${s.first}${s.last!==s.first?' → '+s.last:''} · 클리어 ${s.cleared} · 시도 ${s.attempts}`:'';}
 // 협력 방식: 미션 시도가 있으면 미션형, 시나리오가 있으면 캠페인형, 난이도가 있으면 난이도형, 그 밖의 협력은 성공·실패·점수형으로 읽습니다.
 export const COOP_KINDS=['score','mission','difficulty','campaign'];
-export const coopKindLabels={score:'성공·실패·점수형',mission:'미션형',difficulty:'난이도형',campaign:'캠페인형'};
-export function coopKind(play){if(play?.rule!=='cooperative')return '';if(Array.isArray(play.missionAttempts)&&play.missionAttempts.length)return 'mission';if(Number.isSafeInteger(play.scenario))return 'campaign';if(typeof play.difficulty==='string'&&play.difficulty)return 'difficulty';return 'score';}
+export const coopKindLabels={score:'성공·실패·점수형',mission:'미션형',difficulty:'난이도형',campaign:'캠페인형',story:'스토리 결말'};
+export function coopKind(play){if(play?.rule!=='cooperative')return '';if(Array.isArray(play.missionAttempts)&&play.missionAttempts.length)return 'mission';if(typeof play.ending==='string'&&play.ending)return 'story';if(Number.isSafeInteger(play.scenario))return 'campaign';if(typeof play.difficulty==='string'&&play.difficulty)return 'difficulty';return 'score';}
 export const DIFFICULTY_DEFAULT=['입문','보통','어려움','최고'];
 const DIFFICULTY_PRESETS=[{ids:['30549'],names:['판데믹','pandemic'],levels:['입문','보통','영웅','전설']}];
 // 게임별 난이도 목록이 있으면 그 목록, 없으면 공통 목록을 씁니다.
@@ -48,7 +48,7 @@ export function coopDifficultyStats(plays){const list=plays.filter(p=>coopKind(p
 export function coopCampaignStats(plays){const list=plays.filter(p=>coopKind(p)==='campaign'),rows=new Map();for(const p of list){const r=rows.get(p.scenario)||{scenario:p.scenario,tries:0,cleared:false};r.tries++;if(p.cooperativeResult==='success')r.cleared=true;rows.set(p.scenario,r);}const levels=new Map();for(const p of list){if(!validScenarioLevel(p.scenarioLevel))continue;const l=levels.get(p.scenarioLevel)||{level:p.scenarioLevel,tries:0,successes:0};l.tries++;if(p.cooperativeResult==='success')l.successes++;levels.set(p.scenarioLevel,l);}const last=list.at(-1);return {rows:[...rows.values()].sort((a,b)=>a.scenario-b.scenario),cleared:[...rows.values()].filter(r=>r.cleared).length,attempts:list.length,current:last?last.scenario:null,currentLevel:validScenarioLevel(last?.scenarioLevel)?last.scenarioLevel:null,levels:[...levels.values()].sort((a,b)=>a.level-b.level)};}
 // 마이티 판 내역: 주공·프렌드(''=노프렌드)·공약·기루다·결과·판 점수. 플레이어가 지워져도 기록이 남도록 ID는 형식만 확인한다.
 export function validMightyRounds(list){const id=/^[A-Za-z0-9_.:-]{1,100}$/;return Array.isArray(list)&&list.length>0&&list.length<=500&&list.every(r=>r&&typeof r==='object'&&Object.keys(r).length===6&&typeof r.lead==='string'&&id.test(r.lead)&&typeof r.friend==='string'&&(r.friend===''||id.test(r.friend)&&r.friend!==r.lead)&&Number.isInteger(r.bid)&&r.bid>=13&&r.bid<=20&&['S','H','D','C','none'].includes(r.trump)&&['success','failure'].includes(r.result)&&r.points&&typeof r.points==='object'&&!Array.isArray(r.points)&&Object.keys(r.points).length<=100&&Object.entries(r.points).every(([key,value])=>id.test(key)&&Number.isSafeInteger(value)));}
-export function createPlay({game, date, rule, players, location, cooperativeResult, sharedScore, missionAttempts, difficulty, scenario, scenarioLevel, expansions, bggPlayId, mightyRounds, sessionId}, id = crypto.randomUUID()) {
+export function createPlay({game, date, rule, players, location, cooperativeResult, sharedScore, missionAttempts, difficulty, scenario, scenarioLevel, ending, expansions, bggPlayId, mightyRounds, sessionId}, id = crypto.randomUUID()) {
   if(!game||typeof game.name!=='string'||typeof id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(id))throw Error('기록 형식을 확인해주세요.');
   const name = game.name.trim();
   if (!name || name.length > 120) throw Error('게임명을 120자 이내로 입력해주세요.');
@@ -63,6 +63,10 @@ export function createPlay({game, date, rule, players, location, cooperativeResu
   if(difficulty!==undefined&&(rule!=='cooperative'||!validDifficulty(difficulty)||cooperativeResult===undefined||missionAttempts!==undefined))throw Error('난이도를 확인해주세요.');
   if(scenario!==undefined&&(rule!=='cooperative'||!validScenario(scenario)||cooperativeResult===undefined||missionAttempts!==undefined||difficulty!==undefined))throw Error('시나리오 번호를 확인해주세요.');
   if(scenarioLevel!==undefined&&(scenario===undefined||!validScenarioLevel(scenarioLevel)))throw Error('시나리오 레벨을 확인해주세요.');
+  // 스토리 결말: 협력 기록에 결말 이름(선택, 40자 이내).
+  if(ending!==undefined&&(rule!=='cooperative'||typeof ending!=='string'||!ending.trim()||ending.trim().length>40||cooperativeResult===undefined||missionAttempts!==undefined))throw Error('결말 이름을 확인해주세요.');
+  // 추리 기록: 범인(culprit)·추리 결과(guess)·맡은 캐릭터(character). 범인은 추리 결과가 없다.
+  if(Array.isArray(players)&&players.some(p=>p&&(p.culprit!==undefined&&p.culprit!==true||p.guess!==undefined&&(!['right','wrong','pass'].includes(p.guess)||p.culprit===true)||p.character!==undefined&&(typeof p.character!=='string'||!p.character.trim()||p.character.trim().length>40))))throw Error('추리 기록을 확인해주세요.');
   if(expansions!==undefined&&!validExpansions(expansions))throw Error('사용한 확장을 확인해주세요.');
   // 연속 판 묶음 ID(저장하고 다음 판). 백업 내보내기·가져오기에서도 유지한다.
   if(sessionId!==undefined&&(typeof sessionId!=='string'||!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)))throw Error('연속 판 정보를 확인해주세요.');
@@ -74,10 +78,11 @@ export function createPlay({game, date, rule, players, location, cooperativeResu
   if (!Array.isArray(players) || !players.length || players.length > 100 || players.some(p => !p||typeof p.id!=='string'||!/^[A-Za-z0-9_.:-]{1,100}$/.test(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>120 || !(p.score===null||typeof p.score==='number'&&Number.isFinite(p.score)&&Math.abs(p.score)<=Number.MAX_SAFE_INTEGER) || !/^#[0-9a-f]{6}$/i.test(p.color))) throw Error('플레이어와 점수를 확인해주세요.');
   const hasTeams=players.some(p=>p.teamId!==undefined||p.teamName!==undefined);
   if(hasTeams){const teams=new Map();for(const p of players){if(typeof p.teamId!=='string'||!/^team-[1-4]$/.test(p.teamId)||typeof p.teamName!=='string'||!p.teamName.trim()||p.teamName.trim().length>40)throw Error('팀 정보를 확인해주세요.');const teamName=p.teamName.trim();if(teams.has(p.teamId)&&teams.get(p.teamId)!==teamName)throw Error('팀 정보를 확인해주세요.');teams.set(p.teamId,teamName);}if(teams.size<2||teams.size>4)throw Error('팀은 2~4개로 구성해주세요.');}
-  return {id, game:{name, bggId}, date, rule,...(location?{location}:{}),...(cooperativeResult!==undefined?{cooperativeResult}:{}),...(sharedScore!==undefined?{sharedScore}:{}),...(missionAttempts!==undefined?{missionAttempts:missionAttempts.map(({mission,result})=>({mission,result}))}:{}),...(difficulty!==undefined?{difficulty:difficulty.trim()}:{}),...(scenario!==undefined?{scenario}:{}),...(scenarioLevel!==undefined?{scenarioLevel}:{}),...(expansions!==undefined?{expansions:expansions.map(({id,name})=>({id,name:name.trim()}))}:{}),...(bggPlayId!==undefined?{bggPlayId:String(bggPlayId)}:{}),...(sessionId!==undefined?{sessionId}:{}),...(mightyRounds!==undefined?{mightyRounds:mightyRounds.map(({lead,friend,bid,trump,result,points})=>({lead,friend,bid,trump,result,points:{...points}}))}:{}),createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{}),...(hasTeams?{teamId:p.teamId,teamName:p.teamName.trim()}:{})}))};
+  return {id, game:{name, bggId}, date, rule,...(location?{location}:{}),...(cooperativeResult!==undefined?{cooperativeResult}:{}),...(sharedScore!==undefined?{sharedScore}:{}),...(missionAttempts!==undefined?{missionAttempts:missionAttempts.map(({mission,result})=>({mission,result}))}:{}),...(difficulty!==undefined?{difficulty:difficulty.trim()}:{}),...(scenario!==undefined?{scenario}:{}),...(scenarioLevel!==undefined?{scenarioLevel}:{}),...(ending!==undefined?{ending:ending.trim()}:{}),...(expansions!==undefined?{expansions:expansions.map(({id,name})=>({id,name:name.trim()}))}:{}),...(bggPlayId!==undefined?{bggPlayId:String(bggPlayId)}:{}),...(sessionId!==undefined?{sessionId}:{}),...(mightyRounds!==undefined?{mightyRounds:mightyRounds.map(({lead,friend,bid,trump,result,points})=>({lead,friend,bid,trump,result,points:{...points}}))}:{}),createdAt:new Date().toISOString(), players:players.map(p=>({id:p.id,name:p.name.trim(),color:p.color,score:p.score,...(typeof p.anonymous==='boolean'?{anonymous:p.anonymous}:{}),...(typeof p.isSelf==='boolean'?{isSelf:p.isSelf}:{}),...(typeof p.winner==='boolean'?{winner:p.winner}:{}),...(p.draw===true?{draw:true}:{}),...(Number.isSafeInteger(p.rank)&&p.rank>0&&p.rank<=100?{rank:p.rank}:{}),...(p.culprit===true?{culprit:true}:{}),...(p.guess!==undefined?{guess:p.guess}:{}),...(p.character!==undefined?{character:p.character.trim()}:{}),...(hasTeams?{teamId:p.teamId,teamName:p.teamName.trim()}:{})}))};
 }
 export function recordMode(play){
  if(play.rule==='cooperative')return 'cooperative';
+ if(play.players.some(p=>p.culprit===true))return 'mystery';
  if(play.players.some(p=>p.teamId))return 'team';
  if(play.players.some(p=>typeof p.score==='number'))return play.rule==='lowest'?'lowest':'highest';
  if(play.players.some(p=>Number.isInteger(p.rank)&&p.rank>0))return 'rank';
@@ -90,7 +95,7 @@ export function normalizePlay(play,{cooperative=false}={}){
  if(!play?.id?.startsWith('bgstats:')||!Array.isArray(play.players)||!play.players.length||!play.players.every(p=>p.winner===false)||play.players.some(p=>p.draw===true))return play;
  return {...play,players:play.players.map(({winner,...person})=>person)};
 }
-export const modeLabels={highest:'점수 · 높은 점수 승리',lowest:'점수 · 낮은 점수 승리',win:'개인 승패',team:'팀전',rank:'순위',cooperative:'협력',unknown:'결과 미입력'};
+export const modeLabels={highest:'점수 · 높은 점수 승리',lowest:'점수 · 낮은 점수 승리',win:'개인 승패',team:'팀전',rank:'순위',cooperative:'협력',mystery:'추리',unknown:'결과 미입력'};
 export function playerOutcome(play,person){
  const mode=recordMode(play);
  if(mode==='cooperative')return ['success','failure'].includes(play.cooperativeResult)?play.cooperativeResult:'unknown';

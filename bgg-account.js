@@ -1,7 +1,7 @@
 import {fetchBggPublicPage} from './bgg-public-client.js?v=64';
 import {validUsername,validBggItem,safeBggItems} from './bgg-validation.js?v=129';
-import * as cloudApi from './cloud-records.js?v=174';
-import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=174';
+import * as cloudApi from './cloud-records.js?v=175';
+import {connectCloud,cloudConfigured,idToken,loadBggProfile,saveBggProfile,loadBggData,saveBggData,rememberedUid,mobileDevice} from './cloud-records.js?v=175';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 const $=id=>document.getElementById(id);
 // 키 순서와 상관없이 같은 내용인지 비교합니다.
