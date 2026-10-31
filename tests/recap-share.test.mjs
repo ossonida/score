@@ -66,3 +66,13 @@ test('closest finish skips single-digit games; biggest win needs 10+ points',()=
  const big=[play('2','2026-10-02','카탄',{players:[{id:'a',name:'나',score:40,winner:true},{id:'b',name:'김민수',score:12,winner:false}]})];
  const data=recapData(big,month,profile,{locale:'ko'});assert.equal(data.close.gap,28);assert.deepEqual([data.blow.gap,data.blow.who],[28,'나']);
 });
+
+test('people filter: title names them, milestones and newly logged are left out, rival comes from the chosen people',()=>{
+ const p=(id,date,names,winner)=>({id,date,createdAt:date+'T12:00:00Z',game:{name:'카탄',bggId:''},rule:'highest',players:names.map((name,i)=>({id:'p'+i,name,score:null,winner:name===winner}))});
+ const records=[...Array.from({length:4},(_,i)=>p('a'+i,'2026-10-0'+(i+1),['나','김민수','지영'],i%2?'나':'지영')),...Array.from({length:6},(_,i)=>p('b'+i,'2026-10-1'+i,['나','지영'],'지영'))];
+ const people={keys:['김민수'],names:['김민수'],mode:'any'};
+ const data=recapData(records.filter(play=>play.players.some(x=>x.name==='김민수')),{...month,people},profile,{locale:'ko-KR',scope:'friends'});
+ assert.equal(data.title,'2026년 10월 결산 · 김민수');assert.deepEqual([data.marks.length,data.firsts.length],[0,0]);
+ assert.equal(data.rival.name,'김민수','rival is a chosen person even if someone else played more');
+ assert.equal(recapData(records,{...month,people},profile,{locale:'ko-KR'}).title,'2026년 10월 결산 · 김**');
+});

@@ -1,7 +1,7 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=5';
 import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=4';
 import {readIdentity} from './personal-stats.js?v=117';
-import {openRecapShare} from './recap-share.js?v=19';
+import {openRecapShare} from './recap-share.js?v=20';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;
@@ -62,7 +62,8 @@ export function renderPeriodDashboard(container,records,model,{scope,onGame,onRe
  if(model.preset!=='all'&&days<=366)container.append(calendar(selected,model.current));
  else{const frequency=frequencyBuckets(records,model.current,{all:model.preset==='all'});container.append(bars('플레이 빈도',frequency.buckets,item=>`${item.start}~${item.end}`));}
  if(model.preset==='all'){const years=yearlyCounts(selected).map(item=>({...item,label:item.year}));container.append(bars('연도별 추이',years,item=>item.year+'년'));}
- achievements(container,records,model.current,onRecord);
- if(model.preset!=='all')newGames(container,records,model.current,onGame);
+ // 함께한 사람 필터 중에는 통산 기준인 달성 기록·새로 기록한 게임을 숨긴다.
+ if(!model.people)achievements(container,records,model.current,onRecord);
+ if(model.preset!=='all'&&!model.people)newGames(container,records,model.current,onGame);
  places(container,selected);
 }
