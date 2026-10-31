@@ -1,7 +1,7 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=5';
 import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=4';
 import {readIdentity} from './personal-stats.js?v=117';
-import {openRecapShare} from './recap-share.js?v=20';
+import {openRecapShare} from './recap-share.js?v=21';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;
@@ -51,11 +51,12 @@ function achievements(container,records,selected,onRecord){
  container.append(section);
 }
 
-export function renderPeriodDashboard(container,records,model,{scope,onGame,onRecord}={}){
+// locked: 비Pro 미리보기 기간이면 결산 공유 대신 Pro 소개 시트를 연다.
+export function renderPeriodDashboard(container,records,model,{scope,onGame,onRecord,locked}={}){
  container.replaceChildren();const selected=recordsInPeriod(records,model.current),current=summarizePeriod(records,model.current),previous=model.previous?summarizePeriod(records,model.previous):null;
  const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head');head.append(el('h2',model.title));
  // 결산 공유: 기록이 있는 기간만, 최근 기록 공유와 같은 창.
- if(selected.length){const share=el('button','결산 공유','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
+ if(selected.length){const share=el('button','결산 공유','stats-share-trigger');share.type='button';share.onclick=async()=>{if(locked)return locked();share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
  head.append(el('p',rangeLabel(model.current),'period-range'));hero.append(head);metrics(hero,current,previous,model.label);container.append(hero);
  if(!selected.length){container.append(el('p','선택한 기간에 저장된 기록이 없습니다.','insight-empty'));return;}
  const days=Math.round((utc(model.current.end)-utc(model.current.start))/DAY)+1;

@@ -16,6 +16,8 @@ const allowed={
  screen_viewed:{screen:['home','games','settings']},
  record_changed:{change_type:['name','score','result','cooperative_result','shared_score','player_removed']},
  record_deleted:{},
+ pro_sheet_viewed:{reason:['period','people','share_set','share_friends','share_full','other']},
+ pro_interest:{reason:['period','people','share_set','share_friends','share_full','other']},
  feature_used:{
   feature:['scoreboard','record_mode','statistics','history','game_library','data_transfer','account','cloud_sync','bgg','install','settings'],
   action:['scores_reset','players_reset','mode_selected','result_changed','filter_changed','game_opened','game_added','search_completed','import_previewed','import_completed','import_cancelled','export_completed','login_completed','logout_completed','sync_completed','recovery_completed','guest_records_merged','guest_records_deleted','link_completed','unlink_completed','share_completed','install_accepted','identity_changed']
