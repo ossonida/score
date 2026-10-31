@@ -5,8 +5,12 @@ import {fileURLToPath} from 'node:url';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),dist=resolve(root,'dist');
 await rm(dist,{recursive:true,force:true});await mkdir(dist,{recursive:true});
 // Explicit allowlist keeps server code, credentials, tests and dependencies out of the APK.
-const files=['record-view.js','bgg-link.js','bgg-link-client.js','bgg-export.js','bgg-play-format.js','bgg-public-client.js','games-screen.js','game-library.js','korean-game-names.js','powered-by-bgg.png','ui-system.css','THIRD_PARTY_NOTICES.txt','game-picker.js','jquery-3.7.1.min.js','select2-4.0.13.min.js','select2-4.0.13.min.css','social-insights.js','bgg-metadata.js','bgg-details-client.js','record-edit.js','stats-overview.js','overview-dashboard.js','stats-share.js','game-types.js','game-artwork.js','game-images.js','player-memory.js','personal-stats.js','personal-dashboard.js','stats-insights.js','stats-dashboard.js','settings.js','data-transfer.js','app-analytics.js','analytics-policy.js','native-auth-flow.js','index.html','records.js','records-core.js','records.css','modal-ui.css','cloud-records.js','firebase-config.js','bgg-account.js','bgg-validation.js','game-catalog.js','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
-for(const name of files)await copyFile(resolve(root,name),resolve(dist,name));
+// 웹앱이 실제로 쓰는 파일 목록(sw.js의 ASSETS, npm run sw:assets로 만든 것)을 그대로 쓴다. 손으로 적은 목록은 새 모듈·privacy.html이 빠지는 일이 있었다.
+// 여전히 허용 목록이라 서버 코드·자격 증명·테스트·의존성은 APK에 들어가지 않는다.
+const swSource=await readFile(resolve(root,'sw.js'),'utf8'),assetList=swSource.match(/const ASSETS=(\[[^\]]*\])/);
+if(!assetList)throw Error('sw.js ASSETS 목록을 찾지 못했습니다. npm run sw:assets를 먼저 실행하세요.');
+const files=[...new Set([...JSON.parse(assetList[1].replace(/'/g,'"')).map(item=>item.split('?')[0]).filter(Boolean),'THIRD_PARTY_NOTICES.txt'])];
+for(const name of files){await mkdir(dirname(resolve(dist,name)),{recursive:true});await copyFile(resolve(root,name),resolve(dist,name));}
 let html=await readFile(resolve(dist,'index.html'),'utf8');
 html=html.replace("if('serviceWorker' in navigator&&", "if(false&&'serviceWorker' in navigator&&");
 html=html.replace('<head>','<head>\n<style>main{padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(28px,env(safe-area-inset-bottom))}#installApp{display:none!important}</style>');
