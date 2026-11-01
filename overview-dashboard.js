@@ -5,7 +5,7 @@ import {readIdentity,meIn} from './personal-stats.js?v=118';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
 import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=157';
-import {openDayShare} from './day-share.js?v=16';
+import {openDayShare} from './day-share.js?v=17';
 import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=5';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
