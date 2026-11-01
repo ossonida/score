@@ -157,9 +157,11 @@ export function drawBackground(ctx){
  const gradient=ctx.createLinearGradient(0,0,WIDTH,HEIGHT);gradient.addColorStop(0,'#07111f');gradient.addColorStop(.56,'#10243e');gradient.addColorStop(1,'#0d4a5c');ctx.fillStyle=gradient;ctx.fillRect(0,0,WIDTH,HEIGHT);
  ctx.save();ctx.globalAlpha=.08;ctx.fillStyle='#72d4ff';for(const [x,y,r]of [[930,70,250],[90,950,300],[990,1110,180],[380,590,120]]){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}ctx.restore();
 }
-export function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false}={}){
+// size: 같은 줄 지표를 같은 크기로 맞출 때 넘기는 최대 크기(uniformSize).
+export function uniformSize(ctx,texts,width,max,min,weight=800){let px=max;for(;px>min;px-=2){ctx.font=`${weight} ${px}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(texts.every(text=>ctx.measureText(String(text)).width<=width))break;}return px;}
+export function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false,size:max=60}={}){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign=center?'center':'left';const left=center?x+w/2:x+34,text=String(value);
- ctx.fillStyle=muted?'rgba(225,239,255,.68)':'#fff';let size=72;for(;size>36;size-=4){ctx.font=`800 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=w-40)break;}ctx.fillText(clippedText(ctx,text,w-40),left,y+h/2+14);
+ ctx.fillStyle=muted?'rgba(225,239,255,.68)':'#fff';let size=max;for(;size>30;size-=2){ctx.font=`800 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=w-40)break;}ctx.fillText(clippedText(ctx,text,w-40),left,y+h/2+14);
  ctx.fillStyle='#9fc8f7';const room=w-(center?28:56);for(let size=26;size>=18;size-=2){ctx.font=`600 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(label).width<=room)break;}ctx.fillText(clippedText(ctx,label,room),left,y+h/2+58);
 }
 // 6개 이하는 상단 표지 → 지표 줄(장소가 있으면 3칸) → 카드 최대 2장, 7개 이상은 왼쪽 2열 표지 + 오른쪽 지표·카드(MVP·접전·협력 최대 3장) 열로 배치합니다.
@@ -197,9 +199,9 @@ function typesCard(ctx,mix,words,{x,y,w,h}){
   fillRound(ctx,x+28,top+36,barW,12,6,'rgba(255,255,255,.12)');if(count)fillRound(ctx,x+28,top+36,Math.max(12,barW*ratio),12,6,color);});
  ctx.textAlign='left';
 }
-function dayCard(ctx,card,{x,y,w,h}){
+function dayCard(ctx,card,{x,y,w,h},head=38){
  const top=y+(h-196)/2;fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,top+46);
- ctx.fillStyle='#fff';fitText(ctx,card.headline,w-68,40,26);ctx.fillText(clippedText(ctx,card.headline,w-68),x+34,top+104);
+ ctx.fillStyle='#fff';fitText(ctx,card.headline,w-68,head,Math.min(head,24));ctx.fillText(clippedText(ctx,card.headline,w-68),x+34,top+104);
  ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.detail,w-68),x+34,top+166);
 }
 function winnersCard(ctx,card,words,{x,y,w,h},columns){
@@ -216,11 +218,11 @@ export async function createRecentShareImage(data){
  const place=data.location||'',many=data.games.length>=10||data.playCount>=10,cards=(data.cards||[]).filter(card=>!(many&&card.kind==='winners')).concat(many&&data.games.length<SIDE_COVERS&&data.typeMix&&(data.cards||[]).filter(card=>card.kind!=='winners').length<3?[{kind:'types'}]:[]),headless=many&&data.games.length>MAX_COVERS,chips=(data.highlights||[]).map(([value,label])=>[value,label,false]),layout=shareCoverLayout(data.games.length,cards.length,Boolean(place)||chips.length>0,headless?164:274),shown=data.games.slice(0,layout.cells.length),images=await Promise.all(shown.map(game=>loadImage(game.imageUrl)));
  ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#82bfff';ctx.font='700 30px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText('SCORE COUNTER',72,71);
  const corner=headless?[data.dateLabel,place?words.atPlace(place):''].filter(Boolean).join(' '):layout.side?(place?words.atPlace(place):''):data.dateLabel||'';if(corner){ctx.fillStyle='#fff';ctx.textAlign='right';ctx.font='700 31px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,corner,600),1008,72);ctx.textAlign='left';}
- if(layout.side){if(!headless){const title=words.togetherTitle(data.dateLabel||'');ctx.fillStyle='#fff';fitText(ctx,title,936,53,40);ctx.fillText(clippedText(ctx,title,936),72,168);}ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,headless?140:250);const wide=layout.wide;[...chips,[data.games.length,wide?words.playedShort:words.playedCount],[data.peopleCount,wide?words.peopleShort:words.peopleCount]].slice(0,2).forEach(([value,label],index)=>metric(ctx,layout.metrics[index],value,label,{center:wide}));}
- else{const values=[...chips,...(place?[[place,words.place,true]]:[]),[data.games.length,words.playedCount,false],[data.peopleCount,words.peopleCount,false]].slice(0,layout.metrics.length);values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted}));}
+ if(layout.side){if(!headless){const title=words.togetherTitle(data.dateLabel||'');ctx.fillStyle='#fff';fitText(ctx,title,936,53,40);ctx.fillText(clippedText(ctx,title,936),72,168);}ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.playedGames,72,headless?140:250);const wide=layout.wide,sideValues=[...chips,[data.games.length,wide?words.playedShort:words.playedCount],[data.peopleCount,wide?words.peopleShort:words.peopleCount]].slice(0,2),sideSize=uniformSize(ctx,sideValues.map(([value])=>value),layout.metrics[0].w-40,56,30);sideValues.forEach(([value,label],index)=>metric(ctx,layout.metrics[index],value,label,{center:wide,size:sideSize}));}
+ else{const values=[...chips,...(place?[[place,words.place,true]]:[]),[data.games.length,words.playedCount,false],[data.peopleCount,words.peopleCount,false]].slice(0,layout.metrics.length);const rowSize=uniformSize(ctx,values.map(([value])=>value),layout.metrics[0].w-40,60,30);values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted,size:rowSize}));}
  shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h,data.games.length>=10);});
  if(layout.others){const rest=data.games.slice(shown.length);rest.length?otherGames(ctx,rest,words.otherGames,words,layout.others):data.typeMix?typesCard(ctx,data.typeMix,words,layout.others):otherGames(ctx,data.games.filter(game=>game.winners?.length),words.winnersTitle,words,layout.others);}
- layout.cards.forEach((box,index)=>cards[index].kind==='types'?typesCard(ctx,data.typeMix,words,box):cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box));
+ layout.cards.forEach((box,index)=>cards[index].kind==='types'?typesCard(ctx,data.typeMix,words,box):cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):dayCard(ctx,cards[index],box,uniformSize(ctx,layout.cards.map((_,i)=>cards[i]?.headline||''),Math.min(...layout.cards.map(item=>item.w))-68,38,24,700)));
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
 

@@ -5,7 +5,7 @@ import {peopleLabel} from './people-filter.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=118';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=5';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName} from './stats-share.js?v=157';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize} from './stats-share.js?v=158';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -120,10 +120,12 @@ export function shade(ctx,x,y,w,h,radius,from=.5){ctx.save();roundRect(ctx,x,y,w
 export function badges(ctx,game,x,y,w,size=24){if(game.count>1)pill(ctx,`×${game.count}`,x+w-14,y+14,{size});if(game.isNew)pill(ctx,'NEW',x+14,y+14,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:size-2});}
 function tile(ctx,images,game,x,y,w,h,caption,size=28){cover(ctx,images.get(game.key),game.name,x,y,w,h);if(caption&&images.get(game.key)){shade(ctx,x,y,w,h,24,.55);line(ctx,caption,x+22,y+h-26,w-44,{size,min:16});}badges(ctx,game,x,y,w);}
 export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTER',X,71,500,{size:30,color:'#82bfff'});}
-function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:56,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
+function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:52,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
 export function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
-export function card(ctx,{title,headline,detail},x,y,w,h){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:26,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+34,w-64,{size:48,min:22,weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:24,min:15,weight:600,color:'#b8cde6'});}
-function metrics(ctx,data,y,h){const words=data.words,gap=24,w=(CW-gap*2)/3;[[data.plays.length,words.plays],[data.dayCount,words.days],[data.games.length,words.games]].forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y,w,h},value.toLocaleString(data.lang==='ko'?'ko-KR':'en-US'),label,{center:true}));}
+// head: 같은 묶음 카드의 제목 크기(uniformSize로 맞춘 값).
+export function card(ctx,{title,headline,detail},x,y,w,h,head=38){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:24,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+30,w-64,{size:head,min:Math.min(head,20),weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:22,min:15,weight:600,color:'#b8cde6'});}
+export {uniformSize};
+function metrics(ctx,data,y,h){const words=data.words,gap=24,w=(CW-gap*2)/3,locale=data.lang==='ko'?'ko-KR':'en-US',items=[[data.plays.length,words.plays],[data.dayCount,words.days],[data.games.length,words.games]].map(([value,label])=>[value.toLocaleString(locale),label]),size=uniformSize(ctx,items.map(([value])=>value),w-40,60,30);items.forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y,w,h},value,label,{center:true,size}));}
 const rangeText=data=>`${data.range.start.replace(/-/g,'.')} ~ ${data.range.end.replace(/-/g,'.')}`;
 function canvas(){const node=document.createElement('canvas');node.width=W;node.height=H;return [node,node.getContext('2d')];}
 const toBlob=(node,words)=>new Promise((resolve,reject)=>node.toBlob(blob=>blob?resolve(blob):reject(Error(words.createFailed)),'image/png'));
@@ -160,14 +162,14 @@ function topSlide(ctx,data,images){
 function peopleSlide(ctx,data){
  const words=data.words;let y=250;heading(ctx,words.peopleTitle);
  if(data.rival){const rival=data.rival,h=400;box(ctx,X,y,CW,h);line(ctx,words.rival,X+34,y+56,CW-68,{size:26,weight:600,color:'#9fc8f7'});
-  [[rival.mine,data.selfName,X+CW*.25],[rival.theirs,rival.name,X+CW*.75]].forEach(([value,name,cx])=>{line(ctx,String(value),cx,y+200,360,{size:120,min:60,weight:900,align:'center'});line(ctx,name,cx,y+252,360,{size:34,min:20,weight:700,color:'#cfe3ff',align:'center'});});
+  [[rival.mine,data.selfName,X+CW*.25],[rival.theirs,rival.name,X+CW*.75]].forEach(([value,name,cx])=>{line(ctx,String(value),cx,y+200,360,{size:120,min:60,weight:900,align:'center'});line(ctx,name,cx,y+252,360,{size:30,min:20,weight:700,color:'#cfe3ff',align:'center'});});
   line(ctx,'VS',X+CW/2,y+180,120,{size:40,weight:800,color:'#82bfff',align:'center'});
   const results=rival.results.slice(-20),gap=8,dot=(CW-68-gap*(results.length-1))/results.length;results.forEach((result,index)=>fillRound(ctx,X+34+index*(dot+gap),y+290,dot,18,9,result==='w'?'#4fa3ff':result==='l'?'rgba(255,255,255,.2)':'#9fc8f7'));
   line(ctx,words.rivalDetail(rival.shared),X+34,y+360,CW-68,{size:26,weight:600,color:'#b8cde6'});y+=h+24;}
- if(!data.rival){const w=(CW-48)/3;[[data.peopleCount,words.peopleCount],[data.newFaces,words.newFaces],[data.avgPlayers,words.avgPlayers]].forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+24),y,w,h:172},value.toLocaleString(data.lang==='ko'?'ko-KR':'en-US'),label,{center:true}));y+=196;}
- const rows=data.personRows,rowH=Math.min(150,(1290-y-24)/Math.max(rows.length,1)),shift=(rowH-128)/2,h=rows.length*rowH+24;box(ctx,X,y,CW,h);
- rows.forEach((row,index)=>{const top=y+12+index*rowH+shift;fillRound(ctx,X+30,top+22,84,84,42,'#2c4c74');line(ctx,row.icon,X+72,top+78,80,{size:40,align:'center'});ctx.font=`800 40px ${FONT}`;const valueW=ctx.measureText(row.value).width;
-  line(ctx,row.name,X+140,top+62,CW-200-valueW,{size:36,min:20,weight:800});line(ctx,row.title,X+140,top+100,CW-200-valueW,{size:24,min:16,weight:600,color:'#9fb8d6'});line(ctx,row.value,X+CW-30,top+80,valueW+4,{size:40,weight:800,align:'right'});
+ if(!data.rival){const w=(CW-48)/3,items=[[data.peopleCount,words.peopleCount],[data.newFaces,words.newFaces],[data.avgPlayers,words.avgPlayers]].map(([value,label])=>[value.toLocaleString(data.lang==='ko'?'ko-KR':'en-US'),label]),size=uniformSize(ctx,items.map(([value])=>value),w-40,60,30);items.forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+24),y,w,h:172},value,label,{center:true,size}));y+=196;}
+ const rows=data.personRows,rowH=Math.min(150,(1290-y-24)/Math.max(rows.length,1)),shift=(rowH-128)/2,h=rows.length*rowH+24,valueSize=uniformSize(ctx,rows.map(row=>row.value),300,32,22);box(ctx,X,y,CW,h);
+ rows.forEach((row,index)=>{const top=y+12+index*rowH+shift;fillRound(ctx,X+30,top+22,84,84,42,'#2c4c74');line(ctx,row.icon,X+72,top+78,80,{size:40,align:'center'});ctx.font=`800 ${valueSize}px ${FONT}`;const valueW=ctx.measureText(row.value).width;
+  line(ctx,row.name,X+140,top+62,CW-200-valueW,{size:30,min:20,weight:800});line(ctx,row.title,X+140,top+98,CW-200-valueW,{size:22,min:16,weight:600,color:'#9fb8d6'});line(ctx,row.value,X+CW-30,top+78,valueW+4,{size:valueSize,min:valueSize,weight:800,align:'right'});
   if(index<rows.length-1){ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(X+30,top-shift+rowH-1,CW-60,1);}});
 }
 const LEVELS=['rgba(255,255,255,.07)','#1d4f7a','#2c7bbf','#4fa3ff','#9fe7ff'],DAY=86400000,utc=value=>Date.parse(value+'T00:00:00Z'),iso=time=>new Date(time).toISOString().slice(0,10);
@@ -199,9 +201,9 @@ function highlightItems(data){
 }
 function highlightsSlide(ctx,data,images){
  heading(ctx,data.words.highlightsTitle);
- const list=highlightItems(data),gap=18,h=Math.min(220,(1290-250-gap*(list.length-1))/list.length),thumb=h-50;
+ const list=highlightItems(data),gap=18,h=Math.min(220,(1290-250-gap*(list.length-1))/list.length),thumb=h-50,head=uniformSize(ctx,list.map(item=>item.headline),CW-thumb-86,38,22);
  list.forEach((item,index)=>{const y=250+index*(h+gap);box(ctx,X,y,CW,h);if(item.game)cover(ctx,images.get(item.game.key),item.game.name,X+25,y+25,thumb,thumb,20);else{fillRound(ctx,X+25,y+25,thumb,thumb,thumb/2,'#2c4c74');line(ctx,item.icon,X+25+thumb/2,y+25+thumb*.68,thumb,{size:Math.round(thumb*.4),align:'center'});}
-  const left=X+thumb+56,room=CW-thumb-86;line(ctx,item.title,left,y+h*.3,room,{size:25,weight:600,color:'#9fc8f7'});line(ctx,item.headline,left,y+h*.62,room,{size:46,min:24,weight:800});line(ctx,item.detail,left,y+h*.86,room,{size:23,min:15,weight:600,color:'#b8cde6'});});
+  const left=X+thumb+56,room=CW-thumb-86;line(ctx,item.title,left,y+h*.3,room,{size:24,weight:600,color:'#9fc8f7'});line(ctx,item.headline,left,y+h*.62,room,{size:head,min:Math.min(head,22),weight:800});line(ctx,item.detail,left,y+h*.86,room,{size:22,min:15,weight:600,color:'#b8cde6'});});
 }
 
 export async function createRecapSet(data){
@@ -239,7 +241,7 @@ export async function createRecapSingle(data){
  if(trait.kind!=='top'&&trait.kind!=='focus')pool.push({title:words.topTitle,headline:top.name,detail:words.playsN(top.count)});
  if(data.days.streak>1)pool.push({title:words.streak,headline:words.daysN(data.days.streak),detail:''});
  if(data.days.busiest)pool.push({title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
- const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220));
+ const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);const head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,38,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220,head));
  return toBlob(node,words);
 }
 

@@ -38,7 +38,7 @@ test('hidden-role games: most often mafia, wins by side and best liar',()=>{
  const raw=[night('a',10,'지영',true),night('b',11,'지영',false),night('c',12,'나',true)];
  const story=gameStory(raw,'2026-10-10',K('마피아'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 3판 · 통산 3판');
- assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]),[['마피아 역할 최다','지*','2번'],['숨은 역할 승리','지*','마피아 1승']]);
+ assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]),[['마피아 역할 최다','지*','2번'],['최고의 블러퍼','지*','마피아 1승']]);
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]).sort(),[['마피아',2],['시민',1]]);
  assert.deepEqual(gameStory(raw,'2026-10-10',K('마피아'),profile,{locale:'ko-KR',winners:false}).stories.map(item=>item.title),['마피아 역할 최다']);
 });
