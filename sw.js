@@ -1,5 +1,5 @@
 'use strict';
-const CACHE='score-counter-shell-v272-stats-play';
+const CACHE='score-counter-shell-v273-small-board-order';
 const BASE=new URL('./',self.location.href);
 const INDEX=new URL('index.html',BASE).href;
 // 버전 경로가 고정인 Firebase SDK는 따로 보관해 오프라인·새로고침에서도 바로 쓴다.

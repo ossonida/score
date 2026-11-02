@@ -677,3 +677,4 @@ test('per-game statistics play button starts that game at player selection and s
  a.get('scorelessSetupForm').onsubmit({preventDefault(){}});assert.equal(a.get('scorelessSetupDialog').open,false,'mode step is skipped');
  assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'rank');
 });
+test('score board keeps card order below three players and sorts by score from three players',async()=>{const html=await fs.readFile(new URL('../index.html',import.meta.url),'utf8');assert.ok(html.includes('shown=players.length<3?players:ranked;for(const [index,p] of shown.entries())'));assert.ok(html.includes('rank.textContent=`${ranked.findIndex(x=>x.score===p.score)+1}위`'),'rank label still follows score');});
