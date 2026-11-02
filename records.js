@@ -6,25 +6,25 @@ import {enhanceGamePicker} from './game-picker.js?v=64';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=154';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=155';
 import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=205';
-import {personStats} from './social-insights.js?v=120';
-import {countSessions,isPartyPlay} from './stats-extras.js?v=5';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=208';
+import {personStats} from './social-insights.js?v=121';
+import {countSessions,isPartyPlay} from './stats-extras.js?v=6';
 import {setProAccount,isPro,markProLock} from './pro-access.js?v=1';
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {renderStoryStats} from './story-stats.js?v=2';
-import {recapData,createRecapSet} from './recap-share.js?v=30';
+import {recapData,createRecapSet} from './recap-share.js?v=32';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=167';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
-import {latestPlayDate} from './stats-overview.js?v=167';
+import {latestPlayDate} from './stats-overview.js?v=168';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
 import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=68';
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=118';
 import {renderStatsDashboard} from './stats-dashboard.js?v=102';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=6';
-import {renderPeriodDashboard} from './period-dashboard.js?v=35';
+import {renderPeriodDashboard} from './period-dashboard.js?v=37';
 import {mergeImported} from './data-transfer.js?v=70';
 import {bggSearchQuery,searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=166';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches,aliasSearchName} from './game-aliases.js?v=1';
@@ -412,7 +412,7 @@ function renderHistory(){
    // 플레이하지 않은 게임도 표지·게임명·유형은 보여 주고 나의 기록 데이터가 없다고 안내합니다.
    if(game){const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game,collectionAction),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
- }else if(statsView==='all'){renderPeriodControls(period);periodShown={records:periodMine,model:{...period,people:activePeople()}};renderPeriodDashboard($('statsInsights'),periodMine,periodShown.model,{scope:key(),onGame:chooseStatsGame,onRecord:openStatsRecord,locked:previewOnly(period)?()=>openProSheet({reason:'period',previews:periodPreview}):null});if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}gatePeriod(previewOnly(period));}
+ }else if(statsView==='all'){renderPeriodControls(period);periodShown={records:periodMine,model:{...period,people:activePeople()}};renderPeriodDashboard($('statsInsights'),periodMine,periodShown.model,{scope:key(),onGame:chooseStatsGame,onRecord:openStatsRecord,locked:previewOnly(period)?()=>openProSheet({reason:'period',previews:periodPreview}):null});if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),people:activePeople(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}gatePeriod(previewOnly(period));}
  else{gatePeriod(false);renderOverview($('statsInsights'),statsView==='recent'?counted.filter(p=>p.date<=recentDate):counted,{scope:key(),view:statsView,shareRecords:statsView==='recent'?records.filter(p=>p.date<=recentDate):records,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[],dayNav:statsView==='recent'?{days:playDays,index:playDays.indexOf(recentDate),total:playDays.length,onDay:day=>{recentDay=day;renderHistory();}}:null});}
  $('statsDetailCount').textContent=statsView==='all'?'':`${listed.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!listed.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}

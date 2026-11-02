@@ -5,7 +5,7 @@ import {scoreGameType} from './score-games.js?v=167';
 export const typeLabels={strategy:'전략',sports:'스포츠',family:'가족',party:'파티',abstract:'추상',thematic:'테마',war:'워게임',children:'어린이',customizable:'커스터마이징',cooperative:'협동',deduction:'추리',unknown:'미분류'};
 const domainKeys={'Strategy Games':'strategy','Family Games':'family','Party Games':'party','Abstract Games':'abstract','Thematic Games':'thematic','Wargames':'war',"Children's Games":'children',"Children’s Games":'children','Customizable Games':'customizable'};
 export // BGG 유형과 달리 전략으로 보는 게임
-const fixedTypes={'320780':'strategy','440942':'strategy','439816':'strategy'};
+const fixedTypes={'320780':'strategy','440942':'strategy','439816':'strategy','367966':'strategy'};
 export function gameTypeList(play){const ownType=scoreGameType(play.game)||fixedTypes[bggId(play.game)];if(ownType)return [ownType];const data=metadata(play.game);if(!data)return ['unknown'];const types=[...new Set(data.domains.map(x=>domainKeys[x]).filter(Boolean))];if(data.cooperative)types.push('cooperative');if(data.deduction)types.push('deduction');return types.length?types:['unknown'];}
 export function gameType(play){return gameTypeList(play)[0];}
 export function latestPlayDate(records){return records.reduce((date,p)=>p.date>date?p.date:date,'');}

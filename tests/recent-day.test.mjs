@@ -41,3 +41,9 @@ test('recent day navigation moves between play days and disables the ends',()=>{
  const single=new Element('div');renderOverview(single,[play('only','2026-10-01')],{scope:'test',view:'recent',onGame(){},onRecord(){},dayNav:{days:['2026-10-01'],index:0,total:1,onDay(){}}});
  assert.ok(!walk(single).some(n=>n.textContent==='‹'),'one play day hides the navigator');
 });
+
+test('period head-to-head lists only the people picked in the period filter',async()=>{const {renderPeriodOpponents}=await import('../overview-dashboard.js');
+ const three=(id,date)=>play(id,date,{players:[{id:'a',name:'나',score:30,winner:true,isSelf:true},{id:'b',name:'민수',score:20,winner:false},{id:'c',name:'지영',score:10,winner:false}]});
+ const texts=people=>{const root=new Element('div');renderPeriodOpponents(root,[three('p1','2026-10-01'),three('p2','2026-10-02')],{scope:'test',people,onPerson(){}});return walk(root).map(n=>n.textContent).join('|');};
+ assert.match(texts(null),/지영/);const picked=texts({keys:['민수'],names:['민수'],mode:'any'});assert.match(picked,/민수/);assert.doesNotMatch(picked,/지영/);assert.match(picked,/상대 1명/);
+});

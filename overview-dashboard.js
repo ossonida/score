@@ -1,12 +1,12 @@
-import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=120';
+import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=121';
 import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-core.js?v=156';
-import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=167';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=168';
 import {readIdentity,meIn} from './personal-stats.js?v=118';
 import {renderGameArtwork} from './game-artwork.js?v=171';
 import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=164';
-import {openDayShare} from './day-share.js?v=26';
-import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=5';
+import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=166';
+import {openDayShare} from './day-share.js?v=28';
+import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=6';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
@@ -83,9 +83,10 @@ const shortDate=date=>date.slice(0,4)===String(new Date().getFullYear())?date.sl
 export const withParticle=name=>{const code=name.charCodeAt(name.length-1)-0xAC00;return name+(code>=0&&code<=11171&&code%28?'과':'와');};
 function opponentRow(r,onPerson){const row=el('button',undefined,'opponent-row'),copy=el('span',undefined,'opponent-copy'),record=el('span',undefined,'opponent-record'),chevron=el('span','›','opponent-chevron');row.type='button';row.setAttribute('aria-label',withParticle(r.name)+'의 전적 보기');copy.append(el('strong',r.name),el('small','함께 '+r.met+'판 · 최근 '+shortDate(r.last)));record.append(el('strong',recordText(r)),el('small',rateText(r)));chevron.setAttribute('aria-hidden','true');row.append(copy,record,chevron);row.onclick=()=>onPerson(r.key);return row;}
 function partnerRow(r,onPerson){const row=el('button',undefined,'opponent-row'),copy=el('span',undefined,'opponent-copy'),record=el('span',undefined,'opponent-record'),chevron=el('span','›','opponent-chevron');row.type='button';row.setAttribute('aria-label',withParticle(r.name)+'의 전적 보기');copy.append(el('strong',r.name),el('small','함께 '+r.count+'판 · 최근 '+shortDate(r.last)));record.append(el('strong',r.success+'번 성공'),el('small',r.rate===null?'결과 미입력':'성공률 '+percent(r.rate)+'%'));chevron.setAttribute('aria-hidden','true');row.append(copy,record,chevron);row.onclick=()=>onPerson(r.key);return row;}
-function opponentCard(records,profile,onPerson,period=false){
- const rivals=rivalStats(records,profile),card=el('section',undefined,'insight-card opponent-card'),head=el('div',undefined,'opponent-head');head.append(el('h3','상대 전적'));if(rivals.length)head.append(el('span','상대 '+rivals.length+'명','opponent-summary'));card.append(head);
- if(!rivals.length){const partners=coopPartners(records,profile);if(!partners.length){note(card,'이름이 있는 상대와의 경기를 저장하면 전적을 볼 수 있습니다.');return card;}head.firstChild.textContent='함께한 사람';head.append(el('span',partners.length+'명','opponent-summary'));const list=el('div',undefined,'opponent-list');for(const r of partners.slice(0,8))list.append(partnerRow(r,onPerson));card.append(list);if(partners.length>8){const more=el('button','함께한 사람 '+(partners.length-8)+'명 더 보기','opponent-more');more.type='button';more.onclick=()=>{for(const r of partners.slice(8))list.append(partnerRow(r,onPerson));more.remove();};card.append(more);}note(card,'협동 경기를 함께한 사람과 성공 횟수입니다.'+(period?' 줄을 누르면 전체 기간 전적을 봅니다.':''));return card;}
+// people: 기간 분석에서 고른 사람. 고른 사람만 상대·함께한 사람 줄로 보여 준다.
+function opponentCard(records,profile,onPerson,period=false,people=null){
+ const only=people?.keys?.length?new Set(people.keys):null,picked=r=>!only||only.has(r.key),rivals=rivalStats(records,profile).filter(picked),card=el('section',undefined,'insight-card opponent-card'),head=el('div',undefined,'opponent-head');head.append(el('h3','상대 전적'));if(rivals.length)head.append(el('span','상대 '+rivals.length+'명','opponent-summary'));card.append(head);
+ if(!rivals.length){const partners=coopPartners(records,profile).filter(picked);if(!partners.length){note(card,'이름이 있는 상대와의 경기를 저장하면 전적을 볼 수 있습니다.');return card;}head.firstChild.textContent='함께한 사람';head.append(el('span',partners.length+'명','opponent-summary'));const list=el('div',undefined,'opponent-list');for(const r of partners.slice(0,8))list.append(partnerRow(r,onPerson));card.append(list);if(partners.length>8){const more=el('button','함께한 사람 '+(partners.length-8)+'명 더 보기','opponent-more');more.type='button';more.onclick=()=>{for(const r of partners.slice(8))list.append(partnerRow(r,onPerson));more.remove();};card.append(more);}note(card,'협동 경기를 함께한 사람과 성공 횟수입니다.'+(period?' 줄을 누르면 전체 기간 전적을 봅니다.':''));return card;}
  const {beaten,beatenBy}=opponentHighlights(rivals);if(beaten||beatenBy){const box=el('div',undefined,'opponent-highlights');for(const [label,r,cls] of [['내가 가장 많이 이긴 상대',beaten,'win'],['나를 가장 많이 이긴 상대',beatenBy,'lose']]){if(!r)continue;const item=el('button',undefined,'opponent-highlight'),line=el('span',undefined,'opponent-highlight-line');item.type='button';line.append(el('strong',r.name),el('span',recordText(r),cls));item.append(el('small',label),line);item.onclick=()=>onPerson(r.key);box.append(item);}card.append(box);}
  const list=el('div',undefined,'opponent-list');for(const r of rivals.slice(0,8))list.append(opponentRow(r,onPerson));card.append(list);
  if(rivals.length>8){const more=el('button','상대 '+(rivals.length-8)+'명 더 보기','opponent-more');more.type='button';more.onclick=()=>{for(const r of rivals.slice(8))list.append(opponentRow(r,onPerson));more.remove();};card.append(more);}
@@ -103,7 +104,7 @@ export function renderGameLeaderboard(container,records,{scope,onPerson}){
  const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);
 }
 // 기간 분석: 기간 요약 바로 아래에 선택 기간의 상대 전적을 넣는다.
-export function renderPeriodOpponents(container,records,{scope,onPerson}){const card=opponentCard(records,readIdentity(scope),onPerson,true),first=[...(container.children||[])][0];if(first?.after)first.after(card);else container.append(card);}
+export function renderPeriodOpponents(container,records,{scope,onPerson,people}){const card=opponentCard(records,readIdentity(scope),onPerson,true,people),first=[...(container.children||[])][0];if(first?.after)first.after(card);else container.append(card);}
 // ○○와의 전적(전체 기간). stats는 personStats 결과이며, 범위 칩·게임 줄은 onScope, 최근 대결은 onRecord로 기록을 연다.
 const resultWords={ahead:'승',behind:'패',tied:'무',unknown:'비교 불가'};
 function personCard(container,title,right){const card=el('section',undefined,'insight-card person-card'),head=el('div',undefined,'opponent-head');head.append(el('h3',title));if(right)head.append(right);card.append(head);container.append(card);return card;}
