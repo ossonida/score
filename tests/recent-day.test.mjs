@@ -33,7 +33,7 @@ test('recent day navigation moves between play days and disables the ends',()=>{
  const render=index=>{const root=new Element('div');renderOverview(root,records.filter(p=>p.date<=days[index]),{scope:'test',view:'recent',onGame(){},onRecord(){},dayNav:{days,index,total:days.length,onDay:day=>moved.push(day)}});return root;};
  const middle=render(1),[prev,next]=walk(middle).filter(n=>n.tagName==='BUTTON'&&['‹','›'].includes(n.textContent));
  assert.equal(walk(middle).find(n=>n.tagName==='H2').textContent,'10월5일 게임기록');
- assert.ok(walk(middle).some(n=>n.textContent==='플레이한 날 2/3'));
+ const title=walk(middle).find(n=>n.className==='recent-day-title');assert.deepEqual(title.children.map(n=>n.textContent),['‹','10월5일 게임기록','›']);
  assert.equal(prev.disabled,false);assert.equal(next.disabled,false);
  prev.onclick();next.onclick();assert.deepEqual(moved,['2026-10-01','2026-10-22']);
  const first=render(0),[firstPrev]=walk(first).filter(n=>n.tagName==='BUTTON'&&n.textContent==='‹');assert.equal(firstPrev.disabled,true);
