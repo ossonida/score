@@ -5,7 +5,7 @@ import {peopleLabel} from './people-filter.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=118';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=5';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize} from './stats-share.js?v=158';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize} from './stats-share.js?v=159';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -25,7 +25,7 @@ const COPY={
   wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'Top newly logged',sinceFirst:n=>`${plural(n,'play','plays')} since first logged`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
   peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Most-played opponent',rivalDetail:n=>`${plural(n,'game','games')} head to head · recent results`,mostWins:'Most wins',together:'Played most with me',bestRate:'Best win rate · 5+ games',variety:'Most games tried together',gamesN:n=>plural(n,'game','games'),streakBest:'Longest win streak',streakN:n=>`${n} in a row`,winsOf:(w,n)=>`${w} of ${n}`,newFaces:'New faces',avgPlayers:'Avg. players',winsN:n=>plural(n,'win','wins'),
   calendarTitle:'Play calendar',busiest:'Busiest day',streak:'Longest streak',daysN:n=>plural(n,'day','days'),dayPlays:n=>`${plural(n,'play','plays')} in a day`,weekdayTitle:'By weekday',weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],month:m=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
-  highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Smallest margin',blowout:'Biggest win',blowHead:(game,n)=>`${game} · ${n} points`,crowdTitle:'Biggest table',crowdHead:(game,n)=>`${game} · ${n} players`,wonBy:n=>`Won by ${n}`,closeHead:(game,n)=>`${game} · ${n} points`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · that play: ${game}`:kind==='games'?`${day} · that game: ${game}`:day,milestone:'Milestone',
+  highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Smallest margin',blowout:'Biggest win',blowHead:(game,n)=>`${game} · ${plural(n,'point','points')}`,crowdTitle:'Biggest table',crowdHead:(game,n)=>`${game} · ${n} players`,wonBy:n=>`Won by ${n}`,closeHead:(game,n)=>`${game} · ${plural(n,'point','points')}`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · that play: ${game}`:kind==='games'?`${day} · that game: ${game}`:day,milestone:'Milestone',
   ms:{plays:n=>`Play #${n}`,days:n=>`Play day #${n}`,games:n=>`Game #${n} tried`,game:(n,g)=>`${g} play #${n}`},medalTop:{plays:'Total plays',days:'Play days',games:'Games tried'},medalBottom:{plays:'reached',days:'reached',games:'reached',game:'plays'},
   trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} games newly logged`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`},
   firstsTitle:n=>`Newly logged · ${n}`,winnersOf:g=>`${g} winners`,coopTitle:'Co-op',success:'Won',failure:'Lost',compare:'vs. last period',compareHead:d=>d?`${d>0?'+':''}${d} ${Math.abs(d)===1?'play':'plays'}`:'No change',compareDetail:(a,b)=>`${a} → ${plural(b,'play','plays')}`,firstsCard:'Newly logged',countN:n=>`${n} new`},
@@ -184,7 +184,7 @@ function calendarSlide(ctx,data){
   months.forEach((cursor,row)=>{const [year,month]=cursor.split('-').map(Number),last=new Date(Date.UTC(year,month,0)).getUTCDate(),y=270+row*rowH+(rowH-size)/2;line(ctx,words.month(month),X,y+size-4,labelW-10,{size:22,weight:600,color:'#9fb8d6'});line(ctx,words.playsN(monthly.get(cursor)||0),X+CW,y+size-4,countW-12,{size:22,min:14,weight:700,color:(monthly.get(cursor)||0)?'#fff':'rgba(255,255,255,.4)',align:'right'});
    for(let day=1;day<=last;day++){const value=`${cursor}-${String(day).padStart(2,'0')}`;if(value<data.range.start||value>data.range.end)continue;fillRound(ctx,X+labelW+(day-1)*cell,y,size,size,5,LEVELS[level(counts.get(value)||0)]);}});
  }
- const y=860,half=(CW-24)/2;if(busiest)card(ctx,{title:words.busiest,headline:date(data,busiest.date),detail:words.dayPlays(busiest.count)},X,y,streak>1?half:CW,190);if(streak>1)card(ctx,{title:words.streak,headline:words.daysN(streak),detail:''},X+half+24,y,half,190);
+ const y=860,half=(CW-24)/2,busy=busiest?.count>1;if(busy)card(ctx,{title:words.busiest,headline:date(data,busiest.date),detail:words.dayPlays(busiest.count)},X,y,streak>1?half:CW,190);if(streak>1)card(ctx,{title:words.streak,headline:words.daysN(streak),detail:''},busy?X+half+24:X,y,busy?half:CW,190);
  const weekday=[0,0,0,0,0,0,0];for(const play of data.plays)weekday[new Date(utc(play.date)).getUTCDay()]++;const top=Math.max(1,...weekday),by=1074;box(ctx,X,by,CW,212);line(ctx,words.weekdayTitle,X+32,by+50,CW-64,{size:26,weight:600,color:'#9fc8f7'});
  const slot=(CW-64)/7;weekday.forEach((count,index)=>{const bar=Math.max(6,count/top*100),cx=X+32+index*slot+slot/2;fillRound(ctx,cx-slot*.32,by+170-bar,slot*.64,bar,8,count===top?'#5fe0d0':'#2c7bbf');line(ctx,words.weekdays[index],cx,by+200,slot-6,{size:20,weight:600,color:'#9fb8d6',align:'center'});});
 }
@@ -195,7 +195,7 @@ function highlightItems(data){
  if(data.blow)items.push({game:data.gameOf(data.blow.play),title:words.blowout,headline:words.blowHead(name(data.blow.play),data.blow.gap),detail:`${data.blow.who} · ${date(data,data.blow.play.date)}`});
  for(const mark of data.marks.slice(0,2))items.push({icon:'🎉',title:words.milestone,headline:data.markTitle(mark),detail:words.markDetail(mark.kind,date(data,mark.play.date),name(mark.play))});
  if(data.crowd)items.push({game:data.gameOf(data.crowd.play),title:words.crowdTitle,headline:words.crowdHead(name(data.crowd.play),data.crowd.count),detail:date(data,data.crowd.play.date)});
- if(data.days.busiest)items.push({icon:'📅',title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
+ if(data.days.busiest?.count>1)items.push({icon:'📅',title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
  // 최대 5개: 최고 점수 · 치열 · 압승 · 달성 2 · 최다 인원 · 가장 많이 한 날 순서에서 앞의 다섯.
  return items.slice(0,5);
 }
@@ -235,12 +235,12 @@ export async function createRecapSingle(data){
   [[words.success,coop.wins,'#3fcf9a'],[words.failure,coop.losses,'#d9566a']].forEach(([label,value,color],index)=>{const ly=y+250+index*74;fillRound(ctx,x,ly-26,30,30,8,color);line(ctx,`${label} ${words.playsN(value)}`,x+48,ly,room-48,{size:32,min:18,weight:700});});}
  else{const shown=data.games.slice(0,3),gap=24,w=(CW-gap*(shown.length-1))/shown.length;shown.forEach((game,index)=>tile(ctx,images,game,X+index*(w+gap),y,w,h,game.name,shown.length===1?36:28));}
  const used=new Set([trait.kind]),pool=[];
- if(data.previous!==null)pool.push({title:words.compare,headline:words.compareHead(data.plays.length-data.previous),detail:words.compareDetail(data.previous,data.plays.length)});
+ if(data.previous>0)pool.push({title:words.compare,headline:words.compareHead(data.plays.length-data.previous),detail:words.compareDetail(data.previous,data.plays.length)});
  const mvp=data.personRows.find(row=>row.icon==='🏆');if(mvp)pool.push({title:words.mostWins,headline:mvp.name,detail:mvp.value});
  if(!used.has('firsts')&&data.firsts.length)pool.push({title:words.firstsCard,headline:words.countN(data.firsts.length),detail:data.firsts.map(game=>game.name).join(', ')});
  if(trait.kind!=='top'&&trait.kind!=='focus')pool.push({title:words.topTitle,headline:top.name,detail:words.playsN(top.count)});
  if(data.days.streak>1)pool.push({title:words.streak,headline:words.daysN(data.days.streak),detail:''});
- if(data.days.busiest)pool.push({title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
+ if(data.days.busiest?.count>1)pool.push({title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
  const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);const head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,38,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220,head));
  return toBlob(node,words);
 }

@@ -145,11 +145,11 @@ function drawCover(ctx,image,game,x,y,w,h,flat=false){
  if(label){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}}ctx.restore();
  // ×N 배지는 위쪽 우승자와 아래쪽 게임명 사이 가운데에 두고, 게임명은 배지와 상관없이 하단에 둡니다.
  const repeated=game.count>1,nameFont='700 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';let nameY=y+h-56,badgeY=y+h/2-14,labelY=y+47;
- // 단색 그늘(flat)일 때는 우승자 → 게임명을 한 덩어리로 표지 세로 가운데에 두고, ×N 배지는 오른쪽 위 모서리에 둡니다.
+ // 단색 그늘(flat)일 때는 우승자 → 게임명을 한 덩어리로 표지 세로 가운데에 두고, ×N 배지는 오른쪽 위 모서리에 둡니다. 표지 이미지가 없으면 게임명이 가운데에 있으므로 배지를 아래쪽 가운데로 보냅니다.
  if(flat&&image){ctx.font=nameFont;const lines=drawWrapped({measureText:text=>ctx.measureText(text),fillText(){}},game.game.name,0,0,w-44,31,2),parts=[label?30:0,lines*31-6].filter(Boolean),total=parts.reduce((sum,value)=>sum+value,0)+8*(parts.length-1);let top=y+(h-total)/2;
   if(label){labelY=top+24;top+=38;}nameY=top+25;}
  if(image){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.font=nameFont;drawWrapped(ctx,game.game.name,x+w/2,nameY,w-44,31,2);}
- if(repeated){const badgeX=flat?x+w-48:x+w/2;if(flat)badgeY=y+33;fillRound(ctx,badgeX-35,badgeY-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,badgeX,badgeY+8);}
+ if(repeated){const badgeX=flat?x+w-48:x+w/2;if(flat)badgeY=y+33;else if(!image)badgeY=y+h-48;fillRound(ctx,badgeX-35,badgeY-21,70,42,21,'rgba(5,13,25,.78)');ctx.fillStyle='#e9f3ff';ctx.font='700 21px system-ui, sans-serif';ctx.textAlign='center';ctx.fillText(`×${game.count}`,badgeX,badgeY+8);}
  // 우승자는 표지 위쪽 가운데 정렬.
  if(label){const room=w-44;ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='alphabetic';fitText(ctx,label,room,24,18);ctx.fillText(clippedText(ctx,label,room),x+w/2,labelY);}
 }

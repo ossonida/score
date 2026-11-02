@@ -16,9 +16,9 @@ test('score game: top score, personal best, blowout, close game and win chart; n
   scored('t1','2026-10-10',10,{나:60,김민수:40}),scored('t2','2026-10-10',11,{나:30,김민수:31})];
  const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 2판 · 통산 5판');
- assert.deepEqual(titles(story),['오늘 최고점','개인 최고점 갱신','가장 큰 점수 차','가장 적은 점수 차','평균 우승 점수 대비','최근 성적','같은 멤버','이번 달','플레이 순위']);
- assert.deepEqual(story.stories[1],{title:'개인 최고점 갱신',headline:'나 60점',detail:'이전 42'});
- assert.equal(story.stories[3].detail,'','public hides the losing score');
+ assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','가장 적은 점수 차','평균 우승 점수 대비','최근 성적','같은 멤버','이번 달','플레이 순위']);
+ assert.deepEqual(story.stories[0],{title:'개인 최고점 갱신',headline:'나 60점',detail:'이전 42'});
+ assert.equal(story.stories[2].detail,'','public hides the losing score');
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]),[['나',1],['김**',1]]);
  assert.equal(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false}).stories.find(item=>item.title==='가장 적은 점수 차').detail,'31 : 30');
  const quiet=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',winners:false});
