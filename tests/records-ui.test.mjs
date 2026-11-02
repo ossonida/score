@@ -668,3 +668,12 @@ test('game-first start asks for expansions in the game step and carries them thr
  await a.get('savePlayForm').onsubmit({preventDefault(){}});assert.equal(a.get('savePlayDialog').open,false);assert.equal(a.get('scorelessSetupDialog').open,true);
  a.get('scorelessSetupForm').onsubmit({preventDefault(){}});a.get('scoreModeOption').onclick();a.get('savePlay').onclick();assert.equal(a.get('recordDetailsStep').hidden,false);await a.get('savePlayForm').onsubmit({preventDefault(){}});
  assert.deepEqual(JSON.parse(JSON.stringify(a.bridge.context().records[0].expansions)),[{id:'325',name:'Catan: Seafarers'}]);});
+test('per-game statistics play button starts that game at player selection and skips to the most used mode',async()=>{
+ const play=(id,date,rank)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'순위테스트',bggId:''},rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score:null,rank,isSelf:true},{id:'b',name:'철수',color:'#ffcc00',score:null,rank:rank===1?2:1}]});
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('r1','2026-10-01',1),play('r2','2026-10-02',2),{...play('r3','2026-10-03',1),players:[{id:'a',name:'나',color:'#52c7ef',score:10,isSelf:true},{id:'b',name:'철수',color:'#ffcc00',score:5}]}],pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
+ const a=await app(store);a.vm.window.ScoreCounter.clearPlayers();a.bridge.openGameStats({name:'순위테스트',bggId:''});
+ assert.equal(a.get('statsPlayFab').hidden,false);a.get('statsAll').onclick();assert.equal(a.get('statsPlayFab').hidden,true);a.get('statsGames').onclick();assert.equal(a.get('statsPlayFab').hidden,false);
+ a.get('statsPlayFab').onclick();assert.equal(a.get('scorelessSetupDialog').open,true);assert.equal(a.get('scorelessSetupGame').textContent,'순위테스트');
+ a.get('scorelessSetupForm').onsubmit({preventDefault(){}});assert.equal(a.get('scorelessSetupDialog').open,false,'mode step is skipped');
+ assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'rank');
+});
