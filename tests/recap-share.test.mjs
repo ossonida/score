@@ -24,7 +24,9 @@ test('public recap hides other names and the rival, friends recap shows them',()
 
 test('carousel plan adds the cover wall for 9+ games and a second page for 18+',()=>{
  const many=n=>Array.from({length:n},(_,i)=>play('g'+i,'2026-10-'+String(1+i%28).padStart(2,'0'),'게임'+i));
- assert.deepEqual(recapPlan(recapData(many(3),month,profile,{locale:'ko'})),['cover','top','people','calendar','highlights']);
+ // 게임마다 한 판씩이면 '많이 한 게임' 대신 플레이한 게임 + 게임 종류.
+ assert.deepEqual(recapPlan(recapData(many(3),month,profile,{locale:'ko'})),['cover','played','types','people','calendar','highlights']);
+ assert.deepEqual(recapPlan(recapData([...many(3),play('again','2026-10-20','게임0')],month,profile,{locale:'ko'})).slice(0,2),['cover','top']);
  assert.ok(recapPlan(recapData(many(9),month,profile,{locale:'ko'})).includes('wall'));
  assert.ok(!recapPlan(recapData(many(17),month,profile,{locale:'ko'})).includes('wall2'));
  assert.ok(recapPlan(recapData(many(18),month,profile,{locale:'ko'})).includes('wall2'));
@@ -40,7 +42,8 @@ test('single recap picks one trait per period',()=>{
  assert.equal(trait([...old,...Array.from({length:5},(_,i)=>play('c'+i,'2026-10-1'+i,'카탄')),play('z','2026-10-20','아줄')]),'focus');
  const coop=i=>play('p'+i,'2026-10-0'+(i+1),i%2?'팬데믹':'카탄',i%2?{rule:'cooperative',cooperativeResult:'success',players:[{id:'a',name:'나',score:null}]}:{});
  assert.equal(trait([...old,{...play('pp','2026-08-03','팬데믹')},...Array.from({length:6},(_,i)=>coop(i))]),'coop');
- assert.equal(trait([...old,play('t1','2026-10-01','카탄'),play('t2','2026-10-02','아줄')]),'top');
+ assert.equal(trait([...old,play('t1','2026-10-01','카탄'),play('t2','2026-10-02','아줄'),play('t3','2026-10-03','카탄')]),'top');
+ assert.equal(trait([...old,play('t1','2026-10-01','카탄'),play('t2','2026-10-02','아줄')]),'played');
 });
 
 test('english recap copy stays short and pluralizes',()=>{
@@ -75,4 +78,15 @@ test('people filter: title names them, milestones and newly logged are left out,
  assert.equal(data.title,'2026년 10월 결산 · 김민수');assert.deepEqual([data.marks.length,data.firsts.length],[0,0]);
  assert.equal(data.rival.name,'김민수','rival is a chosen person even if someone else played more');
  assert.equal(recapData(records,{...month,people},profile,{locale:'ko-KR'}).title,'2026년 10월 결산 · 김**');
+});
+
+test('recap game types, type filter and play rhythm',()=>{
+ const coop=(id,date)=>play(id,date,'팬데믹',{rule:'cooperative',cooperativeResult:'success',players:[{id:'a',name:'나',score:null}]});
+ const records=[play('a','2026-10-01','카탄'),play('b','2026-10-05','마피아'),coop('c','2026-10-11'),coop('d','2026-10-21')];
+ const data=recapData(records,month,profile,{locale:'ko'});
+ assert.deepEqual(data.categories.map(row=>[row.key,row.name,row.count,row.pct]),[['coop','협동',2,50],['family','가족/파티',1,25],['deduction','추리',1,25]]);
+ assert.deepEqual(data.rhythm,{days:4,every:7,longest:10,last:'2026-10-21'});
+ const coopOnly=recapData(records,month,profile,{locale:'ko',category:'coop'});
+ assert.equal(coopOnly.plays.length,2);assert.equal(coopOnly.category,'coop');assert.match(coopOnly.title,/ · 협동$/);assert.deepEqual(coopOnly.marks,[]);assert.deepEqual(coopOnly.firsts,[]);
+ assert.equal(recapData(records,month,profile,{locale:'en'}).categories.find(row=>row.key==='deduction').name,'Deduction');
 });

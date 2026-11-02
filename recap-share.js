@@ -5,7 +5,7 @@ import {peopleLabel} from './people-filter.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=118';
 import {gameImageUrl} from './game-artwork.js?v=171';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=5';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize} from './stats-share.js?v=160';
+import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=161';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -13,21 +13,21 @@ const plural=(n,one,many)=>`${n.toLocaleString('en-US')} ${n===1?one:many}`;
 const COPY={
  ko:{me:'나',dialog:'기간 결산 공유',formatSet:'여러 장',formatSetHint:'넘겨 보는 묶음',formatSingle:'한 장',formatSingleHint:'기간 특징 요약',scopeLabel:'공유 범위',formatLabel:'형식',lockedSet:n=>`${n}장 중 첫 장만 저장할 수 있어요 · 나머지는 Pro`,proTile:n=>`+${n}장 · Pro로 전체 보기`,showWinners:'우승자 표시',fullScores:'순위·점수 전체 표시',dayDialog:'최근 기록 공유',daySetHint:'그날 전체 + 게임별',daySingleHint:'그날 요약 한 장',scopePublic:'공개 SNS용',scopeFriends:'친구 공유용',scopePublicHint:'이름을 가리고 점수 비교는 빼요',scopeFriendsHint:'실명과 맞대결·점수까지 넣어요',creating:'결산 이미지를 만드는 중입니다.',readySet:n=>`${n}장 · 옆으로 넘겨 보세요.`,readySingle:'이미지를 저장하거나 SNS로 공유할 수 있습니다.',save:'이미지 저장',share:'SNS 공유',shareFailed:'공유하지 못했습니다. 이미지 저장을 이용해주세요.',createFailed:'결산 이미지를 만들지 못했습니다.',empty:'선택 기간에 공유할 기록이 없습니다.',previewAlt:n=>`결산 이미지 ${n}`,close:'닫기',
   title:label=>`${label} 결산`,titleWith:(label,names)=>`${label} 결산 · ${names}`,plays:'플레이',days:'플레이한 날',games:'서로 다른 게임',swipe:'넘겨서 더 보기 →',topOf:preset=>preset==='month'?'이달의 게임':preset==='year'?'올해의 게임':'가장 많이 한 게임',
-  wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 기록한 게임 중 최다',sinceFirst:n=>`기록 시작 후 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
+  wall:(label,g,p)=>`${label} · 게임 ${g}개 · ${p}판`,moreGames:'게임 더',topTitle:'가장 많이 한 게임',categoryLabel:'게임 종류',categoryAll:'전체',categoryHint:'고른 종류의 판만으로 만들어요',categoryAllHint:'모든 판으로 만들어요',titleOf:(label,x)=>`${label} 결산 · ${x}`,playedTitle:'플레이한 게임',playedSub:(g,p)=>`서로 다른 게임 ${g}개 · ${p}판`,rhythm:'플레이 주기',everyDays:n=>`평균 ${n}일마다`,longestGap:n=>`가장 긴 공백 ${n}일`,oneDay:'하루에 모두',lastPlayed:d=>`마지막 ${d}`,typesSlide:'게임 종류',typeDetail:(plays,names)=>`${plays} · ${names.slice(0,3).join(', ')}${names.length>3?` 외 ${names.length-3}개`:''}`,moreN:n=>`+${n}`,playsN:n=>`${n.toLocaleString('ko-KR')}판`,newFavorite:'새로 기록한 게임 중 최다',sinceFirst:n=>`기록 시작 후 ${n}판`,topShare:'상위 게임 비중',topShareDetail:(a,b)=>`${b}판 중 ${a}판`,
   peopleTitle:'함께한 사람들',peopleCount:'함께한 사람',groupPlays:'여럿이 한 판',rival:'가장 많이 맞붙은 상대',rivalDetail:n=>`${n}판 맞대결 · 최근 결과`,mostWins:'가장 많이 이긴 사람',together:'나와 가장 많이 함께한 사람',bestRate:'가장 높은 승률 · 5판 이상',variety:'가장 다양한 게임을 함께한 사람',gamesN:n=>`${n}종`,streakBest:'이 기간 최장 연승',streakN:n=>`${n}연승`,winsOf:(w,n)=>`${w}승 / ${n}판`,newFaces:'처음 함께한 사람',avgPlayers:'평균 인원',winsN:n=>`${n}승`,
   calendarTitle:'플레이 달력',busiest:'가장 많이 한 날',streak:'최장 연속',daysN:n=>`${n}일`,dayPlays:n=>`하루에 ${n}판`,weekdayTitle:'요일별',weekdays:['일','월','화','수','목','금','토'],month:m=>`${m}월`,
   highlightsTitle:'이 기간의 기록',bestScore:'최고 점수',points:n=>`${n.toLocaleString('ko-KR')}점`,closest:'가장 적은 점수 차',blowout:'가장 큰 점수 차',blowHead:(game,n)=>`${game} ${n}점 차`,crowdTitle:'최다 인원',crowdHead:(game,n)=>`${game} · ${n}명`,wonBy:n=>`${n}점 차`,closeHead:(game,n)=>`${game} ${n}점 차`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · 그 판: ${game}`:kind==='games'?`${day} · 그 게임: ${game}`:day,milestone:'달성 기록',
   ms:{plays:n=>`통산 ${n}번째 플레이`,days:n=>`플레이한 날 ${n}일째`,games:n=>`서로 다른 게임 ${n}개째`,game:(n,g)=>`${g} ${n}번째 플레이`},medalTop:{plays:'통산',days:'플레이한 날',games:'서로 다른 게임'},medalBottom:{plays:'번째 플레이',days:'일째',games:'개째',game:'번째 플레이'},
-  trait:{milestone:t=>`${t} 달성`,firsts:n=>`새로 기록한 게임 ${n}개`,focus:(g,n)=>`${g} ${n}판`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`},
+  trait:{milestone:t=>`${t} 달성`,firsts:n=>`새로 기록한 게임 ${n}개`,focus:(g,n)=>`${g} ${n}판`,coop:(w,n)=>`협력 게임 ${n}판 중 ${w}번 성공`,top:g=>`가장 많이 한 게임 · ${g}`,played:(g,p)=>`게임 ${g}개 · ${p}판`},
   firstsTitle:n=>`새로 기록한 게임 ${n}개`,winnersOf:g=>`${g} 우승`,coopTitle:'협력 게임',success:'성공',failure:'실패',compare:'지난 기간보다',compareHead:d=>d?`${d>0?'+':''}${d}판`:'변화 없음',compareDetail:(a,b)=>`${a}판 → ${b}판`,firstsCard:'새로 기록한 게임',countN:n=>`${n}개`},
  en:{me:'Me',dialog:'Share recap',formatSet:'Carousel',formatSetHint:'Swipe set',formatSingle:'Single',formatSingleHint:'One highlight card',scopeLabel:'Share with',formatLabel:'Format',lockedSet:n=>`Only the first of ${n} can be saved · the rest with Pro`,proTile:n=>`+${n} · See all with Pro`,showWinners:'Show winners',fullScores:'Full rankings & scores',dayDialog:'Share game day',daySetHint:'Day + each game',daySingleHint:'Day summary only',scopePublic:'Public',scopeFriends:'Friends',scopePublicHint:'Names hidden, no score comparisons',scopeFriendsHint:'Real names, rivals and scores',creating:'Creating recap images…',readySet:n=>`${n} images · swipe to view.`,readySingle:'Save the image or share it.',save:'Save',share:'Share',shareFailed:"Couldn't share. Please save the images instead.",createFailed:"Couldn't create the recap images.",empty:'There are no records to share in this period.',previewAlt:n=>`Recap image ${n}`,close:'Close',
   title:label=>`${label} Recap`,titleWith:(label,names)=>`${label} Recap · with ${names}`,plays:'Plays',days:'Play days',games:'Games',swipe:'Swipe for more →',topOf:preset=>preset==='month'?'Game of the month':preset==='year'?'Game of the year':'Top game',
-  wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',playsN:n=>plural(n,'play','plays'),newFavorite:'Top newly logged',sinceFirst:n=>`${plural(n,'play','plays')} since first logged`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
+  wall:(label,g,p)=>`${label} · ${plural(g,'game','games')} · ${plural(p,'play','plays')}`,moreGames:'more games',topTitle:'Most played',categoryLabel:'Game type',categoryAll:'All',categoryHint:'Only plays of this type',categoryAllHint:'All plays',titleOf:(label,x)=>`${label} Recap · ${x}`,playedTitle:'Games played',playedSub:(g,p)=>`${plural(g,'game','games')} · ${plural(p,'play','plays')}`,rhythm:'Play rhythm',everyDays:n=>`Every ${plural(n,'day','days')}`,longestGap:n=>`Longest break ${plural(n,'day','days')}`,oneDay:'All in one day',lastPlayed:d=>`Last ${d}`,typesSlide:'Game types',typeDetail:(plays,names)=>`${plays} · ${names.slice(0,3).join(', ')}${names.length>3?` +${names.length-3} more`:''}`,moreN:n=>`+${n}`,playsN:n=>plural(n,'play','plays'),newFavorite:'Top newly logged',sinceFirst:n=>`${plural(n,'play','plays')} since first logged`,topShare:'Top games share',topShareDetail:(a,b)=>`${a} of ${plural(b,'play','plays')}`,
   peopleTitle:'Play partners',peopleCount:'Players',groupPlays:'Group plays',rival:'Most-played opponent',rivalDetail:n=>`${plural(n,'game','games')} head to head · recent results`,mostWins:'Most wins',together:'Played most with me',bestRate:'Best win rate · 5+ games',variety:'Most games tried together',gamesN:n=>plural(n,'game','games'),streakBest:'Longest win streak',streakN:n=>`${n} in a row`,winsOf:(w,n)=>`${w} of ${n}`,newFaces:'New faces',avgPlayers:'Avg. players',winsN:n=>plural(n,'win','wins'),
   calendarTitle:'Play calendar',busiest:'Busiest day',streak:'Longest streak',daysN:n=>plural(n,'day','days'),dayPlays:n=>`${plural(n,'play','plays')} in a day`,weekdayTitle:'By weekday',weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],month:m=>['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1],
   highlightsTitle:'Highlights',bestScore:'Top score',points:n=>`${n.toLocaleString('en-US')} pts`,closest:'Smallest margin',blowout:'Biggest win',blowHead:(game,n)=>`${game} · ${plural(n,'point','points')}`,crowdTitle:'Biggest table',crowdHead:(game,n)=>`${game} · ${n} players`,wonBy:n=>`Won by ${n}`,closeHead:(game,n)=>`${game} · ${plural(n,'point','points')}`,markDetail:(kind,day,game)=>kind==='plays'?`${day} · that play: ${game}`:kind==='games'?`${day} · that game: ${game}`:day,milestone:'Milestone',
   ms:{plays:n=>`Play #${n}`,days:n=>`Play day #${n}`,games:n=>`Game #${n} tried`,game:(n,g)=>`${g} play #${n}`},medalTop:{plays:'Total plays',days:'Play days',games:'Games tried'},medalBottom:{plays:'reached',days:'reached',games:'reached',game:'plays'},
-  trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} games newly logged`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`},
+  trait:{milestone:t=>`Reached ${t}`,firsts:n=>`${n} games newly logged`,focus:(g,n)=>`${plural(n,'play','plays')} of ${g}`,coop:(w,n)=>`${w} of ${n} co-op wins`,top:g=>`Top game · ${g}`,played:(g,p)=>`${plural(g,'game','games')} · ${plural(p,'play','plays')}`},
   firstsTitle:n=>`Newly logged · ${n}`,winnersOf:g=>`${g} winners`,coopTitle:'Co-op',success:'Won',failure:'Lost',compare:'vs. last period',compareHead:d=>d?`${d>0?'+':''}${d} ${Math.abs(d)===1?'play':'plays'}`:'No change',compareDetail:(a,b)=>`${a} → ${plural(b,'play','plays')}`,firstsCard:'Newly logged',countN:n=>`${n} new`},
 };
 export const recapCopy=lang=>COPY[shareLanguage(lang)];
@@ -37,10 +37,11 @@ export {maskName};
 const byDate=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const MS_RANK={plays:4,days:3,games:2,game:1};
 // 공유 범위: public(기본)은 이름을 가리고 라이벌 대결·접전 점수를 뺀다, friends는 실명과 대결·점수 포함.
-export function recapData(records,model,profile,{locale,scope='public'}={}){
- const mask=scope!=='friends',lang=shareLanguage(locale),words=COPY[lang],range=model.current,plays=records.filter(play=>play.date&&play.date>=range.start&&play.date<=range.end).sort(byDate);
- const firsts=model.preset==='all'||model.people?[]:firstPlays(records,range),newKeys=new Set(firsts.map(item=>item.key)),games=new Map();
- for(const play of plays){const key=gameKey(play.game),entry=games.get(key)||{key,game:play.game,name:localizedGameName(play.game,lang),count:0,imageUrl:gameImageUrl(play.game),isNew:newKeys.has(key)};entry.count++;games.set(key,entry);}
+// category: 공유 창 '게임 종류'(shareGameType 키). 고르면 그 종류의 판만으로 만들고 달성 기록·새로 기록한 게임은 뺀다.
+export function recapData(records,model,profile,{locale,scope='public',category='all'}={}){
+ const mask=scope!=='friends',byType=Boolean(category&&category!=='all'),lang=shareLanguage(locale),words=COPY[lang],range=model.current,plays=records.filter(play=>play.date&&play.date>=range.start&&play.date<=range.end&&(!byType||shareGameType(play)===category)).sort(byDate);
+ const firsts=model.preset==='all'||model.people||byType?[]:firstPlays(records,range),newKeys=new Set(firsts.map(item=>item.key)),games=new Map();
+ for(const play of plays){const key=gameKey(play.game),entry=games.get(key)||{key,game:play.game,name:localizedGameName(play.game,lang),count:0,imageUrl:gameImageUrl(play.game),isNew:newKeys.has(key)};entry.count++;entry.last=play.date;games.set(key,entry);}
  const list=[...games.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),gameOf=play=>games.get(gameKey(play.game)),newGames=list.filter(game=>game.isNew),allNew=list.length>1&&newGames.length===list.length;
  // 모든 게임이 처음이면(기록을 막 시작한 기간) NEW 표시는 의미가 없어 뺀다.
  if(allNew)for(const game of list)game.isNew=false;
@@ -78,19 +79,26 @@ export function recapData(records,model,profile,{locale,scope='public'}={}){
  const mate=pick(together.length?[...together].sort((a,b)=>b.shared-a.shared):[...others].sort((a,b)=>b.plays-a.plays),()=>true);if(mate)personRows.push({icon:'🤝',name:mate.name,title:words.together,value:words.playsN(mate.shared??mate.plays)});
  const diverse=pick([...variety.values()].sort((a,b)=>b.games.size-a.games.size),row=>row.games.size>=3);if(diverse)personRows.push({icon:'🎲',name:diverse.name,title:words.variety,value:words.gamesN(diverse.games.size)});
  const streak=pick([...streaks.values()].sort((a,b)=>b.run-a.run),row=>row.run>=3);if(streak)personRows.push({icon:'🔥',name:streak.name,title:words.streakBest,value:words.streakN(streak.run)});
- const marks=(model.people?[]:milestones(records,range)).sort((a,b)=>MS_RANK[b.kind]-MS_RANK[a.kind]||b.count-a.count),markTitle=mark=>mark.kind==='game'?words.ms.game(mark.count,gameOf(mark.play)?.name||''):words.ms[mark.kind](mark.count);
+ const marks=(model.people||byType?[]:milestones(records,range)).sort((a,b)=>MS_RANK[b.kind]-MS_RANK[a.kind]||b.count-a.count),markTitle=mark=>mark.kind==='game'?words.ms.game(mark.count,gameOf(mark.play)?.name||''):words.ms[mark.kind](mark.count);
  const coop=plays.filter(play=>play.rule==='cooperative'),coopWins=coop.filter(play=>play.cooperativeResult==='success').length,coopLosses=coop.filter(play=>play.cooperativeResult==='failure').length;
- const previous=model.previous?records.filter(play=>play.date>=model.previous.start&&play.date<=model.previous.end).length:null,calendarDays=Math.round((Date.parse(range.end)-Date.parse(range.start))/86400000)+1;
+ const previous=model.previous?records.filter(play=>play.date>=model.previous.start&&play.date<=model.previous.end&&(!byType||shareGameType(play)===category)).length:null,calendarDays=Math.round((Date.parse(range.end)-Date.parse(range.start))/86400000)+1;
  const label=periodShareLabel(model,lang),focus=list[0]&&list[0].count>=5&&list[0].count/plays.length>=.6?list[0]:null;
  const focusWinners=focus?(()=>{const counts=new Map();for(const play of plays){if(gameKey(play.game)!==focus.key||play.rule==='cooperative')continue;const wins=new Set(winnerIds(play)),me=meIn(play,profile);for(const person of play.players){if(!wins.has(person.id)||person.anonymous===true||!String(person.name||'').trim())continue;const self=me?.id===person.id,key=self?SELF:nameKey(person.name),row=counts.get(key)||{name:shown(person,self),wins:0};row.wins++;counts.set(key,row);}}return [...counts.values()].sort((a,b)=>b.wins-a.wins).slice(0,3);})():[];
+ // 게임 종류: 판 수·비율·그 종류의 게임(많이 한 순).
+ const typeRows=new Map();for(const play of plays){const key=shareGameType(play),row=typeRows.get(key)||{key,count:0,games:new Map()},game=gameOf(play);row.count++;row.games.set(game.key,(row.games.get(game.key)||0)+1);typeRows.set(key,row);}
+ const categories=SHARE_TYPES.map(([key,color])=>{const row=typeRows.get(key);return row?{key,color,name:shareTypeName(key,lang),count:row.count,pct:Math.round(row.count/plays.length*100),names:[...row.games].sort((a,b)=>b[1]-a[1]).map(([gameKey])=>games.get(gameKey).name)}:null;}).filter(Boolean).sort((a,b)=>b.count-a.count);
+ // 게임마다 판 수가 모두 같으면(예: 함께한 사람으로 골라 모두 1판) '많이 한' 순위는 뜻이 없다.
+ const uniform=list.length>=2&&list[0].count===list.at(-1).count;
+ // 플레이 주기: 플레이한 날 사이 평균·가장 긴 간격(일).
+ const playDates=[...new Set(plays.map(play=>play.date))].sort(),gaps=playDates.slice(1).map((day,index)=>Math.round((Date.parse(day)-Date.parse(playDates[index]))/86400000)),rhythm={days:playDates.length,every:gaps.length?Math.max(1,Math.round(gaps.reduce((sum,gap)=>sum+gap,0)/gaps.length)):0,longest:gaps.length?Math.max(...gaps):0,last:playDates.at(-1)||''};
  const selfNames=new Map();for(const play of plays){const me=meIn(play,profile),name=String(me?.name||'').trim();if(me&&name)selfNames.set(name,(selfNames.get(name)||0)+1);}
- return {lang,words,model,scope,mask,selfName:[...selfNames].sort((a,b)=>b[1]-a[1])[0]?.[0]||words.me,peopleCount:others.length,newFaces:others.filter(row=>!earlier.has(row.key)).length,avgPlayers:plays.length?Math.round(plays.reduce((sum,play)=>sum+play.players.length,0)/plays.length*10)/10:0,label,title:model.people?words.titleWith(label,peopleLabel(model.people.names.map(name=>mask?maskName(name):name),lang)):words.title(label),range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,blow,crowd,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
+ return {lang,words,model,scope,mask,selfName:[...selfNames].sort((a,b)=>b[1]-a[1])[0]?.[0]||words.me,peopleCount:others.length,newFaces:others.filter(row=>!earlier.has(row.key)).length,avgPlayers:plays.length?Math.round(plays.reduce((sum,play)=>sum+play.players.length,0)/plays.length*10)/10:0,label,title:(model.people?words.titleWith(label,peopleLabel(model.people.names.map(name=>mask?maskName(name):name),lang)):byType?words.titleOf(label,shareTypeName(category,lang)):words.title(label))+(model.people&&byType?` · ${shareTypeName(category,lang)}`:''),category:byType?category:'all',categories,uniform,rhythm,range,plays,games:list,firsts:newGames,allNew,days:playDays(plays),calendarDays,personRows,rival,best,close,blow,crowd,marks,markTitle,coop:{total:coop.length,wins:coopWins,losses:coopLosses,top:list.find(game=>coop.some(play=>gameKey(play.game)===game.key))},previous,focus,focusWinners,dayCount:new Set(plays.map(play=>play.date)).size,gameOf};
 }
 
 // 여러 장 구성: 데이터가 없는 장은 뺀다. 표지 격자는 게임 9개 이상(한 장 12칸, 18개 이상이면 두 장).
 export function recapPlan(data){
  const plan=['cover'];if(data.games.length>=9)plan.push('wall');if(data.games.length>=18)plan.push('wall2');
- if(data.games.length>=2)plan.push('top');if(data.personRows.length+(data.rival?1:0)>=2)plan.push('people');
+ if(data.games.length>=2)plan.push(data.uniform?'played':'top');if(data.categories.length>=2||data.uniform&&data.categories.length)plan.push('types');if(data.personRows.length+(data.rival?1:0)>=2)plan.push('people');
  if(data.model.preset!=='all'&&data.calendarDays<=366)plan.push('calendar');if(highlightItems(data).length>=2)plan.push('highlights');
  return plan;
 }
@@ -98,7 +106,7 @@ export function recapPlan(data){
 export function recapTrait(data){
  const mark=data.marks.find(item=>item.kind!=='game'||item.count>=25);if(mark)return {kind:'milestone',mark};
  if(data.firsts.length>=2)return {kind:'firsts'};if(data.focus)return {kind:'focus'};
- if(data.coop.total>=3&&data.coop.total*2>=data.plays.length)return {kind:'coop'};return {kind:'top'};
+ if(data.coop.total>=3&&data.coop.total*2>=data.plays.length)return {kind:'coop'};return {kind:data.uniform?'played':'top'};
 }
 
 const date=(data,value)=>formatShareDate(value,data.lang);
@@ -133,7 +141,7 @@ async function loadCovers(games){const images=new Map();await Promise.all(games.
 
 function coverSlide(ctx,data,images,total){
  const words=data.words,shown=data.games.slice(0,3),top=452,h=788,gap=24;heading(ctx,data.title,rangeText(data));metrics(ctx,data,250,172);
- const hero=`${words.topOf(data.model.preset)} · ${shown[0].name}`;
+ const hero=data.uniform?shown[0].name:`${words.topOf(data.model.preset)} · ${shown[0].name}`;
  if(shown.length===1)tile(ctx,images,shown[0],X,top,CW,h,hero,38);
  else if(shown.length===2){const w=(CW-gap)/2;tile(ctx,images,shown[0],X,top,w,h,hero,30);tile(ctx,images,shown[1],X+w+gap,top,w,h,shown[1].name,30);}
  else{const big=Math.round((CW-gap)*.57),small=CW-gap-big,half=(h-gap)/2;tile(ctx,images,shown[0],X,top,big,h,hero,34);tile(ctx,images,shown[1],X+big+gap,top,small,half,shown[1].name,26);tile(ctx,images,shown[2],X+big+gap,top+half+gap,small,half,shown[2].name,26);}
@@ -206,11 +214,28 @@ function highlightsSlide(ctx,data,images){
   const left=X+thumb+56,room=CW-thumb-86;line(ctx,item.title,left,y+h*.3,room,{size:24,weight:600,color:'#9fc8f7'});line(ctx,item.headline,left,y+h*.62,room,{size:head,min:Math.min(head,22),weight:800});line(ctx,item.detail,left,y+h*.86,room,{size:22,min:15,weight:600,color:'#b8cde6'});});
 }
 
+// 게임마다 판 수가 같을 때: 어떤 게임을 했는지(최근 순 12칸, 표지 아래 마지막 플레이 날짜), 게임 수·판 수·플레이 주기.
+function playedSlide(ctx,data,images){
+ const words=data.words,r=data.rhythm,locale=data.lang==='ko'?'ko-KR':'en-US',gap=24;heading(ctx,words.playedTitle,words.playedSub(data.games.length,data.plays.length));
+ const w=(CW-gap*2)/3,items=[[data.games.length.toLocaleString(locale),words.games],[data.plays.length.toLocaleString(locale),words.plays],r.days>1?[words.everyDays(r.every),words.rhythm]:[date(data,r.last),words.oneDay]],size=uniformSize(ctx,items.map(([value])=>value),w-40,52,26);
+ items.forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y:250,w,h:150},value,label,{center:true,size}));
+ const list=[...data.games].sort((a,b)=>(b.last||'').localeCompare(a.last||'')||a.name.localeCompare(b.name)),cols=4,cell=(CW-gap*(cols-1))/cols,shown=list.slice(0,list.length>12?11:12),top=430,rowH=cell+58;
+ shown.forEach((game,index)=>{const x=X+index%cols*(cell+gap),y=top+Math.floor(index/cols)*rowH;tile(ctx,images,game,x,y,cell,cell,game.name,22);line(ctx,game.count>1?`${words.playsN(game.count)} · ${date(data,game.last)}`:date(data,game.last),x,y+cell+36,cell,{size:22,min:14,weight:600,color:'#b8cde6'});});
+ if(list.length>shown.length){const index=shown.length,x=X+index%cols*(cell+gap),y=top+Math.floor(index/cols)*rowH;box(ctx,x,y,cell,cell);line(ctx,words.moreN(list.length-shown.length),x+cell/2,y+cell/2+18,cell,{size:52,weight:900,align:'center'});}
+ if(r.days>1)line(ctx,`${words.longestGap(r.longest)} · ${words.lastPlayed(date(data,r.last))}`,X,1300,CW,{size:24,weight:600,color:'#9fc8f7'});
+}
+// 게임 종류: 종류마다 비율 막대·판 수·그 종류의 게임.
+function typesSlide(ctx,data){
+ const words=data.words,rows=data.categories,gap=24,h=Math.min(220,(1000-gap*(rows.length-1))/rows.length);heading(ctx,words.typesSlide,`${rows[0].name} ${rows[0].pct}%`);
+ rows.forEach((row,index)=>{const y=260+index*(h+gap);box(ctx,X,y,CW,h);fillRound(ctx,X+32,y+42,22,22,6,row.color);line(ctx,row.name,X+70,y+64,CW-320,{size:38,min:20,weight:800});line(ctx,`${row.pct}%`,X+CW-32,y+70,240,{size:58,min:28,weight:900,align:'right'});
+  fillRound(ctx,X+32,y+h-88,CW-64,18,9,'rgba(255,255,255,.12)');fillRound(ctx,X+32,y+h-88,Math.max(18,(CW-64)*row.pct/100),18,9,row.color);
+  line(ctx,words.typeDetail(words.playsN(row.count),row.names),X+32,y+h-30,CW-64,{size:24,min:15,weight:600,color:'#b8cde6'});});
+}
 export async function createRecapSet(data){
  if(!data.plays.length)throw Error(data.words.empty);const images=await loadCovers(data.games),plan=recapPlan(data),blobs=[];
  for(const [index,kind]of plan.entries()){const [node,ctx]=canvas(),page=index+1,total=plan.length;
   if(kind==='wall'||kind==='wall2')wallSlide(ctx,data,images,page,total,kind==='wall2');
-  else{frame(ctx,page,total);({cover:coverSlide,top:topSlide,people:peopleSlide,calendar:calendarSlide,highlights:highlightsSlide})[kind](ctx,data,images,total);}
+  else{frame(ctx,page,total);({cover:coverSlide,top:topSlide,played:playedSlide,types:typesSlide,people:peopleSlide,calendar:calendarSlide,highlights:highlightsSlide})[kind](ctx,data,images,total);}
   blobs.push(await toBlob(node,data.words));}
  return blobs;
 }
@@ -218,7 +243,7 @@ export async function createRecapSet(data){
 // 한 장: 제목·특징 한 줄 → 지표 → 특징 본문 → 보조 카드 2장(지난 기간 비교 · 최다 우승 · 새로 기록한 게임 · 많이 한 게임 · 연속 · 가장 많이 한 날 중 본문과 겹치지 않는 것).
 export async function createRecapSingle(data){
  const words=data.words;if(!data.plays.length)throw Error(words.empty);const images=await loadCovers(data.games),trait=recapTrait(data),[node,ctx]=canvas(),top=data.games[0];
- const sub=trait.kind==='milestone'?words.trait.milestone(data.markTitle(trait.mark)):trait.kind==='firsts'?words.trait.firsts(data.firsts.length):trait.kind==='focus'?words.trait.focus(data.focus.name,data.focus.count):trait.kind==='coop'?words.trait.coop(data.coop.wins,data.coop.total):words.trait.top(top.name);
+ const sub=trait.kind==='milestone'?words.trait.milestone(data.markTitle(trait.mark)):trait.kind==='firsts'?words.trait.firsts(data.firsts.length):trait.kind==='focus'?words.trait.focus(data.focus.name,data.focus.count):trait.kind==='coop'?words.trait.coop(data.coop.wins,data.coop.total):trait.kind==='played'?words.trait.played(data.games.length,data.plays.length):words.trait.top(top.name);
  frame(ctx,1,1);heading(ctx,data.title,sub);metrics(ctx,data,250,150);const y=430,h=570;
  if(trait.kind==='milestone'){const mark=trait.mark,cx=W/2,cy=y+250,r=230,gradient=ctx.createRadialGradient(cx-70,cy-80,20,cx,cy,r);gradient.addColorStop(0,'#fff3c4');gradient.addColorStop(.45,'#ffcf5c');gradient.addColorStop(1,'#c98a12');
   ctx.fillStyle='rgba(255,207,92,.10)';ctx.beginPath();ctx.arc(cx,cy,r+40,0,Math.PI*2);ctx.fill();ctx.fillStyle=gradient;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
@@ -238,7 +263,9 @@ export async function createRecapSingle(data){
  if(data.previous>0)pool.push({title:words.compare,headline:words.compareHead(data.plays.length-data.previous),detail:words.compareDetail(data.previous,data.plays.length)});
  const mvp=data.personRows.find(row=>row.icon==='🏆');if(mvp)pool.push({title:words.mostWins,headline:mvp.name,detail:mvp.value});
  if(!used.has('firsts')&&data.firsts.length)pool.push({title:words.firstsCard,headline:words.countN(data.firsts.length),detail:data.firsts.map(game=>game.name).join(', ')});
- if(trait.kind!=='top'&&trait.kind!=='focus')pool.push({title:words.topTitle,headline:top.name,detail:words.playsN(top.count)});
+ if(data.categories.length>=2||data.uniform&&data.categories.length){const [lead,...rest]=data.categories;pool.push({title:words.typesSlide,headline:`${lead.name} ${lead.pct}%`,detail:rest.map(row=>`${row.name} ${row.pct}%`).join(' · ')});}
+ if(data.uniform&&data.rhythm.days>1)pool.push({title:words.rhythm,headline:words.everyDays(data.rhythm.every),detail:words.longestGap(data.rhythm.longest)});
+ if(trait.kind!=='top'&&trait.kind!=='focus'&&!data.uniform)pool.push({title:words.topTitle,headline:top.name,detail:words.playsN(top.count)});
  if(data.days.streak>1)pool.push({title:words.streak,headline:words.daysN(data.days.streak),detail:''});
  if(data.days.busiest?.count>1)pool.push({title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
  const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);const head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,38,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220,head));
@@ -253,6 +280,7 @@ function paint(dialog,state){
  const words=COPY[state.lang],ready=state.phase==='ready',busy=state.phase==='creating',files=state.files,canShare=ready&&typeof navigator.share==='function'&&(!navigator.canShare||navigator.canShare({files}));
  for(const button of dialog.querySelectorAll('.recap-format button')){const on=button.dataset.format===state.format;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;markProLock(button,button.dataset.format==='set'&&!isPro());}
  for(const button of dialog.querySelectorAll('.recap-scope button')){const on=button.dataset.scope===state.scope;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;markProLock(button,button.dataset.scope==='friends'&&!isPro());}
+ for(const button of dialog.querySelectorAll('.recap-category button')){const on=button.dataset.category===state.category;button.setAttribute('aria-checked',String(on));button.classList.toggle('is-selected',on);button.disabled=busy;}dialog.querySelector('.recap-category-hint').textContent=state.category!=='all'?words.categoryHint:words.categoryAllHint;
  dialog.querySelector('.recap-scope-hint').textContent=state.scope==='friends'?words.scopeFriendsHint:words.scopePublicHint;dialog.querySelector('.recap-format-hint').textContent=state.format==='set'?state.setHint:state.singleHint;
  const winners=dialog.querySelector('.recap-winners'),toggle=winners.querySelector('input');winners.hidden=state.winners===undefined;toggle.checked=state.winners!==false;toggle.disabled=busy;markProLock(dialog.querySelector('.recap-full .recap-option-label'),!isPro());
  const full=dialog.querySelector('.recap-full'),fullToggle=full.querySelector('input');full.hidden=state.full===undefined||state.scope!=='friends'||state.winners===false;fullToggle.checked=state.full===true;fullToggle.disabled=busy;
@@ -272,7 +300,7 @@ async function build(dialog,state){
 function ensureShareDialog(){
  let dialog=document.getElementById('recapShareDialog');if(dialog)return dialog;
  dialog=document.createElement('dialog');dialog.id='recapShareDialog';dialog.className='recent-share-dialog recap-share-dialog';
- dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-preview-area"><div class="recap-strip"></div><p class="recent-share-status" role="status" aria-live="polite"></p></div><div class="recap-options"><div class="recap-option"><p class="recap-option-head"><strong data-label="format"></strong><small class="recap-format-hint"></small></p><div class="recap-format recap-segment" role="radiogroup"><button type="button" role="radio" data-format="set"></button><button type="button" role="radio" data-format="single"></button></div></div><div class="recap-option"><p class="recap-option-head"><strong data-label="scope"></strong><small class="recap-scope-hint"></small></p><div class="recap-scope recap-segment" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div></div><label class="recap-switch recap-winners" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label><label class="recap-switch recap-full" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
+ dialog.innerHTML='<div class="record-head"><h2></h2><button class="score-close" type="button">×</button></div><div class="recap-preview-area"><div class="recap-strip"></div><p class="recent-share-status" role="status" aria-live="polite"></p></div><div class="recap-options"><div class="recap-option"><p class="recap-option-head"><strong data-label="format"></strong><small class="recap-format-hint"></small></p><div class="recap-format recap-segment" role="radiogroup"><button type="button" role="radio" data-format="set"></button><button type="button" role="radio" data-format="single"></button></div></div><div class="recap-option"><p class="recap-option-head"><strong data-label="scope"></strong><small class="recap-scope-hint"></small></p><div class="recap-scope recap-segment" role="radiogroup"><button type="button" role="radio" data-scope="public"></button><button type="button" role="radio" data-scope="friends"></button></div></div><div class="recap-option recap-category-option" hidden><p class="recap-option-head"><strong data-label="category"></strong><small class="recap-category-hint"></small></p><div class="recap-category recap-segment" role="radiogroup"></div></div><label class="recap-switch recap-winners" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label><label class="recap-switch recap-full" hidden><span class="recap-option-label"></span><input type="checkbox" role="switch"></label></div><div class="actions recent-share-actions"><button class="secondary recent-share-save" type="button" disabled></button><button class="primary recent-share-send" type="button" disabled></button></div>';
  const close=()=>dialog.close();dialog.querySelector('.score-close').onclick=close;dialog.addEventListener('click',event=>{if(event.target===dialog)close();});dialog.addEventListener('close',()=>{if(session){session.token++;release(session);}session=null;dialog.querySelector('.recap-strip').replaceChildren();});
  // Pro 잠금: 바꾸지 않고 상태 줄에 안내만.
  const locked=reason=>openProSheet({reason,previews:()=>session?.urls?.slice(0,3)||[]});
@@ -285,15 +313,18 @@ function ensureShareDialog(){
  document.body.append(dialog);return dialog;
 }
 // heading: 창 제목, setHint/singleHint: 형식 버튼 설명, winners·full: undefined면 그 옵션을 숨긴다(full은 친구 공유용·우승자 표시일 때만 보임).
-export async function openShareDialog({heading,setHint,singleHint,fileBase,winners,full,make}){
+// categories: 기간 결산의 게임 종류 선택지([{key,label}], 2개 이상일 때만 보임).
+export async function openShareDialog({heading,setHint,singleHint,fileBase,winners,full,make,categories}){
  const dialog=ensureShareDialog(),lang=shareLanguage(),words=COPY[lang];if(session){session.token++;release(session);}
- const state={lang,fileBase,make,setHint,singleHint,format:'set',scope:'public',winners,full,token:0,files:[],urls:[],phase:'creating'};session=state;
+ const state={lang,fileBase,make,setHint,singleHint,format:'set',scope:'public',category:'all',winners,full,token:0,files:[],urls:[],phase:'creating'};session=state;
  dialog.lang=lang;dialog.querySelector('h2').textContent=heading;dialog.querySelector('.score-close').setAttribute('aria-label',words.close);dialog.querySelector('.recap-format').setAttribute('aria-label',heading);
  const [set,single]=dialog.querySelectorAll('.recap-format button');set.textContent=words.formatSet;single.textContent=words.formatSingle;dialog.querySelector('[data-label=format]').textContent=words.formatLabel;dialog.querySelector('[data-label=scope]').textContent=words.scopeLabel;
  const [open,friends]=dialog.querySelectorAll('.recap-scope button');open.textContent=words.scopePublic;friends.textContent=words.scopeFriends;dialog.querySelector('.recap-scope').setAttribute('aria-label',words.scopeLabel);dialog.querySelector('.recap-winners .recap-option-label').textContent=words.showWinners;dialog.querySelector('.recap-full .recap-option-label').textContent=words.fullScores;dialog.querySelector('.recent-share-save').textContent=words.save;dialog.querySelector('.recent-share-send').textContent=words.share;
+ const choices=categories?.length>=2?[{key:'all',label:words.categoryAll},...categories]:[],group=dialog.querySelector('.recap-category');dialog.querySelector('[data-label=category]').textContent=words.categoryLabel;group.setAttribute('aria-label',words.categoryLabel);dialog.querySelector('.recap-category-option').hidden=!choices.length;
+ group.replaceChildren(...choices.map(item=>{const button=document.createElement('button');button.type='button';button.setAttribute('role','radio');button.dataset.category=item.key;button.textContent=item.label;button.onclick=()=>{if(!session||session.category===item.key)return;session.category=item.key;build(dialog,session);};return button;}));
  if(!dialog.open)dialog.showModal();await build(dialog,state);
 }
 export function openRecapShare(records,model,profile){
- const words=COPY[shareLanguage()];
- return openShareDialog({heading:words.dialog,setHint:words.formatSetHint,singleHint:words.formatSingleHint,fileBase:`score-${model.current.start}-${model.current.end}`,make:async state=>{const data=recapData(records,model,profile,{locale:state.lang,scope:state.scope});return {blobs:state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)],title:data.title};}});
+ const words=COPY[shareLanguage()],present=new Set(records.filter(play=>play.date&&play.date>=model.current.start&&play.date<=model.current.end).map(shareGameType)),categories=SHARE_TYPES.map(([key])=>key).filter(key=>present.has(key)).map(key=>({key,label:shareTypeName(key)}));
+ return openShareDialog({heading:words.dialog,categories,setHint:words.formatSetHint,singleHint:words.formatSingleHint,fileBase:`score-${model.current.start}-${model.current.end}`,make:async state=>{const data=recapData(records,model,profile,{locale:state.lang,scope:state.scope,category:state.category});return {blobs:state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)],title:data.title};}});
 }
