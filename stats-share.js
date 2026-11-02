@@ -3,7 +3,7 @@ import {metadata,bggId,gameNames} from './bgg-metadata.js?v=171';
 import {scoreGameType,scoreGames} from './score-games.js?v=167';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=171';
-import {attendanceCount,latestPlayDate} from './stats-overview.js?v=167';
+import {attendanceCount,latestPlayDate,fixedTypes} from './stats-overview.js?v=167';
 import {nameKey} from './personal-stats.js?v=118';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames} from './game-catalog.js?v=166';
@@ -63,6 +63,8 @@ const DEDUCTION_NAMES=/마피아|mafia|레지스탕스|resistance|아발론|aval
 export const SHARE_TYPES=[['strategy','#82bfff'],['family','#ffc56b'],['deduction','#c59bff'],['coop','#7ee0b0']];
 export function shareTypeName(key,locale){return copy[shareLanguage(locale)].typeNames[key]||key;}
 export function shareGameType(play){
+ // 통계에서 따로 정한 유형(BGG 분류가 비어 있는 전략 게임 등)이 먼저.
+ if(fixedTypes[bggId(play.game)]==='strategy')return 'strategy';
  const info=metadata(play.game);if(play.players?.some(person=>person.culprit!==undefined||person.guess!==undefined)||DEDUCTION_NAMES.test(String(play.game?.name||''))||info?.deduction)return 'deduction';
  if(play.rule==='cooperative')return 'coop';const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
  if(info?.cooperative)return 'coop';const domains=info?.domains||[];
