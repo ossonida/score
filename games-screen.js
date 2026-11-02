@@ -1,4 +1,4 @@
-import './records.js?v=253';
+import './records.js?v=254';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=166';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=1';
 import {gameKey} from './records-core.js?v=156';
@@ -87,7 +87,7 @@ async function search(){cancel();const context=opened;if(!context||!current(cont
  finally{if(own===serial){button.disabled=false;button.setAttribute('aria-busy','false');}}
 }
 $('addLibraryGame').onclick=()=>{if(api.context().ready===false)return;cancel();opened=api.context();aliasMiss='';$('addGameTitle').textContent=GAME_SEARCH_CONTEXTS.library.title;$('libraryBggWebsite').hidden=false;$('libraryAliasField').hidden=true;picked=null;$('librarySearch').value='';$('libraryBggId').value='';$('libraryBggAdvanced').open=false;$('libraryAddError').textContent='';$('librarySearchResults').replaceChildren();$('librarySearchStatus').textContent='한글 또는 영문 게임명을 입력해주세요.';$('addGameDialog').showModal();$('librarySearch').focus();};
-$('closeAddGame').onclick=close;$('cancelAddGame').onclick=close;$('registerLibraryGame').onclick=register;
+$('closeAddGame').onclick=close;$('libraryBack').onclick=close;$('cancelAddGame').onclick=close;$('registerLibraryGame').onclick=register;
 $('libraryBggWebsite').onclick=()=>{const query=$('librarySearch').value.trim();if(query)window.open(bggWebSearchUrl(query),'_blank','noopener,noreferrer');};
 $('libraryBggId').addEventListener('input',()=>{$('libraryAddError').textContent='';});$('addGameDialog').addEventListener('close',()=>{cancel();opened=null;});
 $('librarySearchForm').onsubmit=e=>{e.preventDefault();void search();};
