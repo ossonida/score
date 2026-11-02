@@ -1,7 +1,7 @@
-import {bggId} from './bgg-metadata.js?v=171';
+import {bggId} from './bgg-metadata.js?v=172';
 import {gameImages} from './game-images.js?v=64';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {scoreGame} from './score-games.js?v=167';
+import {scoreGame} from './score-games.js?v=168';
 export function safeGameImage(value){try{if(typeof value!=='string'||value.length>2048)return '';const u=new URL(value);return u.protocol==='https:'&&u.hostname==='cf.geekdo-images.com'&&!u.username&&!u.password&&!u.port?u.href:'';}catch{return '';}}
 const idKey=value=>/^[1-9][0-9]{0,9}$/.test(String(value||''))?String(value):'';
 function savedImages(){return readStoredJson('score.bgg.covers.v1',{},value=>value&&typeof value==='object'&&!Array.isArray(value)?value:{});}

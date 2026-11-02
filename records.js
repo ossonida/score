@@ -1,43 +1,43 @@
-import {renderRecordParticipants,renderModeStats} from './record-view.js?v=137';
-import {recordMode,modeLabels} from './records-core.js?v=156';
+import {renderRecordParticipants,renderModeStats} from './record-view.js?v=138';
+import {recordMode,modeLabels} from './records-core.js?v=157';
 import {missionName} from './mission-names.js?v=5';
-import {readGameLibrary} from './game-library.js?v=104';
-import {enhanceGamePicker} from './game-picker.js?v=64';
-import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=154';
-import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=155';
-import {enrichGames} from './bgg-details-client.js?v=65';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=209';
-import {personStats} from './social-insights.js?v=121';
-import {countSessions,isPartyPlay} from './stats-extras.js?v=6';
+import {readGameLibrary} from './game-library.js?v=105';
+import {enhanceGamePicker} from './game-picker.js?v=65';
+import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=155';
+import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=156';
+import {enrichGames} from './bgg-details-client.js?v=66';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=210';
+import {personStats} from './social-insights.js?v=122';
+import {countSessions,isPartyPlay} from './stats-extras.js?v=7';
 import {setProAccount,isPro,markProLock} from './pro-access.js?v=1';
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
-import {renderStoryStats} from './story-stats.js?v=2';
-import {recapData,createRecapSet} from './recap-share.js?v=32';
+import {renderStoryStats} from './story-stats.js?v=3';
+import {recapData,createRecapSet} from './recap-share.js?v=33';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
-import {renderGameTitle} from './personal-dashboard.js?v=167';
+import {renderGameTitle} from './personal-dashboard.js?v=168';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
-import {latestPlayDate} from './stats-overview.js?v=168';
-import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=171';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=68';
-import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=118';
-import {renderStatsDashboard} from './stats-dashboard.js?v=102';
-import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=6';
-import {renderPeriodDashboard} from './period-dashboard.js?v=37';
-import {mergeImported} from './data-transfer.js?v=70';
-import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=166';
-import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=1';
-import {isScoreGame,scoreGameType,scoreGames} from './score-games.js?v=167';
+import {latestPlayDate} from './stats-overview.js?v=169';
+import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=172';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=69';
+import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=119';
+import {renderStatsDashboard} from './stats-dashboard.js?v=103';
+import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=7';
+import {renderPeriodDashboard} from './period-dashboard.js?v=38';
+import {mergeImported} from './data-transfer.js?v=71';
+import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=167';
+import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
+import {isScoreGame,scoreGameType,scoreGames} from './score-games.js?v=168';
 // 영어 화면: 기본 목록의 한글 별칭과 Score 자체 게임 이름을 영어 이름으로 보이게 번역 사전에 더한다.
 if(window.ScoreI18n?.addNames)window.ScoreI18n.addNames([...starterGames.flatMap(g=>g.aliases.map(alias=>[alias,g.name])),...scoreGames.flatMap(g=>{const en=g.aliases.find(alias=>!/[가-힣]/.test(alias));return en?[g.name,...g.aliases].map(name=>[name,en]):[];})]);
-import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=156';
-import * as cloudApi from './cloud-records.js?v=175';
+import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=172';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=157';
+import * as cloudApi from './cloud-records.js?v=176';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=175';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=176';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=1';
+import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=2';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let expansionPick=null,expansionSerial=0,expansionEditing=null,searchPage=false;
 let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history',statsView='recent',recentDay='',recentLatest='',statsPerson=null,accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;
@@ -141,7 +141,7 @@ function updateGameOptions(){const groups=gameStats(records);$('savedGames').rep
 function draftKey(){return `score.playDraft.v1.${scopeUid()||'guest'}`;}
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(draftKey())||'{}');return d&&typeof d.name==='string'&&d.name.length<=120?d:{};}catch{return {};}}
 function rememberGame(){try{localStorage.setItem(draftKey(),JSON.stringify({name:$('playGame').value.trim(),bggId:$('playBggId').value.trim(),rule:$('playRule').value,location:$('playLocation').value.trim()}));}catch{}}
-function gameCategory(game){const own=scoreGameType(game);if(own==='strategy')return '전략';if(own==='sports')return '스포츠';const domains=metadata(game)?.domains||[];return domains.map(domain=>domainLabels[domain]).filter(Boolean).join(' · ')||'보드게임';}
+function gameCategory(game){const own=scoreGameType(game);if(own==='strategy')return '전략';if(own==='sports')return '스포츠';if(own==='escape')return '방탈출';const domains=metadata(game)?.domains||[];return domains.map(domain=>domainLabels[domain]).filter(Boolean).join(' · ')||'보드게임';}
 function showSelectedGame(name,bggId,image,source={}){if(image&&bggId)try{rememberGameImages({[bggId]:image});}catch{}const box=$('selectedGameInfo'),section=$('selectedGameSection');box.replaceChildren();section.hidden=!name;if(!name)return;const game={...source,name,bggId},art=node('span',undefined,'selected-game-art'),copy=node('span',undefined,'selected-game-copy');renderGameArtwork(art,game);if(art.hidden){const type=scoreGameType(game);art.hidden=false;art.className+=' selected-game-fallback';art.textContent=name==='홀덤'?'♠':type==='sports'?'●':'◆';}copy.append(node('strong',name),node('small',gameCategory(game)));box.append(art,copy);}
 // 저장 창 흐름별 게임 검색 상황(docs/CTA-FLOWS.md 5.1.1). 게임(과 확장)을 고른 뒤 게임 먼저 선택은 참가자 선택으로, 나머지는 저장 2단계로 간다.
 const searchContext=()=>GAME_SEARCH_CONTEXTS[{start:'start',scoreless:'scoreless',finish:'score'}[recordFlow]]||null;
@@ -556,7 +556,7 @@ window.ScoreRecords={
  // 계정 삭제: 클라우드·BGG 연결·로그인 계정을 지운 뒤 로그아웃하고 이 기기의 그 계정 저장값을 정리한다(로그인 전 기록은 남김).
  deleteAccount:async(context,step,{account=true}={})=>{
   const uid=scopeUid();if(!uid||context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
-  const {deleteAccountData}=await import('./account-delete.js?v=7');const removed=await deleteAccountData(uid,step,{account});
+  const {deleteAccountData}=await import('./account-delete.js?v=8');const removed=await deleteAccountData(uid,step,{account});
   try{await logout();}catch{}
   for(const name of Object.keys(localStorage))if(name.includes(uid))localStorage.removeItem(name);
   if(localStorage.getItem('score.lastUser.v1')===uid)localStorage.removeItem('score.lastUser.v1');return removed;

@@ -1,7 +1,7 @@
-import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=6';
-import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=6';
-import {readIdentity} from './personal-stats.js?v=118';
-import {openRecapShare} from './recap-share.js?v=32';
+import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=7';
+import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=7';
+import {readIdentity} from './personal-stats.js?v=119';
+import {openRecapShare} from './recap-share.js?v=33';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;

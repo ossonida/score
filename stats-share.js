@@ -1,14 +1,14 @@
-import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=156';
-import {metadata,bggId,gameNames} from './bgg-metadata.js?v=171';
-import {scoreGameType,scoreGames} from './score-games.js?v=167';
+import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=157';
+import {metadata,bggId,gameNames} from './bgg-metadata.js?v=172';
+import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
-import {gameImageUrl,safeGameImage} from './game-artwork.js?v=171';
-import {attendanceCount,latestPlayDate,fixedTypes} from './stats-overview.js?v=168';
-import {nameKey} from './personal-stats.js?v=118';
+import {gameImageUrl,safeGameImage} from './game-artwork.js?v=172';
+import {attendanceCount,latestPlayDate,fixedTypes} from './stats-overview.js?v=169';
+import {nameKey} from './personal-stats.js?v=119';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {starterGames} from './game-catalog.js?v=166';
-import {summarizeStats} from './stats-insights.js?v=68';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=6';
+import {starterGames} from './game-catalog.js?v=167';
+import {summarizeStats} from './stats-insights.js?v=69';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=7';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -68,7 +68,7 @@ export function shareGameType(play){
  if(fixedTypes[bggId(play.game)]==='strategy')return 'strategy';
  const info=metadata(play.game);
  if(play.players?.some(person=>person.culprit!==undefined||person.guess!==undefined)||DEDUCTION_NAMES.test(String(play.game?.name||''))||info?.deduction)return 'deduction';
- const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
+ const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';if(own==='escape')return 'coop';
  const domains=info?.domains||[];
  if(domains.some(domain=>['Family Games','Party Games',"Children's Games",'Children’s Games'].includes(domain)))return 'family';return domains.length?'strategy':'family';
 }

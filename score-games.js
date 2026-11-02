@@ -7,7 +7,12 @@ export const scoreGames=[
  {name:'축구',aliases:['Football','Soccer'],type:'sports',image:'./assets/score-games/football.webp'},
  {name:'야구',aliases:['Baseball'],type:'sports',image:'./assets/score-games/baseball.webp'},
  {name:'배드민턴',aliases:['Badminton'],type:'sports',image:'./assets/score-games/badminton.webp'},
- {name:'탁구',aliases:['Table Tennis','Ping Pong','핑퐁'],type:'sports',image:'./assets/score-games/table-tennis.webp'}
+ {name:'탁구',aliases:['Table Tennis','Ping Pong','핑퐁'],type:'sports',image:'./assets/score-games/table-tennis.webp'},
+ // 방탈출(그림 없음, 공유 이미지에서는 협동으로 센다)
+ {name:'고쿄의 하루',aliases:['SHIFT 고쿄의 하루','SHIFT: 고쿄의 하루','고쿄의하루'],type:'escape'},
+ {name:'이탈리안잡',aliases:['이탈리안 잡','Italian Job','The Italian Job'],type:'escape'},
+ {name:'쇼쿠진',aliases:['Shokujin'],type:'escape'},
+ {name:'Alive',aliases:['얼라이브'],type:'escape'}
 ];
 const normalize=value=>String(value??'').normalize('NFKC').toLocaleLowerCase().replace(/[\s:’'–—-]+/g,'');
 // 별칭 정규화는 한 번만 한다(게임 목록·표지 렌더마다 반복 호출됨).

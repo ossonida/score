@@ -1,9 +1,9 @@
-import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=156';
+import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=157';
 import {missionName,missionRange} from './mission-names.js?v=5';
-import {renderModeStats,cooperativeStats} from './record-view.js?v=137';
-import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=171';
-import {renderGameArtwork} from './game-artwork.js?v=171';
-import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=118';
+import {renderModeStats,cooperativeStats} from './record-view.js?v=138';
+import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=172';
+import {renderGameArtwork} from './game-artwork.js?v=172';
+import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=119';
 import {mightyStats} from './mighty-stats.js?v=2';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});

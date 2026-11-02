@@ -1,5 +1,5 @@
 import {bggPlayFingerprint} from './bgg-play-format.js?v=152';
-import {isScoreGame} from './score-games.js?v=167';
+import {isScoreGame} from './score-games.js?v=168';
 const uncertain=new Set(['pending','unknown']);
 
 // onBgg: BGG에 이미 있는 같은 경기(기록 ID → BGG 플레이 번호, bgstats-link). 새로 올리지 않고 그 플레이를 업데이트한다(adopt).

@@ -1,17 +1,17 @@
-import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=121';
-import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-core.js?v=156';
-import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=168';
-import {readIdentity,meIn} from './personal-stats.js?v=118';
-import {renderGameArtwork} from './game-artwork.js?v=171';
-import {metadata,gameNames} from './bgg-metadata.js?v=171';
-import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=166';
-import {openDayShare} from './day-share.js?v=28';
-import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=6';
+import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=122';
+import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-core.js?v=157';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=169';
+import {readIdentity,meIn} from './personal-stats.js?v=119';
+import {renderGameArtwork} from './game-artwork.js?v=172';
+import {metadata,gameNames} from './bgg-metadata.js?v=172';
+import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=167';
+import {openDayShare} from './day-share.js?v=29';
+import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=7';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
-const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
+const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'방탈출',types:['escape']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
 // 여러 유형인 게임은 이 순서로 한 묶음에만 넣는다.
-const groupPriority=['추리','협동','전략','가족/파티','스포츠','미분류'].map(label=>typeGroups.find(group=>group.label===label));
+const groupPriority=['추리','협동','방탈출','전략','가족/파티','스포츠','미분류'].map(label=>typeGroups.find(group=>group.label===label));
 const groupOf=game=>groupPriority.find(group=>group.types.some(t=>game.types.has(t)));
 function metrics(box,values){const row=el('div',undefined,'insight-metrics');row.setAttribute('data-columns',String(values.length));for(const [value,label]of values){const cell=el('div');cell.append(el('strong',num(value)),el('span',label));row.append(cell);}box.append(row);}
 function note(box,text){box.append(el('p',text,'insight-footnote'));}

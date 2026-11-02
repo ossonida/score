@@ -1,7 +1,7 @@
-import './records.js?v=255';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=175';
-import {bggLinkRequest} from './bgg-link-client.js?v=72';
-import {planBggExport,sendBggExport} from './bgg-export.js?v=100';
+import './records.js?v=256';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=176';
+import {bggLinkRequest} from './bgg-link-client.js?v=73';
+import {planBggExport,sendBggExport} from './bgg-export.js?v=101';
 import {bgStatsLinks,bgStatsDuplicates,orphanPlayLinks} from './bgstats-link.js?v=5';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 let user=null,epoch=0,busy=false,state={ready:false,connected:false,uploads:{}};const posting=new Set();
