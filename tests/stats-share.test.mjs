@@ -43,15 +43,16 @@ test('recent share puts comma-separated unique winners on each played game',()=>
 
 const scoredPlay=(id,game,scores,{date='2026-10-10',createdAt=`${date}T12:00:00Z`,rule='highest',anonymous=[]}={})=>({id,date,createdAt,game:{name:game,bggId:''},rule,players:Object.entries(scores).map(([name,score],index)=>({id:'p'+index,name,score,anonymous:anonymous.includes(name)||undefined}))});
 
-test('day cards list MVP first and then the closest game within three points, newest first on ties',async()=>{
+test('day cards list MVP first and then close games within three points (one per game, one card listing all when several), newest first on ties',async()=>{
  const {pickDayCards}=await import('../stats-share.js');
  const plays=[scoredPlay('a','카탄',{하늘:10,바다:8},{createdAt:'2026-10-10T10:00:00Z'}),scoredPlay('b','아줄',{하늘:30,바다:28},{createdAt:'2026-10-10T11:00:00Z'}),scoredPlay('c','보난자',{하늘:20,바다:5})];
- const cards=pickDayCards(plays,'2026-10-10','ko-KR');assert.deepEqual(cards.map(card=>card.kind),['mvp','close']);
+ const cards=pickDayCards(plays,'2026-10-10','ko-KR');assert.deepEqual(cards.map(card=>card.kind),['mvp','closeList']);
  assert.deepEqual({headline:cards[0].headline,detail:cards[0].detail},{headline:'하늘',detail:'3승 · 3판 중'});
- assert.deepEqual({playId:cards[1].playId,title:cards[1].title,headline:cards[1].headline,detail:cards[1].detail},{playId:'b',title:'오늘의 접전',headline:'아줄 2점 차',detail:'하늘 30 : 28 바다'});
+ assert.deepEqual({title:cards[1].title,rows:cards[1].rows.map(row=>row.text)},{title:'오늘의 접전',rows:['아줄 2점 차 · 하늘 30 : 28 바다','카탄 2점 차 · 하늘 10 : 8 바다']});
+ const one=pickDayCards(plays.filter(play=>play.id!=='a'),'2026-10-10','ko-KR')[1];assert.deepEqual({kind:one.kind,playId:one.playId,headline:one.headline,detail:one.detail},{kind:'close',playId:'b',headline:'아줄 2점 차',detail:'하늘 30 : 28 바다'});
  const three=pickDayCards([scoredPlay('x','카탄',{하늘:13,바다:10})],'2026-10-10','ko-KR');assert.deepEqual(three.map(card=>[card.kind,card.gap]),[['close',3]]);
  assert.deepEqual(pickDayCards([scoredPlay('x','카탄',{하늘:14,바다:10})],'2026-10-10','ko-KR'),[]);
- assert.equal(pickDayCards(plays,'2026-10-10','en-US')[1].headline,'아줄 by 2 points');
+ assert.match(pickDayCards(plays,'2026-10-10','en-US')[1].rows[0].text,/^아줄 by 2 points/);
 });
 
 test('day MVP needs two or more wins and at most two tied leaders',async()=>{
@@ -142,7 +143,7 @@ test('co-op plays add a co-op card after MVP and close game, up to three cards i
  assert.deepEqual(kinds.games.map(game=>game.mission),['성공 · 21점','영웅 난이도 성공','시나리오 3 성공 (2번째 시도)']);
  assert.equal(kinds.cards.find(card=>card.kind==='coop').detail,'하나비 성공 · 21점 · 판데믹 영웅 난이도 성공 · 글룸헤이븐 시나리오 3 성공 (2번째 시도)');
  assert.equal(shareCoverLayout(12,3).cards.length,3);assert.deepEqual(shareCoverLayout(12,3).others,{x:660,y:1034,w:348,h:251});
- assert.equal(shareCoverLayout(8,3).cards.length,3);assert.equal(shareCoverLayout(5,3).cards.length,2);
+ assert.equal(shareCoverLayout(8,3).cards.length,3);{const five=shareCoverLayout(5,3);assert.equal(five.cards.length,3);assert.deepEqual([five.cards[2].x,five.cards[2].w,five.cards[2].y-five.cards[0].y],[72,936,214]);}
 });
 
 test('share game types fold strategy+family and unknown games into family, co-op first',async()=>{
