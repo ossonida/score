@@ -57,7 +57,7 @@ export function coopOutcome(play,records,locale){const words=copy[shareLanguage(
 // BGG 유형이 없는 게임은 가족/파티로 봅니다. 무거운 전략 게임은 대부분 BGG 유형이 있기 때문입니다.
 // BGG는 전략이지만 모임에서 가볍게 즐기는 게임은 아래 목록으로 가족/파티에 넣습니다(BGG ID 또는 공백 뺀 이름).
 const LIGHT_GAMES={ids:['118','279537'],names:['모던아트','modernart','행성x를찾아서','thesearchforplanetx']};
-// 추리: 범인·추리 기록이 있는 판, 이름으로 아는 정체 숨기기 게임, BGG 추리 분류. 협력 게임은 추리 요소가 있어도 협동(예: 콰이어트벨).
+// 추리: 범인·추리 기록이 있는 판, 이름으로 아는 정체 숨기기 게임, BGG 추리 분류. 협력으로 기록한 판은 추리 요소가 있어도 협동(예: 콰이어트벨). BGG에 협력 모드가 있어도 협력으로 기록하지 않았으면 협동이 아니다(예: 엔데버: 딥 씨).
 const DEDUCTION_NAMES=/마피아|mafia|레지스탕스|resistance|아발론|avalon|웨어울프|werewolf|늑대인간|스파이폴|spyfall|클루|cluedo|크라임\s*씬|crime\s*scene|추리/i;
 // 공유 이미지의 게임 종류 순서와 색.
 export const SHARE_TYPES=[['strategy','#82bfff'],['family','#ffc56b'],['deduction','#c59bff'],['coop','#7ee0b0']];
@@ -65,7 +65,7 @@ export function shareTypeName(key,locale){return copy[shareLanguage(locale)].typ
 export function shareGameType(play){
  // 통계에서 따로 정한 유형(BGG 분류가 비어 있는 전략 게임 등)이 먼저.
  if(fixedTypes[bggId(play.game)]==='strategy')return 'strategy';
- const info=metadata(play.game);if(play.rule==='cooperative'||info?.cooperative)return 'coop';
+ const info=metadata(play.game);if(play.rule==='cooperative')return 'coop';
  if(play.players?.some(person=>person.culprit!==undefined||person.guess!==undefined)||DEDUCTION_NAMES.test(String(play.game?.name||''))||info?.deduction)return 'deduction';
  const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';
  const domains=info?.domains||[];
