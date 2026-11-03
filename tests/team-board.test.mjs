@@ -230,3 +230,13 @@ test('mighty board picks lead, bid, trump and friend, scores zero-sum rounds, un
  assert.equal(a.get('saveScorelessPlay').disabled,false);assert.equal(a.get('saveScorelessPlay').textContent,'끝내고 저장 · 2판');assert.equal(a.get('scorelessBoardMode').textContent,'마이티 기록');
  find('마지막 판 되돌리기').onclick();assert.deepEqual(totals(),['+4','−2','+2','−2','−2']);
 });
+test('players added during a result entry land where the current mode shows them',()=>{
+ const {context}=fixture('team');
+ const added=context.placeResultPlayer({id:'n1',name:'새봄',score:null});
+ assert.equal(added.teamId,'b','team mode puts a new player into the smallest team');
+ context.resultEntry.roleSides=[{id:'team-1',name:'마피아'},{id:'team-2',name:'시민'}];
+ assert.equal(context.placeResultPlayer({id:'n2',name:'나무',score:null}).teamName,'시민','role mode puts a new player on the open side');
+ context.resultEntry={mode:'rank',previousPlayers:[]};
+ const ranked=context.placeResultPlayer({id:'n3',name:'나비',score:null});
+ assert.equal(ranked.rank,context.players.length+1);assert.equal(ranked.winner,false);
+});

@@ -678,3 +678,11 @@ test('per-game statistics play button starts that game at player selection and s
  assert.equal(a.vm.window.ScoreCounter.getResultEntry().mode,'rank');
 });
 test('score board keeps card order below three players and sorts by score from three players',async()=>{const html=await fs.readFile(new URL('../index.html',import.meta.url),'utf8');assert.ok(html.includes('shown=players.length<3?players:ranked;for(const [index,p] of shown.entries())'));assert.ok(html.includes('rank.textContent=`${ranked.findIndex(x=>x.score===p.score)+1}위`'),'rank label still follows score');});
+test('board rules: first visit starts with three players, an emptied board asks to add players, Mighty stops at six',async()=>{const html=await fs.readFile(new URL('../index.html',import.meta.url),'utf8');
+ assert.ok(html.includes("try{freshStart=localStorage.getItem(KEY)===null;}catch{}"),'only a first visit (no saved board) creates players');
+ assert.ok(html.includes("function render(){if(freshStart&&!players.length&&!resultEntry){players=generatedPlayers(3,0);"));
+ assert.ok(html.includes("text.textContent='플레이어를 추가하세요'"),'an emptied board shows the add-players message');
+ assert.ok(html.includes("isFreshBoard:()=>!resultEntry&&players.every(p=>p.score===0&&p.autoName&&p.autoName===p.name)"),'only untouched random boards are replaced without asking');
+ assert.ok(html.includes("const mightyFull=resultEntry?.mode==='mighty'&&players.length>=6;$('add').disabled=mightyFull;$('bulk').disabled=mightyFull;"));
+ assert.ok(html.includes("$('reset').hidden=!!resultEntry||!players.some(p=>p.score!==0);$('resetPlayers').hidden=true;"),'score reset shows only with a non-zero score');});
+test('per-game play asks before replacing a board the user set up',async()=>{const a=await app();assert.ok(a.players().length>0);let asked='',go=null;a.vm.window.ScoreCounter.confirm=(_t,message,callback)=>{asked=message;go=callback;};a.bridge.openGameStats({name:'카탄',bggId:'13'});a.get('statsPlayFab').onclick();assert.match(asked,/현재 점수판을 비우고 카탄으로 시작할까요/);assert.equal(a.get('scorelessSetupDialog').open,false,'does not start before confirming');go();assert.equal(a.get('scorelessSetupDialog').open,true);});
