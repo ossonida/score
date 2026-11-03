@@ -20,7 +20,7 @@ html.scoreless-board-mode body #homeScreen .cards{padding-bottom:8px!important}
 .record-results:empty{display:none}
 .bgg-web-link{color:#9fb8da;background:none;padding:4px 0;font-size:12px;text-decoration:underline;margin-bottom:4px}
 
-.record-links [hidden]{display:none!important}.record-links{align-items:center}.record-links #accountLink{color:#b2cfff;text-decoration:underline;text-underline-offset:3px;font-size:12px;padding:8px 2px}.record-links #accountLink:focus-visible{outline:2px solid #80caff;outline-offset:3px}.empty-board #recordModeChange,.scoreless-board-mode #recordModeChange{display:none!important}
+.record-links [hidden]{display:none!important}.record-links{align-items:center}.record-links #accountLink{color:#b2cfff;text-decoration:underline;text-underline-offset:3px;font-size:12px;padding:8px 2px}.record-links #accountLink:focus-visible{outline:2px solid #80caff;outline-offset:3px}.empty-board #recordModeChange{display:none!important}
 
 #bggAccountSection[hidden]{display:none}#bggAccountSection{border-top:1px solid #29374c;margin-top:16px;padding-top:12px}#bggAccountSection h3{font-size:16px;margin:0 0 8px}#bggAccountSection button{padding:8px 12px;min-height:40px}#bggAccountData{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.bgg-data-count{display:grid;align-content:center;gap:4px;min-width:0;min-height:68px;padding:10px 14px;border:1px solid #2b405a;border-radius:12px;background:#0b1421;color:#9fb4cf;font-size:13px}.bgg-data-count span{white-space:nowrap}.bgg-data-count strong{color:#e6f1ff;font-size:20px;line-height:1.15;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 
@@ -158,7 +158,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #homeScreen .toolbar #savePlay,#homeScreen .toolbar #add{display:grid!important}
 #homeScreen .toolbar #savePlay{place-items:center;width:54px;padding:0 8px;font-size:11px;letter-spacing:.02em}
 #homeScreen .toolbar .tool:disabled{opacity:.42;cursor:default}
-.empty-board #homeScreen .toolbar #reset,.empty-board #homeScreen .toolbar #resetPlayers{display:grid!important}
+
 .scoreless-board-mode #homeScreen header{position:relative;padding-bottom:42px}
 .scoreless-board-mode #boardCaption.scoreless-session-caption{position:absolute;left:2px;right:2px;bottom:2px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;margin:0;color:#2e86ff;font-size:12px;line-height:1.15}
 .scoreless-board-mode #boardCaption .scoreless-session-title{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-weight:600;overflow-wrap:anywhere}
@@ -500,3 +500,6 @@ html:not(.scoreless-board-mode):not(.two-players).fit-players #homeScreen .score
 .record-saved-notice{top:max(72px,calc(50% - 210px));bottom:auto;min-width:186px;padding:85px 20px 22px;border:1px solid #72adff;border-radius:14px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='57' height='57' viewBox='0 0 57 57' fill='none' stroke='%232D7FF9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M52.25 26.315V28.5C52.2471 33.6215 50.5887 38.6049 47.5222 42.7068C44.4556 46.8088 40.1453 49.8096 35.234 51.2618C30.3226 52.7139 25.0735 52.5395 20.2694 50.7646C15.4652 48.9898 11.3635 45.7095 8.57602 41.413C5.78849 37.1166 4.46449 32.0342 4.80147 26.9237C5.13845 21.8133 7.11835 16.9488 10.4459 13.0555C13.7735 9.16232 18.2704 6.44903 23.2659 5.32035C28.2615 4.19166 33.4881 4.70805 38.1663 6.7925'/%3E%3Cpath d='M52.25 9.5L28.5 33.2737L21.375 26.1487'/%3E%3C/svg%3E") no-repeat center 21px/57px 57px;color:#2d7ff9;font-size:14px}
 html:not(.scoreless-board-mode) #homeScreen .board-status #stats{display:none}html:not(.scoreless-board-mode) #homeScreen footer{margin-top:0}#homeScreen .record-links:empty{display:none}
 html:not(.scoreless-board-mode) #homeScreen .board-status:not(:has(#recordingStatus:not([hidden]))){display:none}html:not(.scoreless-board-mode).fit-players main#homeScreen{padding-bottom:20px}
+/* 플레이어를 모두 지운 빈 점수판: 안내 문구만, 추가는 우측 상단 버튼(docs/CTA-FLOWS.md 3.0). */
+#homeScreen .empty{display:grid;place-items:center;min-height:202px;padding:24px}#homeScreen .empty-message{margin:0;color:#a9bdd7;font-size:16px;font-weight:500}
+.scoreless-board-actions #scorelessBoardCancel{grid-column:1/-1}
