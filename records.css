@@ -490,11 +490,11 @@ dialog.pro-sheet[open]{display:flex;flex-direction:column;gap:12px;position:fixe
 html:not(.scoreless-board-mode) #homeScreen footer .footer-guide{display:none}
 @media(max-width:600px){
 html:not(.scoreless-board-mode):not(.two-players) #homeScreen .card{border-radius:16px}
-html:not(.scoreless-board-mode):not(.two-players) #homeScreen .card-content{grid-template-columns:minmax(0,1fr) 44px minmax(0,165px) 44px;gap:0;padding:12px;border-radius:16px}
+html:not(.scoreless-board-mode):not(.two-players) #homeScreen .card-content{grid-template-columns:minmax(96px,115px) 44px minmax(0,1fr) 44px;gap:0;padding:12px;border-radius:16px}
 html:not(.scoreless-board-mode):not(.two-players) #homeScreen .name .rank{font-size:16px;font-weight:400;opacity:1;margin-bottom:6px;line-height:1.2}
 html:not(.scoreless-board-mode):not(.two-players) #homeScreen .name strong{font-size:24px;font-weight:500;line-height:1.25}
 html:not(.scoreless-board-mode):not(.two-players) #homeScreen .step{width:44px;height:44px;font-size:28px;font-weight:300}
-html:not(.scoreless-board-mode):not(.two-players).fit-players #homeScreen .score{font-size:min(clamp(30px,34cqh,71px),calc(165px / (var(--score-chars,1) * .62)));font-weight:900;line-height:1.1;padding:0}
+html:not(.scoreless-board-mode):not(.two-players).fit-players #homeScreen .score{font-size:min(clamp(30px,34cqh,71px),calc((100cqw - 227px) / (var(--score-chars,1) * .62)));font-weight:900;line-height:1.1;padding:0}
 }
 /* 저장 완료(Figma A7-1): 점수판 위쪽 가운데 흰 카드, 파란 체크와 문구. */
 .record-saved-notice{top:max(72px,calc(50% - 210px));bottom:auto;min-width:186px;padding:85px 20px 22px;border:1px solid #72adff;border-radius:14px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='57' height='57' viewBox='0 0 57 57' fill='none' stroke='%232D7FF9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M52.25 26.315V28.5C52.2471 33.6215 50.5887 38.6049 47.5222 42.7068C44.4556 46.8088 40.1453 49.8096 35.234 51.2618C30.3226 52.7139 25.0735 52.5395 20.2694 50.7646C15.4652 48.9898 11.3635 45.7095 8.57602 41.413C5.78849 37.1166 4.46449 32.0342 4.80147 26.9237C5.13845 21.8133 7.11835 16.9488 10.4459 13.0555C13.7735 9.16232 18.2704 6.44903 23.2659 5.32035C28.2615 4.19166 33.4881 4.70805 38.1663 6.7925'/%3E%3Cpath d='M52.25 9.5L28.5 33.2737L21.375 26.1487'/%3E%3C/svg%3E") no-repeat center 21px/57px 57px;color:#2d7ff9;font-size:14px}
