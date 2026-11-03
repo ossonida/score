@@ -683,6 +683,7 @@ function dictionary(){return /*<dict>*/{
 "여러 명 추가":"Add players",
 "저장된 플레이어 선택":"Choose saved players",
 "랜덤 이름으로 추가할 인원":"Players with random names",
+"기존 플레이어를 고르거나 추가할 인원을 1명 이상 정해주세요. 최대 100명까지입니다.":"Pick existing players or add at least 1 more. Up to 100 players.",
 "앱을 홈화면에 추가":"Add app to Home screen",
 "플레이어 전체 리셋":"Reset all players",
 "가져온 BGG 정보":"Imported BGG data",
