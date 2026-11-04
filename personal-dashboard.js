@@ -1,6 +1,6 @@
-import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=157';
+import {recordMode,modeLabels,resultLabel,missionSummary,coopKind as playCoopKind,scenarioAttempt,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=282';
 import {missionName,missionRange} from './mission-names.js?v=5';
-import {renderModeStats,cooperativeStats} from './record-view.js?v=138';
+import {renderModeStats,cooperativeStats} from './record-view.js?v=282';
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=280';
 import {renderGameArtwork} from './game-artwork.js?v=172';
 import {namesIn,readIdentity,saveIdentity,personalGame} from './personal-stats.js?v=119';

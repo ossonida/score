@@ -680,3 +680,11 @@ test('board rules: first visit starts with three players, an emptied board asks 
  assert.ok(html.includes("const mightyFull=resultEntry?.mode==='mighty'&&players.length>=6;$('add').disabled=mightyFull;$('bulk').disabled=mightyFull;"));
  assert.ok(html.includes("$('reset').hidden=!!resultEntry||!players.some(p=>p.score!==0);"),'score reset shows only with a non-zero score');assert.ok(html.includes("$('resetPlayers').hidden=!savedSignature||!players.length;"),'clear players shows only right after SAVE');});
 test('per-game play asks before replacing a board the user set up',async()=>{const a=await app();assert.ok(a.players().length>0);let asked='',go=null;a.vm.window.ScoreCounter.confirm=(_t,message,callback)=>{asked=message;go=callback;};a.bridge.openGameStats({name:'카탄',bggId:'13'});a.get('statsPlayFab').onclick();assert.match(asked,/현재 점수판을 비우고 카탄으로 시작할까요/);assert.equal(a.get('scorelessSetupDialog').open,false,'does not start before confirming');go();assert.equal(a.get('scorelessSetupDialog').open,true);});
+test('score save attaches the turn timer summary by player id and marks the timer saved',async()=>{
+ const a=await app(),calls=[];let data={totalMs:9000,sharedMs:1000,rounds:2,autoStart:false,firstStarter:'a',starter:'b',players:{a:5000,b:3000},turns:[{player:'a',round:1,ms:5000},{player:'b',round:1,ms:3000}],log:[]};
+ a.vm.window.ScoreTurnTimer={recordData:(ids,recordId)=>{calls.push(['data',[...ids],recordId]);return data;},saved:id=>calls.push(['saved',id])};
+ await save(a);const [play]=JSON.parse(a.store.get('score.plays.v1.guest')).records;
+ assert.deepEqual(JSON.parse(JSON.stringify(play.turnTimer)),data);assert.deepEqual(calls[0],['data',['a','b'],undefined]);assert.deepEqual(calls.at(-1),['saved',play.id]);
+ data=undefined;calls.length=0;await save(a,'푸에르토리코');const [plain]=JSON.parse(a.store.get('score.plays.v1.guest')).records;
+ assert.equal(plain.game.name,'푸에르토리코');assert.equal('turnTimer' in plain,false);assert.equal(calls.some(([kind])=>kind==='saved'),false);
+});

@@ -6,6 +6,10 @@ try{
  const alice=env.authenticatedContext('alice').firestore(),bob=env.authenticatedContext('bob').firestore(),guest=env.unauthenticatedContext().firestore();
  const record={id:'one',game:{name:'Catan',bggId:'13'},date:'2026-10-12',rule:'highest',createdAt:'2026-10-12T00:00:00.000Z',players:[{id:'a',name:'A',score:1,color:'#ffffff'}]};
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),record));
+ const turnTimer={totalMs:1000,sharedMs:0,rounds:1,autoStart:false,firstStarter:'a',starter:'a',players:{a:1000},turns:[{player:'a',round:1,ms:1000}],log:[]};
+ await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,turnTimer}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,turnTimer:{...turnTimer,extra:true}}));
+ await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,turnTimer:{...turnTimer,totalMs:-1}}));
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'success',sharedScore:0}));
  await assertSucceeds(setDoc(doc(alice,'users/alice/plays/one'),{...record,rule:'cooperative',cooperativeResult:'failure',sharedScore:-12.5}));
  await assertFails(setDoc(doc(alice,'users/alice/plays/one'),{...record,cooperativeResult:'success'}));

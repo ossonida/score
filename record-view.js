@@ -1,8 +1,19 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=157';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=282';
 import {missionName,missionRange} from './mission-names.js?v=5';
+import {formatDuration} from './turn-timer-core.js?v=282';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const rate=n=>n===null?'—':num(n*100)+'%';
+// 턴 타이머를 쓴 기록만: 플레이 시간과 플레이어별 소요 시간. 턴별 이력은 펼칠 때 그린다.
+export function renderTurnTimerSummary(play){
+ const t=play?.turnTimer;if(!t||typeof t!=='object'||!t.players)return null;
+ const names=new Map(play.players.map(p=>[p.id,p.name])),nameOf=id=>names.get(id)||'삭제된 플레이어',box=el('section',undefined,'record-turn-timer');box.setAttribute('aria-label','턴 타이머 기록');
+ const head=el('p',undefined,'record-turn-timer-head');head.append(el('span','플레이 시간'),el('strong',formatDuration(t.totalMs)));
+ const meta=[`라운드 ${t.rounds}`,...(t.sharedMs?[`공용 ${formatDuration(t.sharedMs)}`]:[]),...(t.firstStarter&&names.has(t.firstStarter)?[`최초 선플레이어 ${nameOf(t.firstStarter)}`]:[])];head.append(el('small',meta.join(' · ')));box.append(head);
+ const list=el('ul',undefined,'record-turn-timer-players');for(const p of play.players){if(!Number.isSafeInteger(t.players[p.id]))continue;const row=el('li');row.append(el('span',p.name),el('strong',formatDuration(t.players[p.id])));list.append(row);}box.append(list);
+ if(Array.isArray(t.turns)&&t.turns.length){const details=el('details',undefined,'record-turn-timer-turns'),summary=el('summary',`턴별 기록 ${t.turns.length}턴`),turns=el('ol');details.append(summary,turns);details.addEventListener('toggle',()=>{if(!details.open||turns.childElementCount)return;for(const turn of t.turns){const row=el('li');row.append(el('small',`R${turn.round}`),el('span',nameOf(turn.player)),el('strong',formatDuration(turn.ms)));turns.append(row);}});box.append(details);}
+ return box;
+}
 function action(text,label,callback,cls){const b=el('button',text,cls);b.type='button';b.setAttribute('aria-label',label);b.onclick=callback;return b;}
 export function renderRecordParticipants(play,me,onEdit){
  const mode=recordMode(play),list=el('ul',undefined,'record-scores record-mode-'+mode);

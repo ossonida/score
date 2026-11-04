@@ -1,8 +1,8 @@
-import './records.js?v=281';
+import './records.js?v=282';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=167';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
 import {scoreGame} from './score-games.js?v=168';
-import {gameKey} from './records-core.js?v=157';
+import {gameKey} from './records-core.js?v=282';
 import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=105';
 import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=172';
 import {idToken} from './cloud-records.js?v=176';

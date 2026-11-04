@@ -1,4 +1,4 @@
-import {gameKey,winnerIds} from './records-core.js?v=157';
+import {gameKey,winnerIds} from './records-core.js?v=282';
 import {isPro,markProLock} from './pro-access.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';

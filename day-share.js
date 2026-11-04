@@ -1,4 +1,4 @@
-import {gameKey,winnerIds,coopKind,recordMode} from './records-core.js?v=157';
+import {gameKey,winnerIds,coopKind,recordMode} from './records-core.js?v=282';
 import {meIn,nameKey} from './personal-stats.js?v=119';
 import {gameImageUrl} from './game-artwork.js?v=172';
 import {milestones,MILESTONES} from './stats-extras.js?v=7';
