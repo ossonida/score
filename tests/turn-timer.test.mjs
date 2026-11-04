@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createTimer,startTurn,endTurn,selectPlayer,setNext,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,editTime,finishTimer,syncPlayers,timerRecord,validTurnTimerRecord,liveTime,gameTime,sharedTime,nextPlayer,canUndo,formatDuration,loadTimer} from '../turn-timer-core.js';
+import {createTimer,startTurn,endTurn,selectPlayer,setNext,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,editTime,finishTimer,syncPlayers,timerRecord,validTurnTimerRecord,liveTime,gameTime,sharedTime,nextPlayer,canUndo,formatDuration,loadTimer,setLimit,remainingTime,advanceRound,resetTimer} from '../turn-timer-core.js';
 
 const base=(auto=false)=>setAutoStart(createTimer(['a','b','c']),auto);
 const S=1000,T=ms=>1e9+ms;
@@ -120,4 +120,26 @@ test('record summary is stored by player id, validated and not reused for anothe
 test('broken storage falls back to a fresh timer and durations show seconds',()=>{
  assert.equal(loadTimer({v:2}).status,'idle');assert.equal(loadTimer(null).status,'idle');
  assert.equal(formatDuration(3723999),'01:02:03');assert.equal(formatDuration(-5),'00:00:00');
+});
+
+test('turn limit: warn keeps counting past zero, stop freezes the player at the limit and a new turn gets a fresh limit',()=>{
+ const M=60*S;let s=setLimit(base(),T(0),{mode:'turn',minutes:1});assert.equal(remainingTime(s,T(0),'a'),M,'no turn yet shows the full limit');
+ s=startTurn(s,T(0));assert.equal(remainingTime(s,T(70*S)),-10*S);assert.equal(liveTime(s,'a',T(70*S)),70*S,'warn keeps measuring');
+ let stop=setLimit(s,T(30*S),{over:'stop'});assert.equal(liveTime(stop,'a',T(30*S)),30*S,'change settles first');
+ assert.equal(liveTime(stop,'a',T(90*S)),M);assert.equal(remainingTime(stop,T(90*S)),0);assert.ok(gameTime(stop,T(90*S))>M,'game time keeps running');
+ stop=endTurn(stop,T(100*S));assert.equal(stop.times.a,M);assert.equal(stop.turns[0].ms,M);
+ stop=startTurn(stop,T(100*S));assert.equal(remainingTime(stop,T(110*S)),50*S,'next turn starts with a fresh limit');
+});
+test('game limit is shared across turns and survives reset; old saves load without a limit',()=>{
+ let s=setLimit(base(true),T(0),{mode:'game',minutes:2,over:'stop'});s=startTurn(s,T(0));s=endTurn(s,T(90*S));
+ s=endTurn(s,T(100*S));s=endTurn(s,T(110*S));assert.equal(s.current,'a');assert.equal(remainingTime(s,T(140*S)),0);assert.equal(liveTime(s,'a',T(200*S)),120*S);
+ assert.deepEqual(resetTimer(s).limit,{mode:'game',minutes:2,over:'stop'});
+ const old=createTimer(['a']);delete old.limit;assert.equal(loadTimer(old).limit.mode,'none');
+ assert.equal(setLimit(s,T(0),{minutes:0}),s,'invalid minutes are ignored');
+});
+test('next round from settings closes the open turn without everyone passing and can be undone',()=>{
+ let s=startTurn(base(),T(0));s=togglePass(s,T(S),'c');s=advanceRound(s,T(10*S));
+ assert.equal(s.round,2);assert.deepEqual(s.passed,[]);assert.equal(s.status,'waiting');assert.equal(s.current,'a');assert.equal(s.times.a,10*S);assert.equal(s.turns.at(-1).open,undefined);
+ s=undoTurn(s,T(12*S));assert.equal(s.round,1);assert.equal(s.status,'running');assert.deepEqual(s.passed,['c']);
+ assert.equal(advanceRound(pauseTimer(s,T(13*S)),T(14*S)).round,1,'paused timer does not advance');
 });

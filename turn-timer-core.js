@@ -10,20 +10,31 @@ const run=(c,now)=>c.since?c:{ms:c.ms,since:now};
 const clone=value=>JSON.parse(JSON.stringify(value));
 const ms=value=>Number.isSafeInteger(value)&&value>=0?value:0;
 const validClock=c=>c&&typeof c==='object'&&Number.isSafeInteger(c.ms)&&c.ms>=0&&Number.isSafeInteger(c.since)&&c.since>=0;
+// 제한 시간: none 사용 시간만 누적 · game 1인당 게임 전체(여러 턴 차감) · turn 매 턴 새로. over는 초과 시 warn 계속 측정 · stop 개인 시간 정지.
+const DEFAULT_LIMIT={mode:'none',minutes:3,over:'warn'};
+const validLimit=l=>!!l&&typeof l==='object'&&['none','game','turn'].includes(l.mode)&&Number.isSafeInteger(l.minutes)&&l.minutes>=1&&l.minutes<=999&&['warn','stop'].includes(l.over);
+export const limitOf=s=>validLimit(s.limit)?s.limit:DEFAULT_LIMIT;
+export const limitMs=s=>{const l=limitOf(s);return l.mode==='none'?0:l.minutes*60000;};
 
 export function createTimer(order=[],{autoStart=false}={}){
- return {v:1,used:false,autoStart:autoStart===true,order:order.filter(id=>ID.test(id)),firstStarter:'',starter:'',current:'',nextOverride:'',status:'idle',pausedFrom:'',sharedFrom:'',round:1,passed:[],times:{},run:0,game:{ms:0,since:0},shared:{ms:0,since:0},pause:{ms:0,since:0},turns:[],log:[],undo:[],savedRecordId:''};
+ return {v:1,used:false,autoStart:autoStart===true,order:order.filter(id=>ID.test(id)),firstStarter:'',starter:'',current:'',nextOverride:'',status:'idle',pausedFrom:'',sharedFrom:'',round:1,passed:[],times:{},run:0,game:{ms:0,since:0},shared:{ms:0,since:0},pause:{ms:0,since:0},turns:[],log:[],undo:[],savedRecordId:'',limit:{...DEFAULT_LIMIT}};
 }
 // 저장 문자열이 깨졌거나 형식이 다르면 새 타이머로 시작한다(점수판에는 영향 없음).
 export function validTimer(s){
- return !!s&&typeof s==='object'&&s.v===1&&STATUSES.includes(s.status)&&Array.isArray(s.order)&&s.order.every(id=>typeof id==='string'&&ID.test(id))&&new Set(s.order).size===s.order.length&&Array.isArray(s.passed)&&Array.isArray(s.turns)&&Array.isArray(s.log)&&Array.isArray(s.undo)&&s.times&&typeof s.times==='object'&&Object.values(s.times).every(value=>Number.isSafeInteger(value)&&value>=0)&&Number.isSafeInteger(s.run)&&s.run>=0&&Number.isSafeInteger(s.round)&&s.round>=1&&validClock(s.game)&&validClock(s.shared)&&validClock(s.pause)&&['current','starter','firstStarter','nextOverride','pausedFrom','sharedFrom','savedRecordId'].every(key=>typeof s[key]==='string');
+ return !!s&&typeof s==='object'&&s.v===1&&STATUSES.includes(s.status)&&Array.isArray(s.order)&&s.order.every(id=>typeof id==='string'&&ID.test(id))&&new Set(s.order).size===s.order.length&&Array.isArray(s.passed)&&Array.isArray(s.turns)&&Array.isArray(s.log)&&Array.isArray(s.undo)&&s.times&&typeof s.times==='object'&&Object.values(s.times).every(value=>Number.isSafeInteger(value)&&value>=0)&&Number.isSafeInteger(s.run)&&s.run>=0&&Number.isSafeInteger(s.round)&&s.round>=1&&validClock(s.game)&&validClock(s.shared)&&validClock(s.pause)&&['current','starter','firstStarter','nextOverride','pausedFrom','sharedFrom','savedRecordId'].every(key=>typeof s[key]==='string')&&(s.limit===undefined||validLimit(s.limit));
 }
-export function loadTimer(value){return validTimer(value)?value:createTimer();}
+// 제한 시간이 생기기 전 저장본은 제한 없음으로 읽는다.
+export function loadTimer(value){return validTimer(value)?(value.limit?value:{...value,limit:{...DEFAULT_LIMIT}}):createTimer();}
 
 const openTurn=s=>{const last=s.turns[s.turns.length-1];return last?.open?last:null;};
 // 측정 중인 구간을 현재 시각까지 확정한다. keep이면 같은 턴을 계속 측정한다.
+// 측정 중 구간 중 실제로 더할 길이. 정지 방식이면 제한 시간에 닿은 뒤로는 더하지 않는다.
+function runMs(s,now){
+ if(!s.run)return 0;const raw=Math.max(0,now-s.run),l=limitOf(s);if(l.mode==='none'||l.over!=='stop')return raw;
+ const used=l.mode==='game'?s.times[s.current]||0:openTurn(s)?.ms||0;return Math.min(raw,Math.max(0,l.minutes*60000-used));
+}
 function settle(s,now,keep=false){
- if(!s.run)return;const segment=Math.max(0,now-s.run);s.times[s.current]=(s.times[s.current]||0)+segment;const turn=openTurn(s);if(turn)turn.ms+=segment;s.run=keep?now:0;
+ if(!s.run)return;const segment=runMs(s,now);s.times[s.current]=(s.times[s.current]||0)+segment;const turn=openTurn(s);if(turn)turn.ms+=segment;s.run=keep?now:0;
 }
 function closeTurn(s,now){settle(s,now);const turn=openTurn(s);if(turn)delete turn.open;}
 function beginTurn(s,now){s.turns.push({player:s.current,round:s.round,ms:0,at:now,open:true});s.run=now;s.status='running';s.used=true;s.game=run(s.game,now);}
@@ -31,10 +42,15 @@ function beginTurn(s,now){s.turns.push({player:s.current,round:s.round,ms:0,at:n
 const UNDO_KEYS=['used','firstStarter','current','nextOverride','status','pausedFrom','sharedFrom','round','passed','times','run','game','shared'];
 function remember(s,now){const snap={pauseMs:clock(s.pause,now),turnsLength:s.turns.length,tail:clone(s.turns.slice(-2))};for(const key of UNDO_KEYS)snap[key]=clone(s[key]);s.undo=[...s.undo,snap].slice(-MAX_UNDO);}
 
-export function liveTime(s,id,now){return (s.times[id]||0)+(s.run&&s.current===id?Math.max(0,now-s.run):0);}
+export function liveTime(s,id,now){return (s.times[id]||0)+(s.current===id?runMs(s,now):0);}
 export function gameTime(s,now){return clock(s.game,now);}
 export function sharedTime(s,now){return clock(s.shared,now);}
-export function turnTime(s,now){const turn=openTurn(s);return turn?turn.ms+(s.run?Math.max(0,now-s.run):0):0;}
+export function turnTime(s,now){const turn=openTurn(s);return turn?turn.ms+runMs(s,now):0;}
+// 제한이 있으면 그 플레이어의 남은 시간(음수면 초과한 시간), 없으면 null. 매 턴 제한은 그 플레이어의 열린 턴만 차감한다.
+export function remainingTime(s,now,id=s.current){
+ const limit=limitMs(s);if(!limit||!id)return null;if(limitOf(s).mode==='game')return limit-liveTime(s,id,now);
+ return limit-(s.current===id?turnTime(s,now):0);
+}
 export function canUndo(s){return s.undo.length>0&&!['paused','shared','ended'].includes(s.status);}
 // 다음 예정 플레이어: 일회 지정 → 현재 다음 순서 중 패스하지 않은 사람. 모두 패스면 ''.
 export function nextPlayer(s,from=s.current){
@@ -87,6 +103,12 @@ export function togglePass(input,now,id){
 export function nextRound(input,now){
  if(input.status!=='roundEnd')return input;const s=clone(input);remember(s,now);s.round+=1;s.passed=[];s.nextOverride='';s.status='waiting';if(!s.order.includes(s.current))s.current=firstActive(s);return s;
 }
+// 설정의 다음 라운드: 모두 패스하지 않아도 진행 중인 턴을 확정하고 다음 라운드 첫 플레이어를 시작 대기로 둔다.
+export function advanceRound(input,now){
+ if(input.status==='roundEnd')return nextRound(input,now);
+ if(!['running','waiting'].includes(input.status))return input;const s=clone(input);remember(s,now);closeTurn(s,now);
+ s.round+=1;s.passed=[];s.nextOverride='';s.current=firstActive(s)||s.order[0]||'';s.status='waiting';return s;
+}
 export function pauseTimer(input,now){
  if(!['running','waiting','shared','roundEnd'].includes(input.status))return input;const s=clone(input);
  settle(s,now);s.game=stop(s.game,now);s.shared=stop(s.shared,now);s.pause=run(s.pause,now);s.pausedFrom=s.status;s.status='paused';return s;
@@ -118,6 +140,11 @@ export function reorder(input,order){
  if(order.length!==input.order.length||new Set(order).size!==order.length||order.some(id=>!input.order.includes(id)))return input;const s=clone(input);s.order=[...order];return s;
 }
 export function setAutoStart(input,value){const s=clone(input);s.autoStart=value===true;return s;}
+// 제한 설정 변경: 그때까지의 시간을 이전 설정으로 정산한 뒤 적용한다.
+export function setLimit(input,now,patch){
+ const limit={...limitOf(input),...patch};if(!validLimit(limit)||['mode','minutes','over'].every(key=>limit[key]===limitOf(input)[key]))return input;
+ const s=clone(input);settle(s,now,s.status==='running');s.limit=limit;return s;
+}
 // 시간 수동 수정: 측정 중이면 지금까지 정산한 뒤 바꾸고 수정 전후 값을 남긴다. 되돌리기 기록은 비운다.
 export function editTime(input,now,id,value){
  if(!input.order.includes(id)||!Number.isFinite(value)||input.status==='ended')return input;const s=clone(input);
@@ -128,10 +155,10 @@ export function editTime(input,now,id,value){
 export function finishTimer(input,now,recordId){
  if(!input.used)return input;const s=clone(input);closeTurn(s,now);s.game=stop(s.game,now);s.shared=stop(s.shared,now);s.pause=stop(s.pause,now);s.status='ended';s.pausedFrom='';s.sharedFrom='';s.undo=[];s.savedRecordId=recordId;return s;
 }
-export function resetTimer(input){const s=createTimer(input.order,{autoStart:input.autoStart});s.starter=input.starter&&input.order.includes(input.starter)?input.starter:'';if(s.starter){s.firstStarter=s.starter;s.current=s.starter;}return s;}
+export function resetTimer(input){const s=createTimer(input.order,{autoStart:input.autoStart});s.limit={...limitOf(input)};s.starter=input.starter&&input.order.includes(input.starter)?input.starter:'';if(s.starter){s.firstStarter=s.starter;s.current=s.starter;}return s;}
 // 점수판 플레이어가 바뀌면 순서를 맞춘다. 새 플레이어는 끝에 붙이고, 빠진 플레이어가 현재 턴이면 턴을 닫고 다음 사람을 대기시킨다.
 export function syncPlayers(input,now,ids){
- const valid=ids.filter(id=>ID.test(id));if(!valid.length)return input.order.length||input.used?resetTimer({...createTimer(),autoStart:input.autoStart}):input;
+ const valid=ids.filter(id=>ID.test(id));if(!valid.length)return input.order.length||input.used?resetTimer({...createTimer(),autoStart:input.autoStart,limit:input.limit}):input;
  const order=[...input.order.filter(id=>valid.includes(id)),...valid.filter(id=>!input.order.includes(id))];
  if(order.length===input.order.length&&order.every((id,index)=>id===input.order[index]))return input;
  if(input.status==='ended')return resetTimer({...input,order});
@@ -147,7 +174,7 @@ export function syncPlayers(input,now,ids){
 export function timerRecord(s,now,playerIds,recordId){
  if(!s.used||s.savedRecordId&&s.savedRecordId!==recordId)return undefined;
  const ids=playerIds.filter(id=>ID.test(id)),players={};for(const id of ids)players[id]=liveTime(s,id,now);
- const turns=s.turns.slice(-RECORD_TURNS).map((turn,index,list)=>({player:turn.player,round:turn.round,ms:turn.ms+(turn.open&&index===list.length-1&&s.run?Math.max(0,now-s.run):0)}));
+ const turns=s.turns.slice(-RECORD_TURNS).map((turn,index,list)=>({player:turn.player,round:turn.round,ms:turn.ms+(turn.open&&index===list.length-1?runMs(s,now):0)}));
  const pick=id=>ids.includes(id)?id:'';
  return {totalMs:gameTime(s,now),sharedMs:sharedTime(s,now),rounds:s.round,autoStart:s.autoStart,firstStarter:pick(s.firstStarter),starter:pick(s.starter),players,turns,log:s.log.slice(-MAX_LOG).map(({type,player,before,after})=>({type,player,...(type==='edit'?{before,after}:{after})}))};
 }

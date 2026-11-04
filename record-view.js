@@ -1,6 +1,6 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=282';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=286';
 import {missionName,missionRange} from './mission-names.js?v=5';
-import {formatDuration} from './turn-timer-core.js?v=282';
+import {formatDuration} from './turn-timer-core.js?v=286';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const num=n=>n===null||n===undefined?'—':n.toLocaleString('ko-KR',{maximumFractionDigits:1});
 const rate=n=>n===null?'—':num(n*100)+'%';
