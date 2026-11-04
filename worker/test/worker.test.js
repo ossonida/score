@@ -82,6 +82,7 @@ test('signed-out users may only search, from an allowed site, limited per addres
  const h=createHandler({verify:async()=>{throw Error('no token expected');},upstream:async()=>new Response(xml)});
  const res=await h(guest('query=flip'),limited);assert.equal(res.status,200);assert.deepEqual(await res.json(),{games:[{id:'420087',name:'Flip 7',year:'2024'}]});assert.deepEqual(keys,['user:guest:203.0.113.7','global']);
  assert.equal((await h(guest('query=flip',{'CF-Connecting-IP':'203.0.113.7'}),limited)).status,401,'requests without an allowed site are rejected');
- for(const query of ['action=details&ids=13','action=collection&username=alice','action=plays&username=alice'])assert.equal((await h(guest(query),limited)).status,401,query);
+ assert.notEqual((await h(guest('action=details&ids=13'),limited)).status,401,'guests can read game details');
+ for(const query of ['action=collection&username=alice','action=plays&username=alice'])assert.equal((await h(guest(query),limited)).status,401,query);
 });
 

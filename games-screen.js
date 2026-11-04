@@ -1,4 +1,4 @@
-import './records.js?v=262';
+import './records.js?v=281';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=167';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
 import {scoreGame} from './score-games.js?v=168';
@@ -7,7 +7,7 @@ import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollec
 import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=172';
 import {idToken} from './cloud-records.js?v=176';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {enrichGames} from './bgg-details-client.js?v=66';
+import {enrichGames} from './bgg-details-client.js?v=281';
 import {gameNames} from './bgg-metadata.js?v=280';
 import {indexEntries} from './game-index.js?v=2';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=280';
@@ -17,9 +17,9 @@ let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=fals
 const views={all:'gamesAll',played:'gamesPlayed',wantToPlay:'gamesWantToPlay',owned:'gamesOwned',wishlist:'gamesWishlist',preordered:'gamesPreordered'},viewLabels={wantToPlay:'하고 싶은 게임',owned:'보유 게임',wishlist:'위시 리스트 게임',preordered:'펀딩 게임'};
 const bggState=()=>window.ScoreBggAccount?.state()||{collection:[],plays:[]},bggCollection=()=>bggState().collection||[];
 const playText=(count,bgg)=>[count?'플레이 '+count+'회':'',bgg?'BGG 플레이 '+bgg+'회':''].filter(Boolean).join(' · ')||'아직 플레이 기록이 없습니다.';
-// 로그인 상태에서 BGG 게임 정보를 받아 표지와 한글 이름을 보충합니다(7일 안에 받은 게임은 건너뜀).
+// BGG 게임 정보를 받아(로그인하지 않아도) 표지와 한글 이름을 보충합니다(7일 안에 받은 게임은 건너뜀).
 let enrichAgain=false;
-async function enrichArtwork(context,games){if(!bggSearchUrl||!context.key.startsWith('score.plays.v1.user.'))return;if(enriching){enrichAgain=true;return;}enriching=true;enrichAgain=false;try{const token=await idToken(context.key.slice('score.plays.v1.user.'.length));if(!current(context))return;await enrichGames(games.map(row=>row.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(current(context))render();}});}catch{}finally{enriching=false;if(enrichAgain&&current(context))render();}}
+async function enrichArtwork(context,games){if(!bggSearchUrl)return;if(enriching){enrichAgain=true;return;}enriching=true;enrichAgain=false;try{const user=context.key.startsWith('score.plays.v1.user.'),token=user?await idToken(context.key.slice('score.plays.v1.user.'.length)):'';if(!current(context))return;await enrichGames(games.map(row=>row.game),{endpoint:bggSearchUrl,token,onUpdate:()=>{if(current(context))render();}});}catch{}finally{enriching=false;if(enrichAgain&&current(context))render();}}
 const searchRecords=context=>[...context.records,...readGameLibrary(context.key).map(game=>({game}))];
 const current=c=>{const n=api.context();return c.key===n.key&&c.epoch===n.epoch;};
 function rows(){const c=api.context();return libraryGames(c.records,readGameLibrary(c.key));}

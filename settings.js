@@ -1,7 +1,7 @@
 import {readIdentity} from './personal-stats.js?v=119';
 import {renderIdentitySettings} from './personal-dashboard.js?v=168';
 import {rememberGameImages} from './game-artwork.js?v=172';
-import './records.js?v=262';
+import './records.js?v=281';
 import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=71';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=8';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
