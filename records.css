@@ -501,62 +501,80 @@ html:not(.scoreless-board-mode) #homeScreen .board-status:not(:has(#recordingSta
 /* 플레이어를 모두 지운 빈 점수판: 안내 문구만, 추가는 우측 상단 버튼(docs/CTA-FLOWS.md 3.0). */
 #homeScreen .empty{display:grid;place-items:center;min-height:202px;padding:24px}#homeScreen .empty-message{margin:0;color:#a9bdd7;font-size:16px;font-weight:500}
 .scoreless-board-actions #scorelessBoardCancel{grid-column:1/-1}
-/* 턴 타이머(docs/CTA-FLOWS.md 3.6): 툴바 아이콘 상태 점, 하단 시트, 기록 카드 요약. */
+/* 턴 타이머(docs/CTA-FLOWS.md 3.6): 툴바 아이콘 상태 점, 전체 화면 관리 페이지, 기록 카드 요약. */
 #turnTimer{position:relative}
 #turnTimer[data-timer]::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#45d9a0;box-shadow:0 0 0 2px #0b1220}
 #turnTimer[data-timer=paused]::after{background:#ffcf5c}
+dialog#turnTimerDialog{inset:0;left:0;top:0;transform:none;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:0;border:0;border-radius:0;background:#101827;color:inherit;overflow:hidden}
+dialog#turnTimerDialog[open]{display:flex;flex-direction:column}
+#turnTimerDialog::backdrop{background:#101827}
+.turn-timer-head{display:flex;flex:none;align-items:center;gap:2px;min-height:56px;padding:calc(6px + env(safe-area-inset-top)) max(12px,calc((100vw - 560px)/2)) 6px max(4px,calc((100vw - 576px)/2));border-bottom:1px solid #1f2a3c}
+#turnTimerDialog .turn-timer-head h2{flex:1;margin:0;font-size:18px;font-weight:700}
+#turnTimerDialog .turn-timer-head .search-back{display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;color:#b9c6db;box-shadow:none}
+.turn-timer-head .search-back svg{width:24px;height:24px}
+.turn-timer-body{display:flex;flex:1;flex-direction:column;gap:14px;min-height:0;padding:14px max(16px,calc((100vw - 560px)/2)) 20px;overflow:auto;overscroll-behavior:contain}
+.turn-timer-body>*{flex-shrink:0}
+.turn-timer-actions{display:grid;flex:none;gap:8px;padding:10px max(16px,calc((100vw - 560px)/2)) calc(12px + env(safe-area-inset-bottom));border-top:1px solid #1f2a3c;background:#0d1420}
 .turn-timer-overview{display:flex;flex-wrap:wrap;gap:6px;margin:0;color:#a8b8ce;font-size:13px}
-.turn-timer-overview span{padding:3px 9px;border-radius:999px;background:#1a2433}
+.turn-timer-overview span{padding:4px 10px;border-radius:999px;background:#1a2433}
 .turn-timer-overview output,.turn-timer-detail,.turn-timer-time,.turn-timer-sums{font-variant-numeric:tabular-nums}
-.turn-timer-main{display:grid;gap:10px;padding:14px;border:1px solid #29364b;border-radius:16px;background:#0d131d}
+.turn-timer-main{display:grid;gap:10px;padding:18px 14px 16px;border:1px solid #29364b;border-radius:18px;background:#0d131d}
+.turn-timer-main[data-state=running]{border-color:#1f6b52;background:linear-gradient(180deg,#0f2a22,#0d131d 70%)}
+.turn-timer-main[data-state=paused]{border-color:#6b5a1f}
 .turn-timer-now{display:grid;justify-items:center;gap:2px;min-width:0;text-align:center}
-.turn-timer-status{padding:2px 10px;border-radius:999px;background:#202b3e;color:#b9c6db;font-size:12px;font-weight:700}
+.turn-timer-status{padding:3px 12px;border-radius:999px;background:#202b3e;color:#b9c6db;font-size:12px;font-weight:700}
 .turn-timer-status[data-state=running]{background:#123b2e;color:#45d9a0}
 .turn-timer-status[data-state=paused]{background:#3b3212;color:#ffcf5c}
 .turn-timer-status[data-state=shared]{background:#1d2c4a;color:#72adff}
 .turn-timer-status[data-state=roundEnd]{background:#3a1d2a;color:#ff8fb8}
-.turn-timer-current{display:flex;align-items:center;gap:8px;max-width:100%;margin-top:6px;overflow:hidden;font-size:18px;text-overflow:ellipsis;white-space:nowrap}
-.turn-timer-current::before{content:'';flex:none;width:12px;height:12px;border-radius:50%;background:var(--player,#4b5b74)}
-.turn-timer-clock{font-size:44px;font-weight:700;letter-spacing:-1px;line-height:1.1;font-variant-numeric:tabular-nums}
+.turn-timer-current{display:flex;align-items:center;gap:8px;max-width:100%;margin-top:8px;overflow:hidden;font-size:22px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+.turn-timer-current::before{content:'';flex:none;width:14px;height:14px;border-radius:50%;background:var(--player,#4b5b74)}
+.turn-timer-caption{margin-top:6px;color:#7f8ea6;font-size:12px}
+.turn-timer-clock{font-size:56px;font-weight:700;letter-spacing:-1.5px;line-height:1.05;font-variant-numeric:tabular-nums}
 .turn-timer-main[data-state=running] .turn-timer-clock{color:#45d9a0}
 .turn-timer-main[data-state=paused] .turn-timer-clock{color:#ffcf5c}
-.turn-timer-detail{color:#94a3b8;font-size:13px}
-.turn-timer-cta{width:100%;min-height:52px;font-size:17px;font-weight:700}
+.turn-timer-detail{margin-top:2px;color:#94a3b8;font-size:13px}
+#turnTimerDialog .turn-timer-cta{width:100%;min-height:56px;border-radius:14px;font-size:18px;font-weight:700}
 .turn-timer-tools{display:flex;gap:8px}
-.turn-timer-tools button{flex:1;min-width:0;min-height:44px;padding:0 6px}
+#turnTimerDialog .turn-timer-tools button{flex:1;min-width:0;min-height:44px;padding:0 6px;font-size:14px}
+.turn-timer-list-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin-top:4px}
+#turnTimerDialog .turn-timer-list-head h3{margin:0;font-size:15px;font-weight:700}
+.turn-timer-list-head small{color:#7f8ea6;font-size:12px}
 .turn-timer-players{display:grid;gap:6px;margin:0;padding:0;list-style:none}
-.turn-timer-row{display:flex;align-items:center;gap:4px;min-height:52px;padding-left:2px;border:1px solid #29364b;border-radius:12px;background:#151d2a;--ink:#dbe5f3}
-.turn-timer-row.is-current{border-color:var(--player);background:#1a2536;box-shadow:inset 4px 0 0 var(--player)}
-.turn-timer-row.is-passed .turn-timer-pick,.turn-timer-row.is-passed .turn-timer-time{opacity:.55}
+.turn-timer-row{display:flex;align-items:center;gap:4px;min-height:58px;padding-left:2px;border:1px solid #29364b;border-radius:14px;background:#151d2a;--ink:#dbe5f3}
+.turn-timer-row.is-current{border-color:var(--player);background:color-mix(in srgb,var(--player) 12%,#151d2a);box-shadow:inset 4px 0 0 var(--player)}
+.turn-timer-row.is-passed .turn-timer-pick,.turn-timer-row.is-passed .turn-timer-time{opacity:.5}
 .turn-timer-row.rank-dragging{position:relative;z-index:5;transform:translateY(var(--rank-drag-y,0));outline:2px solid #72adff;box-shadow:0 10px 28px #000a}
-.turn-timer-flag{display:grid;place-items:center;flex:none;width:36px;height:44px;min-height:44px;padding:0;border:0;background:transparent;color:#5d6b82;box-shadow:none}
+#turnTimerDialog .turn-timer-flag{display:grid;place-items:center;flex:none;width:36px;height:48px;min-height:48px;padding:0;border:0;background:transparent;color:#5d6b82;box-shadow:none}
 .turn-timer-flag svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.turn-timer-flag[aria-pressed=true]{color:#ffcf5c}
+#turnTimerDialog .turn-timer-flag[aria-pressed=true]{color:#ffcf5c}
 .turn-timer-flag[aria-pressed=true] svg{fill:currentColor}
-.turn-timer-pick{display:flex;flex:1;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0;min-height:48px;padding:4px 6px;border:0;background:transparent;color:inherit;text-align:left;box-shadow:none}
-.turn-timer-name{max-width:100%;overflow:hidden;font-size:15px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.turn-timer-name::before{content:'';display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:var(--player);vertical-align:middle}
-.turn-timer-sub{color:#94a3b8;font-size:11px}
+#turnTimerDialog .turn-timer-pick{display:flex;flex:1;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-width:0;min-height:52px;padding:4px 6px;border:0;background:transparent;color:inherit;text-align:left;box-shadow:none}
+.turn-timer-name{max-width:100%;overflow:hidden;font-size:16px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.turn-timer-name::before{content:'';display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:50%;background:var(--player);vertical-align:middle}
+.turn-timer-sub{color:#94a3b8;font-size:12px}
 .turn-timer-row.is-current .turn-timer-sub{color:#45d9a0;font-weight:700}
-.turn-timer-time{flex:none;min-width:62px;color:#dbe5f3;font-size:14px;text-align:right}
-.turn-timer-chip{flex:none;min-width:40px;height:32px;min-height:32px;padding:0 6px;border:1px solid #30415a;border-radius:999px;background:transparent;color:#a8b8ce;font-size:12px;box-shadow:none}
-.turn-timer-chip[aria-pressed=true]{border-color:#237bff;background:#237bff;color:#fff}
-.turn-timer-handle.rank-drag-handle{width:40px;min-width:40px;height:48px}
+.turn-timer-time{flex:none;min-width:64px;color:#dbe5f3;font-size:14px;text-align:right}
+#turnTimerDialog .turn-timer-chip{flex:none;min-width:0;height:30px;min-height:30px;padding:0 9px;border:1px solid #30415a;border-radius:999px;background:transparent;color:#a8b8ce;font-size:12px;line-height:1;box-shadow:none}
+#turnTimerDialog .turn-timer-chip[aria-pressed=true]{border-color:#237bff;background:#237bff;color:#fff}
+#turnTimerDialog .turn-timer-chip:disabled,#turnTimerDialog .turn-timer-pick:disabled{opacity:.45}
+.turn-timer-handle.rank-drag-handle{width:40px;min-width:40px;height:52px}
 .turn-timer-handle.rank-drag-handle svg{width:20px;height:20px}
-.turn-timer-settings summary{display:flex;align-items:center;min-height:44px;color:#a8b8ce;font-size:14px;cursor:pointer}
+.turn-timer-settings{border-top:1px solid #1f2a3c}
+.turn-timer-settings summary{display:flex;align-items:center;min-height:48px;color:#a8b8ce;font-size:14px;cursor:pointer}
 #turnTimerSettingsBody{display:grid;gap:8px;padding-bottom:4px}
-.turn-timer-sheet .turn-timer-switch{display:flex;align-items:center;gap:10px;margin:0;color:inherit;font-size:15px}
-.turn-timer-sheet .turn-timer-switch input{width:20px;height:20px;margin:0}
-.turn-timer-sheet .record-note,.turn-timer-sums{margin:0}
+#turnTimerDialog .turn-timer-switch{display:flex;align-items:center;gap:10px;margin:0;color:inherit;font-size:15px}
+#turnTimerDialog .turn-timer-switch input{width:20px;height:20px;margin:0}
+#turnTimerDialog .record-note,.turn-timer-sums{margin:0}
 .turn-timer-sums{color:#a8b8ce;font-size:13px}
-.turn-timer-edit label{margin-top:4px}
+#turnTimerDialog .turn-timer-edit label{margin:4px 0 6px}
 .turn-timer-edit-row{display:flex;gap:6px}
-.turn-timer-sheet .turn-timer-edit-row select{flex:1.3;width:auto}
-.turn-timer-sheet .turn-timer-edit-row input{flex:1;width:auto;font-variant-numeric:tabular-nums}
+#turnTimerDialog .turn-timer-edit-row select{flex:1.3;width:auto}
+#turnTimerDialog .turn-timer-edit-row input{flex:1;width:auto;font-variant-numeric:tabular-nums}
 .turn-timer-edit-row button{flex:none;min-width:60px}
 .turn-timer-log{margin:0;padding-left:18px;color:#94a3b8;font-size:12px}
 .turn-timer-reset{justify-self:start}
-@media(max-width:360px){.turn-timer-time{min-width:54px;font-size:13px}.turn-timer-chip{min-width:34px;padding:0 4px}.turn-timer-flag{width:30px}}
+@media(max-width:360px){.turn-timer-time{min-width:56px;font-size:13px}#turnTimerDialog .turn-timer-chip{padding:0 6px}#turnTimerDialog .turn-timer-flag{width:30px}.turn-timer-clock{font-size:48px}}
 .record-turn-timer{display:grid;gap:6px;margin-top:10px;padding:10px 12px;border:1px solid #29364b;border-radius:12px;background:#0d131d}
 .record-turn-timer-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin:0;font-size:14px}
 .record-turn-timer-head small{flex-basis:100%;color:#94a3b8;font-size:12px}
