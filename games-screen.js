@@ -1,4 +1,4 @@
-import './records.js?v=261';
+import './records.js?v=262';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=167';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
 import {gameKey} from './records-core.js?v=157';
@@ -9,7 +9,7 @@ import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=66';
 import {gameNames} from './bgg-metadata.js?v=172';
 import {indexEntries} from './game-index.js?v=2';
-import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=2';
+import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=3';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;

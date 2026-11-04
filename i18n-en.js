@@ -403,6 +403,7 @@ function dictionary(){return /*<dict>*/{
 "기존 목록에서 선택할 수 있습니다.":"You can pick from the existing list.",
 "자동 저장 완료":"Auto-saved",
 "브라우저 저장 공간을 사용할 수 없습니다":"Browser storage is unavailable",
+"브라우저 저장 공간을 사용할 수 없어 점수가 저장되지 않습니다.":"Browser storage is unavailable, so scores aren't being saved.",
 "각 팀에는 플레이어가 한 명 이상 있어야 합니다.":"Each team needs at least one player.",
 "길게 눌러 팀 이동":"Long-press to move teams",
 "팀전은 최소 2팀이 필요합니다.":"Team games need at least 2 teams.",

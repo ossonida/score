@@ -1,12 +1,11 @@
 import {bggSearchQuery} from './game-catalog.js?v=167';
 import {aliasSearchName} from './game-aliases.js?v=2';
 import {decodeXmlText} from './bgg-validation.js?v=129';
-// 게임 검색 공통: 저장 창(점수판 SAVE·결과 기록 SAVE·게임 먼저 선택)과 게임 탭 게임 추가가 같은 검색을 쓰고, 상황별 차이는 이 표 하나로 정한다(docs/CTA-FLOWS.md 5.1.1).
-// recent: 최근 게임 'open'·'closed'·false, expansions: 확장 선택 단계, after: 게임(과 확장)을 고른 뒤 'details'(저장 2단계)·'start'(참가자 선택)·'register'(목록 등록).
+// 게임 검색 공통: 저장 창(점수판 SAVE·결과 기록 SAVE)과 게임 탭 게임 추가가 같은 검색을 쓰고, 상황별 차이는 이 표 하나로 정한다(docs/CTA-FLOWS.md 5.1.1).
+// recent: 최근 게임 'open'·'closed'·false, expansions: 확장 선택 단계, after: 게임(과 확장)을 고른 뒤 'details'(저장 2단계)·'register'(목록 등록).
 export const GAME_SEARCH_CONTEXTS={
  score:{title:'게임 검색',recent:'closed',expansions:true,after:'details'},
  scoreless:{title:'게임 검색',recent:'open',expansions:true,after:'details'},
- start:{title:'게임 선택',recent:'open',expansions:true,after:'start'},
  library:{title:'게임 추가',recent:false,expansions:false,after:'register'}
 };
 export const bggWebSearchUrl=query=>'https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q='+encodeURIComponent(query);
