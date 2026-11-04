@@ -1,6 +1,6 @@
 import {gameTypes} from './game-types.js?v=64';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {starterGames,normalizeGameQuery} from './game-catalog.js?v=167';
+import {starterGames,searchCatalog,normalizeGameQuery} from './game-catalog.js?v=167';
 const KEY='score.bgg.metadata.v1';
 export const domainLabels={'Strategy Games':'전략','Family Games':'가족','Party Games':'파티','Abstract Games':'추상','Thematic Games':'테마','Wargames':'워게임',"Children’s Games":'어린이',"Children\'s Games":'어린이','Customizable Games':'커스터마이징'};
 export function bggId(game){const id=game?.bggId||game?.id||starterGames.find(g=>[g.name,...g.aliases].some(n=>normalizeGameQuery(n)===normalizeGameQuery(game?.name||'')))?.id;return /^[1-9][0-9]{0,9}$/.test(String(id||''))?String(id):'';}
@@ -12,4 +12,6 @@ export function rememberMetadata(games){const data={...saved()};for(const game o
 export function metadataFresh(game){const value=saved()[bggId(game)],age=Date.now()-value?.checkedAt;return Boolean(value)&&(value.v===4&&age<7*86400000||value.v===3&&age<86400000);}
 // 표시용 이름: 한글 이름(원래 이름이 한글이거나 BGG 한글 별칭)과 영문 이름(BGG 기본 이름)을 나눠 줍니다.
 const hangul=/[\uac00-\ud7a3]/;
-export function gameNames(game){const name=typeof game?.name==='string'?game.name:'',info=metadata(game),ko=hangul.test(name)?name:info?.koName||name,en=info?.name&&info.name!==ko?info.name:!hangul.test(name)&&name!==ko?name:'';return {ko,en};}
+// BGG 게임 정보에 한글 이름이 없으면 앱에 내장된 한글 게임 목록의 첫 한글 이름을 쓴다(처음 쓸 때 한 번만 색인).
+let catalogKo;const catalogKoName=id=>{if(!catalogKo){catalogKo=new Map();for(const g of searchCatalog){const ko=g.aliases.find(a=>hangul.test(a));if(ko&&!catalogKo.has(g.id))catalogKo.set(g.id,ko);}}return catalogKo.get(id)||'';};
+export function gameNames(game){const name=typeof game?.name==='string'?game.name:'',info=metadata(game),ko=hangul.test(name)?name:info?.koName||catalogKoName(bggId(game))||name,en=info?.name&&info.name!==ko?info.name:!hangul.test(name)&&name!==ko?name:'';return {ko,en};}

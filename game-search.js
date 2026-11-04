@@ -19,4 +19,5 @@ export async function searchBggGames(endpoint,query,{local=[],token='',aliases,s
  for(const game of Array.isArray(data?.games)?data.games:[])if(game&&/^[1-9][0-9]{0,9}$/.test(String(game.id))&&typeof game.name==='string')merged.set('bgg:'+game.id,{...game,name:decodeXmlText(game.name),source:'BGG'});
  return [...merged.values()];
 }
-export const searchErrorText=error=>error.name==='TimeoutError'?'검색 응답이 늦습니다. 잠시 후 다시 검색해주세요.':error.message;
+// fetch 자체가 실패하면(오프라인·연결 끊김) 브라우저 영문 메시지 대신 안내 문구를 보인다.
+export const searchErrorText=error=>error.name==='TimeoutError'?'검색 응답이 늦습니다. 잠시 후 다시 검색해주세요.':error.name==='TypeError'?'BGG에 연결하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 검색해주세요.':error.message;

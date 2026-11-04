@@ -31,13 +31,13 @@ import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './ga
 import {isScoreGame,scoreGameType,scoreGames} from './score-games.js?v=168';
 // 영어 화면: 기본 목록의 한글 별칭과 Score 자체 게임 이름을 영어 이름으로 보이게 번역 사전에 더한다.
 if(window.ScoreI18n?.addNames)window.ScoreI18n.addNames([...starterGames.flatMap(g=>g.aliases.map(alias=>[alias,g.name])),...scoreGames.flatMap(g=>{const en=g.aliases.find(alias=>!/[가-힣]/.test(alias));return en?[g.name,...g.aliases].map(name=>[name,en]):[];})]);
-import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=172';
+import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=280';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=157';
 import * as cloudApi from './cloud-records.js?v=176';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=176';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=3';
+import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=280';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
 let expansionPick=null,expansionSerial=0,expansionEditing=null,searchPage=false;
 let currentUser=null,offlineUid=null,records=[],pending=new Set(),mode='history',statsView='recent',recentDay='',recentLatest='',statsPerson=null,accountEpoch=0,searchController=null,searchSerial=0,snapshot=[],snapshotScope='',syncing=null,searchTimer=null;

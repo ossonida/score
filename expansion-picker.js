@@ -1,4 +1,4 @@
-import {metadata,gameNames} from './bgg-metadata.js?v=172';
+import {metadata,gameNames} from './bgg-metadata.js?v=280';
 import {gameKey,EXPANSIONS_MAX} from './records-core.js?v=157';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const fold=value=>String(value||'').normalize('NFKC').toLocaleLowerCase().replace(/\s+/g,'');

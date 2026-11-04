@@ -3,7 +3,7 @@ import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-c
 import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=169';
 import {readIdentity,meIn} from './personal-stats.js?v=119';
 import {renderGameArtwork} from './game-artwork.js?v=172';
-import {metadata,gameNames} from './bgg-metadata.js?v=172';
+import {metadata,gameNames} from './bgg-metadata.js?v=280';
 import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=167';
 import {openDayShare} from './day-share.js?v=29';
 import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=7';

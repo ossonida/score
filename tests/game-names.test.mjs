@@ -7,3 +7,7 @@ test('BGG Korean names show first with the English name, and old metadata is ref
  assert.equal(metadataFresh({bggId:'29223'}),true);assert.deepEqual(gameNames({name:'Marrakech',bggId:'29223'}),{ko:'마라케시',en:'Marrakech'});assert.deepEqual(gameNames({name:'마라케시',bggId:'29223'}),{ko:'마라케시',en:'Marrakech'});assert.deepEqual(metadata({bggId:'29223'}).expansions,[{id:'200',name:'Marrakech: Expansion'}]);
  assert.deepEqual(gameNames({name:'Unknown Game',bggId:'999999'}),{ko:'Unknown Game',en:''});
 });
+test('Without a BGG Korean name, the bundled Korean catalog name is shown first',()=>{
+ assert.deepEqual(gameNames({name:'CATAN',bggId:'13'}),{ko:'카탄',en:'CATAN'});
+ assert.deepEqual(gameNames({name:'Unknown Game',bggId:'999998'}),{ko:'Unknown Game',en:''});
+});
