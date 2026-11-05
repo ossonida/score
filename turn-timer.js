@@ -1,6 +1,6 @@
 // 턴 타이머 관리 전체 화면. 점수판에는 툴바 아이콘만 두고 시간·순서·설정은 모두 이 화면에서 다룬다.
 // 상태 계산은 turn-timer-core.js, 저장은 기기(localStorage). 시트가 닫혀 있으면 아이콘 표시만 갱신한다.
-import {TIMER_KEY,loadTimer,startTurn,endTurn,selectPlayer,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,setLimit,advanceRound,editTime,finishTimer,resetTimer,syncPlayers,timerRecord,liveTime,gameTime,turnTime,remainingTime,limitOf,nextPlayer,canUndo,formatDuration} from './turn-timer-core.js?v=286';
+import {TIMER_KEY,loadTimer,startTurn,endTurn,selectPlayer,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,setLimit,advanceRound,editTime,finishTimer,resetTimer,syncPlayers,timerRecord,liveTime,gameTime,turnTime,remainingTime,limitOf,limitMs,voiceCue,nextPlayer,canUndo,formatDuration} from './turn-timer-core.js?v=291';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 
 const $=id=>document.getElementById(id);
@@ -27,7 +27,7 @@ function current(){
  if(synced!==loaded)persist(synced);state=synced;return state;
 }
 function persist(next){state=next;try{writeStoredJson(TIMER_KEY,next);saveError='';}catch{saveError='브라우저 저장 공간을 사용할 수 없어 타이머가 저장되지 않습니다.';}}
-function apply(change){const before=current(),next=change(before,Date.now());if(next===before)return false;persist(next);updateIcon();if($('turnTimerDialog')?.open)render();return true;}
+function apply(change){const before=current(),next=change(before,Date.now());if(next===before)return false;persist(next);if(limitOf(next).voice)unlockVoice();updateIcon();if($('turnTimerDialog')?.open)render();return true;}
 
 // 측정 중인 현재 플레이어가 제한 시간을 다 썼는지(제한 없음이면 false).
 const isOver=(s,now)=>s.status==='running'&&(remainingTime(s,now)??1)<=0;
@@ -38,7 +38,22 @@ function updateIcon(){
  const label=base?`턴 타이머 · ${over?overText(s):STATUS[s.status]}`:'턴 타이머';button.setAttribute('aria-label',label);button.title=label;
  // 화면이 닫혀 있어도 제한 시간에 닿는 순간 빨간 점으로 바꾼다.
  clearTimeout(iconLater);const left=s.status==='running'?remainingTime(s,now):null;if(left>0)iconLater=setTimeout(updateIcon,Math.min(left+50,2**31-1));
+ syncVoice();
 }
+// 음성 안내: 측정 중이고 제한·음성 안내가 켜져 있을 때만 0.25초마다 남은 시간을 보고, 안내 시점을 지날 때 한 번 읽는다.
+const speech=window.speechSynthesis&&window.SpeechSynthesisUtterance?window.speechSynthesis:null;
+let voiceLoop=0,voiceLast=null,voiceReady=false;
+const voiceOn=s=>!!speech&&!!limitOf(s).voice&&s.status==='running'&&remainingTime(s,Date.now())!==null;
+function speak(text){if(!speech)return;const u=new SpeechSynthesisUtterance(text),ko=speech.getVoices().find(v=>/^ko/i.test(v.lang));u.lang='ko-KR';if(ko)u.voice=ko;if(/^\d$/.test(text))speech.cancel();speech.speak(u);}
+// 아이폰은 사용자가 누른 순간에만 소리를 열 수 있어 켜기·턴 조작 때 무음으로 한 번 연다.
+function unlockVoice(){if(!speech||voiceReady)return;voiceReady=true;const u=new SpeechSynthesisUtterance(' ');u.volume=0;speech.speak(u);}
+function voiceCheck(){
+ const s=state||stored();if(!voiceOn(s)){clearInterval(voiceLoop);voiceLoop=0;voiceLast=null;return;}
+ const left=remainingTime(s,Date.now()),key=`${s.current}|${s.round}`;
+ if(voiceLast?.key===key&&left<voiceLast.left){const text=voiceCue(voiceLast.left,left,limitMs(s));if(text)speak(text);}
+ voiceLast={key,left};
+}
+function syncVoice(){if(voiceOn(state||stored())){if(!voiceLoop){voiceLast=null;voiceCheck();voiceLoop=setInterval(voiceCheck,250);}}else voiceCheck();}
 
 const node=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 function button(text,cls,onclick,{label,pressed,disabled}={}){const b=node('button',cls,text);b.type='button';if(label)b.setAttribute('aria-label',label);if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));b.disabled=!!disabled;b.onclick=onclick;return b;}
@@ -132,7 +147,9 @@ function renderLimit(s,body){
  minutes.append(row);
  const over=group('시간 초과 시');
  over.append(radio('turnTimerLimitOver','warn',limit.over==='warn','경고 표시 후 계속 측정','',()=>change({over:'warn'}),locked),radio('turnTimerLimitOver','stop',limit.over==='stop','제한 시간 도달 시 개인 타이머 정지','',()=>change({over:'stop'}),locked));
- body.append(minutes,over);
+ const voice=group('음성 안내'),copy=node('span','turn-timer-copy');copy.append(node('span','','남은 시간 읽어 주기'),node('small','',speech?'1분·30초·10초 전, 5초부터 카운트다운':'이 브라우저는 음성 안내를 지원하지 않습니다'));
+ voice.append(check(copy,!!limit.voice,value=>{change({voice:value});if(value){unlockVoice();speak('음성 안내를 켰습니다');}},locked||!speech));
+ body.append(minutes,over,voice);
 }
 function parseDuration(text){const parts=String(text).trim().split(':').map(part=>part.trim());if(!parts.length||parts.length>3||parts.some(part=>!/^\d{1,4}$/.test(part)))return NaN;const [h,m,sec]=[0,0,0,...parts.map(Number)].slice(-3);return ((h*60+m)*60+sec)*1000;}
 function renderSettings(s,people){

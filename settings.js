@@ -1,8 +1,8 @@
-import {readIdentity} from './personal-stats.js?v=286';
-import {renderIdentitySettings} from './personal-dashboard.js?v=286';
+import {readIdentity} from './personal-stats.js?v=291';
+import {renderIdentitySettings} from './personal-dashboard.js?v=291';
 import {rememberGameImages} from './game-artwork.js?v=172';
-import './records.js?v=286';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=286';
+import './records.js?v=291';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=291';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=8';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}

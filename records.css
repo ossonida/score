@@ -484,7 +484,7 @@ dialog.pro-sheet[open]{display:flex;flex-direction:column;gap:12px;position:fixe
 /* 점수판(Figma 68:444 A1·A3·A7-1): 툴바 [기록 방식 변경·점수 초기화·여러 명 추가·한 명 추가], SAVE는 카드 아래 가운데, 하단 안내·기록 방식 버튼 없음. */
 #homeScreen .toolbar #bulk{display:grid!important}#homeScreen .toolbar .tool[hidden]{display:none!important}#homeScreen .toolbar #bulk svg{width:29px;height:20px}
 #homeScreen .toolbar #reset svg{width:24px;height:24px;flex:none}#homeScreen .toolbar #recordModeChange svg{width:22px;height:22px}
-.board-save{display:flex;justify-content:center;padding-top:13px;flex-shrink:0}.board-save .game-end-tool{display:grid;place-items:center;width:68px;height:44px;min-height:44px;padding:0;border:1px solid #253553;border-radius:10px;background:#141d2c;color:#72adff;font-size:11px;font-weight:500;letter-spacing:.22px}.board-save .game-end-tool:disabled{opacity:.42;cursor:default}.board-save .game-end-tool[hidden]{display:none}
+.board-save{display:flex;padding-top:12px;flex-shrink:0}.board-save .game-end-tool{display:grid;place-items:center;width:100%;height:52px;min-height:52px;padding:0;border:0;border-radius:14px;background:#237bff;color:#fff;font-size:16px;font-weight:700;letter-spacing:.06em;box-shadow:0 6px 18px rgba(35,123,255,.25)}.board-save #savePlay{font-weight:700}.board-save .game-end-tool:disabled{background:#26384f;color:#9db0c8;box-shadow:none;cursor:default}.board-save .game-end-tool[hidden]{display:none}
 html:not(.scoreless-board-mode) #homeScreen footer .footer-guide{display:none}
 @media(max-width:600px){
 html:not(.scoreless-board-mode):not(.two-players) #homeScreen .card{border-radius:16px}
@@ -593,6 +593,8 @@ dialog#turnTimerDialog[open]{display:flex;flex-direction:column}
 #turnTimerDialog .turn-timer-option input:checked{border-color:#237bff;background:radial-gradient(circle,#237bff 0 4.5px,transparent 5px)}
 #turnTimerDialog .turn-timer-switch>span{display:flex;flex:1;align-items:center;gap:10px;min-width:0}
 .turn-timer-dot{flex:none;width:10px;height:10px;border-radius:50%}
+#turnTimerDialog .turn-timer-switch>.turn-timer-copy{display:grid;gap:2px}
+.turn-timer-copy small{color:#8d9cb3;font-size:12px}
 #turnTimerDialog .turn-timer-switch input{position:relative;flex:none;width:44px;height:26px;min-height:0;margin:0;padding:0;border:0;border-radius:999px;background:#33435b;box-shadow:none;appearance:none;-webkit-appearance:none;transition:background-color .15s}
 #turnTimerDialog .turn-timer-switch input::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .15s}
 #turnTimerDialog .turn-timer-switch input:checked{background:#237bff}

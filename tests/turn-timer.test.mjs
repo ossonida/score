@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createTimer,startTurn,endTurn,selectPlayer,setNext,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,editTime,finishTimer,syncPlayers,timerRecord,validTurnTimerRecord,liveTime,gameTime,sharedTime,nextPlayer,canUndo,formatDuration,loadTimer,setLimit,remainingTime,advanceRound,resetTimer} from '../turn-timer-core.js';
+import {createTimer,startTurn,endTurn,selectPlayer,setNext,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,editTime,finishTimer,syncPlayers,timerRecord,validTurnTimerRecord,liveTime,gameTime,sharedTime,nextPlayer,canUndo,formatDuration,loadTimer,setLimit,remainingTime,advanceRound,resetTimer,voiceCue,limitOf} from '../turn-timer-core.js';
 
 const base=(auto=false)=>setAutoStart(createTimer(['a','b','c']),auto);
 const S=1000,T=ms=>1e9+ms;
@@ -133,7 +133,7 @@ test('turn limit: warn keeps counting past zero, stop freezes the player at the 
 test('game limit is shared across turns and survives reset; old saves load without a limit',()=>{
  let s=setLimit(base(true),T(0),{mode:'game',minutes:2,over:'stop'});s=startTurn(s,T(0));s=endTurn(s,T(90*S));
  s=endTurn(s,T(100*S));s=endTurn(s,T(110*S));assert.equal(s.current,'a');assert.equal(remainingTime(s,T(140*S)),0);assert.equal(liveTime(s,'a',T(200*S)),120*S);
- assert.deepEqual(resetTimer(s).limit,{mode:'game',minutes:2,over:'stop'});
+ assert.deepEqual(resetTimer(s).limit,{mode:'game',minutes:2,over:'stop',voice:false});
  const old=createTimer(['a']);delete old.limit;assert.equal(loadTimer(old).limit.mode,'none');
  assert.equal(setLimit(s,T(0),{minutes:0}),s,'invalid minutes are ignored');
 });
@@ -142,4 +142,15 @@ test('next round from settings closes the open turn without everyone passing and
  assert.equal(s.round,2);assert.deepEqual(s.passed,[]);assert.equal(s.status,'waiting');assert.equal(s.current,'a');assert.equal(s.times.a,10*S);assert.equal(s.turns.at(-1).open,undefined);
  s=undoTurn(s,T(12*S));assert.equal(s.round,1);assert.equal(s.status,'running');assert.deepEqual(s.passed,['c']);
  assert.equal(advanceRound(pauseTimer(s,T(13*S)),T(14*S)).round,1,'paused timer does not advance');
+});
+
+test('voice cues fire once per threshold, skip cues not shorter than the limit and stale ones, and the voice flag is a saved limit setting',()=>{
+ const M=60*S;
+ assert.equal(voiceCue(60.1*S,59.9*S,3*M),'1분 남았습니다');assert.equal(voiceCue(30.2*S,29.95*S,3*M),'30초 남았습니다');assert.equal(voiceCue(10.1*S,9.9*S,3*M),'10초 남았습니다');
+ assert.deepEqual([5,4,3,2,1].map(n=>voiceCue(n*S+100,n*S-100,3*M)),['5','4','3','2','1']);assert.equal(voiceCue(100,-100,3*M),'시간이 종료되었습니다');
+ assert.equal(voiceCue(59.9*S,59.7*S,3*M),null,'no threshold crossed');assert.equal(voiceCue(-100,-400,3*M),null,'over time stays quiet');assert.equal(voiceCue(0,0,3*M),null,'stopped clock stays quiet');
+ assert.equal(voiceCue(60.1*S,59.9*S,M),null,'a 1 minute limit does not announce 1 minute left');assert.equal(voiceCue(30.1*S,29.9*S,M),'30초 남았습니다');
+ assert.equal(voiceCue(12*S,7*S,3*M),null,'cues long past are skipped after a pause in timers');assert.equal(voiceCue(12*S,2.9*S,3*M),'3','only the latest crossed cue is read');assert.equal(voiceCue(5*S,-1*S,3*M),'시간이 종료되었습니다');assert.equal(voiceCue(5*S,-4*S,3*M),null);
+ const s=setLimit(base(),T(0),{mode:'turn',minutes:1});assert.equal(limitOf(s).voice,false);const on=setLimit(s,T(0),{voice:true});assert.equal(limitOf(on).voice,true);assert.equal(setLimit(on,T(0),{voice:true}),on);
+ assert.equal(limitOf(loadTimer(JSON.parse(JSON.stringify(on)))).voice,true);assert.equal(limitOf(loadTimer({...on,limit:{mode:'turn',minutes:1,over:'warn'}})).voice,undefined);assert.equal(limitOf(loadTimer({...on,limit:{...on.limit,voice:'yes'}})).mode,'none','invalid voice falls back to the default limit');
 });

@@ -11,8 +11,8 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const ms=value=>Number.isSafeInteger(value)&&value>=0?value:0;
 const validClock=c=>c&&typeof c==='object'&&Number.isSafeInteger(c.ms)&&c.ms>=0&&Number.isSafeInteger(c.since)&&c.since>=0;
 // 제한 시간: none 사용 시간만 누적 · game 1인당 게임 전체(여러 턴 차감) · turn 매 턴 새로. over는 초과 시 warn 계속 측정 · stop 개인 시간 정지.
-const DEFAULT_LIMIT={mode:'none',minutes:3,over:'warn'};
-const validLimit=l=>!!l&&typeof l==='object'&&['none','game','turn'].includes(l.mode)&&Number.isSafeInteger(l.minutes)&&l.minutes>=1&&l.minutes<=999&&['warn','stop'].includes(l.over);
+const DEFAULT_LIMIT={mode:'none',minutes:3,over:'warn',voice:false};
+const validLimit=l=>!!l&&typeof l==='object'&&['none','game','turn'].includes(l.mode)&&Number.isSafeInteger(l.minutes)&&l.minutes>=1&&l.minutes<=999&&['warn','stop'].includes(l.over)&&(l.voice===undefined||typeof l.voice==='boolean');
 export const limitOf=s=>validLimit(s.limit)?s.limit:DEFAULT_LIMIT;
 export const limitMs=s=>{const l=limitOf(s);return l.mode==='none'?0:l.minutes*60000;};
 
@@ -50,6 +50,13 @@ export function turnTime(s,now){const turn=openTurn(s);return turn?turn.ms+runMs
 export function remainingTime(s,now,id=s.current){
  const limit=limitMs(s);if(!limit||!id)return null;if(limitOf(s).mode==='game')return limit-liveTime(s,id,now);
  return limit-(s.current===id?turnTime(s,now):0);
+}
+// 음성 안내: 남은 시간이 before → after로 줄며 지난 안내 시점 중 가장 최근 것. 오래 지난(화면 꺼짐 등) 안내와 제한 시간 이상인 안내는 건너뛴다.
+const CUES=[[60000,'1분 남았습니다'],[30000,'30초 남았습니다'],[10000,'10초 남았습니다'],[5000,'5'],[4000,'4'],[3000,'3'],[2000,'2'],[1000,'1'],[0,'시간이 종료되었습니다']];
+export function voiceCue(before,after,total){
+ if(!(before>after)||!(total>0))return null;let cue=null;
+ for(const [at,text] of CUES)if(before>at&&after<=at&&(at===0||at<total))cue=[at,text];
+ return cue&&after>cue[0]-(cue[0]?1500:3000)?cue[1]:null;
 }
 export function canUndo(s){return s.undo.length>0&&!['paused','shared','ended'].includes(s.status);}
 // 다음 예정 플레이어: 일회 지정 → 현재 다음 순서 중 패스하지 않은 사람. 모두 패스면 ''.
@@ -142,7 +149,7 @@ export function reorder(input,order){
 export function setAutoStart(input,value){const s=clone(input);s.autoStart=value===true;return s;}
 // 제한 설정 변경: 그때까지의 시간을 이전 설정으로 정산한 뒤 적용한다.
 export function setLimit(input,now,patch){
- const limit={...limitOf(input),...patch};if(!validLimit(limit)||['mode','minutes','over'].every(key=>limit[key]===limitOf(input)[key]))return input;
+ const prev=limitOf(input),limit={...prev,...patch};if(!validLimit(limit)||['mode','minutes','over'].every(key=>limit[key]===prev[key])&&!!limit.voice===!!prev.voice)return input;
  const s=clone(input);settle(s,now,s.status==='running');s.limit=limit;return s;
 }
 // 시간 수동 수정: 측정 중이면 지금까지 정산한 뒤 바꾸고 수정 전후 값을 남긴다. 되돌리기 기록은 비운다.
