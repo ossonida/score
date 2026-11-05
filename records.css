@@ -601,7 +601,9 @@ dialog#turnTimerDialog[open]{display:flex;flex-direction:column}
 .turn-timer-minutes{display:flex;align-items:center;gap:6px;padding:12px 14px}
 #turnTimerDialog .turn-timer-minutes input{flex:none;width:68px;min-height:40px;padding:0 10px;border-radius:10px;text-align:center;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
 #turnTimerDialog .turn-timer-minutes .turn-timer-chip{flex:1;min-width:0;height:40px;min-height:40px;padding:0 4px;border-radius:10px;font-size:13px}
-#turnTimerDialog .turn-timer-round{width:100%;min-height:46px;margin-top:10px;padding:0 16px;border:0;border-radius:12px;background:#202e43;color:#dceaff;font-size:15px;font-weight:600;box-shadow:none}
+.turn-timer-round-row{margin-bottom:-6px}
+.turn-timer-round-row[hidden]{display:none}
+#turnTimerDialog .turn-timer-round{width:100%;min-height:46px;margin:0;padding:0 16px;border:0;border-radius:12px;background:#202e43;color:#dceaff;font-size:15px;font-weight:600;box-shadow:none}
 #turnTimerDialog .turn-timer-round:disabled{opacity:.45}
 .turn-timer-edit{display:grid}
 .turn-timer-edit-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;padding:12px 14px;border-radius:14px;background:#162334}

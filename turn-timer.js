@@ -83,6 +83,7 @@ function render(){
  if(s.status==='ended')actions.append(cta);
  else{const row=node('div','turn-timer-cta-row');row.append(cta);if(canUndo(s))row.append(withIcon(button('','turn-timer-undo',()=>apply(undoTurn),{label:'되돌리기 · 직전 턴 전환 취소'}),'undo',''));main.append(row);}
  // 목록 아래 보조 줄: 일시정지 · 설정(펼침)
+ const round=$('turnTimerRoundRow');round.replaceChildren();round.hidden=!s.order.length||s.status==='ended';if(!round.hidden)round.append(button('다음 라운드','secondary turn-timer-round',()=>apply(advanceRound),{disabled:!['running','waiting','roundEnd'].includes(s.status)}));
  const tools=$('turnTimerTools');tools.replaceChildren();
  if(s.status!=='ended')tools.append(withIcon(button('','secondary',()=>apply(pauseTimer),{disabled:!['running','waiting','shared','roundEnd'].includes(s.status)}),'pause','일시정지'));
  tools.append(withIcon(button('','secondary',()=>{settingsOpen=!settingsOpen;render();if(settingsOpen)$('turnTimerSettings').scrollIntoView({block:'nearest',behavior:'smooth'});}),'settings','설정'));
@@ -141,7 +142,7 @@ function renderSettings(s,people){
  if(s.order.length){
   const passes=group('이번 라운드 패스'),locked=['shared','ended'].includes(s.status);
   for(const id of s.order){const person=people.get(id);if(person){const name=node('span'),dot=node('i','turn-timer-dot');dot.style.background=person.color||'#52c7ef';name.append(dot,person.name);passes.append(check(name,s.passed.includes(id),()=>apply((t,now)=>togglePass(t,now,id)),locked));}}
-  passes.append(button('다음 라운드','secondary turn-timer-round',()=>apply(advanceRound),{disabled:!['running','waiting','roundEnd'].includes(s.status)}));body.append(passes);
+  body.append(passes);
  }
  if(s.order.length&&s.status!=='ended'){
   const form=node('form','turn-timer-edit'),select=node('select'),input=node('input'),error=node('p','record-error');select.setAttribute('aria-label','시간을 수정할 플레이어');
