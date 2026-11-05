@@ -118,7 +118,7 @@ function radio(name,value,checked,text,hint,onpick,disabled){
  const label=node('label','turn-timer-option'),input=node('input'),copy=node('span');input.type='radio';input.name=name;input.value=value;input.checked=checked;input.disabled=disabled;input.onchange=()=>{if(input.checked)onpick();};
  copy.append(node('span','',text));if(hint)copy.append(node('small','',hint));label.append(input,copy);return label;
 }
-function check(text,checked,onchange,disabled){const label=node('label','turn-timer-switch'),input=node('input');input.type='checkbox';input.checked=checked;input.disabled=disabled;input.onchange=()=>onchange(input.checked);label.append(input,text);return label;}
+function check(text,checked,onchange,disabled){const label=node('label','turn-timer-switch'),input=node('input');input.type='checkbox';input.checked=checked;input.disabled=disabled;input.onchange=()=>onchange(input.checked);label.append(typeof text==='string'?node('span','',text):text,input);return label;}
 function renderLimit(s,body){
  const locked=s.status==='ended',limit=limitOf(s),change=patch=>apply((t,now)=>setLimit(t,now,patch));
  const mode=group('제한 시간 방식');
@@ -140,7 +140,7 @@ function renderSettings(s,people){
  body.append(auto);renderLimit(s,body);
  if(s.order.length){
   const passes=group('이번 라운드 패스'),locked=['shared','ended'].includes(s.status);
-  for(const id of s.order){const person=people.get(id);if(person)passes.append(check(person.name,s.passed.includes(id),()=>apply((t,now)=>togglePass(t,now,id)),locked));}
+  for(const id of s.order){const person=people.get(id);if(person){const name=node('span'),dot=node('i','turn-timer-dot');dot.style.background=person.color||'#52c7ef';name.append(dot,person.name);passes.append(check(name,s.passed.includes(id),()=>apply((t,now)=>togglePass(t,now,id)),locked));}}
   passes.append(button('다음 라운드','secondary turn-timer-round',()=>apply(advanceRound),{disabled:!['running','waiting','roundEnd'].includes(s.status)}));body.append(passes);
  }
  if(s.order.length&&s.status!=='ended'){
