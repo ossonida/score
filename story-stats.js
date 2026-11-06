@@ -1,5 +1,5 @@
-import {coopKind} from './records-core.js?v=292';
-import {meIn} from './personal-stats.js?v=292';
+import {coopKind} from './records-core.js?v=293';
+import {meIn} from './personal-stats.js?v=293';
 
 // 스토리·추리 게임의 게임별 통계 카드: 추리(정답률·범인일 때 도주·사건 해결) / 스토리 결말(완주·결말 수집). 해당 기록이 없으면 그리지 않는다.
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};

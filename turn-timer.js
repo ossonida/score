@@ -1,6 +1,6 @@
 // 턴 타이머 관리 전체 화면. 점수판에는 툴바 아이콘만 두고 시간·순서·설정은 모두 이 화면에서 다룬다.
 // 상태 계산은 turn-timer-core.js, 저장은 기기(localStorage). 시트가 닫혀 있으면 아이콘 표시만 갱신한다.
-import {TIMER_KEY,loadTimer,startTurn,endTurn,selectPlayer,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,setLimit,advanceRound,editTime,finishTimer,resetTimer,syncPlayers,timerRecord,liveTime,gameTime,turnTime,remainingTime,limitOf,limitMs,voiceCue,nextPlayer,canUndo,formatDuration} from './turn-timer-core.js?v=292';
+import {TIMER_KEY,loadTimer,startTurn,endTurn,selectPlayer,togglePass,nextRound,pauseTimer,resumeTimer,toggleShared,undoTurn,setStarter,reorder,setAutoStart,setLimit,advanceRound,editTime,finishTimer,resetTimer,syncPlayers,timerRecord,liveTime,gameTime,turnTime,remainingTime,limitOf,limitMs,voiceCue,nextPlayer,canUndo,formatDuration} from './turn-timer-core.js?v=293';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 
 const $=id=>document.getElementById(id);

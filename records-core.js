@@ -1,6 +1,6 @@
 import {resolveGame,matchGameRecords} from './game-catalog.js?v=167';
 import {decodeXmlText} from './bgg-validation.js?v=129';
-import {validTurnTimerRecord,copyTurnTimerRecord} from './turn-timer-core.js?v=292';
+import {validTurnTimerRecord,copyTurnTimerRecord} from './turn-timer-core.js?v=293';
 export function gameKey(game) {
   return game.bggId ? `bgg:${game.bggId}` : `name:${game.name.trim().normalize('NFKC').toLocaleLowerCase()}`;
 }

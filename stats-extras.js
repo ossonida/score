@@ -1,6 +1,6 @@
-import {gameKey,winnerIds} from './records-core.js?v=292';
-import {meIn,nameKey} from './personal-stats.js?v=292';
-import {gameTypeList} from './stats-overview.js?v=292';
+import {gameKey,winnerIds} from './records-core.js?v=293';
+import {meIn,nameKey} from './personal-stats.js?v=293';
+import {gameTypeList} from './stats-overview.js?v=293';
 
 const order=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const chronological=records=>records.filter(play=>play.date).sort(order);

@@ -1,8 +1,8 @@
-import {readIdentity} from './personal-stats.js?v=292';
-import {renderIdentitySettings} from './personal-dashboard.js?v=292';
+import {readIdentity} from './personal-stats.js?v=293';
+import {renderIdentitySettings} from './personal-dashboard.js?v=293';
 import {rememberGameImages} from './game-artwork.js?v=172';
-import './records.js?v=292';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=292';
+import './records.js?v=293';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=293';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=8';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
@@ -38,6 +38,8 @@ const SETTINGS_PAGES={'#settings/places':['places','장소 관리'],'#settings/s
 const settingsPage=()=>SETTINGS_PAGES[location.hash]?.[0]||'main';let lastPage='main',fromMain=false;
 function settingsMain(){if(fromMain)history.back();else location.replace('#settings');}
 $('settingsBack').onclick=settingsMain;
+// 싱크 페이지의 BGG 연동은 늘 펼친 상태로 둔다(제목 줄을 눌러도 접히지 않음).
+$('bggAccountSection').querySelector?.('summary')?.addEventListener('click',event=>event.preventDefault());
 function route(){const view=currentView();
  if(view==='settings'){const page=settingsPage();if(page!==lastPage){fromMain=page!=='main'&&lastView==='settings'&&lastPage==='main';if(lastView==='settings')window.scrollTo?.(0,0);}lastPage=page;$('settingsScreen').setAttribute('data-page',page);$('settingsSubTitle').textContent=SETTINGS_PAGES[location.hash]?.[1]||'';}else{lastPage='main';fromMain=false;}
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
