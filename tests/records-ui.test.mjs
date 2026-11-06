@@ -703,3 +703,8 @@ test('settings menu opens places and sync sub-pages with a back header',async()=
  const bgg=html.indexOf('id="settingsBggCard"');assert.ok(html.indexOf('id="bggAccountSection"')>bgg&&html.indexOf('id="bggAccountSection"')<html.indexOf('id="settingsDataCard"'));
  assert.match(html,/class="settings-subheading" data-settings-page="places sync"><button id="settingsBack"/);
  assert.match(css,/#settingsScreen\[data-page=sync\] \[data-settings-page\]:not\(\[data-settings-page~=sync\]\)/);});
+test('one-player add sits beside SAVE as a round button and the toolbar keeps timer, bulk add and the more menu',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),toolbar=html.slice(html.indexOf('<div class="toolbar">'),html.indexOf('</header>',html.indexOf('<div class="toolbar">'))),save=html.slice(html.indexOf('<div class="board-save">'),html.indexOf('</div>',html.indexOf('<div class="board-save">')));
+ assert.ok(!toolbar.includes('id="add"'));for(const id of ['turnTimer','bulk','toolbarMore'])assert.ok(toolbar.includes('id="'+id+'"'),id);
+ assert.match(save,/id="savePlay"[^]*<button class="board-add" id="add" type="button"[^>]*hidden>/);
+ assert.ok(html.includes("$('add').hidden=addState.hidden||!players.length;"));
+ assert.match(toolbar,/id="recordModeChange"[^]*<span>기록방식 변경<\/span>[^]*id="resetPlayers"[^]*<span>삭제<\/span>/);});

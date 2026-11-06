@@ -557,7 +557,7 @@ function dictionary(){return /*<dict>*/{
 "다시 불러오기":"Reload",
 "점수는 이 기기에 자동 저장됩니다.":"Scores save automatically on this device.",
 "취소":"Cancel",
-"기록 방식 변경":"Change mode",
+"기록 방식 변경":"Change mode","기록방식 변경":"Change mode",
 "기록 저장":"Save record",
 "이름 클릭 수정 · 점수는 직접 입력 · 왼쪽으로 밀면 삭제":"Tap a name to edit · type scores · swipe left to delete",
 "설정":"Settings",
