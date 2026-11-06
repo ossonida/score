@@ -1,8 +1,8 @@
-import {readIdentity} from './personal-stats.js?v=291';
-import {renderIdentitySettings} from './personal-dashboard.js?v=291';
+import {readIdentity} from './personal-stats.js?v=292';
+import {renderIdentitySettings} from './personal-dashboard.js?v=292';
 import {rememberGameImages} from './game-artwork.js?v=172';
-import './records.js?v=291';
-import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=291';
+import './records.js?v=292';
+import {parseImport,mergeImported,MAX_IMPORT_BYTES} from './data-transfer.js?v=292';
 import {readPlacePrefs,savePlacePrefs,placeStats} from './places.js?v=8';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;let preview=null,reading=0,busy=false,lastView='';
 function status(message){$('transferStatus').textContent=message;}
@@ -12,7 +12,7 @@ function clearPreview(){preview=null;$('importPreview').hidden=true;$('confirmIm
 let placesOpen=false;
 function placeButton(text,onClick,pressed){const b=document.createElement('button');b.type='button';b.textContent=text;if(pressed!==undefined)b.setAttribute('aria-pressed',String(pressed));b.onclick=onClick;return b;}
 function renderPlaces(context){
- if(currentView()!=='settings')return;const list=$('placeList'),prefs=readPlacePrefs(context.key),hidden=new Set(prefs.hidden),places=placeStats(context.records,window.ScoreBggAccount?.state().plays||[]);
+ if(currentView()!=='settings'||settingsPage()!=='places')return;const list=$('placeList'),prefs=readPlacePrefs(context.key),hidden=new Set(prefs.hidden),places=placeStats(context.records,window.ScoreBggAccount?.state().plays||[]);
  const ordered=[...places.filter(p=>!hidden.has(p.place)),...places.filter(p=>hidden.has(p.place))],save=next=>{savePlacePrefs(context.key,next);renderPlaces(api.context());};
  list.replaceChildren();if(!places.length){const empty=document.createElement('p');empty.className='settings-note';empty.textContent='아직 저장된 장소가 없습니다. 게임 기록을 저장할 때 장소를 입력하면 여기에 표시됩니다.';list.append(empty);return;}
  const row=item=>{const box=document.createElement('div'),copy=document.createElement('div'),name=document.createElement('strong'),meta=document.createElement('small'),actions=document.createElement('div'),isHidden=hidden.has(item.place),isPrimary=prefs.primary===item.place;
@@ -33,7 +33,13 @@ function renderPrivacy(){$('accountDeleteArea').hidden=!api.context().key.starts
 function deleteCloud(account){const context=api.context();if(!context.key.startsWith('score.plays.v1.user.'))return;const buttons=[$('deleteAccount'),$('deleteCloudData')],run=async()=>{for(const button of buttons)button.disabled=true;try{const removed=await api.deleteAccount(context,text=>{$('deleteAccountStatus').textContent=text;},{account});$('deleteAccountStatus').textContent=account?'계정을 삭제했습니다. 클라우드 데이터 '+removed+'건을 지웠습니다.':'클라우드 데이터 '+removed+'건을 지우고 로그아웃했습니다.';}catch(error){$('deleteAccountStatus').textContent=error.message||(account?'계정을 삭제하지 못했습니다.':'클라우드 데이터를 삭제하지 못했습니다.');}finally{for(const button of buttons)button.disabled=false;renderPrivacy();}};window.ScoreCounter?.confirm?.(account?'계정 삭제':'클라우드 데이터 삭제',account?'클라우드의 기록·닉네임 설정·BGG 정보와 BGG 연결, Google 로그인 계정을 모두 삭제합니다. 이 기기의 이 계정 기록도 지워지며 되돌릴 수 없습니다. BGG 사이트에 이미 올린 플레이는 BGG에서 직접 지워야 합니다.':'클라우드의 기록·닉네임 설정·BGG 정보와 BGG 연결을 모두 삭제하고 로그아웃합니다. Google 로그인 계정은 남습니다. 이 기기의 이 계정 기록도 지워지며 되돌릴 수 없습니다. BGG 사이트에 이미 올린 플레이는 BGG에서 직접 지워야 합니다.',run);}
 $('deleteAccount').onclick=()=>deleteCloud(true);$('deleteCloudData').onclick=()=>deleteCloud(false);
 function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);renderPlaces(context);renderPrivacy();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
+// 설정 하위 페이지(#settings/places·#settings/sync): 같은 설정 화면에서 해당 카드만 보이고 위에 뒤로가기를 둔다.
+const SETTINGS_PAGES={'#settings/places':['places','장소 관리'],'#settings/sync':['sync','싱크']};
+const settingsPage=()=>SETTINGS_PAGES[location.hash]?.[0]||'main';let lastPage='main',fromMain=false;
+function settingsMain(){if(fromMain)history.back();else location.replace('#settings');}
+$('settingsBack').onclick=settingsMain;
 function route(){const view=currentView();
+ if(view==='settings'){const page=settingsPage();if(page!==lastPage){fromMain=page!=='main'&&lastView==='settings'&&lastPage==='main';if(lastView==='settings')window.scrollTo?.(0,0);}lastPage=page;$('settingsScreen').setAttribute('data-page',page);$('settingsSubTitle').textContent=SETTINGS_PAGES[location.hash]?.[1]||'';}else{lastPage='main';fromMain=false;}
  if(view!==lastView){$('accountStatus').textContent='';$('statsStatus').textContent='';lastView=view;}
  for(const [name,id] of [['home','homeScreen'],['stats','statsScreen'],['games','gamesScreen'],['settings','settingsScreen']])$(id).hidden=view!==name;
  delete document.documentElement.dataset.initialView;
@@ -42,8 +48,8 @@ function route(){const view=currentView();
  if(view==='settings')update();if(view==='stats')api.renderHistory();
 }
 // 하단 메뉴: 다른 화면이면 이동하고, 이미 보고 있는 화면의 버튼을 다시 누르면 그 화면 맨 위로 올린다.
-const currentView=()=>location.hash==='#games'?'games':location.hash==='#settings'?'settings':location.hash==='#stats'?'stats':'home';
-function openView(view){if(currentView()===view){window.scrollTo?.({top:0,behavior:'smooth'});return;}location.hash=view;}
+const currentView=()=>location.hash==='#games'?'games':location.hash==='#settings'||location.hash.startsWith('#settings/')?'settings':location.hash==='#stats'?'stats':'home';
+function openView(view){if(view==='settings'&&currentView()==='settings'&&settingsPage()!=='main'){settingsMain();return;}if(currentView()===view){window.scrollTo?.({top:0,behavior:'smooth'});return;}location.hash=view;}
 for(const [view,id] of [['home','navHome'],['stats','navStats'],['games','navGames'],['settings','navSettings']])$(id).onclick=()=>openView(view);window.addEventListener('hashchange',route);window.addEventListener('score-records:changed',update);window.addEventListener('score-bgg:changed',()=>{if(currentView()==='settings')renderPlaces(api.context());});window.addEventListener('score-identity:changed',update);
 $('importData').onclick=()=>{if(!busy)$('importFile').click();};
 $('importFile').addEventListener('change',async event=>{

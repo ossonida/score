@@ -1,6 +1,6 @@
-import './records.js?v=291';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=291';
-import {bggLinkRequest} from './bgg-link-client.js?v=291';
+import './records.js?v=292';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=292';
+import {bggLinkRequest} from './bgg-link-client.js?v=292';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=101';
 import {bgStatsLinks,bgStatsDuplicates,orphanPlayLinks} from './bgstats-link.js?v=5';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
@@ -19,7 +19,7 @@ function render(){
 async function refresh({silent=false}={}){const owner=user?.uid,version=epoch;if(!owner)return;busy=true;if(!silent)$('bggLinkMessage').textContent='';$('bggLinkedStatus').textContent='BGG 연결 확인 중…';render();try{const result=await bggLinkRequest('link-status',{uid:owner});if(version!==epoch)return;state={...result,uploads:result.uploads||{}};if(state.connected)$('bggUsername').value=state.username;notify();}catch(error){if(version===epoch){state={ready:false,connected:false,uploads:{}};$('bggLinkMessage').textContent=error.message;notify();}}finally{if(version===epoch){busy=false;render();}}}
 function closeLogin(){$('bggLoginPassword').value='';$('bggLoginDialog').close();}
 $('bggLinkLogin').onclick=()=>{if(!state.ready||!user||busy)return;$('bggLoginUsername').value=state.username||$('bggUsername').value||'';$('bggLoginPassword').value='';$('bggLoginError').textContent='';$('bggLoginDialog').showModal();($( 'bggLoginUsername').value?$('bggLoginPassword'):$('bggLoginUsername')).focus();};
-window.addEventListener('pagehide',closeLogin);window.addEventListener('hashchange',()=>{if(location.hash!=='#settings')closeLogin();});
+window.addEventListener('pagehide',closeLogin);window.addEventListener('hashchange',()=>{if(location.hash!=='#settings/sync')closeLogin();});
 $('bggLoginClose').onclick=closeLogin;$('bggLoginDialog').addEventListener('close',()=>{$('bggLoginPassword').value='';});
 $('bggLoginForm').onsubmit=async event=>{event.preventDefault();if(!user||busy||!state.ready)return;const owner=user.uid,version=epoch,credentials={username:$('bggLoginUsername').value.trim(),password:$('bggLoginPassword').value};$('bggLoginPassword').value='';if(!credentials.username||!credentials.password){$('bggLoginError').textContent='사용자명과 비밀번호를 입력해주세요.';return;}busy=true;$('bggLoginSubmit').disabled=true;$('bggLoginSubmit').setAttribute('aria-busy','true');render();try{const result=await bggLinkRequest('link-login',{uid:owner,body:credentials});if(version!==epoch)return;if(!result.connected)throw Error('BGG 로그인 상태를 확인하지 못했습니다.');state={...result,uploads:result.uploads||{}};$('bggUsername').value=result.username;closeLogin();window.dispatchEvent(new CustomEvent('score-bgg:linked',{detail:{username:result.username}}));$('bggLinkMessage').textContent='BGG에 연결했습니다. 내 정보 가져오기를 눌러주세요.';notify();}catch(error){if(version===epoch)$('bggLoginError').textContent=error.message;}finally{credentials.password='';if(version===epoch){busy=false;$('bggLoginSubmit').disabled=false;$('bggLoginSubmit').setAttribute('aria-busy','false');render();if(state.connected)void refresh({silent:true});}}};
 $('bggLinkLogout').onclick=async()=>{if(!user||busy)return;const owner=user.uid,version=epoch;busy=true;render();try{await bggLinkRequest('link-logout',{uid:owner,body:{}});if(version!==epoch)return;state={ready:true,connected:false,uploads:{}};$('bggLinkMessage').textContent='이 앱의 BGG 연결을 해제했습니다.';notify();}catch(error){if(version===epoch)$('bggLinkMessage').textContent=error.message;}finally{if(version===epoch){busy=false;render();}}};

@@ -1,6 +1,6 @@
 import {metadata,bggId} from './bgg-metadata.js?v=280';
-import {gameKey,winnerIds} from './records-core.js?v=291';
-import {meIn,nameKey} from './personal-stats.js?v=291';
+import {gameKey,winnerIds} from './records-core.js?v=292';
+import {meIn,nameKey} from './personal-stats.js?v=292';
 import {scoreGameType} from './score-games.js?v=168';
 export const typeLabels={strategy:'전략',sports:'스포츠',escape:'방탈출',family:'가족',party:'파티',abstract:'추상',thematic:'테마',war:'워게임',children:'어린이',customizable:'커스터마이징',cooperative:'협동',deduction:'추리',unknown:'미분류'};
 const domainKeys={'Strategy Games':'strategy','Family Games':'family','Party Games':'party','Abstract Games':'abstract','Thematic Games':'thematic','Wargames':'war',"Children's Games":'children',"Children’s Games":'children','Customizable Games':'customizable'};

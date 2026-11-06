@@ -1,11 +1,11 @@
-import './records.js?v=291';
+import './records.js?v=292';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=167';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
 import {scoreGame} from './score-games.js?v=168';
-import {gameKey} from './records-core.js?v=291';
-import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=291';
+import {gameKey} from './records-core.js?v=292';
+import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=292';
 import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=172';
-import {idToken} from './cloud-records.js?v=291';
+import {idToken} from './cloud-records.js?v=292';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=281';
 import {gameNames} from './bgg-metadata.js?v=280';

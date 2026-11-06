@@ -1,5 +1,5 @@
-import {renderPersonalGame} from './personal-dashboard.js?v=291';
-import {summarizeStats} from './stats-insights.js?v=291';
+import {renderPersonalGame} from './personal-dashboard.js?v=292';
+import {summarizeStats} from './stats-insights.js?v=292';
 const element=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
 const number=n=>n.toLocaleString('ko-KR',{maximumFractionDigits:2});
 export function renderStatsDashboard(container,records,today,onOpen,selectedGame=false,options={}){
@@ -9,7 +9,7 @@ export function renderStatsDashboard(container,records,today,onOpen,selectedGame
  const metrics=element('div',undefined,'insight-metrics');for(const [value,label]of[[s.dayCount,'플레이'],[s.gameCount,'게임'],[s.playerCount,'이름이 있는 사람']]){const metric=element('div');metric.append(element('strong',number(value)),element('span',label));metrics.append(metric);}hero.append(metrics);
  if(s.day!==today&&s.total)hero.append(element('p','최근 플레이한 날의 기록입니다.','insight-footnote'));
  if(s.leaders.length){const leaders=element('div',undefined,'day-leaders');leaders.append(element('span','이날의 승리'));for(const person of s.leaders)leaders.append(element('span',`${person.name} ${person.wins}승`,'leader-chip'));hero.append(leaders);}container.append(hero);
- if(!s.total){const link=element('a','기록 가져오기','insight-link');link.href='#settings';hero.append(link);return;}
+ if(!s.total){const link=element('a','기록 가져오기','insight-link');link.href='#settings/sync';hero.append(link);return;}
  const grid=element('div',undefined,'insight-grid');
  function card(kicker,title,cls){const e=element('article',undefined,'insight-card '+(cls||''));e.append(element('h3',title));return e;}
  function openButton(card,play){const button=element('button','이 경기 보기 ↗','insight-link');button.type='button';button.onclick=()=>onOpen(play.id);card.append(button);}

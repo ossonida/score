@@ -576,7 +576,7 @@ test('the save dialog suggests places already used, most used first, then unused
 test('settings place management sets a default, hides suggestions and renames places in records',async()=>{
  const play=(id,date,location)=>({id,date,createdAt:date+'T12:00:00.000Z',game:{name:'카탄',bggId:'13'},rule:'highest',location,players:[{id:'a',name:'하늘',color:'#52c7ef',score:10}]});
  const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('p1','2026-10-01','우리집'),play('p2','2026-10-02','우리집'),play('p3','2026-10-03','집')],pending:[]})]]);
- const a=await app(store,false,'',{initialHash:'#settings',entry:'settings.js'});a.vm.window.dispatchEvent(new Event('hashchange'));
+ const a=await app(store,false,'',{initialHash:'#settings/places',entry:'settings.js'});a.vm.window.dispatchEvent(new Event('hashchange'));
  const rows=()=>a.get('placeList').children,name=r=>r.children[0].children[0].textContent,btn=(r,text)=>r.children[1].children.find(b=>b.textContent===text);
  assert.deepEqual(rows().map(name),['우리집','집']);
  btn(rows()[1],'기본').onclick();assert.equal(JSON.parse(store.get('score.places.v1.score.plays.v1.guest')).primary,'집');assert.equal(btn(rows()[1],'기본').attributes['aria-pressed'],'true');
@@ -696,3 +696,10 @@ test('play from another game while a changed record mode is in progress asks, di
  a.get('scorelessCount').value='3';a.get('scorelessSetupForm').onsubmit({preventDefault(){}});if(a.get('scorelessSetupDialog').open)a.get('scoreModeOption').onclick();
  assert.equal(a.players().length,3);a.get('savePlay').onclick();await a.get('savePlayForm').onsubmit({preventDefault(){}});assert.equal(a.bridge.context().records[0].game.name,'둘째게임');
 });
+test('settings menu opens places and sync sub-pages with a back header',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),css=await fs.readFile(resolve(root,'ui-system.css'),'utf8'),page=id=>html.match(new RegExp('id="'+id+'"[^>]*data-settings-page="([^"]+)"'))?.[1];
+ assert.match(html,/id="openPlaces" class="settings-menu-row" href="#settings\/places"/);assert.match(html,/id="openSync" class="settings-menu-row" href="#settings\/sync"/);
+ for(const id of ['settingsAccountCard','settingsLanguageCard','settingsIdentityCard','settingsMenu','settingsPrivacyCard'])assert.equal(page(id),'main',id);
+ assert.equal(page('settingsPlacesCard'),'places');assert.equal(page('settingsBggCard'),'sync');assert.equal(page('settingsDataCard'),'sync');
+ const bgg=html.indexOf('id="settingsBggCard"');assert.ok(html.indexOf('id="bggAccountSection"')>bgg&&html.indexOf('id="bggAccountSection"')<html.indexOf('id="settingsDataCard"'));
+ assert.match(html,/class="settings-subheading" data-settings-page="places sync"><button id="settingsBack"/);
+ assert.match(css,/#settingsScreen\[data-page=sync\] \[data-settings-page\]:not\(\[data-settings-page~=sync\]\)/);});

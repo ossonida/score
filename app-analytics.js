@@ -1,4 +1,4 @@
-import {cloudConfigured,connectCloud} from './cloud-records.js?v=291';
+import {cloudConfigured,connectCloud} from './cloud-records.js?v=292';
 import {createAnalyticsGate} from './analytics-policy.js?v=155';
 import {createFeatureAnalytics} from './analytics-events.js?v=118';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
@@ -19,7 +19,7 @@ function installFeatureListeners(){
  const board=()=>({players:window.ScoreCounter?.getPlayers?.()||[],entry:window.ScoreCounter?.getResultEntry?.()||null});
  let boardBefore=board(),records=null,pendingBoard=null,pendingEnd=false,pendingAccount='',pendingBgg='',pendingInstall=false,nextPlayerEntry='manual';
  const armBoard=value=>{pendingBoard=value;queueMicrotask(()=>{if(pendingBoard===value)pendingBoard=null;});};
- const currentView=()=>({'#stats':'stats','#games':'games','#settings':'settings'})[location.hash]||'home';
+ const currentView=()=>({'#stats':'stats','#games':'games','#settings':'settings'})[location.hash.split('/')[0]]||'home';
  const navViews={navHome:'home',navStats:'stats',navGames:'games',navSettings:'settings'};
  const onClick=event=>{
   const target=event.target.closest?.('button,a');if(!target||target.disabled)return;const id=target.id;

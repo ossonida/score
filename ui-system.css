@@ -88,7 +88,7 @@ dialog .actions .danger{margin-right:0}
 #settingsAccountCard #guestUpload,#settingsAccountCard #recoverRecords{grid-column:1/-1}
 #settingsAccountCard .account-actions:has(#accountLogin:not([hidden])){grid-template-columns:1fr}
 #settingsAccountCard .record-row{align-items:end;gap:8px}
-#settingsAccountCard #bggImport{width:100%}
+#settingsBggCard #bggImport{width:100%}
 #settingsAccountCard input,#settingsIdentityCard select{height:44px;border-radius:var(--ui-radius);font-size:16px}
 /* 계정 제목 줄: 로그인 계정명은 같은 줄 오른쪽 끝, 로그인 전 안내는 다음 줄 */
 #settingsAccountCard .account-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}#settingsAccountCard .account-heading h2{margin:0}#settingsAccountCard #accountName{flex-basis:100%;margin:0}#settingsAccountCard #accountName.is-account{flex-basis:auto;min-width:0;text-align:right}#settingsAccountCard #accountName[hidden]{display:none}
@@ -193,7 +193,7 @@ dialog .actions .danger{margin-right:0}
 .bgg-attribution,#addGameDialog .bgg-attribution{width:68px;min-height:26px;padding:3px 4px;border-radius:5px;margin:10px 0}
 .bgg-attribution img,#addGameDialog .bgg-attribution img{width:60px;height:auto}
 
-#settingsAccountCard #bggAccountSection{margin-top:16px;padding-top:0;border-top:1px solid #29374c}.bgg-section-summary{display:flex;align-items:center;min-height:48px;padding:12px 2px;box-sizing:border-box;cursor:pointer;list-style:none;color:#dceaff;font-size:15px;font-weight:600}.bgg-section-summary::-webkit-details-marker{display:none}.bgg-section-summary::after{content:'⌄';margin-left:auto;color:#8ea5c2;font-size:18px;transition:transform .16s ease}#bggAccountSection[open]>.bgg-section-summary::after{transform:rotate(180deg)}.bgg-section-body{padding-top:4px}.bgg-section-heading{margin-bottom:14px}.bgg-section-heading #bggLinkedStatus{margin:0;color:#afc3dc}.bgg-link-actions{display:flex;flex-direction:column;gap:8px}.bgg-sync-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;order:2}.bgg-session-actions{display:flex;gap:8px;order:1}.bgg-link-actions button{min-width:0;min-height:46px;padding:10px 8px;border-radius:10px;font-size:13px;line-height:1.35;word-break:keep-all;background:#203149;color:#d9e8fb}.bgg-session-actions button{flex:1}#bggAccountSection[data-connected=false] #bggLinkLogin{background:#203149;color:#d9e8fb;font-weight:500}.bgg-sync-actions #bggImport{background:#2869bd;color:#fff;font-weight:600}.bgg-sync-actions #bggExport{grid-column:1/-1}
+#settingsBggCard:has(>#bggAccountSection[hidden]){display:none}#settingsBggCard{padding-top:6px!important;padding-bottom:6px!important}.bgg-section-summary{display:flex;align-items:center;min-height:48px;padding:12px 2px;box-sizing:border-box;cursor:pointer;list-style:none;color:#dceaff;font-size:15px;font-weight:600}.bgg-section-summary::-webkit-details-marker{display:none}.bgg-section-summary::after{content:'⌄';margin-left:auto;color:#8ea5c2;font-size:18px;transition:transform .16s ease}#bggAccountSection[open]>.bgg-section-summary::after{transform:rotate(180deg)}.bgg-section-body{padding-top:4px}.bgg-section-heading{margin-bottom:14px}.bgg-section-heading #bggLinkedStatus{margin:0;color:#afc3dc}.bgg-link-actions{display:flex;flex-direction:column;gap:8px}.bgg-sync-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;order:2}.bgg-session-actions{display:flex;gap:8px;order:1}.bgg-link-actions button{min-width:0;min-height:46px;padding:10px 8px;border-radius:10px;font-size:13px;line-height:1.35;word-break:keep-all;background:#203149;color:#d9e8fb}.bgg-session-actions button{flex:1}#bggAccountSection[data-connected=false] #bggLinkLogin{background:#203149;color:#d9e8fb;font-weight:500}.bgg-sync-actions #bggImport{background:#2869bd;color:#fff;font-weight:600}.bgg-sync-actions #bggExport{grid-column:1/-1}
 .bgg-sync-actions #bggImport[data-update=true]::after{content:'';display:inline-block;width:8px;height:8px;margin-left:6px;border-radius:50%;background:#ffcc4d;vertical-align:middle}
 .bgg-update-notice{color:#ffd77a}#bggAccountSection[data-connected=true] .bgg-sync-actions{order:1}#bggAccountSection[data-connected=true] .bgg-session-actions{order:2;justify-content:flex-end;padding-top:2px}#bggAccountSection[data-connected=true] .bgg-session-actions button{flex:0 1 auto;min-height:38px;padding:7px 9px;background:transparent;color:#91a9c6;font-size:12px}#bggAccountSection[data-connected=true] #bggLinkLogout{color:#d2a6ad}.bgg-section-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding-top:10px;border-top:1px solid #26384e}.bgg-section-footer .bgg-explanation{flex:1;min-width:0;margin:0}.bgg-section-footer .bgg-attribution{flex:0 0 auto;margin:0}#bggPublicFallback{margin:14px 0}#bggPublicFallback>summary{font-size:13px;color:#a5bedb;cursor:pointer;min-height:40px;padding:10px 0}#bggPublicFallback[hidden],.bgg-link-actions [hidden]{display:none!important}#bggLoginSubmit{width:100%;margin-top:10px;min-height:44px;border-radius:10px}#bggLoginDialog{max-width:400px}.record-delete-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between}.record-delete-row .bgg-post-button{min-height:40px;padding:9px 12px;border-radius:9px;background:#1d3550;color:#afd5ff;font-size:12px}.record-delete-row .bgg-post-button:disabled{opacity:.5}@media(max-width:360px){.bgg-link-actions button{font-size:12px}.bgg-data-count{padding-inline:10px}.bgg-data-count strong{font-size:19px}.bgg-section-footer{align-items:flex-end}}
 #bggLoginDialog #bggLoginSubmit{position:sticky;bottom:0;z-index:1;background:#237bff}#bggLoginError:empty{display:none}
@@ -220,3 +220,18 @@ dialog .actions .danger{margin-right:0}
 .toolbar .toolbar-menu-item.danger,.toolbar .toolbar-menu-item.danger svg{color:#ff6b81}
 .toolbar .toolbar-menu-item[hidden]{display:none}
 @media(max-width:380px){#homeScreen header{gap:4px}#homeScreen header .toolbar{gap:3px}}
+
+/* 설정 하위 페이지: data-page에 맞는 카드만 보이고, 하위 페이지는 뒤로가기 머리를 쓴다. */
+#settingsScreen[data-page=main] [data-settings-page]:not([data-settings-page~=main]),#settingsScreen[data-page=places] [data-settings-page]:not([data-settings-page~=places]),#settingsScreen[data-page=sync] [data-settings-page]:not([data-settings-page~=sync]){display:none!important}
+.settings-subheading{display:flex;align-items:center;gap:2px;margin:-6px 0 16px -10px}
+.settings-subheading h1{flex:1;margin:0;color:#f6f7fb;font-size:22px;font-weight:600;line-height:1.3}
+#settingsPlacesCard>.settings-note:first-child{margin-top:0}
+.settings-subheading .search-back{display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:0;background:transparent;color:#b9c6db;box-shadow:none}
+.settings-subheading .search-back svg{width:24px;height:24px}
+#settingsMenu{padding:4px 18px!important}
+.settings-menu-row{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 0;color:#f6f7fb;text-decoration:none;border-bottom:1px solid #26384f}
+.settings-menu-row:last-child{border-bottom:0}
+.settings-menu-row span{display:grid;gap:2px;flex:1;min-width:0}
+.settings-menu-row strong{font-size:16px;font-weight:600}
+.settings-menu-row small{font-size:12px;color:#8fa9c8}
+.settings-menu-row svg{flex:none;width:22px;height:22px;color:#8ea5c2}

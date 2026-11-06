@@ -578,7 +578,7 @@ function dictionary(){return /*<dict>*/{
 "장소 관리":"Locations",
 "기본으로 정한 장소는 새 기록에 자동으로 입력되고,":"The default location is filled in for new records,",
 "숨긴 장소는 장소 추천에 나오지 않습니다.":"and hidden locations aren't suggested.",
-"데이터 관리":"Data",
+"데이터 관리":"Data","싱크":"Sync","설정 메뉴":"Settings menu","기본 장소 · 숨긴 장소 · 이름 바꾸기":"Default · hidden · rename","BGG 연동 · 기록 가져오기":"BGG link · import records","뒤로":"Back",
 "가져오기":"Import",
 "기존 기록과 합치고 중복은 제외합니다. 점수판은 유지됩니다.":"Merged with existing records, skipping duplicates. The scoreboard is kept.",
 "가져오기 미리보기":"Import preview",

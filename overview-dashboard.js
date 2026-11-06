@@ -1,12 +1,12 @@
-import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=291';
-import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-core.js?v=291';
-import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=291';
-import {readIdentity,meIn} from './personal-stats.js?v=291';
+import {recentHighlights,rivalStats,opponentHighlights,coopPartners} from './social-insights.js?v=292';
+import {gameKey,recordMode,modeLabels,modeStats,playerOutcome} from './records-core.js?v=292';
+import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-overview.js?v=292';
+import {readIdentity,meIn} from './personal-stats.js?v=292';
 import {renderGameArtwork} from './game-artwork.js?v=172';
 import {metadata,gameNames} from './bgg-metadata.js?v=280';
-import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=291';
-import {openDayShare} from './day-share.js?v=291';
-import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=291';
+import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=292';
+import {openDayShare} from './day-share.js?v=292';
+import {milestones,milestoneTitle,gameLeaderboard} from './stats-extras.js?v=292';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
 const typeGroups=[{label:'가족/파티',types:['family','party','children','abstract','thematic']},{label:'추리',types:['deduction']},{label:'협동',types:['cooperative']},{label:'방탈출',types:['escape']},{label:'전략',types:['strategy','war']},{label:'스포츠',types:['sports','customizable']},{label:'미분류',types:['unknown']}];
@@ -42,7 +42,7 @@ function modeScoreCard(subset,profile){
 export function renderOverview(container,records,{scope,view,onGame,onRecord,shareRecords=records,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',summary=true,dayNav=null}){
  container.replaceChildren();const profile=readIdentity(scope),day=latestPlayDate(records),subset=view==='recent'?records.filter(p=>p.date===day):records,s=overviewStats(subset,profile);
  const hero=el('section',undefined,'insight-hero overview-summary'),heading=el('div',undefined,'overview-summary-heading');const titleNode=el('h2',view==='recent'?(day?formatRecentRecordTitle(day):'최근 게임기록'):title);heading.append(view==='recent'&&dayNav&&dayNav.total>1?recentDayNav(dayNav,titleNode):titleNode);hero.append(heading);
- if(!s.total&&view==='recent'){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings';hero.append(link);container.append(hero);return;}
+ if(!s.total&&view==='recent'){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings/sync';hero.append(link);container.append(hero);return;}
  if(view==='recent'){hero.className+=' recent-summary';const share=el('button','공유하기','stats-share-trigger');share.type='button';share.onclick=async()=>{share.disabled=true;try{await openDayShare(records,profile,{raw:shareRecords});}finally{share.disabled=false;}};heading.append(share);metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.gameCount,'플레이한 게임'],[bggCollection.filter(game=>game.owned).length,'보유게임'],[bggCollection.filter(game=>game.wishlist||game.wantToPlay).length,'하고 싶은 게임']]);note(hero,footnote);}if(summary)container.append(hero);if(!s.total)return;
  if(view==='all')container.append(modeScoreCard(subset,profile));
  if(view==='recent')renderHighlights(container,records,profile,onRecord);
