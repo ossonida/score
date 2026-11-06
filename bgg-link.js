@@ -1,6 +1,6 @@
-import './records.js?v=293';
-import {connectCloud,cloudConfigured} from './cloud-records.js?v=293';
-import {bggLinkRequest} from './bgg-link-client.js?v=293';
+import './records.js?v=294';
+import {connectCloud,cloudConfigured} from './cloud-records.js?v=294';
+import {bggLinkRequest} from './bgg-link-client.js?v=294';
 import {planBggExport,sendBggExport} from './bgg-export.js?v=101';
 import {bgStatsLinks,bgStatsDuplicates,orphanPlayLinks} from './bgstats-link.js?v=5';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;

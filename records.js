@@ -1,41 +1,41 @@
-import {renderRecordParticipants,renderModeStats,renderTurnTimerSummary} from './record-view.js?v=293';
-import {recordMode,modeLabels} from './records-core.js?v=293';
+import {renderRecordParticipants,renderModeStats,renderTurnTimerSummary} from './record-view.js?v=294';
+import {recordMode,modeLabels} from './records-core.js?v=294';
 import {missionName} from './mission-names.js?v=5';
-import {readGameLibrary} from './game-library.js?v=293';
+import {readGameLibrary} from './game-library.js?v=294';
 import {enhanceGamePicker} from './game-picker.js?v=65';
-import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=293';
-import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=293';
+import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=294';
+import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=294';
 import {enrichGames} from './bgg-details-client.js?v=281';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=293';
-import {personStats} from './social-insights.js?v=293';
-import {countSessions,isPartyPlay} from './stats-extras.js?v=293';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=294';
+import {personStats} from './social-insights.js?v=294';
+import {countSessions,isPartyPlay} from './stats-extras.js?v=294';
 import {setProAccount,isPro,markProLock} from './pro-access.js?v=1';
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
-import {renderStoryStats} from './story-stats.js?v=293';
-import {recapData,createRecapSet} from './recap-share.js?v=293';
+import {renderStoryStats} from './story-stats.js?v=294';
+import {recapData,createRecapSet} from './recap-share.js?v=294';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
-import {renderGameTitle} from './personal-dashboard.js?v=293';
+import {renderGameTitle} from './personal-dashboard.js?v=294';
 import {collectionMenu} from './collection-menu.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
-import {latestPlayDate} from './stats-overview.js?v=293';
+import {latestPlayDate} from './stats-overview.js?v=294';
 import {gameImageUrl,renderGameArtwork,rememberGameImages} from './game-artwork.js?v=172';
-import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=293';
-import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=293';
-import {renderStatsDashboard} from './stats-dashboard.js?v=293';
-import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=293';
-import {renderPeriodDashboard} from './period-dashboard.js?v=293';
-import {mergeImported} from './data-transfer.js?v=293';
+import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPlayerChoices} from './player-memory.js?v=294';
+import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=294';
+import {renderStatsDashboard} from './stats-dashboard.js?v=294';
+import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=294';
+import {renderPeriodDashboard} from './period-dashboard.js?v=294';
+import {mergeImported} from './data-transfer.js?v=294';
 import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=167';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=2';
 import {isScoreGame,scoreGame,scoreGameType,scoreGames} from './score-games.js?v=168';
 // 영어 화면: 기본 목록의 한글 별칭과 Score 자체 게임 이름을 영어 이름으로 보이게 번역 사전에 더한다.
 if(window.ScoreI18n?.addNames)window.ScoreI18n.addNames([...starterGames.flatMap(g=>g.aliases.map(alias=>[alias,g.name])),...scoreGames.flatMap(g=>{const en=g.aliases.find(alias=>!/[가-힣]/.test(alias));return en?[g.name,...g.aliases].map(name=>[name,en]):[];})]);
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=280';
-import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=293';
-import * as cloudApi from './cloud-records.js?v=293';
+import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=294';
+import * as cloudApi from './cloud-records.js?v=294';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=293';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=294';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=280';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
@@ -56,7 +56,7 @@ function storedIds(part){return new Set(readStoredJson(key()+'.'+part,[],idList)
 function saveIds(part,ids){try{writeStoredJson(key()+'.'+part,[...ids].slice(-5000));}catch{}}
 function rememberDeleted(ids){if(!ids.length)return;const deleted=storedIds('deletedIds'),restored=storedIds('bggRestored');for(const id of ids){deleted.add(id);restored.delete(id);}saveIds('deletedIds',deleted);saveIds('bggRestored',restored);}
 function recoveryRecords(){return read(recoveryKey()).records.filter(p=>!records.some(r=>r.id===p.id)&&!pending.has(p.id));}
-function syncFailure(error){cloudState='error';cloudError=friendly(error);message('accountError','클라우드 동기화 실패: '+cloudError);}
+function syncFailure(error){cloudState='error';cloudError=friendly(error);if(!cloudToast)message('accountError','클라우드 동기화 실패: '+cloudError);}
 let saveIntent='',scorelessSeries=null,recordLoginPending=false,recordDraftVersion=0,recordFlow='setup',recordStep='game',pendingGame=null,pendingScoreless=null,scorelessMode='',scorelessPlayers=[],scorelessTeams=[],scorelessBoardActive=false,scorelessSelectedPlayers=new Set(),scorelessPlayerSignature='',scorelessStep='count',scorelessDraftMuted=false;
 api.setMissionNamer?.(mission=>missionName(pendingScoreless?.game,mission));
 const sessionKey='score.activeGame.v1';
@@ -85,7 +85,10 @@ const normalizeStoredPlay=play=>normalizePlay(play,{cooperative:metadata(play.ga
 function read(keyName){try{const data=JSON.parse(localStorage.getItem(keyName)||'{}'),source=Array.isArray(data.records)?data.records.filter(isPlay):[],normalized=source.map(normalizeStoredPlay),changed=normalized.some((play,index)=>play!==source[index]),nextPending=Array.isArray(data.pending)?data.pending:[];if(changed&&keyName.includes('.user.'))for(let index=0;index<normalized.length;index++)if(normalized[index]!==source[index]&&!nextPending.includes(normalized[index].id))nextPending.push(normalized[index].id);const result={records:matchGameRecords(normalized),pending:nextPending};if(changed)try{localStorage.setItem(keyName,JSON.stringify(result));}catch{}return result;}catch{return {records:[],pending:[]};}}
 function persist(){localStorage.setItem(key(),JSON.stringify({records,pending:[...pending]}));recordRevision++;window.dispatchEvent?.(new Event('score-records:changed'));}
 function loadLocal(){const data=read(key());records=data.records;pending=new Set(data.pending);window.dispatchEvent?.(new Event('score-records:changed'));}
-function notify(text){$('recordMessage').textContent=text;if(location.hash==='#settings')$('accountStatus').textContent=text;if(location.hash==='#stats')$('statsStatus').textContent=text;}
+// 클라우드 동기화 버튼으로 시작한 동기화의 문구는 계정 카드 대신 앱 상단 토스트로 한 번 보인다(성공 초록, 실패·문제 노랑).
+let cloudToast=null,toastTimer=0;
+function toast(text,tone){let box=$('appToast');if(!box){box=document.createElement('div');box.id='appToast';box.className='app-toast';box.setAttribute('role','status');box.setAttribute('aria-live','polite');document.body.append(box);}box.textContent=text;box.setAttribute('data-tone',tone);box.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{box.hidden=true;},tone==='ok'?3000:5000);}
+function notify(text){if(cloudToast){cloudToast.push(text);return;}$('recordMessage').textContent=text;if(location.hash==='#settings')$('accountStatus').textContent=text;if(location.hash==='#stats')$('statsStatus').textContent=text;}
 function message(id,error){$(id).textContent=typeof error==='string'?error:(error?.message||'처리하지 못했습니다. 다시 시도해주세요.');}
 function friendly(error){if(error?.code==='permission-denied')return 'Firebase 기록 접근 권한을 확인해야 합니다. 이 기기의 기록은 유지됩니다.';if(error?.code==='unavailable')return '서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 동기화해주세요.';if(error?.code==='auth/popup-blocked')return '팝업이 차단됐어요. 브라우저에서 팝업을 허용한 뒤 다시 로그인해주세요.';if(error?.code==='auth/popup-closed-by-user')return '로그인이 취소됐습니다.';return error?.message||'연결하지 못했습니다. 기록은 이 브라우저에 보관됩니다.';}
 function node(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
@@ -531,7 +534,7 @@ async function refreshCloud(full=false){
 $('accountLogin').onclick=async()=>{const button=$('accountLogin');button.disabled=true;button.setAttribute('aria-busy','true');$('accountError').textContent='';try{if(!cloudConfigured())throw Error('Google 로그인 연결을 준비 중입니다. 잠시 후 다시 시도해주세요.');await login();}catch(e){message('accountError',friendly(e));}finally{button.disabled=false;button.setAttribute('aria-busy','false');}};
 $('accountLogout').onclick=async()=>{try{await logout();$('accountError').textContent='';notify('로그아웃했습니다.');}catch(e){message('accountError',friendly(e));}};
 // 클라우드 동기화 버튼이 기록과 BGG 정보 받기를 함께 시작한다.
-$('cloudSync').onclick=async()=>{window.dispatchEvent?.(new Event('score-cloud:pull'));await refreshCloud();};
+$('cloudSync').onclick=async()=>{window.dispatchEvent?.(new Event('score-cloud:pull'));const texts=[];cloudToast=texts;try{await refreshCloud();}finally{if(cloudToast===texts)cloudToast=null;const failed=cloudState==='error';if(texts.length||failed)toast(texts.at(-1)||'클라우드 동기화 실패: '+cloudError,failed?'warn':'ok');}};
 // 로그아웃 상태에서 이 앱이 이 기기에 저장한 데이터(score.·pointer. 키)를 모두 지운다. 클라우드는 건드리지 않는다.
 function clearDeviceData(){for(const storage of [localStorage,globalThis.sessionStorage].filter(Boolean)){const keys=[];for(let index=0;index<storage.length;index++){const name=storage.key(index);if(/^(score\.|pointer\.)/.test(name))keys.push(name);}for(const name of keys)storage.removeItem(name);}}
 $('deviceDataClear').onclick=()=>{if(currentUser||!authReady)return;api.confirm('이 기기 데이터 모두 지우기','이 기기에 저장된 기록, 작성 중인 초안, 닉네임 설정, BGG 정보를 모두 지웁니다. 클라우드에 올리지 않은 기록은 되돌릴 수 없습니다. 클라우드에 저장된 데이터는 지우지 않습니다.',()=>{if(currentUser)return;try{clearDeviceData();}catch(error){message('accountError','기기 데이터를 지우지 못했습니다. '+friendly(error));return;}location.reload();});};
@@ -567,7 +570,7 @@ window.ScoreRecords={
  // 계정 삭제: 클라우드·BGG 연결·로그인 계정을 지운 뒤 로그아웃하고 이 기기의 그 계정 저장값을 정리한다(로그인 전 기록은 남김).
  deleteAccount:async(context,step,{account=true}={})=>{
   const uid=scopeUid();if(!uid||context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
-  const {deleteAccountData}=await import('./account-delete.js?v=293');const removed=await deleteAccountData(uid,step,{account});
+  const {deleteAccountData}=await import('./account-delete.js?v=294');const removed=await deleteAccountData(uid,step,{account});
   try{await logout();}catch{}
   for(const name of Object.keys(localStorage))if(name.includes(uid))localStorage.removeItem(name);
   if(localStorage.getItem('score.lastUser.v1')===uid)localStorage.removeItem('score.lastUser.v1');return removed;
