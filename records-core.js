@@ -1,4 +1,4 @@
-import {resolveGame,matchGameRecords} from './game-catalog.js?v=167';
+import {resolveGame,matchGameRecords} from './game-catalog.js?v=300';
 import {decodeXmlText} from './bgg-validation.js?v=129';
 import {validTurnTimerRecord,copyTurnTimerRecord} from './turn-timer-core.js?v=294';
 export function gameKey(game) {

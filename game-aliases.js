@@ -1,6 +1,6 @@
 // 내가 기억시킨 한글 검색 별칭: 계정별로 이 기기에만 저장하고 검색에만 쓴다(화면의 게임 이름은 바꾸지 않는다).
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {normalizeGameQuery} from './game-catalog.js?v=167';
+import {normalizeGameQuery} from './game-catalog.js?v=300';
 const MAX_GAMES=500,MAX_ALIASES=5,hangul=/[ㄱ-ㆎ가-힣]/;
 const storageKey=scope=>'score.gameAliases.v1.'+scope;
 const validId=id=>/^[1-9][0-9]{0,9}$/.test(String(id??''));

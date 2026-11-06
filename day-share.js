@@ -1,9 +1,8 @@
-import {gameKey,winnerIds,coopKind,recordMode} from './records-core.js?v=294';
-import {meIn,nameKey} from './personal-stats.js?v=294';
-import {gameImageUrl} from './game-artwork.js?v=172';
-import {milestones,MILESTONES} from './stats-extras.js?v=294';
-import {shareLanguage,shareCopy,localizedGameName,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=294';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=294';
+import {gameKey,winnerIds,coopKind,recordMode} from './records-core.js?v=300';
+import {meIn,nameKey} from './personal-stats.js?v=300';
+import {milestones,MILESTONES} from './stats-extras.js?v=300';
+import {shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=300';
+import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=300';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -11,13 +10,13 @@ const W=1080,H=1350,X=72,CW=936,MAX_GAMES=9;
 const plural=(n,one,many)=>`${n} ${n===1?one:many}`;
 const COPY={
  ko:{me:'나',today:(n,total)=>`오늘 ${n}판 · 통산 ${total}판`,points:n=>`${n.toLocaleString('ko-KR')}점`,playsN:n=>`${n}판`,winsN:n=>`${n}승`,
-  revenge:'지난 맞대결',revengeHead:'이번엔 승리',versus:who=>`vs ${who}`,h2h:'통산 전적',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'최근 성적',formHead:(w,n)=>`최근 ${n}판 ${w}승`,goal:'다음 기록까지',goalHead:(g,n,left)=>`${g} ${n}판까지 ${left}판 남음`,totalGoal:(n,left)=>`통산 ${n}판까지 ${left}판 남음`,steady:'연속 기록',weeksHead:n=>`${n}주 연속 플레이`,weekHead:n=>`이번 주 ${n}번째 플레이한 날`,comeback:'지난 플레이',comebackHead:n=>`${n}일 만에 플레이`,crew:'같은 멤버',crewHead:n=>`${n}번째 판`,month:'이번 달',monthHead:n=>`${n}번째 판`,favorite:'플레이 순위',favoriteHead:n=>`${n}위`,crowd:'참가 인원',crowdHead:n=>`${n}명`,milestone:'달성 기록',gamePlay:(game,n)=>`${game} ${n}번째 플레이`,
+  revenge:'지난 맞대결',revengeHead:'이번엔 승리',versus:who=>`vs ${who}`,h2h:'통산 전적',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'최근 성적',formHead:(w,n)=>`최근 ${n}판 ${w}승`,goal:'다음 기록까지',goalHead:(g,n,left)=>`${g} ${n}판까지 ${left}판 남음`,totalGoal:(n,left)=>`통산 ${n}판까지 ${left}판 남음`,steady:'연속 기록',weeksHead:n=>`${n}주 연속 플레이`,weekHead:n=>`이번 주 ${n}번째 플레이한 날`,comeback:'지난 플레이',comebackHead:n=>`${n}일 만에 플레이`,crew:'같은 멤버',crewHead:n=>`${n}번째 판`,month:'이번 달',monthHead:n=>`${n}번째 판`,favorite:'플레이 순위',favoriteHead:n=>`${n}위`,players:'참여자',winner:'오늘의 우승자',milestone:'달성 기록',gamePlay:(game,n)=>`${game} ${n}번째 플레이`,
   topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차`,closest:'가장 적은 점수 차',gap:n=>`${n}점 차`,usual:'평균 우승 점수 대비',usualHead:d=>`${d>0?'+':''}${d}점`,usualDetail:(a,b)=>`평균 ${a}점 → 오늘 ${b}점`,
   streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 최다 우승',winsChart:'오늘 우승',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 블러퍼',liarDetail:(side,n)=>`${side} ${n}승`,
   missionChart:'미션별 도전',missionTitle:'오늘의 미션',difficultyChart:'난이도별 결과',coopToday:'오늘 협력 결과',coopRate:(w,n)=>`${n}판 중 ${w}번 성공`,sharedBest:'최고 공동 점수',newBest:'최고 기록 갱신',scenario:'시나리오',
   caseTitle:'사건 결과',solved:'사건 해결',escaped:'범인 도주',guessed:(n,total)=>`추리 성공 ${n}/${total}명`,chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
  en:{me:'Me',today:(n,total)=>`${plural(n,'play','plays')} today · ${total} all-time`,points:n=>`${n.toLocaleString('en-US')} pts`,playsN:n=>plural(n,'play','plays'),winsN:n=>plural(n,'win','wins'),
-  revenge:'Last match-up',revengeHead:'Won this time',versus:who=>`vs ${who}`,h2h:'Head to head',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'Recent results',formHead:(w,n)=>`${w} wins in last ${n}`,goal:'Next milestone',goalHead:(g,n,left)=>`${left} more to ${n} ${g} plays`,totalGoal:(n,left)=>`${left} more to ${n} total plays`,steady:'Streak',weeksHead:n=>`${n} weeks in a row`,weekHead:n=>`Play day #${n} this week`,comeback:'Last played',comebackHead:n=>`${n} days ago`,crew:'Same players',crewHead:n=>`Game #${n}`,month:'This month',monthHead:n=>`Game #${n}`,favorite:'Play rank',favoriteHead:n=>`#${n} all-time`,crowd:'Players',crowdHead:n=>`${n} players`,milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
+  revenge:'Last match-up',revengeHead:'Won this time',versus:who=>`vs ${who}`,h2h:'Head to head',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'Recent results',formHead:(w,n)=>`${w} wins in last ${n}`,goal:'Next milestone',goalHead:(g,n,left)=>`${left} more to ${n} ${g} plays`,totalGoal:(n,left)=>`${left} more to ${n} total plays`,steady:'Streak',weeksHead:n=>`${n} weeks in a row`,weekHead:n=>`Play day #${n} this week`,comeback:'Last played',comebackHead:n=>`${n} days ago`,crew:'Same players',crewHead:n=>`Game #${n}`,month:'This month',monthHead:n=>`Game #${n}`,favorite:'Play rank',favoriteHead:n=>`#${n} all-time`,players:'Players',winner:"Today's winner",milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
   topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Smallest margin',gap:n=>plural(n,'point','points'),usual:'vs. average winning score',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
   streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'Most wins overall',winsChart:'Wins today',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best bluffer',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
   missionChart:'Missions today',missionTitle:"Today's missions",difficultyChart:'By difficulty',coopToday:'Co-op today',coopRate:(w,n)=>`${w} of ${n} won`,sharedBest:'Best team score',newBest:'New best',scenario:'Scenario',
@@ -69,10 +68,9 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
    for(const person of scored){const p=who(play,person),row=todayBest.get(p.key);if(!row||better(person.score,row.score))todayBest.set(p.key,{...p,score:person.score});}}
   const pb=[...todayBest.values()].map(row=>{const prior=before.flatMap(play=>play.players.filter(person=>typeof person.score==='number'&&named(person)&&who(play,person).key===row.key).map(person=>person.score));return prior.length&&better(row.score,low?Math.min(...prior):Math.max(...prior))?{...row,prior:low?Math.min(...prior):Math.max(...prior)}:null;}).filter(Boolean).sort((a,b)=>(b.key==='\u0000self')-(a.key==='\u0000self'))[0];
   // 오늘 최고점이 곧 개인 최고점 갱신(같은 사람·같은 점수)이면 개인 최고점 한 줄만 남긴다.
-  if(top&&!(pb&&pb.name===top.name&&pb.score===top.score))stories.push({title:words.topScore,headline:words.points(top.score),detail:top.name});
+  if(top&&!(pb&&pb.name===top.name&&pb.score===top.score))stories.push({title:plays.length===1?words.winner:words.topScore,headline:`${top.name} ${words.points(top.score)}`,detail:''});
   if(pb)stories.push({title:words.personalBest,headline:`${pb.name} ${words.points(pb.score)}`,detail:words.before(pb.prior)});
   if(blow&&blow.gap>=10)stories.push({title:words.blowout,headline:words.wonBy(blow.gap),detail:blow.name});
-  if(close)stories.push({title:words.closest,headline:words.gap(close.gap),detail:mask?'':close.scores.join(' : ')});
   const winning=list=>list.map(play=>{const scored=play.players.filter(person=>typeof person.score==='number');return scored.length?(low?Math.min:Math.max)(...scored.map(person=>person.score)):null;}).filter(value=>value!==null);
   const now=winning(plays),then=winning(before);if(then.length>=3&&now.length){const diff=average(now)-average(then);if(diff)stories.push({title:words.usual,headline:words.usualHead(diff),detail:words.usualDetail(average(then),average(now))});}
   if(plays.length>=2){const rows=winBars(plays);if(rows.length)chart={kind:'bars',title:words.winsChart,rows};}
@@ -80,14 +78,15 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
   if(plays.length>=2){const rows=winBars(plays);if(rows.length)chart={kind:'bars',title:words.winsChart,rows};}
   // 연승: 오늘 마지막 판 우승자가 이 게임에서 이어 간 연속 우승.
   const last=plays.at(-1),lastWinners=winnerIds(last).map(id=>last.players.find(person=>person.id===id)).filter(person=>person&&named(person));
+  if(plays.length===1&&lastWinners.length)stories.push({title:words.winner,headline:lastWinners.map(person=>who(last,person).name).join(', '),detail:''});
   for(const person of lastWinners.slice(0,1)){const target=who(last,person).key;let run=0;for(let index=all.length-1;index>=0;index--){const play=all[index],won=winnerIds(play).some(id=>{const p=play.players.find(item=>item.id===id);return p&&named(p)&&who(play,p).key===target;});if(!won)break;run++;}if(run>=2)stories.push({title:words.streak,headline:words.streakHead(who(last,person).name,run),detail:''});}
   const leader=list=>{const rows=new Map();for(const play of list)for(const id of winnerIds(play)){const p=play.players.find(item=>item.id===id);if(!p||!named(p))continue;const k=who(play,p),row=rows.get(k.key)||{...k,wins:0};row.wins++;rows.set(k.key,row);}const sorted=[...rows.values()].sort((a,b)=>b.wins-a.wins);return sorted[0]&&(!sorted[1]||sorted[0].wins>sorted[1].wins)?sorted[0]:null;};
   const was=leader(before),now=leader(all);if(was&&now&&was.key!==now.key)stories.push({title:words.leader,headline:now.name,detail:words.winsN(now.wins)});
  }
  stories.push(...progressStories(all,name,words,profile,winners),...contextStories(raw,all,before,plays,date,key,words,who,named,lang));
- if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(plays,kind,words,who,named,lang);if(results)chart=results;}
+ if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(plays,kind,words,who,named,lang);if(results){chart=results;for(let index=stories.length-1;index>=0;index--)if(stories[index].kind==='players')stories.splice(index,1);}}
  if(!stories.length)stories.push({title:words.todayTitle,headline:words.playsN(plays.length),detail:formatShareDate(date,lang)});
- return {key,game,name,imageUrl:gameImageUrl(game),isNew:!before.length,today:plays.length,total:all.length,todayLine:words.today(plays.length,all.length),chart,stories};
+ return {key,game,name,imageUrl:shareCoverUrl(game),isNew:!before.length,today:plays.length,total:all.length,todayLine:words.today(plays.length,all.length),chart,stories};
 }
 
 const selfIn=(play,profile)=>play.players.find(person=>person.isSelf===true)||meIn(play,profile);
@@ -129,7 +128,7 @@ function contextStories(raw,all,before,plays,date,key,words,who,named,lang){
  if(crew&&before.some(play=>crewKey(play)===crew)){const count=all.filter(play=>crewKey(play)===crew).length;out.push({title:words.crew,headline:words.crewHead(count),detail:''});}
  const month=date.slice(0,7);if(before.some(play=>play.date.startsWith(month))){const count=all.filter(play=>play.date.startsWith(month)).length;if(count>=3)out.push({title:words.month,headline:words.monthHead(count),detail:''});}
  if(all.length>=5){const counts=new Map();for(const play of raw)if(play.date&&play.date<=date){const k=gameKey(play.game);counts.set(k,(counts.get(k)||0)+1);}const rank=[...counts.values()].filter(count=>count>all.length).length+1;if(rank<=5)out.push({title:words.favorite,headline:words.favoriteHead(rank),detail:words.playsN(all.length)});}
- const crowd=Math.max(...plays.map(play=>play.players.filter(named).length));if(crowd>=5)out.push({title:words.crowd,headline:words.crowdHead(crowd),detail:''});
+ const people=new Map();for(const play of plays)for(const person of play.players.filter(named)){const p=who(play,person);if(!people.has(p.key))people.set(p.key,p.name);}if(people.size>=2)out.push({kind:'players',title:words.players,headline:[...people.values()].join(', '),detail:''});
  return out;
 }
 // 결과표: 한 판이면 순위표(순위·이름·점수), 여러 판이면 판마다 한 줄(최근 4판). 팀·역할은 이긴 진영과 멤버.
@@ -157,7 +156,7 @@ function drawChart(ctx,chart,x,y,w,h){
 }
 // 미션 차트: 위 여백 28 + 제목 33 + 12, 아래 여백 30(Figma B-4).
 const MISSION_ROWS=8,MISSION_TOP=73,missionChartH=n=>MISSION_TOP+Math.min(4,n)*48-12+30;
-function storyRow(ctx,story,x,y,w,h,head=34){box(ctx,x,y,w,h);line(ctx,story.title,x+32,y+44,w-64,{size:22,min:15,weight:600,color:'#9fc8f7'});line(ctx,story.headline,x+32,y+h-32,(story.detail?w*.62:w-64),{size:head,min:Math.min(head,20),weight:800});if(story.detail)line(ctx,story.detail,x+w-32,y+h-34,w*.32,{size:22,min:14,weight:600,color:'#b8cde6',align:'right'});}
+function storyRow(ctx,story,x,y,w,h,head=34){box(ctx,x,y,w,h);const a=size=>Math.round(size*.78),titleY=Math.round(y+(h-(a(22)+20+a(head)))/2)+a(22),headY=titleY+20+a(head);line(ctx,story.title,x+32,titleY,w-64,{size:22,min:15,weight:600,color:'#9fc8f7'});line(ctx,story.headline,x+32,headY,(story.detail?w*.62:w-64),{size:head,min:Math.min(head,20),weight:800});if(story.detail)line(ctx,story.detail,x+w-32,headY,w*.32,{size:22,min:14,weight:600,color:'#b8cde6',align:'right'});}
 export async function createGameSlide(story,image,page,total){
  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');frame(ctx,page,total);
  // 차트·카드 높이를 먼저 정하고 남는 세로 공간은 표지가 채운다.
@@ -165,7 +164,7 @@ export async function createGameSlide(story,image,page,total){
  if(story.isNew)pill(ctx,'NEW',X+20,top+20,{align:'left',fill:'#ffcf5c',color:'#1a1300',size:24});
  line(ctx,story.name,X+32,top+coverH-70,CW-64,{size:46,min:26,weight:800});line(ctx,story.todayLine,X+32,top+coverH-28,CW-64,{size:24,min:18,weight:600,color:'#cfe3ff'});
  let y=top+coverH+24;
- if(story.chart){drawChart(ctx,story.chart,X,y,CW,chartH);y+=chartH+24;const cards=story.stories.slice(0,2),h=Math.min(196,bottom-y),cw=(CW-24*(cards.length-1))/cards.length,head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,36,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),y,cw,h,head));}
+ if(story.chart){drawChart(ctx,story.chart,X,y,CW,chartH);y+=chartH+24;const cards=story.stories.slice(0,2),h=Math.min(196,bottom-y),cw=(CW-24*(cards.length-1))/cards.length,head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,36,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),y,cw,h,head,cards.some(other=>other.detail)?3:2));}
  else{const head=uniformSize(ctx,rows.map(item=>item.headline),CW*.62,34,20);rows.forEach((item,index)=>storyRow(ctx,item,X,y+index*(rowH+14),CW,rowH,head));}
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('image')),'image/png'));
 }
@@ -174,7 +173,7 @@ export async function createGameSlide(story,image,page,total){
 export function openDayShare(records,profile,{raw=records}={}){
  const words=recapCopy();
  return openShareDialog({heading:words.dayDialog,setHint:words.daySetHint,singleHint:words.daySingleHint,fileBase:`score-${records.map(play=>play.date).filter(Boolean).sort().at(-1)||'day'}`,winners:true,full:false,make:async state=>{
-  const mask=state.scope!=='friends',data=recentShareData(records,profile,state.lang,{winners:state.winners,mask}),first=await createRecentShareImage(data);
+  const mask=state.scope!=='friends',data=recentShareData(records,profile,state.lang,{winners:state.winners,mask});await loadLargeCovers(data.games.map(game=>game.game));for(const game of data.games)game.imageUrl=shareCoverUrl(game.game);const first=await createRecentShareImage(data);
   if(state.format!=='set')return {blobs:[first],title:data.title};
   const light=data.games.length<=2,stories=data.games.slice(0,MAX_GAMES).map(game=>gameStory(raw,data.date,game.key,profile,{locale:state.lang,mask,winners:state.winners,full:state.full&&!mask&&state.winners})).filter(Boolean),images=await Promise.all(stories.map(story=>loadImage(story.imageUrl)));
   // 가벼운 날(1~2게임): 1장 요약 없이 게임 장 + 이번 달 결산. 첫 게임 장에 하루 이야기를 앞에 둔다.

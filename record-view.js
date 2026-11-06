@@ -1,4 +1,4 @@
-import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=294';
+import {recordMode,modeLabels,modeStats,resultLabel,winnerIds,missionSummary,gameKey,coopKind,coopDifficultyStats,coopCampaignStats} from './records-core.js?v=300';
 import {missionName,missionRange} from './mission-names.js?v=5';
 import {formatDuration} from './turn-timer-core.js?v=294';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

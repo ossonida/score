@@ -1,11 +1,10 @@
-import {gameKey,winnerIds} from './records-core.js?v=294';
+import {gameKey,winnerIds} from './records-core.js?v=300';
 import {isPro,markProLock} from './pro-access.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';
-import {meIn,nameKey} from './personal-stats.js?v=294';
-import {gameImageUrl} from './game-artwork.js?v=172';
-import {firstPlays,milestones,playDays} from './stats-extras.js?v=294';
-import {shareLanguage,localizedGameName,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=294';
+import {meIn,nameKey} from './personal-stats.js?v=300';
+import {firstPlays,milestones,playDays} from './stats-extras.js?v=300';
+import {shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=300';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -41,7 +40,7 @@ const MS_RANK={plays:4,days:3,games:2,game:1};
 export function recapData(records,model,profile,{locale,scope='public',category='all'}={}){
  const mask=scope!=='friends',byType=Boolean(category&&category!=='all'),lang=shareLanguage(locale),words=COPY[lang],range=model.current,plays=records.filter(play=>play.date&&play.date>=range.start&&play.date<=range.end&&(!byType||shareGameType(play)===category)).sort(byDate);
  const firsts=model.preset==='all'||model.people||byType?[]:firstPlays(records,range),newKeys=new Set(firsts.map(item=>item.key)),games=new Map();
- for(const play of plays){const key=gameKey(play.game),entry=games.get(key)||{key,game:play.game,name:localizedGameName(play.game,lang),count:0,imageUrl:gameImageUrl(play.game),isNew:newKeys.has(key)};entry.count++;entry.last=play.date;games.set(key,entry);}
+ for(const play of plays){const key=gameKey(play.game),entry=games.get(key)||{key,game:play.game,name:localizedGameName(play.game,lang),count:0,imageUrl:shareCoverUrl(play.game),isNew:newKeys.has(key)};entry.count++;entry.last=play.date;games.set(key,entry);}
  const list=[...games.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),gameOf=play=>games.get(gameKey(play.game)),newGames=list.filter(game=>game.isNew),allNew=list.length>1&&newGames.length===list.length;
  // 모든 게임이 처음이면(기록을 막 시작한 기간) NEW 표시는 의미가 없어 뺀다.
  if(allNew)for(const game of list)game.isNew=false;
@@ -131,7 +130,10 @@ export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTE
 function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:52,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
 export function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
 // head: 같은 묶음 카드의 제목 크기(uniformSize로 맞춘 값).
-export function card(ctx,{title,headline,detail},x,y,w,h,head=38){box(ctx,x,y,w,h);line(ctx,title,x+32,y+54,w-64,{size:24,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,y+h/2+30,w-64,{size:head,min:Math.min(head,20),weight:800});if(detail)line(ctx,detail,x+32,y+h-30,w-64,{size:22,min:15,weight:600,color:'#b8cde6'});}
+// 글 높이는 글자 크기의 0.78(한글 윗선~기준선)로 잡는다.
+const ascent=size=>Math.round(size*.78);
+export function card(ctx,{title,headline,detail},x,y,w,h,head=38,lines=detail?3:2){box(ctx,x,y,w,h);const block=ascent(24)+22+ascent(head)+(lines>2?16+ascent(22):0),titleY=Math.round(y+(h-block)/2)+ascent(24),headY=titleY+22+ascent(head);
+ line(ctx,title,x+32,titleY,w-64,{size:24,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,headY,w-64,{size:head,min:Math.min(head,20),weight:800});if(detail)line(ctx,detail,x+32,headY+16+ascent(22),w-64,{size:22,min:15,weight:600,color:'#b8cde6'});}
 export {uniformSize};
 function metrics(ctx,data,y,h){const words=data.words,gap=24,w=(CW-gap*2)/3,locale=data.lang==='ko'?'ko-KR':'en-US',items=[[data.plays.length,words.plays],[data.dayCount,words.days],[data.games.length,words.games]].map(([value,label])=>[value.toLocaleString(locale),label]),size=uniformSize(ctx,items.map(([value])=>value),w-40,60,30);items.forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y,w,h},value,label,{center:true,size}));}
 const rangeText=data=>`${data.range.start.replace(/-/g,'.')} ~ ${data.range.end.replace(/-/g,'.')}`;
@@ -192,7 +194,7 @@ function calendarSlide(ctx,data){
   months.forEach((cursor,row)=>{const [year,month]=cursor.split('-').map(Number),last=new Date(Date.UTC(year,month,0)).getUTCDate(),y=270+row*rowH+(rowH-size)/2;line(ctx,words.month(month),X,y+size-4,labelW-10,{size:22,weight:600,color:'#9fb8d6'});line(ctx,words.playsN(monthly.get(cursor)||0),X+CW,y+size-4,countW-12,{size:22,min:14,weight:700,color:(monthly.get(cursor)||0)?'#fff':'rgba(255,255,255,.4)',align:'right'});
    for(let day=1;day<=last;day++){const value=`${cursor}-${String(day).padStart(2,'0')}`;if(value<data.range.start||value>data.range.end)continue;fillRound(ctx,X+labelW+(day-1)*cell,y,size,size,5,LEVELS[level(counts.get(value)||0)]);}});
  }
- const y=860,half=(CW-24)/2,busy=busiest?.count>1;if(busy)card(ctx,{title:words.busiest,headline:date(data,busiest.date),detail:words.dayPlays(busiest.count)},X,y,streak>1?half:CW,190);if(streak>1)card(ctx,{title:words.streak,headline:words.daysN(streak),detail:''},busy?X+half+24:X,y,busy?half:CW,190);
+ const y=860,half=(CW-24)/2,busy=busiest?.count>1;if(busy)card(ctx,{title:words.busiest,headline:date(data,busiest.date),detail:words.dayPlays(busiest.count)},X,y,streak>1?half:CW,190);if(streak>1)card(ctx,{title:words.streak,headline:words.daysN(streak),detail:''},busy?X+half+24:X,y,busy?half:CW,190,38,busy?3:2);
  const weekday=[0,0,0,0,0,0,0];for(const play of data.plays)weekday[new Date(utc(play.date)).getUTCDay()]++;const top=Math.max(1,...weekday),by=1074;box(ctx,X,by,CW,212);line(ctx,words.weekdayTitle,X+32,by+50,CW-64,{size:26,weight:600,color:'#9fc8f7'});
  const slot=(CW-64)/7;weekday.forEach((count,index)=>{const bar=Math.max(6,count/top*100),cx=X+32+index*slot+slot/2;fillRound(ctx,cx-slot*.32,by+170-bar,slot*.64,bar,8,count===top?'#5fe0d0':'#2c7bbf');line(ctx,words.weekdays[index],cx,by+200,slot-6,{size:20,weight:600,color:'#9fb8d6',align:'center'});});
 }
@@ -268,7 +270,7 @@ export async function createRecapSingle(data){
  if(trait.kind!=='top'&&trait.kind!=='focus'&&!data.uniform)pool.push({title:words.topTitle,headline:top.name,detail:words.playsN(top.count)});
  if(data.days.streak>1)pool.push({title:words.streak,headline:words.daysN(data.days.streak),detail:''});
  if(data.days.busiest?.count>1)pool.push({title:words.busiest,headline:date(data,data.days.busiest.date),detail:words.dayPlays(data.days.busiest.count)});
- const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);const head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,38,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220,head));
+ const cards=pool.slice(0,2),cw=(CW-24*(cards.length-1))/Math.max(1,cards.length);const head=uniformSize(ctx,cards.map(item=>item.headline),cw-64,38,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),1030,cw,220,head,cards.some(other=>other.detail)?3:2));
  return toBlob(node,words);
 }
 
@@ -326,5 +328,5 @@ export async function openShareDialog({heading,setHint,singleHint,fileBase,winne
 }
 export function openRecapShare(records,model,profile){
  const words=COPY[shareLanguage()],present=new Set(records.filter(play=>play.date&&play.date>=model.current.start&&play.date<=model.current.end).map(shareGameType)),categories=SHARE_TYPES.map(([key])=>key).filter(key=>present.has(key)).map(key=>({key,label:shareTypeName(key)}));
- return openShareDialog({heading:words.dialog,categories,setHint:words.formatSetHint,singleHint:words.formatSingleHint,fileBase:`score-${model.current.start}-${model.current.end}`,make:async state=>{const data=recapData(records,model,profile,{locale:state.lang,scope:state.scope,category:state.category});return {blobs:state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)],title:data.title};}});
+ return openShareDialog({heading:words.dialog,categories,setHint:words.formatSetHint,singleHint:words.formatSingleHint,fileBase:`score-${model.current.start}-${model.current.end}`,make:async state=>{const data=recapData(records,model,profile,{locale:state.lang,scope:state.scope,category:state.category});await loadLargeCovers(data.games.slice(0,12).map(game=>game.game));for(const game of data.games)game.imageUrl=shareCoverUrl(game.game);return {blobs:state.format==='set'?await createRecapSet(data):[await createRecapSingle(data)],title:data.title};}});
 }

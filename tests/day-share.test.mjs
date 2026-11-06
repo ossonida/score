@@ -11,23 +11,26 @@ const scored=(id,date,hour,scores,game='카탄',extra={})=>({id,date,createdAt:a
 const won=(id,date,hour,names,winner,game='할리갈리')=>({id,date,createdAt:at(date,hour),game:{name:game,bggId:''},rule:'highest',players:names.map((name,i)=>({id:'p'+i,name,score:null,winner:name===winner}))});
 const titles=story=>story.stories.map(item=>item.title);
 
-test('score game: top score, personal best, blowout, close game and win chart; names hidden in public',()=>{
+test('score game: personal best, blowout, win chart and players, no smallest-margin card; names hidden in public',()=>{
  const raw=[scored('o1','2026-10-01',10,{나:40,김민수:30}),scored('o2','2026-10-02',10,{나:42,김민수:35}),scored('o3','2026-10-03',10,{나:41,김민수:20}),
   scored('t1','2026-10-10',10,{나:60,김민수:40}),scored('t2','2026-10-10',11,{나:30,김민수:31})];
  const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 2판 · 통산 5판');
- assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','가장 적은 점수 차','평균 우승 점수 대비','최근 성적','같은 멤버','이번 달','플레이 순위']);
+ assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','평균 우승 점수 대비','최근 성적','같은 멤버','이번 달','플레이 순위','참여자']);
  assert.deepEqual(story.stories[0],{title:'개인 최고점 갱신',headline:'나 60점',detail:'이전 42'});
- assert.equal(story.stories[2].detail,'','public hides the losing score');
+ assert.deepEqual(story.stories.at(-1),{kind:'players',title:'참여자',headline:'나, 김**',detail:''});
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]),[['나',1],['김**',1]]);
- assert.equal(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false}).stories.find(item=>item.title==='가장 적은 점수 차').detail,'31 : 30');
+ assert.ok(!titles(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false})).includes('가장 적은 점수 차'));
+ const single=gameStory([scored('s1','2026-10-10',10,{나:40,김민수:52})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
+ assert.deepEqual(single.stories[0],{title:'오늘의 우승자',headline:'김** 52점',detail:''});
+ assert.deepEqual(titles(gameStory([scored('s1','2026-10-10',10,{나:40,김민수:52})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true})),['오늘의 우승자','가장 큰 점수 차'],'the ranking table already lists the players');
  const quiet=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',winners:false});
- assert.equal(quiet.chart,null);assert.deepEqual(quiet.stories.map(item=>[item.title,item.headline]),[['같은 멤버','5번째 판'],['이번 달','5번째 판'],['플레이 순위','1위']]);
+ assert.equal(quiet.chart,null);assert.deepEqual(quiet.stories.map(item=>[item.title,item.headline]),[['같은 멤버','5번째 판'],['이번 달','5번째 판'],['플레이 순위','1위'],['참여자','나, 김**']]);
 });
 
 test('first play and streak and new all-time leader for win/lose games',()=>{
  const first=gameStory([won('a','2026-10-10',10,['나','지영'],'지영')],'2026-10-10',K('할리갈리'),profile,{locale:'ko-KR'});
- assert.deepEqual(titles(first),['오늘의 플레이']);assert.ok(first.isNew);
+ assert.deepEqual(first.stories.map(item=>[item.title,item.headline]),[['오늘의 우승자','지*'],['참여자','나, 지*']]);assert.ok(first.isNew);
  const raw=[won('o0','2026-09-30',10,['나','지영'],'지영'),won('o1','2026-10-01',10,['나','지영'],'지영'),won('o2','2026-10-02',10,['나','지영'],'나'),won('t1','2026-10-10',10,['나','지영'],'나'),won('t2','2026-10-10',11,['나','지영'],'나')];
  const story=gameStory(raw,'2026-10-10',K('할리갈리'),profile,{locale:'en-US'});
  assert.deepEqual(story.stories.slice(0,2).map(item=>[item.title,item.headline]),[['Win streak','나 · 3 in a row'],['Most wins overall','나']]);
@@ -38,9 +41,9 @@ test('hidden-role games: most often mafia, wins by side and best liar',()=>{
  const raw=[night('a',10,'지영',true),night('b',11,'지영',false),night('c',12,'나',true)];
  const story=gameStory(raw,'2026-10-10',K('마피아'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 3판 · 통산 3판');
- assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]),[['마피아 역할 최다','지*','2번'],['최고의 블러퍼','지*','마피아 1승']]);
+ assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]),[['마피아 역할 최다','지*','2번'],['최고의 블러퍼','지*','마피아 1승'],['참여자','나, 지*, 민*, 철*','']]);
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]).sort(),[['마피아',2],['시민',1]]);
- assert.deepEqual(gameStory(raw,'2026-10-10',K('마피아'),profile,{locale:'ko-KR',winners:false}).stories.map(item=>item.title),['마피아 역할 최다']);
+ assert.deepEqual(gameStory(raw,'2026-10-10',K('마피아'),profile,{locale:'ko-KR',winners:false}).stories.map(item=>item.title),['마피아 역할 최다','참여자']);
 });
 
 test('co-op missions chart each attempt, hold\'em totals show only the leaders',()=>{
@@ -51,7 +54,7 @@ test('co-op missions chart each attempt, hold\'em totals show only the leaders',
  assert.equal(story.stories.find(item=>item.title==='오늘의 미션').headline,'미션 3개 클리어');
  const hand=(id,hour,a,b)=>scored(id,'2026-10-10',hour,{나:a,김민수:b},'홀덤');
  const holdem=gameStory([hand('h1',10,30,-30),hand('h2',11,-10,10),hand('h3',12,5,-5)],'2026-10-10',K('홀덤'),profile,{locale:'ko-KR'});
- assert.deepEqual(holdem.chart.rows.map(row=>[row.label,row.text]),[['나','+25']]);assert.equal(holdem.stories.at(-1).headline,'나 +30');
+ assert.deepEqual(holdem.chart.rows.map(row=>[row.label,row.text]),[['나','+25']]);assert.equal(holdem.stories.find(item=>item.title==='한 판 최대 획득').headline,'나 +30');
 });
 
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
@@ -74,7 +77,8 @@ test('light-day stories: revenge, head to head, recent form, next goal, weekly s
  const duel=(id,date,hour,winner)=>({id,date,createdAt:at(date,hour),game:{name:'패치워크',bggId:''},rule:'highest',players:[{id:'a',name:'Sky',isSelf:true,score:null,winner:winner==='Sky'},{id:'b',name:'Maple',score:null,winner:winner==='Maple'}]});
  const raw=[duel('1','2026-09-29',20,'Sky'),duel('2','2026-10-01',20,'Maple'),duel('3','2026-10-02',20,'Sky'),duel('4','2026-10-06',20,'Maple'),duel('5','2026-10-07',20,'Maple'),duel('6','2026-10-08',20,'Sky')];
  const story=gameStory(raw,'2026-10-08',K('패치워크'),null,{locale:'ko-KR',mask:false});
- assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]).slice(0,3),[['지난 맞대결','이번엔 승리','vs Maple'],['통산 전적','Sky 3 : 3 Maple',''],['최근 성적','최근 5판 2승','○●○○●'],['다음 기록까지','패치워크 10판까지 4판 남음','']].slice(0,3));
+ assert.deepEqual(story.stories.map(item=>[item.title,item.headline,item.detail]).slice(0,3),[['지난 맞대결','이번엔 승리','vs Maple'],['통산 전적','Sky 3 : 3 Maple',''],['오늘의 우승자','Sky','']]);
+ assert.deepEqual(story.stories.filter(item=>['최근 성적','다음 기록까지'].includes(item.title)).map(item=>item.headline),['최근 5판 2승']);
  assert.ok(!gameStory(raw,'2026-10-08',K('패치워크'),null,{locale:'ko-KR'}).stories.some(item=>item.title==='지난 맞대결'),'public leaves out revenge');
  assert.deepEqual(dayStories(raw,'2026-10-08',{locale:'ko-KR'}).map(item=>item.headline),['2주 연속 플레이','통산 10판까지 4판 남음']);
 });

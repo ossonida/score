@@ -1,4 +1,4 @@
-import {bggId} from './bgg-metadata.js?v=280';
+import {bggId} from './bgg-metadata.js?v=300';
 import {gameImages} from './game-images.js?v=64';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {scoreGame} from './score-games.js?v=168';

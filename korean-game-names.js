@@ -654,6 +654,10 @@ export const koreanAliases={
   ],
   "448159": [
     "레일웨이 붐"
+  ],
+  "110327": [
+    "워터딥의 군주들",
+    "워터딥"
   ]
 };
 export const wikidataGames=[
