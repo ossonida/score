@@ -3,12 +3,12 @@ import {metadata,bggId,gameNames} from './bgg-metadata.js?v=300';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=300';
-import {attendanceCount,latestPlayDate,fixedTypes} from './stats-overview.js?v=300';
+import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop} from './stats-overview.js?v=303';
 import {nameKey} from './personal-stats.js?v=300';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames,koreanGameName} from './game-catalog.js?v=300';
 import {summarizeStats} from './stats-insights.js?v=300';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=300';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=303';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -64,7 +64,8 @@ const DEDUCTION_NAMES=/마피아|mafia|레지스탕스|resistance|아발론|aval
 export const SHARE_TYPES=[['strategy','#82bfff'],['family','#ffc56b'],['deduction','#c59bff'],['coop','#7ee0b0']];
 export function shareTypeName(key,locale){return copy[shareLanguage(locale)].typeNames[key]||key;}
 export function shareGameType(play){
- // 협력으로 기록한 판이 먼저, 다음은 통계에서 따로 정한 유형(BGG 분류가 비어 있거나 협력 분류를 빼는 전략 게임 등).
+ // 협력으로 기록해도 전략으로 보는 게임(오를레앙) → 협력으로 기록한 판 → 통계에서 따로 정한 유형(BGG 분류가 비었거나 협력 분류를 빼는 전략 게임: 니하르 등).
+ if(strategyEvenCoop.has(bggId(play.game)))return 'strategy';
  if(play.rule==='cooperative')return 'coop';
  if(fixedTypes[bggId(play.game)]==='strategy')return 'strategy';
  const info=metadata(play.game);
