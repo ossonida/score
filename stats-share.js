@@ -20,7 +20,8 @@ const copy={
 // 이름 가리기: 첫 글자만 남기고 나머지는 *(최대 3개).
 export function maskName(name){const chars=Array.from(String(name||'').trim());return chars.length?chars[0]+'*'.repeat(Math.min(3,Math.max(1,chars.length-1))):'';}
 // 공개용 이름: 나(프로필·isSelf)는 그대로, 다른 사람은 가린다.
-function nameShower(plays,profile,mask){if(!mask)return name=>name;const self=new Set([...(profile?[profile.primary,...profile.aliases]:[]),...plays.flatMap(play=>play.players.filter(person=>person.isSelf===true).map(person=>person.name))].map(nameKey));return name=>self.has(nameKey(name))?name:maskName(name);}
+// 공개용은 나를 포함해 모든 이름을 가린다.
+function nameShower(plays,profile,mask){return mask?name=>maskName(name):name=>name;}
 export function shareLanguage(locale){
  const value=Array.isArray(locale)?locale[0]:locale||globalThis.ScoreI18n?.lang||globalThis.navigator?.languages?.[0]||globalThis.navigator?.language||'ko-KR';
  return /^ko(?:-|$)/i.test(String(value))?'ko':'en';
@@ -183,10 +184,18 @@ export function drawBackground(ctx){
 }
 // size: 같은 줄 지표를 같은 크기로 맞출 때 넘기는 최대 크기(uniformSize).
 export function uniformSize(ctx,texts,width,max,min,weight=800){let px=max;for(;px>min;px-=2){ctx.font=`${weight} ${px}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(texts.every(text=>ctx.measureText(String(text)).width<=width))break;}return px;}
+// 상자 안 여러 줄 글: 줄마다 폭에 맞게 줄인 글자 크기에서 '가'의 실제 윗선·아랫선 높이를 재고, 줄 사이(gap, 기본 14)를 더한 묶음을 상자 세로 가운데에 놓아 위아래 여백을 같게 한다.
+// rows: [{text,size,min,weight,color,gap}] — null은 건너뛰고, text가 ''인 줄은 높이만 차지한다(옆 카드와 줄 높이 맞춤). 반환: 각 줄 기준선 y(null 줄은 null).
+export function stackText(ctx,{x,y,w,h},rows,{align='left'}={}){
+ const font=(row,px)=>`${row.weight||700} ${px}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;
+ const sized=rows.map(row=>{if(!row)return null;const text=String(row.text??'');let px=row.size;for(;px>(row.min??row.size);px-=2){ctx.font=font(row,px);if(ctx.measureText(text).width<=w)break;}ctx.font=font(row,px);const m=ctx.measureText('가');return {...row,text,px,asc:m.actualBoundingBoxAscent||px*.8,desc:m.actualBoundingBoxDescent||px*.1};});
+ const live=sized.filter(Boolean),total=live.reduce((sum,row,index)=>sum+row.asc+row.desc+(index?row.gap??14:0),0);let cursor=y+(h-total)/2;
+ ctx.textAlign=align;ctx.textBaseline='alphabetic';
+ return sized.map((row,index)=>{if(!row)return null;if(live.indexOf(row)>0)cursor+=row.gap??14;const base=Math.round(cursor+row.asc);cursor+=row.asc+row.desc;if(row.text){ctx.font=font(row,row.px);ctx.fillStyle=row.color||'#fff';ctx.fillText(clippedText(ctx,row.text,w),x,base);}return base;});
+}
 export function metric(ctx,{x,y,w,h},value,label,{center=false,muted=false,size:max=60}={}){
- fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign=center?'center':'left';const left=center?x+w/2:x+34,text=String(value);
- ctx.fillStyle=muted?'rgba(225,239,255,.68)':'#fff';let size=max;for(;size>30;size-=2){ctx.font=`800 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(text).width<=w-40)break;}ctx.fillText(clippedText(ctx,text,w-40),left,y+h/2+14);
- ctx.fillStyle='#9fc8f7';const room=w-(center?28:56);for(let size=26;size>=18;size-=2){ctx.font=`600 ${size}px system-ui, -apple-system, "Noto Sans KR", sans-serif`;if(ctx.measureText(label).width<=room)break;}ctx.fillText(clippedText(ctx,label,room),left,y+h/2+58);
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');
+ stackText(ctx,{x:center?x+w/2:x+34,y,w:w-(center?40:68),h},[{text:String(value),size:max,min:30,weight:800,color:muted?'rgba(225,239,255,.68)':'#fff'},{text:label,size:26,min:18,weight:600,color:'#9fc8f7',gap:16}],{align:center?'center':'left'});
 }
 // 6개 이하는 상단 표지 → 지표 줄(장소가 있으면 3칸) → 카드 최대 2장, 7개 이상은 왼쪽 2열 표지 + 오른쪽 지표·카드(MVP·접전·협력 최대 3장) 열로 배치합니다.
 // 12개 이상(wide)은 표지를 12개(2열 6행)까지 그리고, 오른쪽 열은 가로 지표 2칸 → MVP·접전 → 아래 목록 칸 순입니다. 목록 칸은 12개를 넘는 게임이 있으면 "그 밖의 게임", 없으면 게임별 우승자입니다.
@@ -223,10 +232,9 @@ function typesCard(ctx,mix,words,{x,y,w,h}){
   fillRound(ctx,x+28,top+36,barW,12,6,'rgba(255,255,255,.12)');if(count)fillRound(ctx,x+28,top+36,Math.max(12,barW*ratio),12,6,color);});
  ctx.textAlign='left';
 }
-function dayCard(ctx,card,{x,y,w,h},head=38){
- const top=y+(h-196)/2;fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,top+46);
- ctx.fillStyle='#fff';fitText(ctx,card.headline,w-68,head,Math.min(head,24));ctx.fillText(clippedText(ctx,card.headline,w-68),x+34,top+104);
- ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.detail,w-68),x+34,top+166);
+function dayCard(ctx,card,{x,y,w,h},head=38,lines=card.detail?3:2){
+ fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');
+ stackText(ctx,{x:x+34,y,w:w-68,h},[{text:card.title,size:25,weight:600,color:'#9fc8f7'},{text:card.headline,size:head,min:Math.min(head,24),weight:700,color:'#fff',gap:18},lines>2?{text:card.detail||'',size:22,weight:600,color:'#9fc8f7',gap:16}:null]);
 }
 function winnersCard(ctx,card,words,{x,y,w,h},columns){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,y+46);
@@ -246,7 +254,7 @@ export async function createRecentShareImage(data){
  else{const values=[...chips,...(place?[[place,words.place,true]]:[]),[data.games.length,words.playedCount,false],[data.peopleCount,words.peopleCount,false]].slice(0,layout.metrics.length);const rowSize=uniformSize(ctx,values.map(([value])=>value),layout.metrics[0].w-40,60,30);values.forEach(([value,label,muted],index)=>metric(ctx,layout.metrics[index],value,label,{center:true,muted,size:rowSize}));}
  shown.forEach((game,index)=>{const {x,y,w,h}=layout.cells[index];drawCover(ctx,images[index],game,x,y,w,h,data.games.length>=10);});
  if(layout.others){const rest=data.games.slice(shown.length);rest.length?otherGames(ctx,rest,words.otherGames,words,layout.others):data.typeMix?typesCard(ctx,data.typeMix,words,layout.others):otherGames(ctx,data.games.filter(game=>game.winners?.length),words.winnersTitle,words,layout.others);}
- layout.cards.forEach((box,index)=>cards[index].kind==='types'?typesCard(ctx,data.typeMix,words,box):cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):cards[index].kind==='closeList'?winnersCard(ctx,cards[index],words,box,1):dayCard(ctx,cards[index],box,uniformSize(ctx,layout.cards.map((_,i)=>cards[i]?.headline||''),Math.min(...layout.cards.map(item=>item.w))-68,38,24,700)));
+ layout.cards.forEach((box,index)=>cards[index].kind==='types'?typesCard(ctx,data.typeMix,words,box):cards[index].kind==='winners'?winnersCard(ctx,cards[index],words,layout.side&&!layout.wide?{...box,h:650}:box,layout.side?1:2):cards[index].kind==='closeList'?winnersCard(ctx,cards[index],words,box,1):dayCard(ctx,cards[index],box,uniformSize(ctx,layout.cards.map((_,i)=>cards[i]?.headline||''),Math.min(...layout.cards.map(item=>item.w))-68,38,24,700),cards.some(item=>item?.detail)?3:2));
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('이미지를 만들지 못했습니다.')),'image/png'));
 }
 

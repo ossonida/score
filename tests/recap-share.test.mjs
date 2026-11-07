@@ -18,7 +18,7 @@ test('public recap hides other names and the rival, friends recap shows them',()
  const friends=recapData(records,month,profile,{locale:'ko-KR',scope:'friends'});
  assert.deepEqual([friends.rival.name,friends.rival.mine,friends.rival.theirs,friends.rival.results.join('')],['김민수',2,2,'wlwl']);
  assert.ok(data.personRows.every(row=>row.name!=='김민수'));
- assert.deepEqual([data.close.gap,data.best.score,data.best.who],[1,30,'나']);
+ assert.deepEqual([data.close.gap,data.best.score,data.best.who],[1,30,'나*']);
  assert.ok(data.personRows.some(row=>row.name==='김**'));
 });
 
@@ -67,7 +67,7 @@ test('closest finish skips single-digit games; biggest win needs 10+ points',()=
  const small=[play('1','2026-10-01','카탄',{players:[{id:'a',name:'나',score:3,winner:true},{id:'b',name:'김민수',score:2,winner:false}]})];
  assert.equal(recapData(small,month,profile,{locale:'ko'}).close,null);
  const big=[play('2','2026-10-02','카탄',{players:[{id:'a',name:'나',score:40,winner:true},{id:'b',name:'김민수',score:12,winner:false}]})];
- const data=recapData(big,month,profile,{locale:'ko'});assert.equal(data.close.gap,28);assert.deepEqual([data.blow.gap,data.blow.who],[28,'나']);
+ const data=recapData(big,month,profile,{locale:'ko'});assert.equal(data.close.gap,28);assert.deepEqual([data.blow.gap,data.blow.who],[28,'나*']);
 });
 
 test('people filter: title names them, milestones and newly logged are left out, rival comes from the chosen people',()=>{

@@ -4,7 +4,7 @@ import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=300';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=300';
-import {shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=300';
+import {stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=301';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -45,7 +45,7 @@ export function recapData(records,model,profile,{locale,scope='public',category=
  // 모든 게임이 처음이면(기록을 막 시작한 기간) NEW 표시는 의미가 없어 뺀다.
  if(allNew)for(const game of list)game.isNew=false;
  // 나는 기록에 적힌 닉네임 그대로(가리지 않음), 다른 사람은 공개용이면 가림.
- const shown=(person,self)=>self||!mask?String(person.name).trim():maskName(person.name);
+ const shown=person=>!mask?String(person.name).trim():maskName(person.name);
  // 사람: 경쟁 기록의 이름 있는 플레이어. 나는 별칭과 상관없이 한 줄, 나와 같이 한 판은 상대 전적으로도 센다.
  const people=new Map(),versus=new Map();let best=null,close=null,blow=null,crowd=null;
  for(const play of plays){
@@ -130,10 +130,7 @@ export function frame(ctx,page,total){drawBackground(ctx);line(ctx,'SCORE COUNTE
 function heading(ctx,title,sub){line(ctx,title,X,168,CW,{size:52,min:30,weight:800});if(sub)line(ctx,sub,X,216,CW,{size:30,min:18,weight:600,color:'#9fc8f7'});}
 export function box(ctx,x,y,w,h){fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');}
 // head: 같은 묶음 카드의 제목 크기(uniformSize로 맞춘 값).
-// 글 높이는 글자 크기의 0.78(한글 윗선~기준선)로 잡는다.
-const ascent=size=>Math.round(size*.78);
-export function card(ctx,{title,headline,detail},x,y,w,h,head=38,lines=detail?3:2){box(ctx,x,y,w,h);const block=ascent(24)+22+ascent(head)+(lines>2?16+ascent(22):0),titleY=Math.round(y+(h-block)/2)+ascent(24),headY=titleY+22+ascent(head);
- line(ctx,title,x+32,titleY,w-64,{size:24,min:16,weight:600,color:'#9fc8f7'});line(ctx,headline,x+32,headY,w-64,{size:head,min:Math.min(head,20),weight:800});if(detail)line(ctx,detail,x+32,headY+16+ascent(22),w-64,{size:22,min:15,weight:600,color:'#b8cde6'});}
+export function card(ctx,{title,headline,detail},x,y,w,h,head=38,lines=detail?3:2){box(ctx,x,y,w,h);stackText(ctx,{x:x+32,y,w:w-64,h},[{text:title,size:24,min:16,weight:600,color:'#9fc8f7'},{text:headline,size:head,min:Math.min(head,20),weight:800,gap:18},lines>2?{text:detail||'',size:22,min:15,weight:600,color:'#b8cde6',gap:16}:null]);}
 export {uniformSize};
 function metrics(ctx,data,y,h){const words=data.words,gap=24,w=(CW-gap*2)/3,locale=data.lang==='ko'?'ko-KR':'en-US',items=[[data.plays.length,words.plays],[data.dayCount,words.days],[data.games.length,words.games]].map(([value,label])=>[value.toLocaleString(locale),label]),size=uniformSize(ctx,items.map(([value])=>value),w-40,60,30);items.forEach(([value,label],index)=>metric(ctx,{x:X+index*(w+gap),y,w,h},value,label,{center:true,size}));}
 const rangeText=data=>`${data.range.start.replace(/-/g,'.')} ~ ${data.range.end.replace(/-/g,'.')}`;
