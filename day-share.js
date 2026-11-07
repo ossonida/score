@@ -12,13 +12,13 @@ const COPY={
  ko:{me:'나',today:(n,total)=>`오늘 ${n}판 · 통산 ${total}판`,points:n=>`${n.toLocaleString('ko-KR')}점`,playsN:n=>`${n}판`,winsN:n=>`${n}승`,
   revenge:'지난 맞대결',revengeHead:'이번엔 승리',versus:who=>`vs ${who}`,h2h:'통산 전적',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'최근 성적',formHead:(w,n)=>`최근 ${n}판 ${w}승`,goal:'다음 기록까지',goalHead:(g,n,left)=>`${g} ${n}판까지 ${left}판 남음`,totalGoal:(n,left)=>`통산 ${n}판까지 ${left}판 남음`,steady:'연속 기록',weeksHead:n=>`${n}주 연속 플레이`,weekHead:n=>`이번 주 ${n}번째 플레이한 날`,crew:'같은 멤버',crewHead:n=>`${n}번째 판`,month:'이번 달',monthHead:n=>`${n}번째 판`,favorite:'플레이 순위',favoriteHead:n=>`${n}위`,players:'참여자',winner:'오늘의 우승자',milestone:'달성 기록',gamePlay:(game,n)=>`${game} ${n}번째 플레이`,
   topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차`,closest:'가장 적은 점수 차',gap:n=>`${n}점 차`,usual:'평균 우승 점수 대비',usualHead:d=>`${d>0?'+':''}${d}점`,usualDetail:(a,b)=>`평균 ${a}점 → 오늘 ${b}점`,
-  streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 최다 우승',winsChart:'오늘 우승',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 블러퍼',liarDetail:(side,n)=>`${side} ${n}승`,
+  streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 최다 우승',winsChart:'오늘 우승',teamWins:'팀별 승리',teamWon:'승리',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 블러퍼',liarDetail:(side,n)=>`${side} ${n}승`,
   missionChart:'미션별 도전',missionTitle:'오늘의 미션',difficultyChart:'난이도별 결과',coopToday:'오늘 협력 결과',coopRate:(w,n)=>`${n}판 중 ${w}번 성공`,sharedBest:'최고 공동 점수',newBest:'최고 기록 갱신',scenario:'시나리오',
   caseTitle:'사건 결과',solved:'사건 해결',escaped:'범인 도주',guessed:(n,total)=>`추리 성공 ${n}/${total}명`,chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
  en:{me:'Me',today:(n,total)=>`${plural(n,'play','plays')} today · ${total} all-time`,points:n=>`${n.toLocaleString('en-US')} pts`,playsN:n=>plural(n,'play','plays'),winsN:n=>plural(n,'win','wins'),
   revenge:'Last match-up',revengeHead:'Won this time',versus:who=>`vs ${who}`,h2h:'Head to head',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'Recent results',formHead:(w,n)=>`${w} wins in last ${n}`,goal:'Next milestone',goalHead:(g,n,left)=>`${left} more to ${n} ${g} plays`,totalGoal:(n,left)=>`${left} more to ${n} total plays`,steady:'Streak',weeksHead:n=>`${n} weeks in a row`,weekHead:n=>`Play day #${n} this week`,crew:'Same players',crewHead:n=>`Game #${n}`,month:'This month',monthHead:n=>`Game #${n}`,favorite:'Play rank',favoriteHead:n=>`#${n} all-time`,players:'Players',winner:"Today's winner",milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
   topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Smallest margin',gap:n=>plural(n,'point','points'),usual:'vs. average winning score',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
-  streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'Most wins overall',winsChart:'Wins today',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best bluffer',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
+  streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'Most wins overall',winsChart:'Wins today',teamWins:'Team wins',teamWon:'Won',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best bluffer',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
   missionChart:'Missions today',missionTitle:"Today's missions",difficultyChart:'By difficulty',coopToday:'Co-op today',coopRate:(w,n)=>`${w} of ${n} won`,sharedBest:'Best team score',newBest:'New best',scenario:'Scenario',
   caseTitle:'The case',solved:'Case solved',escaped:'Culprit escaped',guessed:(n,total)=>`${n}/${total} guessed right`,chipsChart:'Chip totals today',results:"Today's results",gameN:n=>`Game ${n}`,sideWon:side=>`${side} won`,morePlays:n=>`+${n} more`,bigHand:'Biggest pot',todayTitle:"Today's play",more:n=>`+${n} more`},
 };
@@ -74,7 +74,14 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
   const winning=list=>list.map(play=>{const scored=play.players.filter(person=>typeof person.score==='number');return scored.length?(low?Math.min:Math.max)(...scored.map(person=>person.score)):null;}).filter(value=>value!==null);
   const now=winning(plays),then=winning(before);if(then.length>=3&&now.length){const diff=average(now)-average(then);if(diff)stories.push({title:words.usual,headline:words.usualHead(diff),detail:words.usualDetail(average(then),average(now))});}
   if(plays.length>=2){const rows=winBars(plays);if(rows.length)chart={kind:'bars',title:words.winsChart,rows};}
- }else if((kind==='win'||kind==='team')&&winners){
+ }else if(kind==='team'){
+  // 팀전: 팀 이름별로 오늘의 팀원(합집합)과 이긴 판 수. 이긴 팀부터 카드 한 장씩, 여러 판이면 팀별 승리 막대.
+  const teams=new Map();
+  for(const play of plays){const wins=new Set(winnerIds(play)),won=new Set();for(const person of play.players){const label=String(person.teamName||'').trim();if(!label)continue;const row=teams.get(label)||{label,members:new Map(),wins:0};if(named(person)){const p=who(play,person);row.members.set(p.key,p.name);}if(wins.has(person.id))won.add(label);teams.set(label,row);}for(const label of won)teams.get(label).wins++;}
+  const sorted=[...teams.values()].sort((a,b)=>winners?b.wins-a.wins:0);
+  if(winners&&plays.length>=2&&sorted.some(row=>row.wins))chart={kind:'bars',title:words.teamWins,rows:sorted.map(row=>({label:row.label,value:row.wins,text:words.winsN(row.wins)}))};
+  for(const row of sorted.slice(0,4))if(row.members.size)stories.push({kind:'team',title:winners&&row.wins?(plays.length===1?`${row.label} · ${words.teamWon}`:`${row.label} · ${words.winsN(row.wins)}`):row.label,headline:[...row.members.values()].join(', '),detail:''});
+ }else if(kind==='win'&&winners){
   if(plays.length>=2){const rows=winBars(plays);if(rows.length)chart={kind:'bars',title:words.winsChart,rows};}
   // 연승: 오늘 마지막 판 우승자가 이 게임에서 이어 간 연속 우승.
   const last=plays.at(-1),lastWinners=winnerIds(last).map(id=>last.players.find(person=>person.id===id)).filter(person=>person&&named(person));
@@ -83,7 +90,7 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
   const leader=list=>{const rows=new Map();for(const play of list)for(const id of winnerIds(play)){const p=play.players.find(item=>item.id===id);if(!p||!named(p))continue;const k=who(play,p),row=rows.get(k.key)||{...k,wins:0};row.wins++;rows.set(k.key,row);}const sorted=[...rows.values()].sort((a,b)=>b.wins-a.wins);return sorted[0]&&(!sorted[1]||sorted[0].wins>sorted[1].wins)?sorted[0]:null;};
   const was=leader(before),now=leader(all);if(was&&now&&was.key!==now.key)stories.push({title:words.leader,headline:now.name,detail:words.winsN(now.wins)});
  }
- stories.push(...progressStories(all,name,words,profile,winners),...contextStories(raw,all,before,plays,date,key,words,who,named,lang));
+ stories.push(...progressStories(all,name,words,profile,winners),...contextStories(raw,all,before,plays,date,key,words,who,named,lang).filter(story=>!(kind==='team'&&story.kind==='players')));
  if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(plays,kind,words,who,named,lang);if(results){chart=results;for(let index=stories.length-1;index>=0;index--)if(stories[index].kind==='players')stories.splice(index,1);}}
  if(!stories.length)stories.push({title:words.todayTitle,headline:words.playsN(plays.length),detail:formatShareDate(date,lang)});
  return {key,game,name,imageUrl:shareCoverUrl(game),isNew:!before.length,today:plays.length,total:all.length,todayLine:words.today(plays.length,all.length),chart,stories};

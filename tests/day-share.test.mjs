@@ -88,3 +88,13 @@ test('recent share leaves out the "N days since last play" story',()=>{
  const story=gameStory([won('a','2026-08-21',10,['나','지영'],'지영'),won('b','2026-11-06',10,['나','지영'],'나')],'2026-11-06',K('할리갈리'),profile,{locale:'ko-KR'});
  assert.ok(!titles(story).includes('지난 플레이'));assert.ok(!story.stories.some(item=>/일 만에/.test(item.headline)));
 });
+
+test('team games show each team with its members and team wins',()=>{
+ const match=(id,hour,winTeam)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'코드네임',bggId:''},rule:'team',players:['나','지영','민수','철수'].map((name,i)=>({id:'p'+i,name,score:null,teamId:i<2?'team-1':'team-2',teamName:i<2?'레드':'블루',winner:(i<2?'레드':'블루')===winTeam}))});
+ const one=gameStory([match('1',10,'블루')],'2026-10-10',K('코드네임'),null,{mask:false,winners:true});
+ assert.deepEqual(one.stories.filter(item=>item.kind==='team').map(item=>[item.title,item.headline]),[['블루 · 승리','민수, 철수'],['레드','나, 지영']]);
+ assert.ok(!one.stories.some(item=>item.kind==='players'),'members replace the participants card');
+ const two=gameStory([match('1',10,'블루'),match('2',11,'레드'),match('3',12,'레드')],'2026-10-10',K('코드네임'),null,{mask:true,winners:true});
+ assert.deepEqual(two.chart.rows.map(row=>[row.label,row.text]),[['레드','2승'],['블루','1승']]);
+ assert.deepEqual(two.stories.filter(item=>item.kind==='team').map(item=>[item.title,item.headline]),[['레드 · 2승','나*, 지*'],['블루 · 1승','민*, 철*']]);
+});

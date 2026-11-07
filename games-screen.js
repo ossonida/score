@@ -1,4 +1,4 @@
-import './records.js?v=301';
+import './records.js?v=302';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=300';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=300';
 import {scoreGame} from './score-games.js?v=168';
