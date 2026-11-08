@@ -277,3 +277,21 @@ dialog .actions .danger{margin-right:0}
 .toolbar .toolbar-menu-item{gap:10px;padding:0 14px 0 12px;line-height:1}
 .toolbar .toolbar-menu-item svg{display:block;width:22px;height:22px}
 .toolbar .toolbar-menu-item span{flex:1;line-height:1.3}
+
+/* 처음 사용 안내(product-tour.js): 대상 둘레 링 + 말풍선. dim은 첫 실행 3단계(바깥 어둡게, 누르기 막음). */
+.tour-layer{position:fixed;inset:0;z-index:1200;pointer-events:none}
+.tour-layer.dim{pointer-events:auto}
+.tour-ring{position:fixed;border:2px solid #7fc4ff;border-radius:14px;box-shadow:0 0 0 4px rgba(127,196,255,.25);transition:left .2s ease,top .2s ease,width .2s ease,height .2s ease}
+.tour-layer.dim .tour-ring{box-shadow:0 0 0 4px rgba(127,196,255,.25),0 0 0 200vmax rgba(3,8,16,.62)}
+.tour-bubble{position:fixed;box-sizing:border-box;padding:16px 16px 12px;border:1px solid #41658d;border-radius:14px;background:#14263d;color:#eef6ff;box-shadow:0 12px 32px rgba(0,0,0,.45);pointer-events:auto;transition:top .2s ease,left .2s ease}
+.tour-bubble::before{content:'';position:absolute;left:calc(var(--arrow,50%) - 8px);width:14px;height:14px;background:#14263d;border:1px solid #41658d;transform:rotate(45deg)}
+.tour-bubble[data-side=below]::before{top:-8px;border-right:0;border-bottom:0}
+.tour-bubble[data-side=above]::before{bottom:-8px;border-left:0;border-top:0}
+.tour-bubble strong{display:block;font-size:16px;line-height:1.35;margin-bottom:6px}
+.tour-bubble p{margin:0;font-size:14px;line-height:1.5;color:#c9dcf2}
+.tour-actions{display:flex;align-items:center;gap:8px;margin-top:12px}
+.tour-count{font-size:12px;color:#8fb3d9;margin-right:auto}
+.tour-actions button{min-height:36px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.tour-skip{border:0;background:transparent;color:#9fc8f7}
+.tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
+.tour-count+.tour-skip{margin-left:0}

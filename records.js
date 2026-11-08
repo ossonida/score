@@ -542,6 +542,8 @@ $('recoverRecords').onclick=()=>{const context={key:key(),epoch:accountEpoch},it
 $('guestUpload').onclick=()=>openGuestRecordAction('merge');
 $('guestDelete').onclick=()=>openGuestRecordAction('delete');
 window.ScoreRecords={
+ // 처음 사용 안내(product-tour.js)용: 기록 수 · 로그인 여부 · 마지막 날 판 수.
+ tourState:()=>{let latest='',day=0;for(const play of records){const date=String(play.date||'');if(date>latest){latest=date;day=0;}if(date===latest)day++;}return {count:records.length,signedIn:!!currentUser,dayPlays:day};},
  playerChoices:()=>({scope:key()+':'+accountEpoch,players:savedPlayerChoices(records)}),
  bggRecords:()=>{const profile=readIdentity(key());return records.map(play=>{const me=meIn(play,profile);return {...play,game:{...play.game},players:play.players.map(person=>({...person,isSelf:person.id===me?.id}))};});},
  renderHistory,

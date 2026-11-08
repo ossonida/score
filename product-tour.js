@@ -1,0 +1,86 @@
+// 처음 사용 안내(docs/CTA-FLOWS.md 3.7): 점수판 첫 실행 3단계 + 기능을 처음 만날 때 한 번씩 뜨는 말풍선.
+// 본 안내는 score.tour.v1에 남긴다. 대상이 안 보이거나 대화상자가 열려 있으면 다음 기회에 다시 확인한다.
+import {readStoredJson} from './stored-json.js?v=171';
+import {rememberedUid} from './cloud-records.js?v=300';
+
+const KEY='score.tour.v1',TIPS=['welcome','firstSave','stats','share','login'];
+const WELCOME=[
+ {target:()=>document.querySelector('#cards .name')||visible('#bulk')||visible('#add'),title:'같이 하는 사람',text:'이름을 눌러 바꾸고, 위쪽 버튼으로 사람을 더해요.'},
+ {target:()=>document.querySelector('#cards .score'),title:'점수 올리기',text:'+ − 로 점수를 바꾸고, 숫자를 누르면 직접 입력해요. 점수가 없는 게임은 저장할 때 \'점수 없이 기록\'으로 승패·순위·팀·협력을 남겨요.'},
+ {target:()=>visible('#savePlay'),title:'게임이 끝나면 SAVE',text:'게임을 검색해 붙이면 표지와 한글 이름이 나오고, 통계에서 게임 종류별로 나뉘어요.'},
+];
+const TIP={
+ firstSave:{target:()=>visible('#navStats'),title:'첫 기록 저장 완료',text:'저장한 기록과 통계는 여기서 볼 수 있어요.'},
+ stats:{target:()=>visible('#statsViewTabs'),title:'통계 보기',text:'최근 기록 · 기간 분석 · 게임별 통계에서 많이 한 게임, 승률, 함께한 사람을 볼 수 있어요.'},
+ share:{target:()=>visible('#statsScreen .stats-share-trigger'),title:'오늘 기록 공유',text:'오늘 한 게임을 이미지로 만들어 단톡방이나 SNS에 공유해 보세요.'},
+ login:{target:()=>visible('#navSettings'),title:'기록 지키기',text:'로그인하면 기기를 바꿔도 기록이 그대로 남아요.'},
+};
+
+let state=load(),open=null,timer=0,startCount=null,replay=false;
+function load(){const data=readStoredJson(KEY,null,value=>value&&typeof value==='object'&&value.seen&&typeof value.seen==='object'?value:null);return {seen:{...(data?.seen||{})}};}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{}}
+function mark(...keys){for(const key of keys)state.seen[key]=true;save();}
+function visible(selector){const node=document.querySelector(selector);return node&&node.getClientRects().length&&getComputedStyle(node).visibility!=='hidden'?node:null;}
+function info(){return window.ScoreRecords?.tourState?.()||null;}
+const route=()=>(location.hash||'#home').split('/')[0];
+// 대화상자나 하단 이용 분석 안내가 떠 있으면 기다린다(안내 버튼을 누르면 click으로 다시 확인).
+const busy=()=>!!document.querySelector('dialog[open]')||!!visible('#analyticsNotice');
+
+// 말풍선: 대상 둘레 링 + 아래(자리가 없으면 위) 말풍선. dim이면 바깥을 어둡게 하고 누르기를 막는다.
+function show(step,{dim=false,index=0,total=1,onNext,onSkip}={}){
+ const target=step.target();if(!target)return false;close(false);
+ target.scrollIntoView?.({block:'nearest'});
+ const layer=document.createElement('div');layer.className='tour-layer'+(dim?' dim':'');
+ const ring=document.createElement('div');ring.className='tour-ring';
+ const bubble=document.createElement('div');bubble.className='tour-bubble';bubble.setAttribute('role','dialog');bubble.setAttribute('aria-live','polite');
+ const title=document.createElement('strong');title.textContent=step.title;const text=document.createElement('p');text.textContent=step.text;
+ const actions=document.createElement('div');actions.className='tour-actions';
+ if(total>1){const count=document.createElement('span');count.className='tour-count';count.textContent=`${index+1} / ${total}`;actions.append(count);}
+ if(onSkip){const skip=document.createElement('button');skip.type='button';skip.className='tour-skip';skip.textContent='건너뛰기';skip.onclick=()=>onSkip();actions.append(skip);}
+ const next=document.createElement('button');next.type='button';next.className='tour-next';next.textContent=total>1?(index+1<total?'다음':'시작하기'):'확인';next.onclick=()=>onNext();actions.append(next);
+ bubble.append(title,text,actions);layer.append(ring,bubble);document.body.append(layer);
+ const place=()=>{const r=target.getBoundingClientRect(),pad=6;Object.assign(ring.style,{left:`${r.left-pad}px`,top:`${r.top-pad}px`,width:`${r.width+pad*2}px`,height:`${r.height+pad*2}px`});
+  const width=Math.min(320,innerWidth-24),left=Math.max(12,Math.min(innerWidth-width-12,r.left+r.width/2-width/2)),h=bubble.offsetHeight,below=r.bottom+pad+12+h<=innerHeight-8;
+  Object.assign(bubble.style,{width:`${width}px`,left:`${left}px`,top:`${below?r.bottom+pad+12:Math.max(8,r.top-pad-12-h)}px`});bubble.dataset.side=below?'below':'above';bubble.style.setProperty('--arrow',`${Math.max(18,Math.min(width-18,r.left+r.width/2-left))}px`);};
+ place();
+ const outside=event=>{if(!dim&&!bubble.contains(event.target)){onNext();}};
+ if(!dim)setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
+ addEventListener('resize',place);addEventListener('scroll',place,true);
+ open={layer,cleanup:()=>{removeEventListener('resize',place);removeEventListener('scroll',place,true);document.removeEventListener('pointerdown',outside,true);}};
+ next.focus({preventScroll:true});return true;
+}
+function close(recheck=true){if(!open)return;open.cleanup();open.layer.remove();open=null;if(recheck)schedule();}
+
+function welcome(index=0){
+ if(index>=WELCOME.length){mark('welcome');close();return;}
+ const shown=show(WELCOME[index],{dim:true,index,total:WELCOME.length,onNext:()=>welcome(index+1),onSkip:()=>{mark('welcome');close();}});
+ if(!shown)welcome(index+1);
+}
+function tip(key){return show(TIP[key],{onNext:()=>{mark(key);close();}});}
+
+function check(){
+ timer=0;if(open||busy()||document.hidden)return;const data=info();if(!data)return;
+ if(startCount===null)startCount=data.count;
+ const view=route();
+ if(!state.seen.welcome){
+  // 기존 사용자(기록이 있거나 로그인했던 기기)는 안내를 모두 본 것으로 둔다.
+  if(!replay&&(data.count>0||rememberedUid())){mark(...TIPS);return;}
+  if(view==='#home')welcome();return;
+ }
+ if(view==='#home'&&!state.seen.firstSave&&startCount===0&&data.count>0&&tip('firstSave'))return;
+ if(view==='#stats'&&!state.seen.stats&&data.count>=3&&tip('stats'))return;
+ if(view==='#stats'&&!state.seen.share&&data.dayPlays>=2&&tip('share'))return;
+ if((view==='#home'||view==='#stats')&&!state.seen.login&&data.count>=5&&!data.signedIn&&tip('login'))return;
+}
+function schedule(delay=500){clearTimeout(timer);timer=setTimeout(check,delay);}
+
+// 설정 '사용법 다시 보기': 본 기록을 지우고 점수판에서 첫 실행 안내를 다시 보여 준다(기록이 있어도).
+export function replayTour(){replay=true;state={seen:Object.fromEntries(TIPS.filter(key=>key!=='welcome').map(key=>[key,true]))};save();close(false);
+ const run=()=>{if(route()==='#home'&&!busy())welcome();else schedule();};if(route()==='#home')setTimeout(run,300);else{location.hash='home';setTimeout(run,600);}}
+
+document.getElementById('replayTour')?.addEventListener('click',event=>{event.preventDefault();replayTour();});
+addEventListener('score-records:changed',()=>schedule());
+addEventListener('hashchange',()=>{close(false);schedule(700);});
+document.addEventListener('click',()=>{if(!open)schedule(900);});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
+schedule(1200);
