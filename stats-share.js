@@ -3,12 +3,12 @@ import {metadata,bggId,gameNames} from './bgg-metadata.js?v=300';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
 import {gameImageUrl,safeGameImage} from './game-artwork.js?v=300';
-import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop} from './stats-overview.js?v=303';
+import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=304';
 import {nameKey} from './personal-stats.js?v=300';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames,koreanGameName} from './game-catalog.js?v=300';
 import {summarizeStats} from './stats-insights.js?v=300';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=303';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=304';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -65,9 +65,9 @@ export const SHARE_TYPES=[['strategy','#82bfff'],['family','#ffc56b'],['deductio
 export function shareTypeName(key,locale){return copy[shareLanguage(locale)].typeNames[key]||key;}
 export function shareGameType(play){
  // 협력으로 기록해도 전략으로 보는 게임(오를레앙) → 협력으로 기록한 판 → 통계에서 따로 정한 유형(BGG 분류가 비었거나 협력 분류를 빼는 전략 게임: 니하르 등).
- if(strategyEvenCoop.has(bggId(play.game)))return 'strategy';
+ if(strategyEvenCoop.has(fixedGameId(play.game)))return 'strategy';
  if(play.rule==='cooperative')return 'coop';
- if(fixedTypes[bggId(play.game)]==='strategy')return 'strategy';
+ if(fixedTypes[fixedGameId(play.game)]==='strategy')return 'strategy';
  const info=metadata(play.game);
  if(play.players?.some(person=>person.culprit!==undefined||person.guess!==undefined)||DEDUCTION_NAMES.test(String(play.game?.name||''))||info?.deduction)return 'deduction';
  const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';if(own==='escape')return 'coop';
@@ -224,7 +224,7 @@ function otherGames(ctx,games,title,words,{x,y,w,h}){
 // 게임 성격 비율 막대: 전략 · 가족/파티 · 협동을 판 수 기준 비율로 그립니다. 낮은 칸(행 높이 60 미만)은 이름 · 막대 · 비율을 한 줄에 둡니다.
 function typesCard(ctx,mix,words,{x,y,w,h}){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#9fc8f7';ctx.font='600 24px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.typesTitle,x+28,y+44);
- const rows=SHARE_TYPES.filter(([key])=>key!=='deduction'||mix?.deduction),total=rows.reduce((sum,[key])=>sum+(mix?.[key]||0),0)||1,rowH=Math.min(70,(h-76)/rows.length),barW=w-56;
+ const rows=SHARE_TYPES.filter(([key])=>mix?.[key]>0),total=rows.reduce((sum,[key])=>sum+(mix?.[key]||0),0)||1,rowH=Math.min(70,(h-76)/rows.length),barW=w-56;
  const compact=rowH<60;
  rows.forEach(([key,color],index)=>{const count=mix?.[key]||0,ratio=count/total,top=y+70+index*rowH;
   if(compact){const barX=x+132,barLen=w-132-118;ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='700 21px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.typeNames[key],x+28,top+22);fillRound(ctx,barX,top+10,barLen,12,6,'rgba(255,255,255,.12)');if(count)fillRound(ctx,barX,top+10,Math.max(12,barLen*ratio),12,6,color);ctx.textAlign='right';ctx.fillStyle='#9fc8f7';ctx.font='600 19px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(`${Math.round(ratio*100)}% · ${words.playsUnit(count)}`,x+w-24,top+22);return;}

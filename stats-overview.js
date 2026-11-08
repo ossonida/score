@@ -6,9 +6,13 @@ export const typeLabels={strategy:'전략',sports:'스포츠',escape:'방탈출'
 const domainKeys={'Strategy Games':'strategy','Family Games':'family','Party Games':'party','Abstract Games':'abstract','Thematic Games':'thematic','Wargames':'war',"Children's Games":'children',"Children’s Games":'children','Customizable Games':'customizable'};
 export // BGG 유형과 달리 전략으로 보는 게임
 const fixedTypes={'455881':'strategy','164928':'strategy','320780':'strategy','440942':'strategy','439816':'strategy','367966':'strategy'};
-// 협력 모드로 기록해도 전략으로 보는 게임(오를레앙: 침공 협력 시나리오).
-export const strategyEvenCoop=new Set(['164928']);
-export function gameTypeList(play){const ownType=scoreGameType(play.game)||fixedTypes[bggId(play.game)];if(ownType)return [ownType];const data=metadata(play.game);if(!data)return ['unknown'];const types=[...new Set(data.domains.map(x=>domainKeys[x]).filter(Boolean))];if(data.cooperative)types.push('cooperative');if(data.deduction)types.push('deduction');return types.length?types:['unknown'];}
+// 협력 모드로 기록해도 전략으로 보는 게임(오를레앙·엔데버: 딥 씨 — 협동 모드가 있는 전략 게임).
+export const strategyEvenCoop=new Set(['164928','367966']);
+// BGG 번호 없이 이름만 있는 기록도 고정 분류를 받도록 이름(공백 제거·소문자·악센트 제거)으로도 찾는다.
+const fixedNames={'니하르':'455881','nijar':'455881','오를레앙':'164928','orleans':'164928','엔데버:딥씨':'367966','endeavor:deepsea':'367966'};
+const plainName=name=>String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').normalize('NFC').replace(/\s+/g,'').toLowerCase();
+export function fixedGameId(game){const id=bggId(game);return id&&fixedTypes[id]?id:fixedNames[plainName(game?.name)]||id;}
+export function gameTypeList(play){const ownType=scoreGameType(play.game)||fixedTypes[fixedGameId(play.game)];if(ownType)return [ownType];const data=metadata(play.game);if(!data)return ['unknown'];const types=[...new Set(data.domains.map(x=>domainKeys[x]).filter(Boolean))];if(data.cooperative)types.push('cooperative');if(data.deduction)types.push('deduction');return types.length?types:['unknown'];}
 export function gameType(play){return gameTypeList(play)[0];}
 export function latestPlayDate(records){return records.reduce((date,p)=>p.date>date?p.date:date,'');}
 export function overviewStats(records,profile){
