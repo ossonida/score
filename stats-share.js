@@ -2,7 +2,7 @@ import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './recor
 import {metadata,bggId,gameNames} from './bgg-metadata.js?v=309';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
-import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=309';
+import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=310';
 import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=309';
 import {nameKey} from './personal-stats.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -165,7 +165,7 @@ export function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.mea
 // 표지가 10개 이상이면 위·아래 그라데이션 대신 표지 전체에 한 가지 농도의 그늘을 깝니다.
 // 표지는 칸을 꽉 채우되, 세로로 남는 부분은 위쪽 15% 지점을 기준으로 잘라 상자 위쪽의 게임 제목·로고가 보이게 합니다.
 // 표지를 w×h에 꽉 채울 원본 구간 [sx,sy,sw,sh]: 가운데(세로는 위쪽 15%) 기준, 앞·뒷면 사진은 앞면 구간 안에서.
-export function coverSource(image,w,h){const crop=coverCrop(image.src),left=crop?crop[0]*image.naturalWidth:0,width=crop?(crop[1]-crop[0])*image.naturalWidth:image.naturalWidth,scale=Math.max(w/width,h/image.naturalHeight),sw=w/scale,sh=h/scale;return [left+(width-sw)/2,(image.naturalHeight-sh)*.15,sw,sh];}
+export function coverSource(image,w,h){const crop=coverCrop(image.src),left=crop?crop[0]*image.naturalWidth:0,width=crop?(crop[1]-crop[0])*image.naturalWidth:image.naturalWidth,scale=Math.max(w/width,h/image.naturalHeight),sw=w/scale,sh=h/scale;return [left+(width-sw)/2,(image.naturalHeight-sh)*(crop?.[2]??.15),sw,sh];}
 function drawCover(ctx,image,game,x,y,w,h,flat=false){
  const label=game.winners?.length?'🏆 '+game.winners.join(', '):game.mission||'';fillRound(ctx,x,y,w,h,28,'#17253a');ctx.save();roundRect(ctx,x,y,w,h,28);ctx.clip();
  if(image){ctx.drawImage(image,...coverSource(image,w,h),x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
