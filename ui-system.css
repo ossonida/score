@@ -297,14 +297,14 @@ dialog .actions .danger{margin-right:0}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
-/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 꿀빛 원목 책장. 뒤판 전체가 세로 나뭇결 원목, 줄마다 밝은 원목 선반(윗면·앞턱·벽에 지는 그림자),
-   표지는 선반 위에 상자 비율 그대로(fitShelfCover) 세운다. 글자 이름표는 그 글자 첫 선반 앞턱에 옅게 새김. */
-.library-list.game-shelf{position:relative;display:block;margin:10px 0 14px;padding:0 0 10px;border-radius:12px;overflow:hidden;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27360%27%20height%3D%27520%27%3E%3Cfilter%20id%3D%27w%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.07%200.004%27%20numOctaves%3D%273%27%20seed%3D%277%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.42%200%200%200%200%200.24%200%200%200%200%200.08%200%200%200%201.6%20-0.62%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23w)%27%2F%3E%3C%2Fsvg%3E"),radial-gradient(ellipse 120% 70% at 50% 40%,#d6a56a,#b9824a 70%,#a87240);background-size:360px 520px,auto;box-shadow:inset 0 0 0 1px rgba(80,45,10,.35),inset 0 0 40px rgba(70,35,5,.35),0 12px 26px rgba(0,0,0,.45)}
-.library-list.game-shelf.has-index{margin-right:20px}
-.shelf-group{position:relative;z-index:1;padding:0 22px}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:18px;align-items:end;padding-top:30px;margin-bottom:26px}
-.shelf-row::after{content:'';position:absolute;z-index:0;left:-12px;right:-12px;bottom:-20px;height:26px;background:linear-gradient(180deg,#e2bd85 0,#efd3a3 6px,#f6dfb4 7px,#ecc994 12px,#dcb07a 100%);border-radius:1px 1px 2px 2px;box-shadow:inset 0 -1px 0 rgba(120,70,20,.35),0 16px 16px -8px rgba(70,35,5,.5),0 3px 4px rgba(70,35,5,.25)}
-.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-4px;bottom:-16px;height:10px;font-size:9px;font-weight:700;line-height:10px;letter-spacing:.12em;color:rgba(110,65,20,.45);text-shadow:0 1px 0 rgba(255,240,210,.5);pointer-events:none}
+/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 꿀빛 원목 책장. 뒤판은 자연스러운 세로 나뭇결(굵은 무늬 + 가는 결), 줄마다 얇고 밝은 원목 선반과 벽에 길게 지는 그림자.
+   표지는 크게, 선반 위에 상자 비율 그대로(fitShelfCover). 좌우 여백은 같게 두고 우측 색인은 책장 오른쪽 가장자리에 반투명으로 겹친다. */
+.library-list.game-shelf{position:relative;display:block;margin:10px 0 14px;padding:0 0 6px;border-radius:4px;overflow:hidden;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27420%27%20height%3D%27640%27%3E%3Cfilter%20id%3D%27f%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.022%200.0025%27%20numOctaves%3D%274%27%20seed%3D%2711%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.36%200%200%200%200%200.19%200%200%200%200%200.05%203.4%200%200%200%20-1.45%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23f)%27%2F%3E%3C%2Fsvg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27300%27%20height%3D%27600%27%3E%3Cfilter%20id%3D%27g%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.55%200.008%27%20numOctaves%3D%272%27%20seed%3D%274%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.5%200%200%200%200%200.3%200%200%200%200%200.12%201.7%200%200%200%20-0.78%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23g)%27%2F%3E%3C%2Fsvg%3E"),linear-gradient(90deg,#bf8a52,#cc975d 30%,#c99359 70%,#bc8650);background-size:420px 640px,300px 600px,auto;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+.library-list.game-shelf.has-index{margin-right:0;padding-right:0}
+.shelf-group{position:relative;z-index:1;padding:0 18px}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:32px;margin-bottom:30px}
+.shelf-row::after{content:'';position:absolute;z-index:0;left:-14px;right:-14px;bottom:-16px;height:20px;background:linear-gradient(180deg,#d7ae76 0,#e9c995 4px,#f5dcaf 5px,#efd09d 60%,#e6c189 100%);box-shadow:0 20px 22px -12px rgba(80,40,5,.55),0 2px 3px rgba(80,40,5,.25)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-6px;bottom:-13px;height:10px;font-size:9px;font-weight:700;line-height:10px;letter-spacing:.12em;color:rgba(120,75,25,.4);pointer-events:none}
 .shelf-row:not([data-key])::before{content:none}
 .shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
 .shelf-book:active{transform:translateY(-3px)}
@@ -313,7 +313,7 @@ dialog .actions .danger{margin-right:0}
 .shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:2px 4px 4px 2px;background:linear-gradient(160deg,#2c3846,#1b232d);box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75);font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
 .shelf-book:has(>.shelf-cover-art.is-ready:not([hidden])) .shelf-cover-name{display:none}
 /* 표지: fitShelfCover가 상자 비율·크기를 정한다. 빈 여백 없이 그림 = 상자. */
-.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(40,20,0,.35),6px 4px 10px -2px rgba(60,30,0,.45),-2px 2px 6px rgba(60,30,0,.2)}
+.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(40,20,0,.3),4px 2px 8px rgba(70,35,0,.35),-1px 1px 4px rgba(70,35,0,.2)}
 .shelf-cover-art:not(.is-ready){width:0;height:0}
 .shelf-cover-art[hidden]{display:none}
 .shelf-cover-art::after{content:'';position:absolute;z-index:3;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 2px,transparent 7px),linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%);pointer-events:none}
@@ -326,3 +326,7 @@ dialog .actions .danger{margin-right:0}
 /* 앞·뒷면을 나란히 찍은 대표 이미지(game-artwork.js COVER_CROPS): 넓힌 그림을 칸 폭으로 가려 앞면만 보인다. */
 .cover-crop{display:block;width:100%;overflow:hidden}
 .cover-crop img{max-width:none;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:fill!important}
+
+/* 책장 위 우측 색인: 원목 위에서 읽히게 반투명 어두운 띠 */
+.game-index.on-shelf{border-radius:13px 0 0 13px;background:rgba(30,18,6,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.game-index.on-shelf button{color:#f7e6c8}
