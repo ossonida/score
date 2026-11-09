@@ -1,13 +1,13 @@
-import './records.js?v=310';
+import './records.js?v=311';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
 import {gameKey} from './records-core.js?v=309';
 import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=309';
-import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=310';
+import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=311';
 import {idToken} from './cloud-records.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {enrichGames} from './bgg-details-client.js?v=310';
+import {enrichGames} from './bgg-details-client.js?v=311';
 import {gameNames} from './bgg-metadata.js?v=309';
 import {indexEntries} from './game-index.js?v=2';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
@@ -33,13 +33,15 @@ function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;co
  showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
+// 책장 표지: 정사각에 가까우면 꽉 채우고, 많이 세로·가로로 긴 표지는 잘리지 않게 통째로 넣고 남는 자리를 같은 그림을 흐리게 깔아 채운다.
+function fitShelfCover(art,image){const ratio=image.naturalWidth/image.naturalHeight,fit=!art.classList.contains('cover-crop')&&(ratio<.8||ratio>1.25);art.classList.toggle('cover-fit',fit);if(fit)art.style.setProperty('--cover',`url("${image.currentSrc||image.src}")`);}
 // 보유 탭 '내 컬렉션 책장': 첫 글자 묶음마다 책장 한 칸(표지를 한 줄 3개·넓은 화면 5개씩, 줄마다 선반). 글자는 그 칸 첫 선반 앞면에 새긴다(data-key).
 function renderShelf(list,games){const entries=indexEntries(games.map(row=>row.label)),columns=list.clientWidth>=640?5:3;
  const groups=(entries.length?entries:[{key:'',index:0}]).map((entry,index,all)=>({key:entry.key,index:entry.index,items:games.slice(entry.index,all[index+1]?.index??games.length)})).filter(group=>group.items.length);
  for(const group of groups){const section=el('section',undefined,'shelf-group');section.dataset.shelfIndex=String(group.index);
   for(let start=0;start<group.items.length;start+=columns){const row=el('div',undefined,'shelf-row');row.style.setProperty('--shelf-columns',String(columns));if(!start&&group.key)row.dataset.key=group.key;
    for(const data of group.items.slice(start,start+columns)){const {game,thumbnail,label}=data,book=el('button',undefined,'shelf-book');book.type='button';book.title=label;book.setAttribute('aria-label',label+' 게임별 통계 보기');
-    const fallback=el('span',label,'shelf-cover-name'),art=el('span',undefined,'shelf-cover-art');renderGameArtwork(art,thumbnail?{...game,thumbnail}:game);const image=art.querySelector('img');if(image)image.alt='';
+    const fallback=el('span',label,'shelf-cover-name'),art=el('span',undefined,'shelf-cover-art');renderGameArtwork(art,thumbnail?{...game,thumbnail}:game);const image=art.querySelector('img');if(image){image.alt='';image.onload=()=>fitShelfCover(art,image);}
     book.append(fallback,art);book.onclick=()=>api.openGameStats(game);row.append(book);}
    section.append(row);}
   list.append(section);}

@@ -299,13 +299,15 @@ dialog .actions .danger{margin-right:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
 /* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 앱과 같은 어두운 벽 + 얇은 선반(윗면 빛·아래 그림자), 표지는 모두 같은 정사각 상자.
    표지는 칸을 꽉 채우되 제목이 있는 위쪽을 기준으로 맞춘다(COVER_CROPS 세로 기준이 있으면 그쪽). 글자 이름표는 그 글자 칸 첫 선반 앞면에 옅게. */
-.library-list.game-shelf{display:block;margin-top:8px;padding:22px 16px 10px;border-radius:18px;background:radial-gradient(ellipse 90% 140px at 50% 0,rgba(255,255,255,.05),transparent),linear-gradient(180deg,#161c25,#11161d);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 12px 28px rgba(0,0,0,.35)}
+.library-list.game-shelf{display:block;margin-top:8px;padding:0 10px 8px;border-radius:14px;background:linear-gradient(90deg,#2a1d14,#3a291c 3%,#33241a 50%,#3a291c 97%,#2a1d14);box-shadow:inset 0 1px 0 rgba(255,220,180,.12),inset 0 0 0 1px rgba(0,0,0,.4),0 14px 30px rgba(0,0,0,.45)}
 .library-list.game-shelf.has-index{margin-right:20px}
-.shelf-group{position:relative;padding:0 6px}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;margin-bottom:48px}
-.shelf-row::after{content:'';position:absolute;z-index:0;left:-12px;right:-12px;bottom:-19px;height:19px;border-radius:2px 2px 4px 4px;background:linear-gradient(180deg,#2b333e 0,#3b4552 5px,#2a313b 6px,#222932 70%,#1c222a 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 16px 18px -8px rgba(0,0,0,.75),0 4px 6px -2px rgba(0,0,0,.4)}
-.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-4px;bottom:-17px;height:12px;font-size:10px;font-weight:600;line-height:12px;letter-spacing:.1em;color:rgba(255,255,255,.26);pointer-events:none}
+.shelf-group{position:relative;padding:0 10px;background:linear-gradient(180deg,#10151c,#141a22);box-shadow:inset 6px 0 10px -4px rgba(0,0,0,.7),inset -6px 0 10px -4px rgba(0,0,0,.7)}
+.shelf-group:first-child{margin-top:10px;border-radius:4px 4px 0 0}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:22px;margin-bottom:22px;background:radial-gradient(ellipse 75% 70% at 50% 0,rgba(255,214,160,.11),transparent 70%)}
+.shelf-row::after{content:'';position:absolute;z-index:0;left:-10px;right:-10px;bottom:-22px;height:22px;background:linear-gradient(180deg,#8a6646 0,#a57b55 2px,#7c5a3d 7px,#5a3f2a 8px,#4a3322 60%,#3b2819 100%),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 17px);background-blend-mode:normal;box-shadow:inset 0 -1px 0 rgba(0,0,0,.45),0 10px 14px -4px rgba(0,0,0,.8)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-18px;height:12px;font-size:10px;font-weight:700;line-height:12px;letter-spacing:.1em;color:rgba(20,10,4,.55);text-shadow:0 1px 0 rgba(255,210,160,.18);pointer-events:none}
 .shelf-row:not([data-key])::before{content:none}
+.shelf-group:last-child .shelf-row:last-child{margin-bottom:22px}
 .shelf-book{position:relative;z-index:1;display:block;width:100%;aspect-ratio:1/1;padding:0;border:0;border-radius:2px 4px 4px 2px;overflow:hidden;background:linear-gradient(160deg,#2c3846,#1b232d);color:#e6dcc8;box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75),1px 3px 4px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 .shelf-book:active{transform:translateY(-3px);box-shadow:0 1px 1px rgba(0,0,0,.4),6px 14px 18px -6px rgba(0,0,0,.8)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
@@ -314,6 +316,10 @@ dialog .actions .danger{margin-right:0}
 .shelf-cover-art{position:absolute;z-index:2;inset:0;display:block;overflow:hidden;background:#1b222b}
 .shelf-cover-art[hidden]{display:none}
 .shelf-cover-art img{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:none;object-fit:cover;object-position:50% 0}
+/* 많이 세로·가로로 긴 표지(fitShelfCover): 통째로 넣고 남는 자리는 같은 그림을 흐리게. */
+.shelf-cover-art.cover-fit{background:var(--cover) center/cover no-repeat #1b222b}
+.shelf-cover-art.cover-fit::before{content:'';position:absolute;inset:-16px;background:inherit;filter:blur(14px) brightness(.7) saturate(1.1)}
+.shelf-cover-art.cover-fit img{z-index:1;object-fit:contain;object-position:50% 50%}
 /* 앞·뒷면 사진: 앞면 폭을 칸 폭에 맞추고 세로는 --crop-y(0 위·1 아래) 기준. */
 .shelf-cover-art.cover-crop img{inset:auto;left:0;top:calc(var(--crop-y,0) * 100%);transform:translateY(calc(var(--crop-y,0) * -100%))}
 .game-shelf:empty{margin:0;padding:0;box-shadow:none;background:none}
