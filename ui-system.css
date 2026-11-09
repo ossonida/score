@@ -296,3 +296,4 @@ dialog .actions .danger{margin-right:0}
 .tour-skip{border:0;background:transparent;color:#9fc8f7}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
+.tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
