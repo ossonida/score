@@ -297,20 +297,20 @@ dialog .actions .danger{margin-right:0}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
-/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 진열장처럼. 월넛 틀(양옆 기둥이 위로 조금·아래로 다리처럼), 따뜻하고 깊은 안쪽 벽, 칸마다 위 LED 줄조명과 스포트라이트,
-   월넛 선반 앞 모서리에 황동 줄, 글자 이름표는 선반 앞면에 황동색으로 작게. 표지는 상자 비율 그대로(fitShelfCover). */
-.library-list.game-shelf{position:relative;display:block;margin:18px 4px 30px;padding:0 10px 8px;border-radius:2px;background:linear-gradient(90deg,#2e1c10,#4a2f1c 3%,#3f2818 50%,#4a2f1c 97%,#2e1c10);box-shadow:inset 0 0 0 1px rgba(0,0,0,.45),0 18px 34px rgba(0,0,0,.55)}
+/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 무광 블랙 틀(양옆 기둥이 위로 조금·아래로 다리처럼) + 차콜 안쪽 벽 + 얇은 월넛 선반.
+   빛·장식 효과 없이 차분하게. 글자 이름표는 선반 앞면에 옅게. 표지는 상자 비율 그대로(fitShelfCover). */
+.library-list.game-shelf{position:relative;display:block;margin:18px 4px 30px;padding:0 6px 6px;border-radius:2px;background:#0c0d0f;box-shadow:0 18px 30px rgba(0,0,0,.5)}
 /* 양옆 기둥만 위로 조금, 아래로 다리처럼 삐져나온다(위·아래를 막는 판은 없음). */
-.library-list.game-shelf::before{content:'';position:absolute;z-index:0;left:0;right:0;top:-10px;bottom:-22px;background:linear-gradient(90deg,#2e1c10,#4a2f1c 30%,#5b3b24 55%,#3a2416) left top/10px 100% no-repeat,linear-gradient(90deg,#2e1c10,#4a2f1c 30%,#5b3b24 55%,#3a2416) right top/10px 100% no-repeat;filter:drop-shadow(0 8px 8px rgba(0,0,0,.5));pointer-events:none}
+.library-list.game-shelf::before{content:'';position:absolute;z-index:0;left:0;right:0;top:-10px;bottom:-22px;background:linear-gradient(90deg,#08090a,#1b1c1f 50%,#0c0d0f) left top/6px 100% no-repeat,linear-gradient(90deg,#0c0d0f,#1b1c1f 50%,#08090a) right top/6px 100% no-repeat;filter:drop-shadow(0 8px 8px rgba(0,0,0,.5));pointer-events:none}
 .library-list.game-shelf.has-index{margin-right:24px}
-.shelf-group{position:relative;padding:0 10px;background:radial-gradient(ellipse 120% 60% at 50% 50%,#211b16,#16120e);box-shadow:inset 8px 0 12px -4px rgba(0,0,0,.75),inset -8px 0 12px -4px rgba(0,0,0,.75)}
-.shelf-group:first-child{margin-top:10px;border-radius:4px 4px 0 0}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:24px;margin-bottom:22px;background:linear-gradient(180deg,rgba(255,226,180,.55) 0,rgba(255,214,160,.12) 2px,transparent 6px),radial-gradient(ellipse 34% 95% at 18% 0,rgba(255,196,120,.16),transparent 75%),radial-gradient(ellipse 34% 95% at 50% 0,rgba(255,196,120,.16),transparent 75%),radial-gradient(ellipse 34% 95% at 82% 0,rgba(255,196,120,.16),transparent 75%)}
-.shelf-row::after{content:'';position:absolute;z-index:0;left:-10px;right:-10px;bottom:-22px;height:22px;background:linear-gradient(180deg,#6b4a30 0,#8c6443 3px,#7a5537 6px,#d8b57a 6px,#b88f55 7px,#5a3b24 8px,#4a3020 60%,#3a2617 100%);box-shadow:inset 0 -1px 0 rgba(0,0,0,.5),0 12px 16px -4px rgba(0,0,0,.8)}
-.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-19px;height:12px;font-size:10px;font-weight:700;line-height:12px;letter-spacing:.12em;color:rgba(216,181,122,.7);text-shadow:0 1px 0 rgba(0,0,0,.5);pointer-events:none}
+.shelf-group{position:relative;padding:0 12px;background:#17181b;box-shadow:inset 0 10px 16px -10px rgba(0,0,0,.6)}
+.shelf-group:first-child{margin-top:6px}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:26px;margin-bottom:12px}
+.shelf-row::after{content:'';position:absolute;z-index:0;left:-12px;right:-12px;bottom:-12px;height:12px;background:linear-gradient(180deg,#9a7150 0,#7a5438 1px,#5e3f28 3px,#4d331f 100%);box-shadow:0 10px 14px -6px rgba(0,0,0,.75),0 1px 2px rgba(0,0,0,.5)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-10px;height:8px;font-size:8px;font-weight:700;line-height:8px;letter-spacing:.12em;color:rgba(255,232,205,.32);pointer-events:none}
 .shelf-group{z-index:1}
 .shelf-row:not([data-key])::before{content:none}
-.shelf-group:last-child .shelf-row:last-child{margin-bottom:22px}
+.shelf-group:last-child .shelf-row:last-child{margin-bottom:12px}
 .shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
 .shelf-book:active{transform:translateY(-3px)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
