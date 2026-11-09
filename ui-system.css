@@ -297,14 +297,14 @@ dialog .actions .danger{margin-right:0}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
-/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 꿀빛 원목 책장. 뒤판은 실제 원목 사진(assets/wood-wall.jpg, ambientCG Wood092 CC0) + 가운데 밝고 가장자리 어두운 빛,
-   표지는 크게(한 줄 3개가 폭을 거의 채움), 선반 위에 상자 비율 그대로(fitShelfCover). 선반 양옆 벽 여백, 우측 색인은 오른쪽 벽 여백에 새긴 듯. */
-.library-list.game-shelf{position:relative;display:block;margin:10px 0 14px;padding:0 0 6px;border-radius:4px;overflow:hidden;background:radial-gradient(ellipse 75% 45% at 50% 30%,rgba(255,236,200,.30),transparent 70%),radial-gradient(ellipse 110% 90% at 50% 45%,transparent 50%,rgba(55,25,4,.42)),linear-gradient(rgba(255,210,150,.14),rgba(255,210,150,.14)),url(assets/wood-wall.jpg) -60px 0/520px 520px repeat,#c08a52;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 벽은 앱 어두운 배경 그대로, 선반만 실제 원목(assets/wood-plank.jpg, ambientCG Wood092 CC0 가로결).
+   선반은 원근 윗면·두께 있는 앞면·벽 그림자. 표지는 크게(한 줄 3개), 선반 위에 상자 비율 그대로(fitShelfCover). 우측 색인은 오른쪽 여백에. */
+.library-list.game-shelf{position:relative;display:block;margin:6px 0 14px;padding:0 0 6px;background:none;box-shadow:none}
 .library-list.game-shelf.has-index{margin-right:0;padding-right:0}
 .shelf-group{position:relative;z-index:1;padding:0 30px}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:12px;align-items:end;padding:22px 0 3px;margin-bottom:32px;background:linear-gradient(0deg,transparent 7px,rgba(70,35,0,.22) 7px,rgba(70,35,0,0) 18px) 0 0/100% 100% no-repeat}
-.shelf-row::after{content:attr(data-key);position:absolute;z-index:2;left:-6px;right:-6px;bottom:-15px;height:15px;box-sizing:border-box;padding-left:8px;font-size:9px;font-weight:700;line-height:15px;letter-spacing:.12em;color:rgba(125,78,28,.45);text-shadow:0 1px 0 rgba(255,244,222,.55);background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27400%27%20height%3D%2740%27%3E%3Cfilter%20id%3D%27p%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.006%200.45%27%20numOctaves%3D%272%27%20seed%3D%275%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.55%200%200%200%200%200.33%200%200%200%200%200.12%202.4%200%200%200%20-1.15%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23p)%27%2F%3E%3C%2Fsvg%3E") 0 0/400px 100%,linear-gradient(180deg,#fff5dc 0,#fbe4b6 1px,#f5d9a6 35%,#eccb92 80%,#d9ad72 100%);border-radius:1px 1px 2px 2px;box-shadow:inset 1px 0 0 rgba(255,240,210,.35),inset -1px 0 0 rgba(120,70,20,.25),0 1px 1px rgba(70,35,0,.5),0 9px 12px -1px rgba(70,35,0,.42),0 26px 34px -4px rgba(70,35,0,.3)}
-.shelf-row::before{content:'';position:absolute;z-index:0;left:-6px;right:-6px;bottom:0;height:8px;background:linear-gradient(180deg,#c99a60 0,#e2bd86 50%,#f2d6a3 100%);clip-path:polygon(1.5% 0,98.5% 0,100% 100%,0 100%);pointer-events:none}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:12px;align-items:end;padding:22px 0 3px;margin-bottom:32px;background:linear-gradient(0deg,transparent 7px,rgba(0,0,0,.4) 7px,rgba(0,0,0,0) 20px) 0 0/100% 100% no-repeat}
+.shelf-row::after{content:attr(data-key);position:absolute;z-index:2;left:-6px;right:-6px;bottom:-15px;height:15px;box-sizing:border-box;padding-left:8px;font-size:9px;font-weight:700;line-height:15px;letter-spacing:.12em;color:rgba(80,38,8,.6);text-shadow:0 1px 0 rgba(255,236,204,.35);background:linear-gradient(180deg,rgba(255,244,222,.7) 0,rgba(255,232,196,.32) 1px,rgba(255,226,186,.2) 45%,rgba(50,20,0,.22) 100%),url(assets/wood-plank.jpg) 0 50%/600px auto repeat-x,#c98a4c;border-radius:1px 1px 2px 2px;box-shadow:inset 1px 0 0 rgba(255,236,204,.3),inset -1px 0 0 rgba(60,25,0,.35),0 1px 1px rgba(0,0,0,.6),0 10px 14px -2px rgba(0,0,0,.55),0 26px 30px -6px rgba(0,0,0,.35)}
+.shelf-row::before{content:'';position:absolute;z-index:0;left:-6px;right:-6px;bottom:0;height:8px;background:linear-gradient(180deg,rgba(40,15,0,.5),rgba(255,226,186,.12)),url(assets/wood-plank.jpg) 0 0/600px auto repeat-x,#b97c42;clip-path:polygon(1.5% 0,98.5% 0,100% 100%,0 100%);pointer-events:none}
 .shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
 .shelf-book:active{transform:translateY(-3px)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
@@ -312,7 +312,7 @@ dialog .actions .danger{margin-right:0}
 .shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:2px 4px 4px 2px;background:linear-gradient(160deg,#2c3846,#1b232d);box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75);font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
 .shelf-book:has(>.shelf-cover-art.is-ready:not([hidden])) .shelf-cover-name{display:none}
 /* 표지: fitShelfCover가 상자 비율·크기를 정한다. 빈 여백 없이 그림 = 상자. */
-.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(40,20,0,.45),0 3px 4px -1px rgba(40,20,0,.35),5px -2px 12px rgba(70,35,0,.32),-3px -1px 8px rgba(70,35,0,.18)}
+.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(0,0,0,.55),0 3px 4px -1px rgba(0,0,0,.5),5px -2px 12px rgba(0,0,0,.45),-3px -1px 8px rgba(0,0,0,.28)}
 .shelf-cover-art:not(.is-ready){width:0;height:0}
 .shelf-cover-art[hidden]{display:none}
 .shelf-cover-art::after{content:'';position:absolute;z-index:3;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 2px,transparent 7px),linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%);pointer-events:none}
@@ -326,6 +326,4 @@ dialog .actions .danger{margin-right:0}
 .cover-crop{display:block;width:100%;overflow:hidden}
 .cover-crop img{max-width:none;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:fill!important}
 
-/* 책장 위 우측 색인: 원목 위에서 읽히게 반투명 어두운 띠 */
 .game-index.on-shelf{right:calc(max(0px,calc((100vw - 960px)/2)) + 14px);width:24px}
-.game-index.on-shelf button{color:rgba(96,56,18,.78);text-shadow:0 1px 0 rgba(255,236,204,.5)}
