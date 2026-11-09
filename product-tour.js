@@ -5,15 +5,15 @@ import {rememberedUid} from './cloud-records.js?v=300';
 
 const KEY='score.tour.v1',TIPS=['welcome','firstSave','stats','share','login'];
 const WELCOME=[
- {target:()=>document.querySelector('#cards .name')||visible('#bulk')||visible('#add'),title:'같이 하는 사람',text:'이름을 눌러 바꾸고, 위쪽 버튼으로 사람을 더해요.'},
- {target:()=>document.querySelector('#cards .score'),title:'점수 올리기',text:'+ − 로 점수를 바꾸고, 숫자를 누르면 직접 입력해요. 점수가 없는 게임은 저장할 때 \'점수 없이 기록\'으로 승패·순위·팀·협력을 남겨요.'},
- {target:()=>visible('#savePlay'),title:'게임이 끝나면 SAVE',text:'게임을 검색해 붙이면 표지와 한글 이름이 나오고, 통계에서 게임 종류별로 나뉘어요.'},
+ {target:()=>document.querySelector('#cards .name')||visible('#bulk')||visible('#add'),title:'플레이어 이름',text:'이름을 누르면 바꿀 수 있어요.\n사람을 더하려면 오른쪽 위 사람 모양 버튼을 누르세요.'},
+ {target:()=>document.querySelector('#cards .score'),title:'점수 바꾸기',text:'+ 와 − 를 누르면 1점씩 바뀌어요.\n큰 숫자를 누르면 점수를 직접 쓸 수 있어요.'},
+ {target:()=>visible('#savePlay'),title:'게임이 끝나면 SAVE',text:'SAVE를 누르고 무슨 게임이었는지 검색해서 고르면 기록이 저장돼요.\n점수 없이 이기고 지기만 하는 게임이면, 저장 화면에서 \'점수 없이 기록\'을 켜세요.'},
 ];
 const TIP={
- firstSave:{target:()=>visible('#navStats'),title:'첫 기록 저장 완료',text:'저장한 기록과 통계는 여기서 볼 수 있어요.'},
- stats:{target:()=>visible('#statsViewTabs'),title:'통계 보기',text:'최근 기록 · 기간 분석 · 게임별 통계에서 많이 한 게임, 승률, 함께한 사람을 볼 수 있어요.'},
- share:{target:()=>visible('#statsScreen .stats-share-trigger'),title:'오늘 기록 공유',text:'오늘 한 게임을 이미지로 만들어 단톡방이나 SNS에 공유해 보세요.'},
- login:{target:()=>visible('#navSettings'),title:'기록 지키기',text:'로그인하면 기기를 바꿔도 기록이 그대로 남아요.'},
+ firstSave:{target:()=>visible('#navStats'),title:'기록이 저장됐어요',text:'저장한 게임은 아래 통계 탭에서 다시 볼 수 있어요.'},
+ stats:{target:()=>visible('#statsViewTabs'),title:'통계 화면',text:'최근 기록: 마지막으로 게임한 날의 결과\n기간 분석: 한 달·한 해 동안 많이 한 게임과 승률\n게임별 통계: 게임마다 누가 몇 번 이겼는지'},
+ share:{target:()=>visible('#statsScreen .stats-share-trigger'),title:'공유하기',text:'이 날 한 게임 결과를 사진으로 만들어 줘요.\n카톡이나 인스타에 바로 올릴 수 있어요.'},
+ login:{target:()=>visible('#navSettings'),title:'로그인하기',text:'지금 기록은 이 휴대폰에만 저장돼 있어요.\n설정에서 로그인하면 폰을 바꿔도 기록이 남아요.'},
 };
 
 let state=load(),open=null,timer=0,startCount=null,replay=false;
@@ -33,12 +33,13 @@ function show(step,{dim=false,index=0,total=1,onNext,onSkip}={}){
  const layer=document.createElement('div');layer.className='tour-layer'+(dim?' dim':'');
  const ring=document.createElement('div');ring.className='tour-ring';
  const bubble=document.createElement('div');bubble.className='tour-bubble';bubble.setAttribute('role','dialog');bubble.setAttribute('aria-live','polite');
- const title=document.createElement('strong');title.textContent=step.title;const text=document.createElement('p');text.textContent=step.text;
+ const title=document.createElement('strong');title.textContent=step.title;// 줄마다 따로 그린다(영어 사전이 줄 단위로 번역).
+ const text=step.text.split('\n').map(line=>{const p=document.createElement('p');p.textContent=line;return p;});
  const actions=document.createElement('div');actions.className='tour-actions';
  if(total>1){const count=document.createElement('span');count.className='tour-count';count.textContent=`${index+1} / ${total}`;actions.append(count);}
  if(onSkip){const skip=document.createElement('button');skip.type='button';skip.className='tour-skip';skip.textContent='건너뛰기';skip.onclick=()=>onSkip();actions.append(skip);}
  const next=document.createElement('button');next.type='button';next.className='tour-next';next.textContent=total>1?(index+1<total?'다음':'시작하기'):'확인';next.onclick=()=>onNext();actions.append(next);
- bubble.append(title,text,actions);layer.append(ring,bubble);document.body.append(layer);
+ bubble.append(title,...text,actions);layer.append(ring,bubble);document.body.append(layer);
  const place=()=>{const r=target.getBoundingClientRect(),pad=6;Object.assign(ring.style,{left:`${r.left-pad}px`,top:`${r.top-pad}px`,width:`${r.width+pad*2}px`,height:`${r.height+pad*2}px`});
   const width=Math.min(320,innerWidth-24),left=Math.max(12,Math.min(innerWidth-width-12,r.left+r.width/2-width/2)),h=bubble.offsetHeight,below=r.bottom+pad+12+h<=innerHeight-8;
   Object.assign(bubble.style,{width:`${width}px`,left:`${left}px`,top:`${below?r.bottom+pad+12:Math.max(8,r.top-pad-12-h)}px`});bubble.dataset.side=below?'below':'above';bubble.style.setProperty('--arrow',`${Math.max(18,Math.min(width-18,r.left+r.width/2-left))}px`);};

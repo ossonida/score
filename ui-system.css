@@ -288,7 +288,8 @@ dialog .actions .danger{margin-right:0}
 .tour-bubble[data-side=below]::before{top:-8px;border-right:0;border-bottom:0}
 .tour-bubble[data-side=above]::before{bottom:-8px;border-left:0;border-top:0}
 .tour-bubble strong{display:block;font-size:16px;line-height:1.35;margin-bottom:6px}
-.tour-bubble p{margin:0;font-size:14px;line-height:1.5;color:#c9dcf2}
+.tour-bubble p{margin:0;font-size:14px;line-height:1.5;color:#c9dcf2;word-break:keep-all}
+.tour-bubble p+p{margin-top:6px}
 .tour-actions{display:flex;align-items:center;gap:8px;margin-top:12px}
 .tour-count{font-size:12px;color:#8fb3d9;margin-right:auto}
 .tour-actions button{min-height:36px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
