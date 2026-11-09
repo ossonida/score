@@ -297,20 +297,15 @@ dialog .actions .danger{margin-right:0}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
-/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 무광 블랙 틀(양옆 기둥이 위로 조금·아래로 다리처럼) + 차콜 안쪽 벽 + 얇은 월넛 선반.
-   빛·장식 효과 없이 차분하게. 글자 이름표는 선반 앞면에 옅게. 표지는 상자 비율 그대로(fitShelfCover). */
-.library-list.game-shelf{position:relative;display:block;margin:18px 4px 30px;padding:0 6px 6px;border-radius:2px;background:#0c0d0f;box-shadow:0 18px 30px rgba(0,0,0,.5)}
-/* 양옆 기둥만 위로 조금, 아래로 다리처럼 삐져나온다(위·아래를 막는 판은 없음). */
-.library-list.game-shelf::before{content:'';position:absolute;z-index:0;left:0;right:0;top:-10px;bottom:-22px;background:linear-gradient(90deg,#08090a,#1b1c1f 50%,#0c0d0f) left top/6px 100% no-repeat,linear-gradient(90deg,#0c0d0f,#1b1c1f 50%,#08090a) right top/6px 100% no-repeat;filter:drop-shadow(0 8px 8px rgba(0,0,0,.5));pointer-events:none}
-.library-list.game-shelf.has-index{margin-right:24px}
-.shelf-group{position:relative;padding:0 12px;background:#17181b;box-shadow:inset 0 10px 16px -10px rgba(0,0,0,.6)}
-.shelf-group:first-child{margin-top:6px}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:26px;margin-bottom:12px}
-.shelf-row::after{content:'';position:absolute;z-index:0;left:-12px;right:-12px;bottom:-12px;height:12px;background:linear-gradient(180deg,#9a7150 0,#7a5438 1px,#5e3f28 3px,#4d331f 100%);box-shadow:0 10px 14px -6px rgba(0,0,0,.75),0 1px 2px rgba(0,0,0,.5)}
-.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-10px;height:8px;font-size:8px;font-weight:700;line-height:8px;letter-spacing:.12em;color:rgba(255,232,205,.32);pointer-events:none}
-.shelf-group{z-index:1}
+/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 꿀빛 원목 책장. 뒤판 전체가 세로 나뭇결 원목, 줄마다 밝은 원목 선반(윗면·앞턱·벽에 지는 그림자),
+   표지는 선반 위에 상자 비율 그대로(fitShelfCover) 세운다. 글자 이름표는 그 글자 첫 선반 앞턱에 옅게 새김. */
+.library-list.game-shelf{position:relative;display:block;margin:10px 0 14px;padding:0 0 10px;border-radius:12px;overflow:hidden;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27360%27%20height%3D%27520%27%3E%3Cfilter%20id%3D%27w%27%3E%3CfeTurbulence%20type%3D%27fractalNoise%27%20baseFrequency%3D%270.07%200.004%27%20numOctaves%3D%273%27%20seed%3D%277%27%2F%3E%3CfeColorMatrix%20values%3D%270%200%200%200%200.42%200%200%200%200%200.24%200%200%200%200%200.08%200%200%200%201.6%20-0.62%27%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%27100%25%27%20height%3D%27100%25%27%20filter%3D%27url(%23w)%27%2F%3E%3C%2Fsvg%3E"),radial-gradient(ellipse 120% 70% at 50% 40%,#d6a56a,#b9824a 70%,#a87240);background-size:360px 520px,auto;box-shadow:inset 0 0 0 1px rgba(80,45,10,.35),inset 0 0 40px rgba(70,35,5,.35),0 12px 26px rgba(0,0,0,.45)}
+.library-list.game-shelf.has-index{margin-right:20px}
+.shelf-group{position:relative;z-index:1;padding:0 22px}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:18px;align-items:end;padding-top:30px;margin-bottom:26px}
+.shelf-row::after{content:'';position:absolute;z-index:0;left:-12px;right:-12px;bottom:-20px;height:26px;background:linear-gradient(180deg,#e2bd85 0,#efd3a3 6px,#f6dfb4 7px,#ecc994 12px,#dcb07a 100%);border-radius:1px 1px 2px 2px;box-shadow:inset 0 -1px 0 rgba(120,70,20,.35),0 16px 16px -8px rgba(70,35,5,.5),0 3px 4px rgba(70,35,5,.25)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-4px;bottom:-16px;height:10px;font-size:9px;font-weight:700;line-height:10px;letter-spacing:.12em;color:rgba(110,65,20,.45);text-shadow:0 1px 0 rgba(255,240,210,.5);pointer-events:none}
 .shelf-row:not([data-key])::before{content:none}
-.shelf-group:last-child .shelf-row:last-child{margin-bottom:12px}
 .shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
 .shelf-book:active{transform:translateY(-3px)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
@@ -318,7 +313,7 @@ dialog .actions .danger{margin-right:0}
 .shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:2px 4px 4px 2px;background:linear-gradient(160deg,#2c3846,#1b232d);box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75);font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
 .shelf-book:has(>.shelf-cover-art.is-ready:not([hidden])) .shelf-cover-name{display:none}
 /* 표지: fitShelfCover가 상자 비율·크기를 정한다. 빈 여백 없이 그림 = 상자. */
-.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75),1px 3px 4px rgba(0,0,0,.35)}
+.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(40,20,0,.35),6px 4px 10px -2px rgba(60,30,0,.45),-2px 2px 6px rgba(60,30,0,.2)}
 .shelf-cover-art:not(.is-ready){width:0;height:0}
 .shelf-cover-art[hidden]{display:none}
 .shelf-cover-art::after{content:'';position:absolute;z-index:3;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 2px,transparent 7px),linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%);pointer-events:none}
