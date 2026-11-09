@@ -1,10 +1,10 @@
-import {gameKey,winnerIds} from './records-core.js?v=300';
+import {gameKey,winnerIds} from './records-core.js?v=309';
 import {isPro,markProLock} from './pro-access.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';
-import {meIn,nameKey} from './personal-stats.js?v=300';
-import {firstPlays,milestones,playDays} from './stats-extras.js?v=304';
-import {stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=304';
+import {meIn,nameKey} from './personal-stats.js?v=309';
+import {firstPlays,milestones,playDays} from './stats-extras.js?v=309';
+import {coverSource,stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=309';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 기간 특징 한 장. 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
@@ -119,7 +119,7 @@ export function pill(ctx,text,x,y,{align='right',fill='rgba(5,13,25,.82)',color=
 }
 export function cover(ctx,image,name,x,y,w,h,radius=24){
  ctx.save();roundRect(ctx,x,y,w,h,radius);ctx.clip();
- if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale;ctx.drawImage(image,(image.naturalWidth-sw)/2,(image.naturalHeight-sh)*.15,sw,sh,x,y,w,h);}
+ if(image){ctx.drawImage(image,...coverSource(image,w,h),x,y,w,h);}
  else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);line(ctx,name,x+w/2,y+h/2+10,w-28,{size:Math.min(34,Math.round(w/6)),min:14,color:'#93bced',align:'center'});}
  ctx.restore();
 }

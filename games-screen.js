@@ -1,16 +1,16 @@
-import './records.js?v=305';
-import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=300';
-import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=300';
+import './records.js?v=309';
+import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
+import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
-import {gameKey} from './records-core.js?v=300';
-import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=300';
-import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=300';
-import {idToken} from './cloud-records.js?v=300';
+import {gameKey} from './records-core.js?v=309';
+import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=309';
+import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=309';
+import {idToken} from './cloud-records.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {enrichGames} from './bgg-details-client.js?v=300';
-import {gameNames} from './bgg-metadata.js?v=300';
+import {enrichGames} from './bgg-details-client.js?v=309';
+import {gameNames} from './bgg-metadata.js?v=309';
 import {indexEntries} from './game-index.js?v=2';
-import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=300';
+import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 let opened=null,timer,controller,serial=0,lastScope='',view='all',enriching=false;
@@ -33,11 +33,11 @@ function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;co
  showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
-// 보유 탭 '내 컬렉션 책장': 첫 글자 묶음마다 책장 한 칸(이름표 + 표지를 한 줄 3개·넓은 화면 5개씩, 줄마다 선반).
+// 보유 탭 '내 컬렉션 책장': 첫 글자 묶음마다 책장 한 칸(표지를 한 줄 3개·넓은 화면 5개씩, 줄마다 선반). 글자는 그 칸 첫 선반 앞면에 새긴다(data-key).
 function renderShelf(list,games){const entries=indexEntries(games.map(row=>row.label)),columns=list.clientWidth>=640?5:3;
  const groups=(entries.length?entries:[{key:'',index:0}]).map((entry,index,all)=>({key:entry.key,index:entry.index,items:games.slice(entry.index,all[index+1]?.index??games.length)})).filter(group=>group.items.length);
- for(const group of groups){const section=el('section',undefined,'shelf-group');section.dataset.shelfIndex=String(group.index);if(group.key){const tag=el('span',group.key,'shelf-tag');tag.setAttribute('aria-hidden','true');section.append(tag);}
-  for(let start=0;start<group.items.length;start+=columns){const row=el('div',undefined,'shelf-row');row.style.setProperty('--shelf-columns',String(columns));
+ for(const group of groups){const section=el('section',undefined,'shelf-group');section.dataset.shelfIndex=String(group.index);
+  for(let start=0;start<group.items.length;start+=columns){const row=el('div',undefined,'shelf-row');row.style.setProperty('--shelf-columns',String(columns));if(!start&&group.key)row.dataset.key=group.key;
    for(const data of group.items.slice(start,start+columns)){const {game,thumbnail,label}=data,book=el('button',undefined,'shelf-book');book.type='button';book.title=label;book.setAttribute('aria-label',label+' 게임별 통계 보기');
     const fallback=el('span',label,'shelf-cover-name'),art=el('span',undefined,'shelf-cover-art');renderGameArtwork(art,thumbnail?{...game,thumbnail}:game);const image=art.querySelector('img');if(image)image.alt='';
     book.append(fallback,art);book.onclick=()=>api.openGameStats(game);row.append(book);}

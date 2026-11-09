@@ -297,20 +297,26 @@ dialog .actions .danger{margin-right:0}
 .tour-next{margin-left:auto;border:0;background:#2f7de1;color:#fff}
 .tour-count+.tour-skip{margin-left:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
-
-/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 나무 틀 + 글자 칸(왼쪽 위 이름표) + 줄마다 선반. */
-.library-list.game-shelf{display:block;margin-top:8px;padding:12px 12px 4px;border-radius:14px;background:linear-gradient(90deg,#c88a4a,#e0a865 8%,#e0a865 92%,#c88a4a);box-shadow:0 6px 18px rgba(0,0,0,.45)}
-.library-list.game-shelf.has-index{margin-right:20px;padding-right:12px}
-.shelf-group{position:relative;padding:38px 12px 0;background:linear-gradient(180deg,#7a4d26,#93602f 30%,#9b6733);box-shadow:inset 0 10px 14px rgba(0,0,0,.35),inset 6px 0 10px rgba(0,0,0,.18),inset -6px 0 10px rgba(0,0,0,.18)}
-.shelf-group+.shelf-group{margin-top:0}
-.shelf-tag{position:absolute;top:8px;left:0;min-width:34px;padding:3px 10px 4px 9px;border-radius:0 9px 9px 0;background:#4f2f15;color:#fff3e2;font-size:15px;font-weight:800;line-height:1.2;text-align:center;box-shadow:0 2px 4px rgba(0,0,0,.35)}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding:0 2px;margin-bottom:30px}
-.shelf-row::after{content:'';position:absolute;left:-12px;right:-12px;bottom:-18px;height:16px;border-radius:2px;background:linear-gradient(180deg,#f3c88e,#d79a58 55%,#b97b3e);box-shadow:0 5px 8px rgba(0,0,0,.4)}
-.shelf-book{position:relative;display:block;width:100%;aspect-ratio:1/1.08;padding:0;border:0;border-radius:4px 6px 6px 4px;overflow:hidden;background:linear-gradient(160deg,#2c4a72,#1a2c46);color:#fff;box-shadow:3px 5px 9px rgba(0,0,0,.5),inset 3px 0 0 rgba(255,255,255,.12);cursor:pointer;transition:transform .15s ease}
+/* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 월넛 원목 틀 + 칸마다 위에서 비추는 은은한 조명 + 줄마다 선반.
+   글자 이름표는 그 글자 칸 첫 선반 앞면에 새긴 듯 작게. 표지는 자르지 않고 원래 비율로 선반 위에 세운다. */
+.library-list.game-shelf{display:block;margin-top:8px;padding:14px 14px 6px;border-radius:12px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 9px),linear-gradient(90deg,#2c190c,#4a2c17 5%,#3e2513 50%,#4a2c17 95%,#2c190c);box-shadow:0 14px 30px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,214,160,.12),inset 0 1px 0 rgba(255,225,180,.18)}
+.library-list.game-shelf.has-index{margin-right:20px;padding-right:14px}
+.shelf-group{position:relative;padding:20px 14px 0;background:radial-gradient(ellipse 70% 120px at 50% 0,rgba(255,196,128,.16),transparent),repeating-linear-gradient(90deg,rgba(255,235,210,.018) 0 2px,transparent 2px 11px),linear-gradient(180deg,#1b0f07,#24150a 40%,#2a180c);box-shadow:inset 8px 0 14px rgba(0,0,0,.45),inset -8px 0 14px rgba(0,0,0,.45)}
+.shelf-group:first-child{border-radius:4px 4px 0 0;box-shadow:inset 0 14px 18px rgba(0,0,0,.55),inset 8px 0 14px rgba(0,0,0,.45),inset -8px 0 14px rgba(0,0,0,.45)}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:16px;align-items:end;padding:0 2px;margin-bottom:38px}
+.shelf-row::after{content:'';position:absolute;left:-14px;right:-14px;bottom:-20px;height:18px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 13px),linear-gradient(180deg,#9a6a43 0,#7a4f2d 18%,#623d21 60%,#4c2e18 100%);box-shadow:inset 0 1px 0 rgba(255,226,186,.45),inset 0 -1px 0 rgba(0,0,0,.4),0 10px 14px rgba(0,0,0,.6)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-4px;bottom:-19px;height:16px;font-size:10px;font-weight:700;line-height:16px;letter-spacing:.08em;color:rgba(28,14,4,.62);text-shadow:0 1px 0 rgba(255,214,166,.28);pointer-events:none}
+.shelf-row:not([data-key])::before{content:none}
+.shelf-book{position:relative;display:block;width:100%;aspect-ratio:1/1.08;padding:0;border:0;border-radius:3px;overflow:hidden;background:linear-gradient(160deg,#3a2a1c,#22170e);color:#f3e6d3;box-shadow:0 8px 14px rgba(0,0,0,.55),0 2px 3px rgba(0,0,0,.5);cursor:pointer;transition:transform .15s ease}
+.shelf-book:has(>.shelf-cover-art:not([hidden])){aspect-ratio:auto;background:transparent}
 .shelf-book:active{transform:translateY(-3px)}
-.shelf-book:focus-visible{outline:3px solid #7fc4ff;outline-offset:2px}
-.shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;font-size:14px;font-weight:800;line-height:1.3;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
-.shelf-cover-art{position:absolute;inset:0}
+.shelf-book:focus-visible{outline:2px solid #e8c48a;outline-offset:3px}
+.shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(232,196,138,.35);border-radius:3px;font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
+.shelf-cover-art{position:relative;display:block}
 .shelf-cover-art[hidden]{display:none}
-.shelf-cover-art img{display:block;width:100%;height:100%;object-fit:cover}
+.shelf-cover-art img{display:block;width:100%;height:auto;aspect-ratio:auto 1/1.08;max-height:calc(var(--shelf-book-max,180px));object-fit:contain}
 .game-shelf:empty{margin:0;padding:0;box-shadow:none;background:none}
+
+/* 앞·뒷면을 나란히 찍은 대표 이미지(game-artwork.js COVER_CROPS): 넓힌 그림을 칸 폭으로 가려 앞면만 보인다. */
+.cover-crop{display:block;width:100%;overflow:hidden}
+.cover-crop img{max-width:none;height:auto!important;max-height:none!important;aspect-ratio:auto!important;object-fit:fill!important}

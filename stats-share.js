@@ -1,14 +1,14 @@
-import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=300';
-import {metadata,bggId,gameNames} from './bgg-metadata.js?v=300';
+import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './records-core.js?v=309';
+import {metadata,bggId,gameNames} from './bgg-metadata.js?v=309';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
-import {gameImageUrl,safeGameImage} from './game-artwork.js?v=300';
-import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=304';
-import {nameKey} from './personal-stats.js?v=300';
+import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=309';
+import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=309';
+import {nameKey} from './personal-stats.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {starterGames,koreanGameName} from './game-catalog.js?v=300';
-import {summarizeStats} from './stats-insights.js?v=300';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=304';
+import {starterGames,koreanGameName} from './game-catalog.js?v=309';
+import {summarizeStats} from './stats-insights.js?v=309';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=309';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -164,9 +164,11 @@ function drawWrapped(ctx,text,x,y,maxWidth,lineHeight,maxLines=2){
 export function clippedText(ctx,text,maxWidth){let value=String(text);if(ctx.measureText(value).width<=maxWidth)return value;while(value.length>1&&ctx.measureText(value+'…').width>maxWidth)value=value.slice(0,-1);return value+'…';}
 // 표지가 10개 이상이면 위·아래 그라데이션 대신 표지 전체에 한 가지 농도의 그늘을 깝니다.
 // 표지는 칸을 꽉 채우되, 세로로 남는 부분은 위쪽 15% 지점을 기준으로 잘라 상자 위쪽의 게임 제목·로고가 보이게 합니다.
+// 표지를 w×h에 꽉 채울 원본 구간 [sx,sy,sw,sh]: 가운데(세로는 위쪽 15%) 기준, 앞·뒷면 사진은 앞면 구간 안에서.
+export function coverSource(image,w,h){const crop=coverCrop(image.src),left=crop?crop[0]*image.naturalWidth:0,width=crop?(crop[1]-crop[0])*image.naturalWidth:image.naturalWidth,scale=Math.max(w/width,h/image.naturalHeight),sw=w/scale,sh=h/scale;return [left+(width-sw)/2,(image.naturalHeight-sh)*.15,sw,sh];}
 function drawCover(ctx,image,game,x,y,w,h,flat=false){
  const label=game.winners?.length?'🏆 '+game.winners.join(', '):game.mission||'';fillRound(ctx,x,y,w,h,28,'#17253a');ctx.save();roundRect(ctx,x,y,w,h,28);ctx.clip();
- if(image){const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight),sw=w/scale,sh=h/scale,sx=(image.naturalWidth-sw)/2,sy=(image.naturalHeight-sh)*.15;ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
+ if(image){ctx.drawImage(image,...coverSource(image,w,h),x,y,w,h);}else{const gradient=ctx.createLinearGradient(x,y,x+w,y+h);gradient.addColorStop(0,'#294d79');gradient.addColorStop(1,'#15253c');ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);ctx.fillStyle='#93bced';ctx.font='700 34px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';drawWrapped(ctx,game.game.name,x+w/2,y+h/2-20,w-50,42,3);}
  if(flat){ctx.fillStyle='rgba(4,10,20,.5)';ctx.fillRect(x,y,w,h);}else{const shade=ctx.createLinearGradient(0,y+h*.54,0,y+h);shade.addColorStop(0,'transparent');shade.addColorStop(1,'rgba(4,10,20,.92)');ctx.fillStyle=shade;ctx.fillRect(x,y,w,h);
  if(label){const top=ctx.createLinearGradient(0,y,0,y+Math.min(120,h*.5));top.addColorStop(0,'rgba(4,10,20,.82)');top.addColorStop(1,'transparent');ctx.fillStyle=top;ctx.fillRect(x,y,w,h);}}ctx.restore();
  // ×N 배지는 위쪽 우승자와 아래쪽 게임명 사이 가운데에 두고, 게임명은 배지와 상관없이 하단에 둡니다.
