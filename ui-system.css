@@ -299,19 +299,19 @@ dialog .actions .danger{margin-right:0}
 .tour-bubble .tour-icon{display:inline-block;width:18px;height:18px;margin:0 4px;vertical-align:-4px;color:#dceeff}
 /* 보유 탭 '내 컬렉션 책장'(games-screen.js renderShelf): 앱과 같은 어두운 벽 + 얇은 선반(윗면 빛·아래 그림자), 표지는 모두 같은 정사각 상자.
    표지는 칸을 꽉 채우되 제목이 있는 위쪽을 기준으로 맞춘다(COVER_CROPS 세로 기준이 있으면 그쪽). 글자 이름표는 그 글자 칸 첫 선반 앞면에 옅게. */
-.library-list.game-shelf{position:relative;display:block;margin:18px 6px 14px;padding:22px 10px 22px;border-radius:3px;background:linear-gradient(90deg,#2a1d14,#3a291c 3%,#33241a 50%,#3a291c 97%,#2a1d14);box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 18px 30px rgba(0,0,0,.5)}
-/* 책장 맨 위 상판: 몸체보다 살짝 넓게 튀어나온 갓 + 몰딩 줄 */
-.library-list.game-shelf::before{content:'';position:absolute;z-index:3;left:-7px;right:-7px;top:-12px;height:26px;border-radius:3px 3px 2px 2px;background:linear-gradient(180deg,#8d6747 0,#a77d57 2px,#7a5639 5px,#5e412b 9px,#6f4e34 10px,#4d3524 15px,#5b3f2a 16px,#3f2b1d 100%);box-shadow:inset 0 -1px 0 rgba(0,0,0,.5),0 4px 6px rgba(0,0,0,.55)}
-/* 책장 맨 아래 받침: 앞판 + 안쪽으로 들어간 걸레받이 + 바닥 그림자 */
-.library-list.game-shelf::after{content:'';position:absolute;z-index:3;left:-4px;right:-4px;bottom:-8px;height:30px;border-radius:2px 2px 3px 3px;background:linear-gradient(180deg,#6f4e34 0,#5a3f2a 2px,#4a3322 60%,#3b2819 21px,#1f150e 22px,#140d08 100%);box-shadow:inset 0 1px 0 rgba(255,220,180,.15),inset 0 -8px 0 #120c07,0 10px 14px -4px rgba(0,0,0,.7)}
-.library-list.game-shelf.has-index{margin-right:26px}
-.shelf-group{position:relative;padding:0 10px;background:linear-gradient(180deg,#10151c,#141a22);box-shadow:inset 6px 0 10px -4px rgba(0,0,0,.7),inset -6px 0 10px -4px rgba(0,0,0,.7)}
-.shelf-group:first-child{border-radius:2px 2px 0 0}
-.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:22px;margin-bottom:22px;background:radial-gradient(ellipse 75% 70% at 50% 0,rgba(255,214,160,.11),transparent 70%)}
-.shelf-row::after{content:'';position:absolute;z-index:0;left:-10px;right:-10px;bottom:-22px;height:22px;background:linear-gradient(180deg,#8a6646 0,#a57b55 2px,#7c5a3d 7px,#5a3f2a 8px,#4a3322 60%,#3b2819 100%),repeating-linear-gradient(90deg,rgba(255,255,255,.03) 0 1px,transparent 1px 17px);background-blend-mode:normal;box-shadow:inset 0 -1px 0 rgba(0,0,0,.45),0 10px 14px -4px rgba(0,0,0,.8)}
-.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-18px;height:12px;font-size:10px;font-weight:700;line-height:12px;letter-spacing:.1em;color:rgba(20,10,4,.55);text-shadow:0 1px 0 rgba(255,210,160,.18);pointer-events:none}
+/* 책장 틀(게임 탭 아이콘 모양): 뒤가 트인 원목 선반. 양옆 기둥은 맨 위 얇은 상판보다 조금 위로, 맨 아래 선반보다 아래로(다리) 삐져나온다. */
+.library-list.game-shelf{position:relative;display:block;margin:22px 12px 34px;padding:12px 9px 0;border-radius:0;background:none;box-shadow:none}
+/* 양옆 기둥(위로 10px, 아래 다리 22px) */
+.library-list.game-shelf::before{content:'';position:absolute;z-index:3;left:0;right:0;top:-10px;bottom:-22px;background:linear-gradient(90deg,#3d2a1b,#7a5739 35%,#8e6847 55%,#5a3f2a) left top/9px 100% no-repeat,linear-gradient(90deg,#3d2a1b,#7a5739 35%,#8e6847 55%,#5a3f2a) right top/9px 100% no-repeat;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5));pointer-events:none}
+/* 맨 위 얇은 상판 */
+.library-list.game-shelf::after{content:'';position:absolute;z-index:2;left:0;right:0;top:0;height:12px;background:linear-gradient(180deg,#a57b55 0,#8a6646 2px,#6a4a31 60%,#4f3624 100%);box-shadow:0 6px 10px -4px rgba(0,0,0,.6);pointer-events:none}
+.library-list.game-shelf.has-index{margin-right:28px}
+.shelf-group{position:relative;padding:0 10px}
+.shelf-row{position:relative;display:grid;grid-template-columns:repeat(var(--shelf-columns,3),minmax(0,1fr));gap:14px;align-items:end;padding-top:22px;margin-bottom:14px;background:radial-gradient(ellipse 75% 70% at 50% 0,rgba(255,214,160,.07),transparent 70%)}
+.shelf-row::after{content:'';position:absolute;z-index:0;left:-19px;right:-19px;bottom:-14px;height:14px;background:linear-gradient(180deg,#8a6646 0,#a57b55 2px,#7c5a3d 5px,#5a3f2a 6px,#4a3322 60%,#3b2819 100%);box-shadow:inset 0 -1px 0 rgba(0,0,0,.45),0 10px 14px -4px rgba(0,0,0,.75)}
+.shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-12px;height:8px;font-size:8px;font-weight:700;line-height:8px;letter-spacing:.1em;color:rgba(20,10,4,.6);text-shadow:0 1px 0 rgba(255,210,160,.18);pointer-events:none}
 .shelf-row:not([data-key])::before{content:none}
-.shelf-group:last-child .shelf-row:last-child{margin-bottom:22px}
+.shelf-group:last-child .shelf-row:last-child{margin-bottom:14px}
 .shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
 .shelf-book:active{transform:translateY(-3px)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
