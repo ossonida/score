@@ -308,20 +308,21 @@ dialog .actions .danger{margin-right:0}
 .shelf-row::before{content:attr(data-key);position:absolute;z-index:1;left:-2px;bottom:-18px;height:12px;font-size:10px;font-weight:700;line-height:12px;letter-spacing:.1em;color:rgba(20,10,4,.55);text-shadow:0 1px 0 rgba(255,210,160,.18);pointer-events:none}
 .shelf-row:not([data-key])::before{content:none}
 .shelf-group:last-child .shelf-row:last-child{margin-bottom:22px}
-.shelf-book{position:relative;z-index:1;display:block;width:100%;aspect-ratio:1/1;padding:0;border:0;border-radius:2px 4px 4px 2px;overflow:hidden;background:linear-gradient(160deg,#2c3846,#1b232d);color:#e6dcc8;box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75),1px 3px 4px rgba(0,0,0,.35);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
-.shelf-book:active{transform:translateY(-3px);box-shadow:0 1px 1px rgba(0,0,0,.4),6px 14px 18px -6px rgba(0,0,0,.8)}
+.shelf-book{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:center;width:100%;aspect-ratio:1/1;padding:0;border:0;background:none;color:#e6dcc8;cursor:pointer;transition:transform .15s ease}
+.shelf-book:active{transform:translateY(-3px)}
 .shelf-book:focus-visible{outline:2px solid #8fb4ff;outline-offset:3px}
-.shelf-book::after{content:'';position:absolute;z-index:3;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 2px,transparent 7px),linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%);pointer-events:none}
-.shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:inherit;font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
-.shelf-cover-art{position:absolute;z-index:2;inset:0;display:block;overflow:hidden;background:#1b222b}
+/* 표지 없을 때·불러오기 전: 이름 카드(정사각) */
+.shelf-cover-name{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;border:1px solid rgba(255,255,255,.1);border-radius:2px 4px 4px 2px;background:linear-gradient(160deg,#2c3846,#1b232d);box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75);font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.02em;text-align:center;word-break:keep-all;overflow-wrap:anywhere}
+.shelf-book:has(>.shelf-cover-art.is-ready:not([hidden])) .shelf-cover-name{display:none}
+/* 표지: fitShelfCover가 상자 비율·크기를 정한다. 빈 여백 없이 그림 = 상자. */
+.shelf-cover-art{position:relative;z-index:2;display:block;max-width:100%;max-height:100%;overflow:hidden;border-radius:2px 4px 4px 2px;box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.75),1px 3px 4px rgba(0,0,0,.35)}
+.shelf-cover-art:not(.is-ready){width:0;height:0}
 .shelf-cover-art[hidden]{display:none}
-.shelf-cover-art img{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:none;object-fit:cover;object-position:50% 0}
-/* 많이 세로·가로로 긴 표지(fitShelfCover): 통째로 넣고 남는 자리는 같은 그림을 흐리게. */
-.shelf-cover-art.cover-fit{background:var(--cover) center/cover no-repeat #1b222b}
-.shelf-cover-art.cover-fit::before{content:'';position:absolute;inset:-16px;background:inherit;filter:blur(14px) brightness(.7) saturate(1.1)}
-.shelf-cover-art.cover-fit img{z-index:1;object-fit:contain;object-position:50% 50%}
-/* 앞·뒷면 사진: 앞면 폭을 칸 폭에 맞추고 세로는 --crop-y(0 위·1 아래) 기준. */
-.shelf-cover-art.cover-crop img{inset:auto;left:0;top:calc(var(--crop-y,0) * 100%);transform:translateY(calc(var(--crop-y,0) * -100%))}
+.shelf-cover-art::after{content:'';position:absolute;z-index:3;inset:0;border-radius:inherit;background:linear-gradient(90deg,rgba(0,0,0,.22),rgba(255,255,255,.12) 2px,transparent 7px),linear-gradient(180deg,rgba(255,255,255,.07),transparent 30%);pointer-events:none}
+.shelf-cover-art img{position:absolute;inset:0;display:block;width:100%;height:100%;max-height:none;object-fit:cover}
+/* 앞·뒷면 사진: 넓힌 그림을 앞면 폭으로 가린다(세로는 앞면 비율이라 꼭 맞음). */
+.shelf-cover-art.cover-crop{width:auto}
+.shelf-cover-art.cover-crop img{inset:0 auto auto 0;height:100%!important}
 .game-shelf:empty{margin:0;padding:0;box-shadow:none;background:none}
 
 /* 앞·뒷면을 나란히 찍은 대표 이미지(game-artwork.js COVER_CROPS): 넓힌 그림을 칸 폭으로 가려 앞면만 보인다. */

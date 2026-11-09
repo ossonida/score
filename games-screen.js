@@ -1,13 +1,13 @@
-import './records.js?v=311';
+import './records.js?v=312';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
 import {gameKey} from './records-core.js?v=309';
 import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=309';
-import {renderGameArtwork,gameImageUrl} from './game-artwork.js?v=311';
+import {renderGameArtwork,gameImageUrl,coverCrop} from './game-artwork.js?v=312';
 import {idToken} from './cloud-records.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
-import {enrichGames} from './bgg-details-client.js?v=311';
+import {enrichGames} from './bgg-details-client.js?v=312';
 import {gameNames} from './bgg-metadata.js?v=309';
 import {indexEntries} from './game-index.js?v=2';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
@@ -33,8 +33,8 @@ function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;co
  showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
-// 책장 표지: 정사각에 가까우면 꽉 채우고, 많이 세로·가로로 긴 표지는 잘리지 않게 통째로 넣고 남는 자리를 같은 그림을 흐리게 깔아 채운다.
-function fitShelfCover(art,image){const ratio=image.naturalWidth/image.naturalHeight,fit=!art.classList.contains('cover-crop')&&(ratio<.8||ratio>1.25);art.classList.toggle('cover-fit',fit);if(fit)art.style.setProperty('--cover',`url("${image.currentSrc||image.src}")`);}
+// 책장 표지: 빈 여백 없이 상자 비율 그대로. 같은 정사각 틀 안에 들어가게 가로가 길면 폭에, 세로가 길면 높이에 맞추고 선반 위에 세운다.
+function fitShelfCover(art,image){if(!image.naturalWidth||!image.naturalHeight)return;const crop=coverCrop(image.src),ratio=image.naturalWidth*(crop?crop[1]-crop[0]:1)/image.naturalHeight;art.style.aspectRatio=String(ratio);art.style.width=ratio>=1?'100%':'auto';art.style.height=ratio>=1?'auto':'100%';art.classList.add('is-ready');}
 // 보유 탭 '내 컬렉션 책장': 첫 글자 묶음마다 책장 한 칸(표지를 한 줄 3개·넓은 화면 5개씩, 줄마다 선반). 글자는 그 칸 첫 선반 앞면에 새긴다(data-key).
 function renderShelf(list,games){const entries=indexEntries(games.map(row=>row.label)),columns=list.clientWidth>=640?5:3;
  const groups=(entries.length?entries:[{key:'',index:0}]).map((entry,index,all)=>({key:entry.key,index:entry.index,items:games.slice(entry.index,all[index+1]?.index??games.length)})).filter(group=>group.items.length);

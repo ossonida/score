@@ -2,7 +2,7 @@ import {gameKey,winnerIds,missionSummary,coopKind,scenarioAttempt} from './recor
 import {metadata,bggId,gameNames} from './bgg-metadata.js?v=309';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
-import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=311';
+import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=312';
 import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=309';
 import {nameKey} from './personal-stats.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
