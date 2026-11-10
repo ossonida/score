@@ -1,6 +1,6 @@
 import {gameKey,winnerIds} from './records-core.js?v=309';
 import {meIn,nameKey} from './personal-stats.js?v=309';
-import {gameTypeList} from './stats-overview.js?v=309';
+import {gameTypeList} from './stats-overview.js?v=326';
 
 const order=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const chronological=records=>records.filter(play=>play.date).sort(order);
@@ -12,10 +12,10 @@ export function firstPlays(records,{start,end}){
  return out;
 }
 
-// 장소별 판 수(많은 순). 장소를 적지 않은 판은 뺀다.
+// 장소별 방문 날 수(많은 순): 같은 날 같은 장소는 몇 판을 했어도 1회. 장소를 적지 않은 판은 뺀다.
 export function placeCounts(records){
- const counts=new Map();for(const play of records){const place=typeof play.location==='string'?play.location.trim():'';if(place)counts.set(place,(counts.get(place)||0)+1);}
- return [...counts].map(([place,count])=>({place,count})).sort((a,b)=>b.count-a.count||a.place.localeCompare(b.place));
+ const days=new Map();for(const play of records){const place=typeof play.location==='string'?play.location.trim():'';if(!place)continue;const set=days.get(place)||new Set();set.add(play.date||play.id);days.set(place,set);}
+ return [...days].map(([place,set])=>({place,count:set.size})).sort((a,b)=>b.count-a.count||a.place.localeCompare(b.place));
 }
 
 // 달성 기록: 기록 순서대로 세어 기간 안에서 기준 수에 닿은 판. kind = plays(통산 판) · days(플레이한 날) · games(서로 다른 게임) · game(한 게임 판).
@@ -34,7 +34,9 @@ export function milestones(records,{start,end}){
  return out;
 }
 
-export function milestoneTitle({kind,count}){return kind==='plays'?`통산 ${count}번째 플레이`:kind==='days'?`플레이한 날 ${count}일째`:kind==='games'?`서로 다른 게임 ${count}개째`:`이 게임 ${count}번째 플레이`;}
+// 달성 제목은 '몇 판 달성'으로 쓰고 게임 이름은 'OO 판에서 달성'으로 따로 적는다('통산 100번째 플레이 · 게임'은 그 게임을 100번 한 것으로 읽힌다).
+export function milestoneTitle({kind,count}){return kind==='plays'?`통산 ${count}판 달성`:kind==='days'?`플레이한 날 ${count}일 달성`:kind==='games'?`서로 다른 게임 ${count}개 달성`:`이 게임 ${count}판 달성`;}
+export const milestoneDetail=play=>`${play.game.name} 판에서 달성`;
 
 // 게임 순위: 경쟁 기록의 이름 있는 플레이어별 판 수·승리·승률(결과 있는 판 기준). 나는 별칭과 상관없이 한 줄. 승리 많은 순 → 승률 → 판 수.
 export function gameLeaderboard(records,profile){

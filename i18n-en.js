@@ -1541,7 +1541,7 @@ function dictionary(){return /*<dict>*/{
 "플레이 장소":"Places",
 "{0}곳":"{0} places",
 "달성 기록":"Milestones",
-"통산 {0}번째 플레이":"Play #{0} overall",
+"통산 {0}번째 플레이":"Play #{0} overall","통산 {0}판 달성":"Reached {0} plays overall","플레이한 날 {0}일 달성":"Reached {0} play days","서로 다른 게임 {0}개 달성":"Reached {0} different games","이 게임 {0}판 달성":"Reached {0} plays of this game","{0} 판에서 달성":"Reached while playing {0}",
 "플레이한 날 {0}일째":"Play day #{0}",
 "서로 다른 게임 {0}개째":"{0} different games",
 "이 게임 {0}번째 플레이":"Play #{0} of this game",

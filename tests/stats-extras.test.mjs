@@ -27,7 +27,7 @@ test('first plays are games whose first-ever play falls in the period',()=>{
 });
 
 test('place counts skip empty places and sort by count',()=>{
- assert.deepEqual(placeCounts([play('1','2026-10-01','카탄',{location:'집'}),play('2','2026-10-02','카탄',{location:' 집 '}),play('3','2026-10-03','카탄',{location:'카페'}),play('4','2026-10-04')]),[{place:'집',count:2},{place:'카페',count:1}]);
+ assert.deepEqual(placeCounts([play('1','2026-10-01','카탄',{location:'집'}),play('2','2026-10-02','카탄',{location:' 집 '}),play('3','2026-10-03','카탄',{location:'카페'}),play('4','2026-10-04')]),[{place:'집',count:2},{place:'카페',count:1}]);assert.deepEqual(placeCounts([play('1','2026-10-01','카탄',{location:'집'}),play('2','2026-10-01','아줄',{location:'집'}),play('3','2026-10-01','카탄',{location:'집'}),play('4','2026-10-02','카탄',{location:'카페'})]),[{place:'집',count:1},{place:'카페',count:1}],'same day same place counts once');
 });
 
 test('milestones fire at thresholds inside the range only',()=>{
@@ -35,8 +35,8 @@ test('milestones fire at thresholds inside the range only',()=>{
  const all=milestones(records,{start:'2026-01-01',end:'2026-12-31'}).map(m=>[m.kind,m.count,m.play.date]);
  assert.deepEqual(all,[['plays',10,'2026-01-10'],['days',10,'2026-01-10'],['game',10,'2026-01-10'],['games',10,'2026-01-19'],['plays',25,'2026-01-25']]);
  assert.deepEqual(milestones(records,{start:'2026-01-11',end:'2026-01-24'}).map(m=>m.kind),['games']);
- assert.equal(milestoneTitle({kind:'plays',count:100}),'통산 100번째 플레이');
- assert.equal(milestoneTitle({kind:'game',count:10}),'이 게임 10번째 플레이');
+ assert.equal(milestoneTitle({kind:'plays',count:100}),'통산 100판 달성');
+ assert.equal(milestoneTitle({kind:'game',count:10}),'이 게임 10판 달성');
 });
 
 test('game leaderboard ranks named players by wins, merges my aliases and skips co-op and anonymous',()=>{
@@ -64,7 +64,7 @@ test('period dashboard shows the calendar, milestones, first plays, places and t
  const all=texts(root);
  for(const label of ['결산 공유','플레이 달력','달성 기록','새로 기록한 게임','플레이 장소','가장 많이 한 날 10/2 · 2판'])assert.ok(all.includes(label),label);
  assert.ok(!all.includes('플레이 빈도'),'calendar replaces the frequency bars for a month');
- assert.ok(all.includes('통산 10번째 플레이'));
+ assert.ok(all.includes('통산 10판 달성'));
  assert.equal(walk(root).filter(n=>n.className==='calendar-day').length,31);
  const yearRoot=new Element('div');renderPeriodDashboard(yearRoot,records,{...monthModel,title:'2026년',current:{start:'2026-01-01',end:'2026-12-31'}},{scope:'none'});
  assert.equal(walk(yearRoot).filter(n=>n.className==='calendar-month').length,12);
@@ -77,7 +77,7 @@ test('recent highlights lead with the day milestones',()=>{
  const records=daysFrom('2026-10-01',10,'카탄'),root=new Element('div');
  renderOverview(root,records,{scope:'none',view:'recent',onGame(){},onRecord(){}});
  const headings=walk(root).filter(n=>n.tagName==='H3').map(n=>n.textContent);
- assert.equal(headings[0],'이날의 달성');assert.ok(texts(root).includes('통산 10번째 플레이'));
+ assert.equal(headings[0],'이날의 달성');assert.ok(texts(root).includes('통산 10판 달성'));
 });
 
 test('period recap data names the period and fills the cards',()=>{

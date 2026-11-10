@@ -1,7 +1,7 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=309';
-import {firstPlays,placeCounts,milestones,playDays,milestoneTitle} from './stats-extras.js?v=309';
+import {firstPlays,placeCounts,milestones,playDays,milestoneTitle,milestoneDetail} from './stats-extras.js?v=326';
 import {readIdentity} from './personal-stats.js?v=309';
-import {openRecapShare} from './recap-share.js?v=312';
+import {openRecapShare} from './recap-share.js?v=326';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const rangeLabel=period=>`${period.start} ~ ${period.end}`;
@@ -42,12 +42,12 @@ function newGames(container,records,selected,onGame){
 }
 function places(container,subset){
  const list=placeCounts(subset);if(!list.length)return;const section=card('플레이 장소',`${list.length}곳`),max=list[0].count,box=el('div',undefined,'place-bars');
- for(const {place,count}of list.slice(0,5)){const line=el('div',undefined,'place-bar'),track=el('span',undefined,'place-bar-track'),fill=el('span',undefined,'place-bar-fill');fill.style.width=`${count/max*100}%`;track.append(fill);line.append(el('strong',place),track,el('span',`${count}판`));box.append(line);}
+ for(const {place,count}of list.slice(0,5)){const line=el('div',undefined,'place-bar'),track=el('span',undefined,'place-bar-track'),fill=el('span',undefined,'place-bar-fill');fill.style.width=`${count/max*100}%`;track.append(fill);line.append(el('strong',place),track,el('span',`${count}회`));box.append(line);}
  section.append(box);container.append(section);
 }
 function achievements(container,records,selected,onRecord){
  const list=milestones(records,selected);if(!list.length)return;const section=card('달성 기록',`${list.length}개`);
- for(const item of list.slice(-8).reverse())row(section,milestoneTitle(item),`${item.play.game.name} · ${md(item.play.date)}`,()=>onRecord?.(item.play.id));
+ for(const item of list.slice(-8).reverse())row(section,milestoneTitle(item),`${milestoneDetail(item.play)} · ${md(item.play.date)}`,()=>onRecord?.(item.play.id));
  container.append(section);
 }
 

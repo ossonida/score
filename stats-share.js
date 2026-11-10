@@ -3,12 +3,12 @@ import {metadata,bggId,gameNames} from './bgg-metadata.js?v=309';
 import {scoreGameType,scoreGames} from './score-games.js?v=168';
 import {missionCleared,missionName,missionRange} from './mission-names.js?v=5';
 import {gameImageUrl,safeGameImage,coverCrop} from './game-artwork.js?v=312';
-import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=309';
+import {attendanceCount,latestPlayDate,fixedTypes,strategyEvenCoop,fixedGameId} from './stats-overview.js?v=326';
 import {nameKey} from './personal-stats.js?v=309';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {starterGames,koreanGameName} from './game-catalog.js?v=309';
 import {summarizeStats} from './stats-insights.js?v=309';
-import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=309';
+import {firstPlays,placeCounts,milestones} from './stats-extras.js?v=326';
 
 const WIDTH=1080,HEIGHT=1350,MAX_COVERS=6,SIDE_COVERS=12,CLOSE_GAP=3;
 const catalogById=new Map(starterGames.map(game=>[String(game.id),game]));
@@ -67,7 +67,7 @@ export function shareGameType(play){
  // 협력으로 기록해도 전략으로 보는 게임(오를레앙) → 협력으로 기록한 판 → 통계에서 따로 정한 유형(BGG 분류가 비었거나 협력 분류를 빼는 전략 게임: 니하르 등).
  if(strategyEvenCoop.has(fixedGameId(play.game)))return 'strategy';
  if(play.rule==='cooperative')return 'coop';
- if(fixedTypes[fixedGameId(play.game)]==='strategy')return 'strategy';
+ const fixed=[].concat(fixedTypes[fixedGameId(play.game)]||[]);if(fixed[0]==='strategy')return 'strategy';if(fixed.includes('family'))return 'family';
  const info=metadata(play.game);
  if(play.players?.some(person=>person.culprit!==undefined||person.guess!==undefined)||DEDUCTION_NAMES.test(String(play.game?.name||''))||info?.deduction)return 'deduction';
  const plain=String(play.game?.name||'').replace(/\s+/g,'').toLowerCase();if(LIGHT_GAMES.ids.includes(bggId(play.game))||LIGHT_GAMES.names.includes(plain))return 'family';const own=scoreGameType(play.game);if(own==='strategy')return 'strategy';if(own==='sports')return 'family';if(own==='escape')return 'coop';
