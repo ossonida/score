@@ -6,14 +6,14 @@ import {enhanceGamePicker} from './game-picker.js?v=309';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=309';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=309';
 import {enrichGames} from './bgg-details-client.js?v=312';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=330';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=331';
 import {personStats} from './social-insights.js?v=326';
 import {countSessions,isPartyPlay} from './stats-extras.js?v=326';
 import {setProAccount,isPro,markProLock} from './pro-access.js?v=330';
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {renderStoryStats} from './story-stats.js?v=309';
-import {recapData,createRecapSet} from './recap-share.js?v=330';
+import {recapData,createRecapSet} from './recap-share.js?v=331';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=312';
 import {collectionMenu} from './collection-menu.js?v=2';
@@ -24,7 +24,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=309';
 import {renderStatsDashboard} from './stats-dashboard.js?v=312';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=309';
-import {renderPeriodDashboard} from './period-dashboard.js?v=330';
+import {renderPeriodDashboard} from './period-dashboard.js?v=331';
 import {mergeImported} from './data-transfer.js?v=312';
 import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
@@ -431,7 +431,7 @@ function renderHistory(){
    // 플레이하지 않은 게임도 표지·게임명·유형은 보여 주고 나의 기록 데이터가 없다고 안내합니다.
    if(game){statsPlayTarget={game,plays:[]};const overview=node('section',undefined,'insight-hero game-overview');overview.append(renderGameTitle(game,collectionAction),node('p','나의 기록 데이터가 없습니다. 이 게임을 플레이하고 기록을 저장하면 통계가 표시됩니다.','record-note'));box.append(overview);renderGameExpansions(box,game,bggCollection);loadExpansionNames((metadata(game)?.expansions||[]).slice(0,30),renderHistory);}
    else box.append(node('p','저장된 게임 기록이 없습니다.','record-note'));}
- }else if(statsView==='all'){renderPeriodControls(period);periodShown={records:periodMine,model:{...period,people:activePeople()}};renderPeriodDashboard($('statsInsights'),periodMine,periodShown.model,{scope:key(),onGame:chooseStatsGame,onRecord:openStatsRecord,locked:previewOnly(period)?()=>openProSheet({reason:'period',previews:periodPreview}):null});if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),people:activePeople(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}gatePeriod(previewOnly(period));}
+ }else if(statsView==='all'){renderPeriodControls(period);periodShown={records:periodMine,model:{...period,people:activePeople()}};renderPeriodDashboard($('statsInsights'),periodMine,periodShown.model,{scope:key(),onGame:chooseStatsGame,onRecord:openStatsRecord,locked:previewOnly(period)?()=>openProSheet({reason:'period',previews:periodPreview}):null,sharePeople:{label:periodPeopleText,locked:()=>!isPro(),choose:choosePeriodPeople,current:()=>periodShown}});if(filtered.length)renderPeriodOpponents($('statsInsights'),filtered,{scope:key(),people:activePeople(),onPerson:person=>openStatsPerson(person,'')});if(filtered.length){const summary=document.createElement('div');summary.className='period-overview';$('statsInsights').append(summary);renderOverview(summary,filtered,{scope:key(),view:'all',summary:false,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[]});}gatePeriod(previewOnly(period));}
  else{gatePeriod(false);renderOverview($('statsInsights'),statsView==='recent'?counted.filter(p=>p.date<=recentDate):counted,{scope:key(),view:statsView,shareRecords:statsView==='recent'?records.filter(p=>p.date<=recentDate):records,onGame:chooseStatsGame,onRecord:openStatsRecord,bggCollection:window.ScoreBggAccount?.state().collection||[],dayNav:statsView==='recent'?{days:playDays,index:playDays.indexOf(recentDate),total:playDays.length,onDay:day=>{recentDay=day;renderHistory();}}:null});}
  $('statsPlayFab').hidden=!statsPlayTarget;$('statsDetailCount').textContent=statsView==='all'?'':`${listed.length}개 기록`;const profile=readIdentity(key()),personalBests=personalRecordIds(records,profile);const box=$('recordList');box.replaceChildren();$('historyTab').classList.toggle('active',mode==='history');$('statsTab').classList.toggle('active',mode==='stats');
 if(!listed.length){box.append(node('p',statsView==='all'?'선택 기간의 기록이 없습니다.':'저장된 기록이 없습니다. 점수를 입력한 뒤 게임 기록 저장을 눌러주세요.','record-note'));return;}
@@ -456,12 +456,15 @@ function gatePeriod(on){
  if(!on||!box.children[0])return;const en=window.ScoreI18n?.lang==='en',gate=document.createElement('div'),text=document.createElement('p'),button=document.createElement('button');
  gate.className='pro-gate';text.textContent=en?'See the full analysis and recap with Pro':'전체 분석과 결산은 Pro에서 볼 수 있어요';button.type='button';button.className='primary';button.textContent=en?'Learn about Pro':'Pro 알아보기';button.onclick=()=>openProSheet({reason:'period',previews:periodPreview});gate.append(text,button);box.children[0].append(gate);
 }
-function renderPeopleButton(){const button=$('periodPeopleButton'),people=activePeople(),en=window.ScoreI18n?.lang==='en',label=people?peopleLabel(people.names)+(people.mode==='all'?(en?' · all':' · 모두 함께'):''):(en?'Everyone':'전체');button.textContent=(en?'Played with: ':'함께한 사람: ')+label;button.classList.toggle('is-filtered',Boolean(people));markProLock(button,!isPro());}
-$('periodPeopleButton').onclick=()=>{$('periodNotice').textContent='';if(!isPro())return openProSheet({reason:'people',previews:periodPreview});
+function periodPeopleText(){const people=activePeople(),en=window.ScoreI18n?.lang==='en';return people?peopleLabel(people.names)+(people.mode==='all'?(en?' · all':' · 모두 함께'):''):(en?'Everyone':'전체');}
+function renderPeopleButton(){const button=$('periodPeopleButton'),people=activePeople(),en=window.ScoreI18n?.lang==='en',label=periodPeopleText();button.textContent=(en?'Played with: ':'함께한 사람: ')+label;button.classList.toggle('is-filtered',Boolean(people));markProLock(button,!isPro());}
+// 함께한 사람 고르기: 기간 분석 버튼과 결산 공유 창이 같이 쓴다(after: 적용 뒤 결산 다시 만들기).
+function choosePeriodPeople(after){$('periodNotice').textContent='';if(!isPro())return openProSheet({reason:'people',previews:periodPreview});
  const profile=readIdentity(key()),counts=new Map();
  for(const play of recordsInPeriod(records.filter(p=>meIn(p,profile)),selectedPeriod().current)){const me=meIn(play,profile);for(const person of play.players){const name=String(person.name||'').trim();if(person.anonymous===true||!name||person.id===me?.id)continue;const k=nameKey(name),row=counts.get(k)||{key:k,name,count:0};row.count++;counts.set(k,row);}}
  for(const k of periodPeople.keys)if(!counts.has(k))counts.set(k,{key:k,name:periodPeople.names[periodPeople.keys.indexOf(k)],count:0});
- openPeopleFilter({people:[...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),selected:periodPeople,onApply:value=>{periodPeople=value;renderHistory();}});};
+ openPeopleFilter({people:[...counts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),selected:periodPeople,onApply:value=>{periodPeople=value;renderHistory();after?.();}});}
+$('periodPeopleButton').onclick=()=>choosePeriodPeople();
 $('periodPrev').onclick=()=>stepPeriod(-1);$('periodNext').onclick=()=>stepPeriod(1);
 $('customPeriodForm').onsubmit=event=>{event.preventDefault();const selection=customPeriod($('periodStart').value,$('periodEnd').value);if(!selection){const start=$('periodStart').value,end=$('periodEnd').value;$('periodError').textContent=start&&end&&start>end?'시작일은 종료일보다 늦을 수 없습니다.':'올바른 시작일과 종료일을 입력해주세요.';return;}$('periodError').textContent='';activePeriodUnit='custom';activeCustomPeriod=selection;renderHistory();window.ScoreAnalytics?.feature('statistics','filter_changed');};
 for(const [view,id]of [['recent','statsRecent'],['all','statsAll'],['games','statsGames']])$(id).onclick=()=>{statsView=view;if(statsPerson)leavePersonEntry();statsPerson=null;mode=view==='games'?'stats':'history';$('statsDetails').open=false;renderHistory();};
