@@ -321,6 +321,11 @@ dialog .actions .danger{margin-right:0}
 .shelf-cover-art.cover-crop{width:auto}
 .shelf-cover-art.cover-crop img{inset:0 auto auto 0;height:100%!important}
 .game-shelf:empty{margin:0;padding:0;box-shadow:none;background:none}
+/* 보유 게임이 없을 때 예시 책장: 선반은 흐리게, 상자는 표지 없는 실루엣 */
+.shelf-demo-note{margin:4px 30px 0;text-align:center}
+.shelf-demo{opacity:.5;pointer-events:none}
+.shelf-demo .shelf-book{cursor:default}
+.shelf-demo-box{display:block;max-width:100%;max-height:100%;border:1px solid rgba(255,255,255,.14);border-radius:2px 3px 3px 2px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));box-shadow:0 1px 1px rgba(0,0,0,.4),5px 9px 14px -5px rgba(0,0,0,.6)}
 
 /* 앞·뒷면을 나란히 찍은 대표 이미지(game-artwork.js COVER_CROPS): 넓힌 그림을 칸 폭으로 가려 앞면만 보인다. */
 .cover-crop{display:block;width:100%;overflow:hidden}
