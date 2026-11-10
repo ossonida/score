@@ -7,7 +7,7 @@ const KEY='score.tour.v1',TIPS=['welcome','firstSave','stats','share','login'];
 // 문구의 {person}·{mode}는 그 자리에 실제 버튼 아이콘(svg 복제)을 넣는다.
 const ICONS={person:['#add','#bulk'],mode:['#recordModeChange']};
 const WELCOME=[
- {target:()=>document.querySelector('#cards .name')||visible('#add')||visible('#bulk'),title:'플레이어 이름',text:'이름을 누르면 색상과 이름을 바꿀 수 있어요.\n사람을 추가하려면 오른쪽 위 사람 모양{person}버튼을 누르세요.'},
+ {target:()=>document.querySelector('#cards .name')||visible('#add')||visible('#bulk'),title:()=>document.querySelector('#cards .name')?'플레이어 이름':'플레이어 추가',text:()=>(document.querySelector('#cards .name')?'이름을 누르면 색상과 이름을 바꿀 수 있어요.\n':'')+'사람을 추가하려면 오른쪽 위 사람 모양{person}버튼을 누르세요.'},
  {target:()=>document.querySelector('#cards .score'),title:'점수 바꾸기',text:'숫자를 누르면 점수를 직접 입력할 수 있어요.\n+ 와 − 를 누르면 1점씩 바뀌어요.'},
  {target:()=>visible('#turnTimer'),title:'턴 타이머 관리',text:'플레이어별, 게임 시간 기록이 가능해요.'},
  {target:()=>visible('#add')||visible('#bulk'),title:'플레이어 추가',text:'{person}버튼을 누르면 플레이어를 추가할 수 있어요.'},
@@ -40,8 +40,8 @@ function show(step,{dim=false,index=0,total=1,onNext,onSkip}={}){
  const layer=document.createElement('div');layer.className='tour-layer'+(dim?' dim':'');
  const ring=document.createElement('div');ring.className='tour-ring';
  const bubble=document.createElement('div');bubble.className='tour-bubble';bubble.setAttribute('role','dialog');bubble.setAttribute('aria-live','polite');
- const title=document.createElement('strong');title.textContent=step.title;// 줄마다 따로 그린다. 글 조각은 span으로 나눠 영어 사전이 조각 단위로 번역하고, {이름}은 아이콘으로 바꾼다.
- const text=step.text.split('\n').map(line=>{const p=document.createElement('p');for(const [index,part] of line.split(/\{(\w+)\}/).entries()){if(index%2){const icon=icon_(part);if(icon)p.append(icon);}else if(part){const span=document.createElement('span');span.textContent=part;p.append(span);}}return p;});
+ const title=document.createElement('strong');title.textContent=typeof step.title==='function'?step.title():step.title;// 줄마다 따로 그린다. 글 조각은 span으로 나눠 영어 사전이 조각 단위로 번역하고, {이름}은 아이콘으로 바꾼다.
+ const text=(typeof step.text==='function'?step.text():step.text).split('\n').map(line=>{const p=document.createElement('p');for(const [index,part] of line.split(/\{(\w+)\}/).entries()){if(index%2){const icon=icon_(part);if(icon)p.append(icon);}else if(part){const span=document.createElement('span');span.textContent=part;p.append(span);}}return p;});
  const actions=document.createElement('div');actions.className='tour-actions';
  if(total>1){const count=document.createElement('span');count.className='tour-count';count.textContent=`${index+1} / ${total}`;actions.append(count);}
  if(onSkip){const skip=document.createElement('button');skip.type='button';skip.className='tour-skip';skip.textContent='건너뛰기';skip.onclick=()=>onSkip();actions.append(skip);}
