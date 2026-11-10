@@ -9,6 +9,11 @@ service cloud.firestore {
         && request.resource.data.primary is string && request.resource.data.primary.size() <= 1000
         && request.resource.data.aliases is list && request.resource.data.aliases.size() <= 100;
     }
+    // Pro 권한: 본인만 읽기. 쓰기는 Firebase 콘솔·관리자 SDK(서버 함수, 결제 확인 후)만 — 앱에서 스스로 Pro를 줄 수 없다.
+    match /users/{uid}/settings/pro {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
     match /users/{uid}/settings/bgg {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid

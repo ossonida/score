@@ -51,6 +51,8 @@ export async function markCloudChanged(uid){const c=await connectCloud();await t
 export async function loadCloud(uid){const c=await connectCloud();const result=await c.store.getDocsFromServer(c.store.collection(c.db,'users',userId(c,uid),'plays'));return result.docs.map(d=>({...withoutStamp(d.data()),id:d.id}));}
 export async function saveCloud(play,uid){const c=await connectCloud(),owner=userId(c,uid);await ensureMode(c,owner);await c.store.setDoc(c.store.doc(c.db,'users',owner,'plays',play.id),stamp(c,play));}
 export async function deleteCloud(id,uid){const c=await connectCloud(),owner=userId(c,uid);await ensureMode(c,owner);await c.store.deleteDoc(c.store.doc(c.db,'users',owner,'plays',id));}
+// Pro 권한 문서(users/{uid}/settings/pro, {pro:true}). 없거나 pro가 true가 아니면 Pro 아님.
+export async function loadCloudPro(uid){const c=await connectCloud();const snap=await c.store.getDocFromServer(c.store.doc(c.db,'users',userId(c,uid),'settings','pro'));return snap.exists()&&snap.data()?.pro===true;}
 export async function loadCloudIdentity(uid){const c=await connectCloud();const snap=await c.store.getDocFromServer(c.store.doc(c.db,'users',userId(c,uid),'settings','identity'));return snap.exists()?snap.data():null;}
 export async function saveCloudIdentity(profile,uid){if(!validIdentity(profile))throw Error('닉네임 설정을 확인해주세요.');const c=await connectCloud();await c.store.setDoc(c.store.doc(c.db,'users',userId(c,uid),'settings','identity'),{primary:profile.primary,aliases:profile.aliases});}
 export async function idToken(uid){const c=await connectCloud(),owner=userId(c,uid),token=await c.session.currentUser.getIdToken();userId(c,owner);return token;}

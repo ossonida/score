@@ -1,7 +1,7 @@
 // 처음 사용 안내(docs/CTA-FLOWS.md 3.7): 점수판 첫 실행 7단계 + 기능을 처음 만날 때 한 번씩 뜨는 말풍선.
 // 본 안내는 score.tour.v1에 남긴다. 대상이 안 보이거나 대화상자가 열려 있으면 다음 기회에 다시 확인한다.
 import {readStoredJson} from './stored-json.js?v=171';
-import {rememberedUid} from './cloud-records.js?v=309';
+import {rememberedUid} from './cloud-records.js?v=332';
 
 const KEY='score.tour.v1',TIPS=['welcome','firstSave','stats','share','login'];
 // 문구의 {person}·{mode}는 그 자리에 실제 버튼 아이콘(svg 복제)을 넣는다.

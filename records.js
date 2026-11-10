@@ -6,14 +6,14 @@ import {enhanceGamePicker} from './game-picker.js?v=309';
 import {editRecordedPlayer,removeRecordedPlayer,setRecordExpansions} from './record-edit.js?v=309';
 import {createExpansionPicker,expansionChoices,expansionLabel,lastExpansions} from './expansion-picker.js?v=309';
 import {enrichGames} from './bgg-details-client.js?v=312';
-import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=331';
+import {renderOverview,renderGameLeaderboard,renderGameOpponents,renderPeriodOpponents,renderPersonView,renderGameExpansions,withParticle} from './overview-dashboard.js?v=332';
 import {personStats} from './social-insights.js?v=326';
 import {countSessions,isPartyPlay} from './stats-extras.js?v=326';
-import {setProAccount,isPro,markProLock} from './pro-access.js?v=330';
+import {setProAccount,applyCloudPro,isPro,markProLock} from './pro-access.js?v=332';
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {renderStoryStats} from './story-stats.js?v=309';
-import {recapData,createRecapSet} from './recap-share.js?v=331';
+import {recapData,createRecapSet} from './recap-share.js?v=332';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=312';
 import {collectionMenu} from './collection-menu.js?v=2';
@@ -24,7 +24,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=309';
 import {renderStatsDashboard} from './stats-dashboard.js?v=312';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=309';
-import {renderPeriodDashboard} from './period-dashboard.js?v=331';
+import {renderPeriodDashboard} from './period-dashboard.js?v=332';
 import {mergeImported} from './data-transfer.js?v=312';
 import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
@@ -33,9 +33,9 @@ import {isScoreGame,scoreGame,scoreGameType,scoreGames} from './score-games.js?v
 if(window.ScoreI18n?.addNames)window.ScoreI18n.addNames([...starterGames.flatMap(g=>g.aliases.map(alias=>[alias,g.name])),...scoreGames.flatMap(g=>{const en=g.aliases.find(alias=>!/[가-힣]/.test(alias));return en?[g.name,...g.aliases].map(name=>[name,en]):[];})]);
 import {metadata,domainLabels,gameNames} from './bgg-metadata.js?v=309';
 import {createPlay,isPlay,gameKey,winnerIds,gameStats,normalizePlay,validMissionAttempts,missionSummary,coopKind as playCoopKind,coopKindLabels,difficultyOptions,scenarioAttempt,validScenario,validScenarioLevel} from './records-core.js?v=309';
-import * as cloudApi from './cloud-records.js?v=309';
+import * as cloudApi from './cloud-records.js?v=332';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
-import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=309';
+import {cloudConfigured,connectCloud,login,logout,loadCloud,saveCloud,deleteCloud,idToken,loadCloudIdentity,loadCloudPro,saveCloudIdentity,rememberedUid,rememberUid,rememberedLabel,mobileDevice} from './cloud-records.js?v=332';
 import {bggSearchUrl} from './firebase-config.js?v=64';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
 const $=id=>document.getElementById(id), api=window.ScoreCounter;
@@ -575,7 +575,7 @@ window.ScoreRecords={
  // 계정 삭제: 클라우드·BGG 연결·로그인 계정을 지운 뒤 로그아웃하고 이 기기의 그 계정 저장값을 정리한다(로그인 전 기록은 남김).
  deleteAccount:async(context,step,{account=true}={})=>{
   const uid=scopeUid();if(!uid||context.key!==key()||context.epoch!==accountEpoch)throw Error('계정이 변경됐습니다. 다시 시도해주세요.');
-  const {deleteAccountData}=await import('./account-delete.js?v=309');const removed=await deleteAccountData(uid,step,{account});
+  const {deleteAccountData}=await import('./account-delete.js?v=332');const removed=await deleteAccountData(uid,step,{account});
   try{await logout();}catch{}
   for(const name of Object.keys(localStorage))if(name.includes(uid))localStorage.removeItem(name);
   if(localStorage.getItem('score.lastUser.v1')===uid)localStorage.removeItem('score.lastUser.v1');return removed;
@@ -596,4 +596,4 @@ window.addEventListener('scorecounter:changed',()=>{updateButtons();if(scoreless
 window.addEventListener('score-identity:changed',updateButtons);
 window.addEventListener('scorecounter:result-empty',()=>{scorelessBoardActive=false;$('scorelessBoardPanel').hidden=true;$('scorelessBoardError').textContent='';clearScorelessDraft();pendingScoreless=null;scorelessMode='';scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';scorelessStep='count';close('scorelessSetupDialog');updateButtons();location.hash='home';});
 offlineUid=cloudConfigured()?rememberedUid():null;loadLocal();restoreScorelessDraft();updateButtons();renderHistory();window.ScoreStartup?.ready('records');
-if(cloudConfigured())connectCloud(async user=>{if(user)rememberUid(user.uid,user.displayName||user.email||'');else if(!mobileDevice)rememberUid(null);const nextUid=user?.uid||(mobileDevice?rememberedUid():null),sameScope=nextUid===scopeUid();authReady=true;if(!sameScope){accountEpoch++;pendingGame=null;scorelessDraftMuted=true;scorelessBoardActive=false;api.endResultEntry?.();$('scorelessBoardPanel').hidden=true;pendingScoreless=null;scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';close('gamePlayersDialog');close('scorelessSetupDialog');scorelessDraftMuted=false;close('endGameDialog');recordEditing=null;close('recordEditDialog');expansionEditing=null;close('expansionDialog');expansionPick=null;expansionSerial++;searchSerial++;searchController?.abort();clearTimeout(searchTimer);}currentUser=user;setProAccount(user);offlineUid=user?null:nextUid;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();if(!sameScope)restoreScorelessDraft();updateButtons();renderHistory();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open){const saved=await $('savePlayForm').onsubmit({preventDefault(){}});if(saved===false&&recordFlow!=='setup'&&recordStep==='details')await $('savePlayForm').onsubmit({preventDefault(){}});}}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));if(navigator.onLine!==false)notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));});
+if(cloudConfigured())connectCloud(async user=>{if(user)rememberUid(user.uid,user.displayName||user.email||'');else if(!mobileDevice)rememberUid(null);const nextUid=user?.uid||(mobileDevice?rememberedUid():null),sameScope=nextUid===scopeUid();authReady=true;if(!sameScope){accountEpoch++;pendingGame=null;scorelessDraftMuted=true;scorelessBoardActive=false;api.endResultEntry?.();$('scorelessBoardPanel').hidden=true;pendingScoreless=null;scorelessPlayers=[];scorelessTeams=[];scorelessSelectedPlayers=new Set();scorelessPlayerSignature='';close('gamePlayersDialog');close('scorelessSetupDialog');scorelessDraftMuted=false;close('endGameDialog');recordEditing=null;close('recordEditDialog');expansionEditing=null;close('expansionDialog');expansionPick=null;expansionSerial++;searchSerial++;searchController?.abort();clearTimeout(searchTimer);}currentUser=user;setProAccount(user);if(user?.uid){const proUid=user.uid;loadCloudPro(proUid).then(value=>applyCloudPro(proUid,value),()=>{});}offlineUid=user?null:nextUid;cloudState='idle';cloudError='';message('accountError','');const finishDraft=Boolean(recordLoginPending&&user&&$('savePlayDialog').open),draftVersion=recordDraftVersion;if($('savePlayDialog').open){if(recordLoginPending&&user){snapshotScope=key();recordLoginPending=false;updateRecordStorage();}else close('savePlayDialog');}loadLocal();if(!sameScope)restoreScorelessDraft();updateButtons();renderHistory();if(finishDraft&&draftVersion===recordDraftVersion&&currentUser?.uid===user.uid&&$('savePlayDialog').open){const saved=await $('savePlayForm').onsubmit({preventDefault(){}});if(saved===false&&recordFlow!=='setup'&&recordStep==='details')await $('savePlayForm').onsubmit({preventDefault(){}});}}).catch(error=>{authReady=true;updateButtons();message('accountError','로그인 상태를 확인하지 못했습니다. '+friendly(error));if(navigator.onLine!==false)notify('로그인 서비스를 연결하지 못했습니다. '+friendly(error));});
