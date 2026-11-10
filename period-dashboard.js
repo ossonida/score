@@ -56,7 +56,7 @@ export function renderPeriodDashboard(container,records,model,{scope,onGame,onRe
  container.replaceChildren();const selected=recordsInPeriod(records,model.current),current=summarizePeriod(records,model.current),previous=model.previous?summarizePeriod(records,model.previous):null;
  const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head');head.append(el('h2',model.title));
  // 결산 공유: 기록이 있는 기간만, 최근 기록 공유와 같은 창.
- if(selected.length){const share=el('button','결산 공유','stats-share-trigger');share.type='button';share.onclick=async()=>{if(locked)return locked();share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
+ if(selected.length){const share=el('button',undefined,'stats-share-trigger');share.append(el('span','결산 공유','share-label'));share.title='결산 공유';share.type='button';share.onclick=async()=>{if(locked)return locked();share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope));}finally{share.disabled=false;}};head.append(share);}
  head.append(el('p',rangeLabel(model.current),'period-range'));hero.append(head);metrics(hero,current,previous,model.label);container.append(hero);
  if(!selected.length){container.append(el('p','선택한 기간에 저장된 기록이 없습니다.','insight-empty'));return;}
  const days=Math.round((utc(model.current.end)-utc(model.current.start))/DAY)+1;
