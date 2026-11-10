@@ -1,5 +1,5 @@
 // Pro 기능 접근: 결제 기능을 넣기 전까지는 지정한 계정만 Pro로 본다. 화면에서 막는 표시용 잠금이며 서버 검증은 아니다.
-const PRO_EMAILS=new Set(['ahnssoni2@gmail.com','ahssoni2@gmail.com']);
+const PRO_EMAILS=new Set(['ahnssoni2@gmail.com','ahssoni2@gmail.com','hjm1193@gmail.com']);
 let email='';
 
 // 로그인 상태가 바뀔 때 records.js가 부른다. Pro 여부가 바뀌면 score-pro:changed.

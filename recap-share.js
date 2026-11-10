@@ -1,5 +1,5 @@
 import {gameKey,winnerIds} from './records-core.js?v=309';
-import {isPro,markProLock} from './pro-access.js?v=1';
+import {isPro,markProLock} from './pro-access.js?v=327';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';
 import {meIn,nameKey} from './personal-stats.js?v=309';
