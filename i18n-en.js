@@ -759,6 +759,10 @@ function dictionary(){return /*<dict>*/{
 "저장된 전체 기록과 BGG 컬렉션 기준입니다.":"Based on all saved records and your BGG collection.",
 "최근 게임기록":"Recent game records",
 "저장된 게임 기록이 없습니다.":"No saved game records.",
+"게임을 기록하면 이렇게 보여요":"Here's what your stats will look like",
+"점수판에서 게임을 마치고 저장하면 그날의 결과, 많이 한 게임, 승률이 여기에 쌓여요.":"Finish a game on the scoreboard and save it — each day's results, your most played games and win rates build up here.",
+"첫 게임 기록하기":"Record your first game",
+"예시":"Sample",
 
 "플레이한 게임 수":"Games played",
 "함께한 인원 수":"People played with",

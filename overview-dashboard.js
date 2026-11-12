@@ -38,10 +38,24 @@ function modeScoreCard(subset,profile){
  if(rows.some(row=>row.expected!==null))note(section,'기대 승률은 경기 인원(팀전은 팀 수)으로 나눈 평균 확률이며 막대의 노란 세로선입니다.');
  return section;
 }
+// 기록이 하나도 없을 때: 안내 + 첫 게임 기록하기, 아래에 예시 기록으로 그린 최근 기록 화면을 흐리게(누를 수 없음·화면 읽기 숨김).
+function sampleRecords(){
+ const en=globalThis.window?.ScoreI18n?.lang==='en',d=new Date(),date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+ const [me,a,b,c]=en?['Me','Alex','Sam','Jamie']:['나','민수','지영','현우'],[g1,g2,g3]=en?['Splendor','Azul','Codenames']:['스플렌더','아줄','코드네임'];
+ const p=(id,name,score,winner)=>({id,name,score,winner,color:{me:'#4a90e2',a:'#e94e77',b:'#50c878',c:'#f5a623'}[id]});
+ const play=(n,game,rule,players)=>({id:'sample-'+n,date,createdAt:date+'T1'+n+':00:00Z',game:{name:game,bggId:''},rule,players});
+ return [play(1,g1,'highest',[p('me',me,15,true),p('a',a,13,false),p('b',b,9,false)]),play(2,g1,'highest',[p('me',me,12,false),p('a',a,16,true),p('b',b,11,false),p('c',c,10,false)]),play(3,g2,'highest',[p('me',me,58,false),p('b',b,61,true),p('c',c,44,false)]),play(4,g3,'highest',[p('me',me,1,true),p('a',a,0,false),p('b',b,1,true),p('c',c,0,false)])];
+}
+export function renderStatsSample(container,{onStart}){
+ container.replaceChildren();const intro=el('section',undefined,'insight-hero stats-sample-intro');intro.append(el('h2','게임을 기록하면 이렇게 보여요'));note(intro,'점수판에서 게임을 마치고 저장하면 그날의 결과, 많이 한 게임, 승률이 여기에 쌓여요.');
+ const start=el('button','첫 게임 기록하기','primary stats-sample-start');start.type='button';start.onclick=()=>onStart();const link=el('a','기록 가져오기','insight-link');link.href='#settings/sync';intro.append(start,link);
+ const wrap=el('div',undefined,'stats-sample-wrap'),preview=el('div',undefined,'stats-sample');preview.setAttribute('aria-hidden','true');preview.inert=true;renderOverview(preview,sampleRecords(),{scope:'__sample__',view:'recent',onGame(){},onRecord(){}});wrap.append(el('span','예시','stats-sample-badge'),preview);container.append(intro,wrap);
+}
 // 최근 기록: records는 고른 날까지의 기록이다(그날이 가장 최근 날). dayNav가 있으면 이전·다음 플레이한 날로 이동한다.
-export function renderOverview(container,records,{scope,view,onGame,onRecord,shareRecords=records,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',summary=true,dayNav=null}){
+export function renderOverview(container,records,{scope,view,onGame,onRecord,onStart,shareRecords=records,bggCollection=[],title='지금까지의 플레이',footnote='저장된 전체 기록과 BGG 컬렉션 기준입니다.',summary=true,dayNav=null}){
  container.replaceChildren();const profile=readIdentity(scope),day=latestPlayDate(records),subset=view==='recent'?records.filter(p=>p.date===day):records,s=overviewStats(subset,profile);
  const hero=el('section',undefined,'insight-hero overview-summary'),heading=el('div',undefined,'overview-summary-heading');const titleNode=el('h2',view==='recent'?(day?formatRecentRecordTitle(day):'최근 게임기록'):title);heading.append(view==='recent'&&dayNav&&dayNav.total>1?recentDayNav(dayNav,titleNode):titleNode);hero.append(heading);
+ if(!records.length&&view==='recent'&&onStart)return renderStatsSample(container,{onStart});
  if(!s.total&&view==='recent'){note(hero,'저장된 게임 기록이 없습니다.');const link=el('a','기록 가져오기','insight-link');link.href='#settings/sync';hero.append(link);container.append(hero);return;}
  if(view==='recent'){hero.className+=' recent-summary';const share=el('button',undefined,'stats-share-trigger');share.append(el('span','공유하기','share-label'));share.title='공유하기';share.type='button';share.onclick=async()=>{share.disabled=true;try{await openDayShare(records,profile,{raw:shareRecords});}finally{share.disabled=false;}};heading.append(share);metrics(hero,[[s.total,'플레이한 게임 수'],[attendanceCount(subset,profile),'함께한 인원 수']]);hero.setAttribute('title','게임 수는 경기 수, 인원은 나를 포함해 같은 이름을 중복 제외합니다. 익명은 경기당 최대 인원 기준입니다.');}else{metrics(hero,[[s.gameCount,'플레이한 게임'],[bggCollection.filter(game=>game.owned).length,'보유게임'],[bggCollection.filter(game=>game.wishlist||game.wantToPlay).length,'하고 싶은 게임']]);note(hero,footnote);}if(summary)container.append(hero);if(!s.total)return;
  if(view==='all')container.append(modeScoreCard(subset,profile));

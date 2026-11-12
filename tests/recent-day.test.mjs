@@ -47,3 +47,15 @@ test('period head-to-head lists only the people picked in the period filter',asy
  const texts=people=>{const root=new Element('div');renderPeriodOpponents(root,[three('p1','2026-10-01'),three('p2','2026-10-02')],{scope:'test',people,onPerson(){}});return walk(root).map(n=>n.textContent).join('|');};
  assert.match(texts(null),/지영/);const picked=texts({keys:['민수'],names:['민수'],mode:'any'});assert.match(picked,/민수/);assert.doesNotMatch(picked,/지영/);assert.match(picked,/상대 1명/);
 });
+
+test('no records: recent view shows sample preview with first-game CTA, sample is inert and hidden',()=>{
+ const root=new Element('div');let started=0;
+ renderOverview(root,[],{scope:'test',view:'recent',onGame(){},onRecord(){},onStart:()=>started++});
+ const nodes=walk(root),start=nodes.find(n=>String(n.className).includes('stats-sample-start'));
+ assert.equal(start.textContent,'첫 게임 기록하기');start.onclick();assert.equal(started,1);
+ const preview=nodes.find(n=>n.className==='stats-sample');assert.equal(preview.attributes['aria-hidden'],'true');assert.equal(preview.inert,true);
+ assert.ok(walk(preview).some(n=>n.tagName==='H3'),'sample renders real overview cards');
+ assert.ok(!nodes.some(n=>n.textContent==='저장된 게임 기록이 없습니다.'));
+ const plain=new Element('div');renderOverview(plain,[],{scope:'test',view:'recent',onGame(){},onRecord(){}});
+ assert.ok(walk(plain).some(n=>n.textContent==='저장된 게임 기록이 없습니다.'),'without onStart keeps old note');
+});

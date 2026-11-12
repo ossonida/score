@@ -625,3 +625,5 @@ dialog#turnTimerDialog[open]{display:flex;flex-direction:column}
 .record-turn-timer strong{font-weight:600;font-variant-numeric:tabular-nums}
 .record-turn-timer li small{min-width:28px;color:#94a3b8}
 .record-turn-timer-turns summary{color:#a8b8ce;font-size:12px;cursor:pointer}
+.stats-sample-intro .stats-sample-start{display:block;width:100%;min-height:48px;margin-top:14px;border-radius:12px;font-size:16px;font-weight:700}.stats-sample-intro .insight-link{display:flex;justify-content:center;width:100%}.stats-sample-wrap{position:relative;margin-top:12px}.stats-sample{max-height:520px;overflow:hidden;opacity:.5;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 45%,transparent);mask-image:linear-gradient(#000 45%,transparent)}.stats-sample-badge{position:absolute;z-index:1;top:12px;right:12px;padding:3px 9px;border:1px solid rgba(154,203,255,.45);border-radius:999px;background:#13233a;color:#9acbff;font-size:11px;font-weight:700;letter-spacing:.04em}
+.stats-sample .stats-share-trigger{visibility:hidden}
