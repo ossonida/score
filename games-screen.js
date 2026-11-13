@@ -3,7 +3,7 @@ import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} f
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
 import {gameKey} from './records-core.js?v=309';
-import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView} from './game-library.js?v=309';
+import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView,LIBRARY_LISTS} from './game-library.js?v=334';
 import {renderGameArtwork,gameImageUrl,coverCrop} from './game-artwork.js?v=312';
 import {idToken} from './cloud-records.js?v=332';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -81,7 +81,7 @@ $('gameViewTabs').addEventListener('keydown',e=>{const keys=Object.keys(views),s
 $('gameSearch').addEventListener('input',()=>render());
 function cancel(){clearTimeout(timer);controller?.abort();serial++;$('librarySearchButton').disabled=false;$('librarySearchButton').setAttribute('aria-busy','false');}
 function close(){cancel();$('addGameDialog').close();opened=null;}
-function showResults(games,context){const box=$('librarySearchResults'),existing=new Set(gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),'all',bggState().plays||[]).map(r=>r.key)),resolve=gameResolver(context.records);box.replaceChildren();
+function showResults(games,context){const box=$('librarySearchResults'),existing=new Set(gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),LIBRARY_LISTS.includes(view)?view:'all',bggState().plays||[]).map(r=>r.key)),resolve=gameResolver(context.records);box.replaceChildren();
  for(const g of games){if(!g||typeof g.name!=='string'||g.name.length>120||(g.id&&!/^[1-9][0-9]{0,9}$/.test(String(g.id))))continue;const game={name:g.name,bggId:String(g.id||'')},added=existing.has(gameKey(resolve(game))),row=el('div',undefined,'game-result-row'),button=el('button',undefined,'game-result-choice'),cover=el('span','♟','game-result-cover'),info=el('span',undefined,'game-result-info');button.type='button';button.disabled=added;button.setAttribute('aria-pressed',String(isPicked(game)));if(gameImageUrl({...g,...game}))renderGameArtwork(cover,{...g,...game});const names=gameNames(game);info.append(el('strong',names.ko),el('small',[added?'추가됨':'',names.en,g.year,g.id?'#'+g.id:'',g.scoreGame?'Score 자체 게임':g.source||'BGG'].filter(Boolean).join(' · ')));button.append(cover,info);
  button.onclick=()=>pick(g.scoreGame?{...game,scoreGame:true}:game,button);row.append(button);
  if(g.id){const link=el('a','ⓘ','game-result-detail');link.href='https://boardgamegeek.com/boardgame/'+g.id;link.target='_blank';link.rel='noopener noreferrer';link.setAttribute('aria-label',names.ko+' BGG 상세 보기');row.append(link);}
@@ -96,7 +96,7 @@ function offerAlias(game){const show=!!aliasMiss&&!!game?.bggId;$('libraryAliasF
 function pick(game,button){picked=game;offerAlias(game);$('libraryBggWebsite').hidden=!!game.scoreGame;$('librarySearch').value=game.name;$('libraryBggId').value=game.bggId;$('libraryAddError').textContent='';for(const item of $('librarySearchResults').querySelectorAll('.game-result-choice'))item.setAttribute('aria-pressed',String(item===button));}
 // 등록: 고른 게임 또는 직접 입력한 이름(BGG 게임 ID는 선택)을 내 게임 목록에 추가한다.
 function register(){const context=opened;if(!context||!current(context))return close();const name=$('librarySearch').value.trim(),bggId=$('libraryBggId').value.trim();if(!name){$('libraryAddError').textContent='게임명을 입력해주세요.';$('librarySearch').focus();return;}if(bggId&&!/^[1-9][0-9]{0,9}$/.test(bggId)){$('libraryAddError').textContent='BGG 게임 ID는 숫자로 입력해주세요.';$('libraryBggAdvanced').open=true;$('libraryBggId').focus();return;}if(picked&&bggId&&picked.bggId===bggId&&!$('libraryAliasField').hidden&&$('libraryRememberAlias').checked)try{rememberGameAlias(context.key,picked,$('libraryAliasName').value);}catch{}
- const game={name,bggId};try{const added=addLibraryGame(context.key,game,context.records);render();close();$('gamesMessage').textContent=added?gameNames(game).ko+' · 추가했습니다.':'이미 추가된 게임입니다.';}catch(error){$('libraryAddError').textContent=error.message;}}
+ const game={name,bggId};try{const added=addLibraryGame(context.key,game,context.records,localStorage,LIBRARY_LISTS.includes(view)?view:'');render();close();$('gamesMessage').textContent=added?gameNames(game).ko+' · 추가했습니다.':'이미 추가된 게임입니다.';}catch(error){$('libraryAddError').textContent=error.message;}}
 async function search(query=$('librarySearch').value){cancel();const context=opened;if(!context||!current(context))return close();const q=query.trim(),local=withAliasMatches(searchLocalGames(q,searchRecords(context)),q,readGameAliases(context.key));showResults(local,context);if(!q){$('librarySearchStatus').textContent='한글 또는 영문 게임명을 입력해주세요.';return;}
  if(scoreGame(q)){$('librarySearchStatus').textContent=local.length+'개 결과 · Score 자체 게임은 BGG와 연동하지 않습니다.';return;}
  if(!bggSearchUrl){if(!local.length&&hasHangul(q))aliasMiss=q;$('librarySearchStatus').textContent=local.length?local.length+'개 결과':'결과가 없습니다. 영문명으로 검색해주세요.';return;}
