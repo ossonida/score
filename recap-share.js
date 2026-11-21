@@ -2,7 +2,7 @@ import {gameKey,winnerIds} from './records-core.js?v=309';
 import {isPro,markProLock} from './pro-access.js?v=332';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {peopleLabel} from './people-filter.js?v=1';
-import {meIn,nameKey} from './personal-stats.js?v=309';
+import {meIn,nameKey} from './personal-stats.js?v=310';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=326';
 import {coverSource,stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=326';
 

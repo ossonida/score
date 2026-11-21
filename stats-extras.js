@@ -1,5 +1,5 @@
 import {gameKey,winnerIds} from './records-core.js?v=309';
-import {meIn,nameKey} from './personal-stats.js?v=309';
+import {meIn,nameKey} from './personal-stats.js?v=310';
 import {gameTypeList} from './stats-overview.js?v=326';
 
 const order=(a,b)=>a.date.localeCompare(b.date)||String(a.createdAt||'').localeCompare(String(b.createdAt||''));

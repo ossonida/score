@@ -1,5 +1,5 @@
 import {gameKey,winnerIds,recordMode,playerOutcome} from './records-core.js?v=309';
-import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=309';
+import {meIn,nameKey,personalRecordIds} from './personal-stats.js?v=310';
 import {latestPlayDate} from './stats-overview.js?v=326';
 const scored=p=>typeof p.score==='number'&&Number.isFinite(p.score);
 export function recentHighlights(records,profile){

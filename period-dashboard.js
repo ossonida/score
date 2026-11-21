@@ -1,6 +1,6 @@
 import {frequencyBuckets,recordsInPeriod,summarizePeriod,yearlyCounts} from './period-stats.js?v=309';
 import {firstPlays,placeCounts,milestones,playDays,milestoneTitle,milestoneDetail} from './stats-extras.js?v=326';
-import {readIdentity} from './personal-stats.js?v=309';
+import {readIdentity} from './personal-stats.js?v=310';
 import {openRecapShare} from './recap-share.js?v=332';
 
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};

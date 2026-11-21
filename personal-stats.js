@@ -37,9 +37,9 @@ export function personalRank(play,person){
 }
 export function personalGame(records,profile,rule){
  const all=ordered(records),keys=new Set(profile?[profile.primary,...profile.aliases].map(nameKey):[]),ambiguous=all.filter(p=>!p.players.some(x=>typeof x.isSelf==='boolean')&&p.players.filter(x=>x.anonymous!==true&&keys.has(nameKey(x.name))).length>1).length;
- const own=all.flatMap(play=>{const person=meIn(play,profile);return person?[{play,person}]:[];}),modeCount=new Map();for(const x of own){const m=recordMode(x.play);modeCount.set(m,(modeCount.get(m)||0)+1);}
- // 기본 방식: 많이 쓴 방식(결과 미입력은 맨 뒤). 점수·결과를 적지 않은 판도 그 방식의 플레이로 함께 센다(승률에서는 제외).
- const rules=[...modeCount.keys()].sort((a,b)=>(a==='unknown')-(b==='unknown')||modeCount.get(b)-modeCount.get(a));
+ const own=all.flatMap(play=>{const person=meIn(play,profile);return person?[{play,person}]:[];}),modeCount=new Map(),scoredModeCount=new Map();for(const x of own){const m=recordMode(x.play);modeCount.set(m,(modeCount.get(m)||0)+1);if(['highest','lowest'].includes(m)&&numeric(x.person.score))scoredModeCount.set(m,(scoredModeCount.get(m)||0)+1);}
+ // 기본 방식: 내 점수 기록이 있으면 점수 방식을 먼저, 그 밖에는 많이 쓴 방식(결과 미입력은 맨 뒤). 점수·결과를 적지 않은 판도 그 방식의 플레이로 함께 센다(승률에서는 제외).
+ const rules=[...modeCount.keys()].sort((a,b)=>(a==='unknown')-(b==='unknown')||(scoredModeCount.get(b)||0)-(scoredModeCount.get(a)||0)||modeCount.get(b)-modeCount.get(a));
  const active=rules.includes(rule)?rule:rules[0]||'highest',entries=own.filter(x=>{const m=recordMode(x.play);return m===active||m==='unknown'&&active!=='cooperative';}).map(({play,person})=>{const wins=winnerIds(play);return {play,person,rank:personalRank(play,person),outcome:playerOutcome(play,person),known:playerOutcome(play,person)!=='unknown',won:['win','success'].includes(playerOutcome(play,person))};});
  const scored=entries.filter(x=>['highest','lowest'].includes(active)&&numeric(x.person.score)),scores=scored.map(x=>x.person.score),bestEntry=scored.reduce((best,x)=>!best||better(x.person.score,best.person.score,active)?x:best,null),known=entries.filter(x=>x.known),wins=known.filter(x=>x.won).length;
  const latest5=entries.slice(-5),previous5=entries.slice(-10,-5),recentScores=latest5.filter(x=>numeric(x.person.score)),previousScores=previous5.filter(x=>numeric(x.person.score));
