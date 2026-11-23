@@ -222,7 +222,10 @@ dialog .actions .danger{margin-right:0}
 @media(max-width:380px){#homeScreen header{gap:4px}#homeScreen header .toolbar{gap:3px}}
 
 /* 설정 하위 페이지: data-page에 맞는 카드만 보이고, 하위 페이지는 뒤로가기 머리를 쓴다. */
-#settingsScreen[data-page=main] [data-settings-page]:not([data-settings-page~=main]),#settingsScreen[data-page=places] [data-settings-page]:not([data-settings-page~=places]),#settingsScreen[data-page=sync] [data-settings-page]:not([data-settings-page~=sync]){display:none!important}
+#settingsScreen[data-page=main] [data-settings-page]:not([data-settings-page~=main]),#settingsScreen[data-page=places] [data-settings-page]:not([data-settings-page~=places]),#settingsScreen[data-page=sync] [data-settings-page]:not([data-settings-page~=sync]),#settingsScreen[data-page=pro] [data-settings-page]:not([data-settings-page~=pro]){display:none!important}
+.settings-beta-tag,.pro-beta-kicker{display:inline-block;margin-left:8px;padding:1px 5px;border:1px solid #4f8dff;border-radius:5px;color:#8fb6ff;font-size:10px;font-style:normal;font-weight:800;letter-spacing:.06em;line-height:1.3;vertical-align:2px}.pro-beta-kicker{margin:0 0 8px}
+.pro-beta-page h2{font-size:19px;line-height:1.4;margin:0 0 8px}.pro-beta-lead{font-size:14px;line-height:1.6;color:#aab6ca;margin:0}.pro-beta-page h3{font-size:14px;color:#c9d6ea;margin:20px 0 8px}
+.pro-beta-features{list-style:none;padding:0;margin:0;display:grid;gap:8px}.pro-beta-features li{display:grid;gap:3px;padding:12px 14px;border:1px solid #26384f;border-radius:12px;background:#0b1320}.pro-beta-features strong{font-size:15px;font-weight:600;color:#f6f7fb}.pro-beta-features span{font-size:13px;line-height:1.5;color:#aab6ca}.pro-beta-notes{margin:0;padding-left:18px;font-size:13px;line-height:1.7;color:#aab6ca}
 .settings-subheading{display:flex;align-items:center;gap:2px;margin:-6px 0 16px -10px}
 .settings-subheading h1{flex:1;margin:0;color:#f6f7fb;font-size:22px;font-weight:600;line-height:1.3}
 #settingsPlacesCard>.settings-note:first-child{margin-top:0}

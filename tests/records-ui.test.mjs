@@ -702,7 +702,7 @@ test('settings menu opens places and sync sub-pages with a back header',async()=
  for(const id of ['settingsAccountCard','settingsLanguageCard','settingsIdentityCard','settingsMenu','settingsPrivacyCard'])assert.equal(page(id),'main',id);
  assert.equal(page('settingsPlacesCard'),'places');assert.equal(page('settingsBggCard'),'sync');assert.equal(page('settingsDataCard'),'sync');
  const bgg=html.indexOf('id="settingsBggCard"');assert.ok(html.indexOf('id="bggAccountSection"')>bgg&&html.indexOf('id="bggAccountSection"')<html.indexOf('id="settingsDataCard"'));
- assert.match(html,/class="settings-subheading" data-settings-page="places sync"><button id="settingsBack"/);
+ assert.match(html,/class="settings-subheading" data-settings-page="places sync pro"><button id="settingsBack"/);assert.match(html,/id="openProBeta" class="settings-menu-row" href="#settings\/pro"/);assert.equal(page("settingsProCard"),"pro");assert.ok(css.includes('#settingsScreen[data-page=pro] [data-settings-page]:not([data-settings-page~=pro])'));
  assert.match(css,/#settingsScreen\[data-page=sync\] \[data-settings-page\]:not\(\[data-settings-page~=sync\]\)/);});
 test('the toolbar swaps bulk add for one-player add once the board has players',async()=>{const html=await fs.readFile(resolve(root,'index.html'),'utf8'),toolbar=html.slice(html.indexOf('<div class="toolbar">'),html.indexOf('</header>',html.indexOf('<div class="toolbar">'))),save=html.slice(html.indexOf('<div class="board-save">'),html.indexOf('</div>',html.indexOf('<div class="board-save">')));
  for(const id of ['turnTimer','bulk','add','toolbarMore'])assert.ok(toolbar.includes('id="'+id+'"'),id);assert.ok(!save.includes('id="add"'));

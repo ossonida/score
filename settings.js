@@ -34,7 +34,7 @@ function deleteCloud(account){const context=api.context();if(!context.key.starts
 $('deleteAccount').onclick=()=>deleteCloud(true);$('deleteCloudData').onclick=()=>deleteCloud(false);
 function update(){$('transferStatus').setAttribute('aria-busy',String(busy));const context=api.context();renderSelf(context);renderPlaces(context);renderPrivacy();$('settingsRecordCount').textContent=`저장된 게임 기록 ${context.records.length.toLocaleString('ko-KR')}개`;$('importData').disabled=busy;if(preview&&!contextMatches(preview.context)){reading++;clearPreview();status('계정이 변경됐습니다. 파일을 다시 선택해주세요.');}}
 // 설정 하위 페이지(#settings/places·#settings/sync): 같은 설정 화면에서 해당 카드만 보이고 위에 뒤로가기를 둔다.
-const SETTINGS_PAGES={'#settings/places':['places','장소 관리'],'#settings/sync':['sync','싱크']};
+const SETTINGS_PAGES={'#settings/places':['places','장소 관리'],'#settings/sync':['sync','싱크'],'#settings/pro':['pro','Pro 베타']};
 const settingsPage=()=>SETTINGS_PAGES[location.hash]?.[0]||'main';let lastPage='main',fromMain=false;
 function settingsMain(){if(fromMain)history.back();else location.replace('#settings');}
 $('settingsBack').onclick=settingsMain;
