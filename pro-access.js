@@ -5,7 +5,10 @@
 // 공개 저장소에 이메일이 보이지 않도록 이메일 대신 SHA-256('score-pro:' + 소문자 이메일) 값만 둔다.
 // 계정 추가: node -e "console.log(require('crypto').createHash('sha256').update('score-pro:'+'이메일').digest('hex'))"
 const PRO_HASHES=new Set(['1eda2feb56bb7a3670972085b06cb1348e2dcebe6d1af0885df08fa99dd6d038','1f9e48aeae5048a212880156a218cb458f879282bd2452d6cd8d465998fd20e0','a6e17411c6d9a98d4060e605adedbf1c06c05f496991626a3d0c39edd248aac1']);
-let email='',uid='',pro=false;
+// 베타 기간에는 모든 사용자에게 Pro 기능을 연다. 정식 출시 때 false로 바꾸면 아래 잠금·Pro 소개 시트가 그대로 돌아온다.
+// 베타에 쓴 계정의 얼리 서포터 혜택은 출시 때 서버에서 권한 문서(users/{uid}/settings/pro)로 준다(앱에서 따로 기록하지 않음).
+export const PRO_BETA_FREE=true;
+let email='',uid='',pro=false;const betaUsed=new Set();
 const cacheKey=id=>'score.pro.v1.'+id;
 function cached(id){try{return Boolean(id)&&localStorage.getItem(cacheKey(id))==='1';}catch{return false;}}
 function update(next){if(next===pro)return;pro=next;globalThis.dispatchEvent?.(new Event('score-pro:changed'));}
@@ -25,12 +28,19 @@ export function setProAccount(user){
 }
 // 서버 권한 문서를 읽은 결과. 그 사이 계정이 바뀌었으면 버린다.
 export function applyCloudPro(forUid,value){if(!forUid||forUid!==uid)return;try{if(value)localStorage.setItem(cacheKey(forUid),'1');else localStorage.removeItem(cacheKey(forUid));}catch{}update(Boolean(value)||Boolean(email)&&PRO_HASHES.has(proHash(email)));}
-export function isPro(){return pro;}
+// 기능을 쓸 수 있는지(베타 무료 포함). 실제 Pro 권한만 볼 때는 hasProEntitlement.
+export function isPro(){return PRO_BETA_FREE||pro;}
+export function hasProEntitlement(){return pro;}
 // 이메일 → 목록에 넣는 해시(공백 제거·소문자).
 export function proHash(value){return sha256('score-pro:'+String(value||'').trim().toLowerCase());}
 export function proOnlyText(){return globalThis.ScoreI18n?.lang==='en'?'Available in the Pro version.':'프로 버전에서 이용할 수 있습니다.';}
-// 잠긴 버튼: 열쇠 아이콘(CSS .is-pro-locked)과 화면 읽기용 설명.
-export function markProLock(node,locked){
- node.classList.toggle('is-pro-locked',locked);
- if(locked)node.setAttribute('aria-description',proOnlyText());else node.removeAttribute('aria-description');
+export function proBetaText(){return globalThis.ScoreI18n?.lang==='en'?'Pro feature · free during beta':'Pro 기능 · 베타 기간 무료';}
+// Pro 기능 버튼 표시. proFeature: 이 버튼이 Pro 기능인지, reason: Pro 시트·Analytics 이유값.
+// 권한이 없으면 열쇠(.is-pro-locked), 베타 무료로 열려 있으면 'PRO' 표시(.is-pro-beta)와 화면 읽기용 설명.
+// 베타 중 처음 누르면 이유별로 한 번 pro_beta_used를 남긴다(어떤 Pro 기능이 쓰이는지).
+export function markProLock(node,proFeature,reason='other'){
+ const locked=Boolean(proFeature)&&!isPro(),beta=Boolean(proFeature)&&PRO_BETA_FREE&&!pro,note=locked?proOnlyText():beta?proBetaText():'';
+ node.classList.toggle('is-pro-locked',locked);node.classList.toggle('is-pro-beta',beta);node.dataset.proReason=reason;
+ if(note)node.setAttribute('aria-description',note);else node.removeAttribute('aria-description');
+ if(beta&&!node._proBetaWatch){node._proBetaWatch=true;node.addEventListener('click',()=>{const why=node.dataset.proReason;if(!node.classList.contains('is-pro-beta')||betaUsed.has(why))return;betaUsed.add(why);globalThis.ScoreAnalytics?.track?.('pro_beta_used',{reason:why});});}
 }

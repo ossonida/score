@@ -1,6 +1,6 @@
 import {cloudConfigured,connectCloud} from './cloud-records.js?v=332';
 import {createAnalyticsGate} from './analytics-policy.js?v=155';
-import {createFeatureAnalytics} from './analytics-events.js?v=118';
+import {createFeatureAnalytics} from './analytics-events.js?v=337';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
 const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
 window[disableKey]=true;
