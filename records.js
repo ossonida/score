@@ -13,7 +13,7 @@ import {setProAccount,applyCloudPro,isPro,markProLock} from './pro-access.js?v=3
 import {openPeopleFilter,peopleLabel} from './people-filter.js?v=1';
 import {openProSheet} from './pro-sheet.js?v=1';
 import {renderStoryStats} from './story-stats.js?v=309';
-import {recapData,createRecapSet} from './recap-share.js?v=337';
+import {recapData,createRecapSet} from './recap-share.js?v=342';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=341';
 import {collectionMenu} from './collection-menu.js?v=2';
@@ -25,7 +25,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=310';
 import {renderStatsDashboard} from './stats-dashboard.js?v=312';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=309';
-import {renderPeriodDashboard} from './period-dashboard.js?v=332';
+import {renderPeriodDashboard} from './period-dashboard.js?v=342';
 import {mergeImported} from './data-transfer.js?v=312';
 import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';

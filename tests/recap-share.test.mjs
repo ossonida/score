@@ -90,3 +90,16 @@ test('recap game types, type filter and play rhythm',()=>{
  assert.equal(coopOnly.plays.length,2);assert.equal(coopOnly.category,'coop');assert.match(coopOnly.title,/ · 협동$/);assert.deepEqual(coopOnly.marks,[]);assert.deepEqual(coopOnly.firsts,[]);
  assert.equal(recapData(records,month,profile,{locale:'en'}).categories.find(row=>row.key==='deduction').name,'Deduction');
 });
+
+test('carousel adds my game tiers page when 3+ games played in the period have a personal tier',async()=>{
+ const {gameKey}=await import('../records-core.js');const {resolveGame}=await import('../game-catalog.js');
+ const records=['게임0','게임1','게임2','게임3'].flatMap((name,i)=>Array.from({length:i+1},(_,k)=>play(name+k,'2026-10-0'+(1+k),name))),catan=play('c','2026-10-09','카탄');
+ const base=recapData([...records,catan],month,profile,{locale:'ko'});assert.equal(base.tierCount,0);assert.equal(recapPlan(base).includes('tiers'),false);
+ const two=recapData(records,month,profile,{locale:'ko',tiers:{'name:게임0':'fav','name:게임1':'b'}});assert.equal(two.tierCount,2);assert.equal(recapPlan(two).includes('tiers'),false,'needs three ranked games');
+ const tiers={'name:게임0':'b','name:게임3':'fav','name:게임2':'b',[gameKey(resolveGame({name:'카탄',bggId:''},[]))]:'s','name:옛게임':'a'};
+ const data=recapData([...records,catan,play('old','2026-09-01','옛게임')],month,profile,{locale:'ko',tiers});
+ assert.deepEqual(data.tierRows.map(row=>[row.label,row.games.map(game=>game.name)]),[['최애',['게임3']],['S',['카탄']],['B',['게임2','게임0']]],'only this period, tier order, most played first');
+ assert.equal(data.unranked,1);const plan=recapPlan(data);assert.equal(plan[plan.indexOf('tiers')-1],'top');
+ assert.equal(recapCopy('ko').tierSub(4,1),'이 기간 게임 4개 · 미분류 1개 제외');
+ assert.equal(recapData(records,month,profile,{locale:'en',tiers}).tierRows[0].label,'FAV');
+});
