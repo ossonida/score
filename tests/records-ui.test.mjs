@@ -744,3 +744,9 @@ test("what's new stays hidden on a first-run device and marks current announceme
  const store=new Map(),a=await app(store,false,'',{entry:'whats-new.js',initialHash:'#home'}),{checkWhatsNew}=a.module('whats-new.js');a.vm.window.ScoreRecords={tourState:()=>({count:0})};
  checkWhatsNew();assert.equal(a.get('whatsNewDialog').open,false);assert.deepEqual(JSON.parse(store.get('score.whatsNew.v1')).seen,{'2026-11-game-tiers':true});
 });
+test("settings 'see what's new again' reopens the latest announcement on the home board even after it was seen",async()=>{
+ const store=new Map([['score.whatsNew.v1',JSON.stringify({seen:{'2026-11-game-tiers':true}})]]),a=await app(store,false,'',{entry:'whats-new.js',initialHash:'#settings'}),{checkWhatsNew}=a.module('whats-new.js');
+ a.vm.window.ScoreRecords={tourState:()=>({count:5})};checkWhatsNew();assert.equal(a.get('whatsNewDialog').open,false);
+ let prevented=false;a.get('replayWhatsNew').listeners.click({preventDefault(){prevented=true;}});assert.equal(prevented,true);assert.equal(a.vm.location.hash,'home');
+ await new Promise(resolve=>setTimeout(resolve,700));assert.equal(a.get('whatsNewDialog').open,true);assert.equal(a.get('whatsNewCount').textContent,'1 / 4');
+});

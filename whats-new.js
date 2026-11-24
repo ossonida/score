@@ -43,6 +43,9 @@ function show(item){
 }
 // 창을 어떻게 닫든(×·바깥·Esc·CTA) 본 것으로 둔다.
 function closed(){if(!current)return;mark([current.id]);current=null;schedule(1500);}
+// 설정 '새 기능 다시 보기': 본 기록·기한과 상관없이 가장 최근 안내를 점수판에서 처음부터 보여 준다.
+export function replayWhatsNew(){const item=ANNOUNCEMENTS[0];if(!item)return;clearTimeout(timer);const run=()=>{if(!current&&!document.querySelector?.('dialog[open]'))show(item);};if((location.hash||'#home').split('/')[0]==='#home')setTimeout(run,300);else{location.hash='home';setTimeout(run,600);}}
+$('replayWhatsNew')?.addEventListener('click',event=>{event.preventDefault();replayWhatsNew();});
 $('whatsNewPrev').onclick=()=>go(index-1);
 $('whatsNewNext').onclick=()=>{if(!current)return;if(index<current.slides.length-1)return go(index+1);const item=current;$('whatsNewDialog').close();item.action();};
 $('whatsNewTrack').addEventListener('scroll',()=>{if(!current)return;const track=$('whatsNewTrack'),next=Math.round(track.scrollLeft/Math.max(1,track.clientWidth));if(next!==index){index=Math.max(0,Math.min(current.slides.length-1,next));sync();}},{passive:true});
