@@ -273,7 +273,7 @@ function dictionary(){return /*<dict>*/{
 "하고 싶은":"Want to Play",
 "위시리스트":"Wishlist",
 "펀딩":"Preorder",
-"컬렉션 관리":"Manage collection","티어 정하기":"Set tier","티어 없음":"No tier","최애":"Favorite","목록":"List","티어":"Tier","해본 게임 보기":"Played games view","{0} 나머지 {1}개 보기":"Show {1} more in {0}",
+"컬렉션 관리":"Manage collection","티어 정하기":"Set tier","새 기능":"New","새 기능 안내":"What's new","티어 보러 가기":"See my tiers","{0}번째 안내":"Slide {0}","게임마다 내 티어 정하기":"Give each game your tier","게임별 통계에서 게임 이름 아래 칩을 누르세요.":"In game stats, tap the chip under the game name.","최애부터 C까지 골라요":"Pick from Favorite to C","최애·S·A·B·C 중 하나를 고르면 바로 저장돼요.":"Choose Favorite, S, A, B or C and it saves right away.","해본 게임을 티어로 모아 보기":"See played games by tier","게임 탭 › 해본에서 티어를 누르면 티어별로 묶여 보여요.":"In Games › Played, tap Tier to group games by tier.","결산에 내 티어표":"Your tier list in recaps","기간 분석 › 결산 공유의 여러 장에 그 기간 게임의 티어표가 들어가요.":"Period recap carousels now include a tier list of that period's games.","티어 없음":"No tier","최애":"Favorite","목록":"List","티어":"Tier","해본 게임 보기":"Played games view","{0} 나머지 {1}개 보기":"Show {1} more in {0}",
 "BGG에 저장하지 못했습니다. 다시 시도해주세요.":"Couldn't save to BGG. Please try again.",
 "날짜 없음":"No date",
 "잘못된 날짜":"Invalid date",

@@ -96,6 +96,8 @@ $('gameViewTabs').addEventListener('keydown',e=>{const keys=Object.keys(views),s
 $('gameSearch').addEventListener('input',()=>render());
 $('gamesLayoutList').onclick=()=>selectLayout('list');$('gamesLayoutTier').onclick=()=>selectLayout('tier');$('gamesLayoutList').setAttribute('aria-pressed',String(playedLayout==='list'));$('gamesLayoutTier').setAttribute('aria-pressed',String(playedLayout==='tier'));
 window.addEventListener('score-tiers:changed',()=>render());
+// 다른 화면(새 기능 안내 등)이 게임 탭의 보기를 고를 때 쓰는 공통 이벤트: {view, layout}.
+window.addEventListener('score-games:open',event=>{const {view:next,layout}=event.detail||{};if(layout==='tier'||layout==='list')selectLayout(layout);if(views[next])selectView(next);});
 function cancel(){clearTimeout(timer);controller?.abort();serial++;$('librarySearchButton').disabled=false;$('librarySearchButton').setAttribute('aria-busy','false');}
 function close(){cancel();$('addGameDialog').close();opened=null;}
 function showResults(games,context){const box=$('librarySearchResults'),existing=new Set(gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),LIBRARY_LISTS.includes(view)?view:'all',bggState().plays||[]).map(r=>r.key)),resolve=gameResolver(context.records);box.replaceChildren();

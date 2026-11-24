@@ -362,3 +362,19 @@ dialog .actions .danger{margin-right:0}
 .tier-option[aria-checked=true]{background:#1b3556}
 .tier-option[aria-checked=true]::after{content:"✓";margin-left:auto;color:#5ea8ff}
 .tier-option[data-tier=none]{color:#8fa6c3;font-weight:500}
+.tier-dialog .popup-heading{align-items:flex-start}
+.tier-dialog .popup-heading>div{flex:1;min-width:0}
+.whats-new-dialog{overflow-x:hidden}
+.whats-new-badge{flex:none;padding:4px 10px;border-radius:999px;background:#16345a;color:#8fc3ff;font-size:12px;font-weight:700;line-height:16px}
+.whats-new-count{flex:1;color:#7f93ae;font-size:13px}
+.whats-new-track{display:flex;margin:0 -20px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.whats-new-track::-webkit-scrollbar{display:none}
+.whats-new-slide{flex:0 0 100%;box-sizing:border-box;padding:0 20px;scroll-snap-align:center;scroll-snap-stop:always}
+.whats-new-slide img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border:1px solid #223047;border-radius:14px;background:#0b111c}
+.whats-new-slide h2{margin:16px 0 6px;font-size:19px}
+.whats-new-slide p{margin:0;min-height:42px;color:#acb9ce;font-size:14px;line-height:1.5}
+.whats-new-dots{display:flex;justify-content:center;gap:6px;margin:14px 0 0}
+.whats-new-dots button{width:8px;height:8px;min-height:0;padding:0;border:0;border-radius:4px;background:#344158;transition:width .15s}
+.whats-new-dots button[aria-current=true]{width:20px;background:#5ea8ff}
+.whats-new-actions button[hidden]{display:none}
+#whatsNewDots button{flex:none;height:8px;min-height:0;min-width:0;line-height:0}
