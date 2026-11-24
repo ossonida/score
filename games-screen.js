@@ -1,4 +1,4 @@
-import './records.js?v=341';
+import './records.js?v=345';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
@@ -10,7 +10,7 @@ import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=312';
 import {gameNames} from './bgg-metadata.js?v=309';
 import {indexEntries} from './game-index.js?v=2';
-import {readGameTiers,groupByTier} from './game-tiers.js?v=1';
+import {readGameTiers,groupByTier} from './game-tiers.js?v=2';
 import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
@@ -43,6 +43,7 @@ function saveCollapsed(id,closed){const next=collapsedTiers().filter(item=>item!
 function selectLayout(next){playedLayout=next;try{localStorage.setItem(LAYOUT_KEY,next);}catch{}for(const [id,value] of [['gamesLayoutList','list'],['gamesLayoutTier','tier']])$(id).setAttribute('aria-pressed',String(value===next));render();}
 function tierCover(data){const {game,thumbnail,label}=data,cover=el('button',undefined,'tier-cover');cover.type='button';cover.setAttribute('aria-label',label+' 게임별 통계 보기');cover.append(artwork(thumbnail?{...game,thumbnail}:game),el('span',label,'tier-cover-name'));cover.onclick=()=>api.openGameStats(game);return cover;}
 function renderTiers(list,games){const sorted=[...games].sort((a,b)=>Math.max(b.count,b.bggPlays)-Math.max(a.count,a.bggPlays)||a.label.localeCompare(b.label,'ko')),closed=collapsedTiers();
+ list.append(el('p','좋아하는 정도로 나눈 내 취향 티어예요. 게임을 눌러 바꿀 수 있어요.','record-note tier-note'));
  for(const group of groupByTier(sorted,readGameTiers(api.context().key))){const id=group.id||'none',section=el('section',undefined,'tier-group'),head=el('button',undefined,'tier-head'),body=el('div',undefined,'tier-covers');section.style.setProperty('--tier-color',group.color);section.dataset.tier=id;head.type='button';head.append(el('span',undefined,'tier-dot'),el('span',group.label,'tier-name'),el('span',String(group.items.length),'tier-count'),el('span',undefined,'tier-chevron'));
   const fill=()=>{if(body.childElementCount)return;body.append(...group.items.slice(0,5).map(tierCover));const rest=group.items.length-5;if(rest>0){const more=el('button','+'+rest,'tier-more');more.type='button';more.setAttribute('aria-label',group.label+' 나머지 '+rest+'개 보기');more.onclick=()=>{body.classList.toggle('expanded',true);body.replaceChildren(...group.items.map(tierCover));};body.append(more);}};
   const setOpen=open=>{body.hidden=!open;head.setAttribute('aria-expanded',String(open));if(open)fill();};setOpen(!closed.includes(id));head.onclick=()=>{const open=body.hidden;setOpen(open);saveCollapsed(id,!open);};

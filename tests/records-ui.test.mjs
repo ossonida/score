@@ -718,7 +718,7 @@ test('played tab tier view groups games into collapsible personal tiers and the 
  const a=await app(store,false,'',{entry:'games-screen.js',initialHash:'#games'});
  assert.equal(a.get('gamesLayout').hidden,true,'toggle only on played tab');
  a.get('gamesPlayed').onclick();assert.equal(a.get('gamesLayout').hidden,false);assert.equal(a.get('gamesLayoutTier').attributes['aria-pressed'],'true');
- const list=a.get('gamesList'),sections=list.children;assert.deepEqual(sections.map(s=>s.dataset.tier),['fav','b','none']);
+ const list=a.get('gamesList'),[note,...sections]=list.children;assert.equal(note.textContent,'좋아하는 정도로 나눈 내 취향 티어예요. 게임을 눌러 바꿀 수 있어요.');assert.deepEqual(sections.map(s=>s.dataset.tier),['fav','b','none']);
  const [fav,b,none]=sections;assert.deepEqual(fav.children[0].children.slice(1,3).map(n=>n.textContent),['최애','1']);assert.equal(fav.children[1].hidden,false);
  assert.equal(b.children[1].children.length,6,'five covers then +N');assert.equal(b.children[1].children[5].textContent,'+2');
  b.children[1].children[5].onclick();assert.equal(b.children[1].children.length,7);
@@ -726,9 +726,9 @@ test('played tab tier view groups games into collapsible personal tiers and the 
  a.get('gamesLayoutList').onclick();assert.equal(store.get('score.gamesPlayedLayout'),'list');assert.equal(list.children.length,9);
  a.bridge.openGameStats({name:'아줄',bggId:'230802'});
  const chip=(()=>{const walk=n=>n.className==='game-tier-chip'?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));})();
- assert.ok(chip);assert.equal(chip.textContent,'티어 없음');chip.onclick();assert.equal(a.get('gameTierDialog').open,true);
- const options=a.get('gameTierOptions').children;assert.deepEqual(options.map(o=>o.textContent),['최애','S','A','B','C','티어 없음']);assert.equal(options[5].attributes['aria-checked'],'true');
- options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
+ assert.ok(chip);assert.equal(chip.textContent,'취향 티어 정하기');chip.onclick();assert.equal(a.get('gameTierDialog').open,true);
+ const options=a.get('gameTierOptions').children;assert.deepEqual(options.map(o=>o.children.map(n=>n.textContent).join('|')),['최애|가장 좋아하는 게임','S|아주 좋아요','A|좋아요','B|괜찮아요','C|손이 잘 안 가요','티어 없음']);assert.equal(options[5].attributes['aria-checked'],'true');
+ options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);a.bridge.openGameStats({name:'아줄',bggId:'230802'});assert.equal((()=>{const walk=n=>n.className==='game-tier-chip'?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));})().textContent,'취향 티어 · S');assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
 });
 test("what's new carousel shows once to existing users on the home board and its last CTA opens the played tier view",async()=>{
  const store=new Map(),a=await app(store,false,'',{entry:'whats-new.js',initialHash:'#home'}),{checkWhatsNew,ANNOUNCEMENTS}=a.module('whats-new.js'),dialog=a.get('whatsNewDialog');
@@ -736,7 +736,7 @@ test("what's new carousel shows once to existing users on the home board and its
  checkWhatsNew();assert.equal(dialog.open,true);const slides=ANNOUNCEMENTS[0].slides.length;assert.equal(a.get('whatsNewTrack').children.length,slides);assert.equal(a.get('whatsNewDots').children.length,slides);
  assert.equal(a.get('whatsNewCount').textContent,'1 / '+slides);assert.equal(a.get('whatsNewPrev').hidden,true);assert.equal(a.get('whatsNewNext').textContent,'다음');
  a.get('whatsNewNext').onclick();assert.equal(a.get('whatsNewCount').textContent,'2 / '+slides);assert.equal(a.get('whatsNewPrev').hidden,false);assert.equal(a.get('whatsNewDots').children[1].attributes['aria-current'],'true');
- a.get('whatsNewDots').children[slides-1].onclick();assert.equal(a.get('whatsNewNext').textContent,'티어 보러 가기');
+ a.get('whatsNewDots').children[slides-1].onclick();assert.equal(a.get('whatsNewNext').textContent,'내 취향 티어 보기');
  a.get('whatsNewNext').onclick();dialog.listeners.close?.();assert.equal(dialog.open,false);assert.equal(JSON.stringify(opened),JSON.stringify([{view:'played',layout:'tier'}]));assert.equal(a.vm.location.hash,'games');
  assert.equal(JSON.parse(store.get('score.whatsNew.v1')).seen['2026-11-game-tiers'],true);a.vm.location.hash='#home';checkWhatsNew();assert.equal(dialog.open,false,'shown only once');
 });

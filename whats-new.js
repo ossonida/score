@@ -6,11 +6,11 @@ import {rememberedUid} from './cloud-records.js?v=332';
 const KEY='score.whatsNew.v1';
 // 게임 탭이 받는 공통 이벤트로 보기를 고른 뒤 게임 탭으로 간다(숨은 버튼 클릭 없음).
 const openGames=detail=>{window.dispatchEvent(new CustomEvent('score-games:open',{detail}));location.hash='games';};
-export const ANNOUNCEMENTS=[{id:'2026-11-game-tiers',until:'2027-01-31',cta:'티어 보러 가기',action:()=>openGames({view:'played',layout:'tier'}),slides:[
- {image:'assets/whats-new/tier-chip.webp',title:'게임마다 내 티어 정하기',text:'게임별 통계에서 게임 이름 아래 칩을 누르세요.'},
- {image:'assets/whats-new/tier-pick.webp',title:'최애부터 C까지 골라요',text:'최애·S·A·B·C 중 하나를 고르면 바로 저장돼요.'},
- {image:'assets/whats-new/tier-view.webp',title:'해본 게임을 티어로 모아 보기',text:'게임 탭 › 해본에서 티어를 누르면 티어별로 묶여 보여요.'},
- {image:'assets/whats-new/tier-recap.webp',title:'결산에 내 티어표',text:'기간 분석 › 결산 공유의 여러 장에 그 기간 게임의 티어표가 들어가요.'}]}];
+export const ANNOUNCEMENTS=[{id:'2026-11-game-tiers',until:'2027-01-31',cta:'내 취향 티어 보기',action:()=>openGames({view:'played',layout:'tier'}),slides:[
+ {image:'assets/whats-new/tier-pick.webp',title:'취향 티어가 뭐예요?',text:'좋아하는 정도에 따라 게임을 최애·S·A·B·C로 나눠요. 실력이나 랭킹과는 상관없어요.'},
+ {image:'assets/whats-new/tier-chip.webp',title:'게임별 통계에서 정해요',text:'게임 이름 아래 취향 티어 정하기를 누르고 하나를 고르면 바로 저장돼요.'},
+ {image:'assets/whats-new/tier-view.webp',title:'해본 게임을 취향 티어로 모아 보기',text:'게임 탭 › 해본에서 취향 티어를 누르면 티어별로 묶여 보여요.'},
+ {image:'assets/whats-new/tier-recap.webp',title:'결산에 내 취향 티어표',text:'기간 분석 › 결산 공유의 여러 장에 그 기간 게임의 취향 티어표가 들어가요.'}]}];
 
 const $=id=>document.getElementById(id);
 const seen=()=>readStoredJson(KEY,{seen:{}},value=>value&&typeof value.seen==='object'&&value.seen&&!Array.isArray(value.seen)?value:{seen:{}}).seen;

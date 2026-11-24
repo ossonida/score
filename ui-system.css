@@ -359,8 +359,10 @@ dialog .actions .danger{margin-right:0}
 .tier-options{display:grid;gap:4px;margin-top:14px}
 .tier-option{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:#e4f0ff;font-size:16px;font-weight:600;text-align:left}
 .tier-option::before{content:"";width:14px;height:14px;border-radius:4px;background:var(--tier-color,transparent);border:1px solid var(--tier-color,#4a5b74)}
+.tier-option small{margin-left:auto;color:#8fa6c3;font-size:13px;font-weight:500}.tier-dialog-note{margin:10px 0 0;color:#b7c8de;font-size:14px;line-height:1.45}.tier-note{margin:0 0 12px}
 .tier-option[aria-checked=true]{background:#1b3556}
 .tier-option[aria-checked=true]::after{content:"✓";margin-left:auto;color:#5ea8ff}
+.tier-option:has(small)[aria-checked=true]::after{margin-left:10px}
 .tier-option[data-tier=none]{color:#8fa6c3;font-weight:500}
 .tier-dialog .popup-heading{align-items:flex-start}
 .tier-dialog .popup-heading>div{flex:1;min-width:0}
