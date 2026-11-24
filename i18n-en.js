@@ -273,7 +273,7 @@ function dictionary(){return /*<dict>*/{
 "하고 싶은":"Want to Play",
 "위시리스트":"Wishlist",
 "펀딩":"Preorder",
-"컬렉션 관리":"Manage collection",
+"컬렉션 관리":"Manage collection","티어 정하기":"Set tier","티어 없음":"No tier","최애":"Favorite","목록":"List","티어":"Tier","해본 게임 보기":"Played games view","{0} 나머지 {1}개 보기":"Show {1} more in {0}",
 "BGG에 저장하지 못했습니다. 다시 시도해주세요.":"Couldn't save to BGG. Please try again.",
 "날짜 없음":"No date",
 "잘못된 날짜":"Invalid date",

@@ -1,4 +1,4 @@
-import './records.js?v=337';
+import './records.js?v=341';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
@@ -10,6 +10,8 @@ import {bggSearchUrl} from './firebase-config.js?v=64';
 import {enrichGames} from './bgg-details-client.js?v=312';
 import {gameNames} from './bgg-metadata.js?v=309';
 import {indexEntries} from './game-index.js?v=2';
+import {readGameTiers,groupByTier} from './game-tiers.js?v=1';
+import {readStoredJson,writeStoredJson} from './stored-json.js?v=171';
 import {GAME_SEARCH_CONTEXTS,bggWebSearchUrl,searchBggGames,searchErrorText} from './game-search.js?v=309';
 const $=id=>document.getElementById(id),api=window.ScoreRecords;
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -28,11 +30,24 @@ function artwork(game){const wrap=el('span',undefined,'library-art'),placeholder
 let stale=true,renderToken=0,showRow=()=>null;
 function render(){if(location.hash!=='#games'){stale=true;return;}stale=false;const context=api.context(),scope=context.key;if(scope!==lastScope){$('gamesMessage').textContent='';lastScope=scope;}const list=$('gamesList');$('addLibraryGame').disabled=context.ready===false;if(context.ready===false){list.replaceChildren();renderIndex([]);$('gamesCount').textContent='계정 확인 중…';$('gamesEmpty').hidden=true;return;}const all=gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),view,bggState().plays||[]),query=$('gameSearch').value.trim(),q=normalizeGameQuery(query),aliasIds=q?new Set(readGameAliases(scope).filter(entry=>entry.aliases.some(alias=>normalizeGameQuery(alias).includes(q))).map(entry=>entry.id)):null,games=(query?all.filter(row=>searchableGameGroups([row],query).length||normalizeGameQuery(gameNames(row.game).ko).includes(q)||aliasIds.has(row.game.bggId)):[...all]).map(row=>({...row,label:gameNames(row.game).ko}));games.sort((a,b)=>a.label.localeCompare(b.label,'ko'));list.replaceChildren();$('gamesCount').textContent=all.length+'개';$('gamesEmpty').hidden=games.length>0;
  $('gamesEmpty').textContent=all.length?'검색 결과가 없습니다.':view==='all'?'아직 추가한 게임이 없습니다. ＋로 게임을 추가하세요.':view==='played'?'아직 플레이한 게임이 없습니다. 기록을 저장하거나 게임을 추가하세요.':bggCollection().length?'BGG 컬렉션에 '+viewLabels[view]+'이 없습니다.':viewLabels[view]+'을 등록하거나 BGG 컬렉션을 설정에서 불러올 수 있어요.';
- const token=++renderToken;list.classList.toggle('game-shelf',view==='owned');$('gameIndex').classList.toggle('on-shelf',view==='owned');if(view==='owned'){if(!all.length){renderShelfDemo(list);return;}renderShelf(list,games);return;}let rendered=0;const append=limit=>{const end=Math.min(games.length,limit);for(let index=rendered;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index],item=el('div',undefined,'library-item'),behind=el('span','삭제','library-delete');behind.setAttribute('aria-hidden','true');const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);rowData.set(row,games[index]);item.append(behind,row);list.append(item);}rendered=Math.max(rendered,end);},addRows=()=>{if(token!==renderToken)return;append(rendered+(rendered?60:30));if(rendered<games.length)setTimeout(addRows,0);};
+ const token=++renderToken,tierMode=view==='played'&&playedLayout==='tier';$('gamesLayout').hidden=view!=='played';list.classList.toggle('game-tiers',tierMode);list.classList.toggle('game-shelf',view==='owned');if(tierMode&&games.length){renderTiers(list,games);return;}$('gameIndex').classList.toggle('on-shelf',view==='owned');if(view==='owned'){if(!all.length){renderShelfDemo(list);return;}renderShelf(list,games);return;}let rendered=0;const append=limit=>{const end=Math.min(games.length,limit);for(let index=rendered;index<end;index++){const {game,count,bggPlays,thumbnail,label}=games[index],item=el('div',undefined,'library-item'),behind=el('span','삭제','library-delete');behind.setAttribute('aria-hidden','true');const row=el('button',undefined,'library-row'),info=el('span',undefined,'library-copy');row.type='button';row.setAttribute('aria-label',label+' 게임별 통계 보기');info.append(el('strong',label),el('small',playText(count,bggPlays)));row.append(artwork(thumbnail?{...game,thumbnail}:game),info);row.onclick=()=>api.openGameStats(game);rowData.set(row,games[index]);item.append(behind,row);list.append(item);}rendered=Math.max(rendered,end);},addRows=()=>{if(token!==renderToken)return;append(rendered+(rendered?60:30));if(rendered<games.length)setTimeout(addRows,0);};
  // 색인 이동은 아직 나눠 붙이지 않은 줄까지 바로 그린 뒤 그 줄을 돌려준다.
  showRow=index=>{if(token!==renderToken)return null;append(index+1);return list.children[index]||null;};addRows();renderIndex(indexEntries(games.map(row=>row.label)));
  void enrichArtwork(context,all);
 }
+// 해본 탭 목록/티어 보기(이 기기에 기억). 티어 보기는 개인 티어(최애·S·A·B·C·미분류)마다 접는 섹션, 처음 5개 표지 + 나머지는 +N.
+const LAYOUT_KEY='score.gamesPlayedLayout',COLLAPSED_KEY='score.gameTierCollapsed.v1';
+let playedLayout=(()=>{try{return localStorage.getItem(LAYOUT_KEY)==='tier'?'tier':'list';}catch{return 'list';}})();
+const collapsedTiers=()=>readStoredJson(COLLAPSED_KEY,['none'],value=>Array.isArray(value)?value.filter(item=>typeof item==='string').slice(0,10):['none']);
+function saveCollapsed(id,closed){const next=collapsedTiers().filter(item=>item!==id);if(closed)next.push(id);try{writeStoredJson(COLLAPSED_KEY,next);}catch{}}
+function selectLayout(next){playedLayout=next;try{localStorage.setItem(LAYOUT_KEY,next);}catch{}for(const [id,value] of [['gamesLayoutList','list'],['gamesLayoutTier','tier']])$(id).setAttribute('aria-pressed',String(value===next));render();}
+function tierCover(data){const {game,thumbnail,label}=data,cover=el('button',undefined,'tier-cover');cover.type='button';cover.setAttribute('aria-label',label+' 게임별 통계 보기');cover.append(artwork(thumbnail?{...game,thumbnail}:game),el('span',label,'tier-cover-name'));cover.onclick=()=>api.openGameStats(game);return cover;}
+function renderTiers(list,games){const sorted=[...games].sort((a,b)=>Math.max(b.count,b.bggPlays)-Math.max(a.count,a.bggPlays)||a.label.localeCompare(b.label,'ko')),closed=collapsedTiers();
+ for(const group of groupByTier(sorted,readGameTiers(api.context().key))){const id=group.id||'none',section=el('section',undefined,'tier-group'),head=el('button',undefined,'tier-head'),body=el('div',undefined,'tier-covers');section.style.setProperty('--tier-color',group.color);section.dataset.tier=id;head.type='button';head.append(el('span',undefined,'tier-dot'),el('span',group.label,'tier-name'),el('span',String(group.items.length),'tier-count'),el('span',undefined,'tier-chevron'));
+  const fill=()=>{if(body.childElementCount)return;body.append(...group.items.slice(0,5).map(tierCover));const rest=group.items.length-5;if(rest>0){const more=el('button','+'+rest,'tier-more');more.type='button';more.setAttribute('aria-label',group.label+' 나머지 '+rest+'개 보기');more.onclick=()=>{body.classList.toggle('expanded',true);body.replaceChildren(...group.items.map(tierCover));};body.append(more);}};
+  const setOpen=open=>{body.hidden=!open;head.setAttribute('aria-expanded',String(open));if(open)fill();};setOpen(!closed.includes(id));head.onclick=()=>{const open=body.hidden;setOpen(open);saveCollapsed(id,!open);};
+  section.append(head,body);list.append(section);}
+ renderIndex([]);void enrichArtwork(api.context(),games);}
 // 책장 표지: 빈 여백 없이 상자 비율 그대로. 같은 정사각 틀 안에 들어가게 가로가 길면 폭에, 세로가 길면 높이에 맞추고 선반 위에 세운다.
 function fitShelfCover(art,image){if(!image.naturalWidth||!image.naturalHeight)return;const crop=coverCrop(image.src),ratio=image.naturalWidth*(crop?crop[1]-crop[0]:1)/image.naturalHeight;art.style.aspectRatio=String(ratio);art.style.width=ratio>=1?'100%':'auto';art.style.height=ratio>=1?'auto':'100%';art.classList.add('is-ready');}
 // 보유 탭 '내 컬렉션 책장': 첫 글자 묶음마다 책장 한 칸(표지를 한 줄 3개·넓은 화면 5개씩, 줄마다 선반). 글자는 그 칸 첫 선반 앞면에 새긴다(data-key).
@@ -79,6 +94,8 @@ function selectView(next,focus){view=next;for(const [key,id] of Object.entries(v
 for(const [key,id] of Object.entries(views))$(id).onclick=()=>selectView(key);
 $('gameViewTabs').addEventListener('keydown',e=>{const keys=Object.keys(views),step={ArrowRight:1,ArrowLeft:-1}[e.key];if(!step)return;e.preventDefault();selectView(keys[(keys.indexOf(view)+step+keys.length)%keys.length],true);});
 $('gameSearch').addEventListener('input',()=>render());
+$('gamesLayoutList').onclick=()=>selectLayout('list');$('gamesLayoutTier').onclick=()=>selectLayout('tier');$('gamesLayoutList').setAttribute('aria-pressed',String(playedLayout==='list'));$('gamesLayoutTier').setAttribute('aria-pressed',String(playedLayout==='tier'));
+window.addEventListener('score-tiers:changed',()=>render());
 function cancel(){clearTimeout(timer);controller?.abort();serial++;$('librarySearchButton').disabled=false;$('librarySearchButton').setAttribute('aria-busy','false');}
 function close(){cancel();$('addGameDialog').close();opened=null;}
 function showResults(games,context){const box=$('librarySearchResults'),existing=new Set(gameCollectionView(context.records,readGameLibrary(context.key),bggCollection(),LIBRARY_LISTS.includes(view)?view:'all',bggState().plays||[]).map(r=>r.key)),resolve=gameResolver(context.records);box.replaceChildren();
@@ -115,4 +132,4 @@ $('librarySearch').addEventListener('input',()=>{cancel();if(picked&&picked.name
 window.addEventListener('score-records:changed',()=>{if(opened&&!current(opened))close();render();});
 window.addEventListener('score-bgg:changed',()=>render());
 window.addEventListener('hashchange',()=>{if(location.hash!=='#games'&&opened)close();if(location.hash==='#games'&&stale)render();});
-window.addEventListener('storage',e=>{if(e.key?.startsWith('score.games.v1.'))render();});render();window.ScoreStartup?.ready('games');
+window.addEventListener('storage',e=>{if(e.key?.startsWith('score.games.v1.')||e.key?.startsWith('score.gameTiers.v1.'))render();});render();window.ScoreStartup?.ready('games');

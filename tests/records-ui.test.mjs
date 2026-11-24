@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createFeatureAnalytics} from '../analytics-events.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 class Element{
- constructor(){this.children=[];this.value='';this.textContent='';this.listeners={};this.style={};this.classList={toggle(){}};this.open=false;}
+ constructor(){this.children=[];this.value='';this.textContent='';this.listeners={};this.style={setProperty(name,value){this[name]=value;}};this.dataset={};this.classList={toggle(){}};this.open=false;}
  querySelector(){return null;}
  setAttribute(name,value){(this.attributes??={})[name]=value;}
  removeAttribute(){}
@@ -708,3 +708,25 @@ test('the toolbar swaps bulk add for one-player add once the board has players',
  for(const id of ['turnTimer','bulk','add','toolbarMore'])assert.ok(toolbar.includes('id="'+id+'"'),id);assert.ok(!save.includes('id="add"'));
  assert.ok(html.includes("$('add').hidden=addState.hidden||!players.length;"));assert.ok(html.includes("$('bulk').hidden=players.length>0;"));
  assert.match(toolbar,/id="recordModeChange"[^]*<span>기록방식 변경<\/span>[^]*id="resetPlayers"[^]*<span>삭제<\/span>/);});
+test('played tab tier view groups games into collapsible personal tiers and the game header chip sets a tier',async()=>{
+ const {gameKey}=await import('../records-core.js');
+ const play=(id,name,bggId)=>({id,game:{name,bggId},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score:3}]});
+ const records=[play('1','카탄','13'),play('2','카탄','13'),play('3','아줄','230802'),...Array.from({length:7},(_,i)=>play('m'+i,'게임'+i,String(900+i)))];
+ const key=game=>gameKey({name:game.name,bggId:game.bggId});
+ const tiers={[key(records[0].game)]:'fav',...Object.fromEntries(records.slice(3).map(r=>[key(r.game),'b']))};
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records,pending:[]})],['score.gameTiers.v1.score.plays.v1.guest',JSON.stringify(tiers)],['score.gamesPlayedLayout','tier']]);
+ const a=await app(store,false,'',{entry:'games-screen.js',initialHash:'#games'});
+ assert.equal(a.get('gamesLayout').hidden,true,'toggle only on played tab');
+ a.get('gamesPlayed').onclick();assert.equal(a.get('gamesLayout').hidden,false);assert.equal(a.get('gamesLayoutTier').attributes['aria-pressed'],'true');
+ const list=a.get('gamesList'),sections=list.children;assert.deepEqual(sections.map(s=>s.dataset.tier),['fav','b','none']);
+ const [fav,b,none]=sections;assert.deepEqual(fav.children[0].children.slice(1,3).map(n=>n.textContent),['최애','1']);assert.equal(fav.children[1].hidden,false);
+ assert.equal(b.children[1].children.length,6,'five covers then +N');assert.equal(b.children[1].children[5].textContent,'+2');
+ b.children[1].children[5].onclick();assert.equal(b.children[1].children.length,7);
+ assert.equal(none.children[1].hidden,true,'unranked starts collapsed');none.children[0].onclick();assert.equal(none.children[1].hidden,false);assert.deepEqual(JSON.parse(store.get('score.gameTierCollapsed.v1')),[]);
+ a.get('gamesLayoutList').onclick();assert.equal(store.get('score.gamesPlayedLayout'),'list');assert.equal(list.children.length,9);
+ a.bridge.openGameStats({name:'아줄',bggId:'230802'});
+ const chip=(()=>{const walk=n=>n.className==='game-tier-chip'?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));})();
+ assert.ok(chip);assert.equal(chip.textContent,'티어 없음');chip.onclick();assert.equal(a.get('gameTierDialog').open,true);
+ const options=a.get('gameTierOptions').children;assert.deepEqual(options.map(o=>o.textContent),['최애','S','A','B','C','티어 없음']);assert.equal(options[5].attributes['aria-checked'],'true');
+ options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
+});
