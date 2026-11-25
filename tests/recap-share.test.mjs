@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 globalThis.document={createElement:()=>({})};
-const {maskName,recapData,recapPlan,recapTrait,recapCopy}=await import('../recap-share.js');
+const {maskName,recapData,recapPlan,recapCopy}=await import('../recap-share.js');
 const play=(id,date,game='카탄',extra={})=>({id,date,createdAt:date+'T12:00:00Z',game:{name:game,bggId:''},rule:'highest',players:[{id:'a',name:'나',score:30,winner:true},{id:'b',name:'김민수',score:28,winner:false}],...extra});
 const month={preset:'month',title:'2026년 10월',label:'이전 달',current:{start:'2026-10-01',end:'2026-10-31'},previous:{start:'2026-09-01',end:'2026-09-30'}};
 const profile={primary:'나',aliases:[]};
@@ -33,17 +33,12 @@ test('carousel plan adds the cover wall for 9+ games and a second page for 18+',
  assert.ok(!recapPlan(recapData(many(3),{...month,preset:'all'},profile,{locale:'ko'})).includes('calendar'));
 });
 
-test('single recap picks one trait per period',()=>{
- const trait=records=>recapTrait(recapData(records,month,profile,{locale:'ko'})).kind;
- const before=Array.from({length:9},(_,i)=>play('o'+i,'2026-09-0'+(i+1),'아줄'));
- assert.equal(trait([...before,play('n','2026-10-02','아줄')]),'milestone');
- assert.equal(trait([play('1','2026-10-01','카탄'),play('2','2026-10-02','아줄')]),'firsts');
- const old=[play('x','2026-08-01','카탄'),play('y','2026-08-02','아줄')];
- assert.equal(trait([...old,...Array.from({length:5},(_,i)=>play('c'+i,'2026-10-1'+i,'카탄')),play('z','2026-10-20','아줄')]),'focus');
- const coop=i=>play('p'+i,'2026-10-0'+(i+1),i%2?'팬데믹':'카탄',i%2?{rule:'cooperative',cooperativeResult:'success',players:[{id:'a',name:'나',score:null}]}:{});
- assert.equal(trait([...old,{...play('pp','2026-08-03','팬데믹')},...Array.from({length:6},(_,i)=>coop(i))]),'coop');
- assert.equal(trait([...old,play('t1','2026-10-01','카탄'),play('t2','2026-10-02','아줄'),play('t3','2026-10-03','카탄')]),'top');
- assert.equal(trait([...old,play('t1','2026-10-01','카탄'),play('t2','2026-10-02','아줄')]),'played');
+test('single recap summary data: my wins and best score, partner only for friends, milestone says the game total',()=>{
+ const records=[play('1','2026-10-01'),play('2','2026-10-02','아줄',{players:[{id:'a',name:'나',score:12,winner:false},{id:'b',name:'김민수',score:40,winner:true}]})];
+ const pub=recapData(records,month,profile,{locale:'ko'}),friends=recapData(records,month,profile,{locale:'ko',scope:'friends'});
+ assert.deepEqual([pub.self.wins,pub.self.plays,pub.myBest.score],[1,2,30]);
+ assert.deepEqual(friends.partner,{name:'김민수',count:2});
+ const words=recapCopy('ko');assert.equal(words.ms.game(100,'윙스팬'),'윙스팬 통산 100판째');assert.equal(words.ms.plays(200),'전체 게임 통산 200판째');
 });
 
 test('english recap copy stays short and pluralizes',()=>{
