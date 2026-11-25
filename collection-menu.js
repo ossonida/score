@@ -1,4 +1,4 @@
-// 게임별 통계 게임 머리 메뉴: 맨 위 취향 티어(누르면 메뉴를 닫고 tier.onOpen), BGG 게임이면 그 아래 컬렉션 관리(보유·하고 싶은·위시리스트·펀딩 체크박스), onDelete가 있으면 게임 삭제. triggers(머리 라벨)를 주면 ⋮ 대신 그 라벨들이 메뉴를 연다. 저장은 onChange가 맡고 돌려준 안내 문구를 보여 준다.
+// 게임별 통계 게임 머리 메뉴: 맨 위 취향 티어(누르면 메뉴를 닫고 tier.onOpen), BGG 게임이면 그 아래 컬렉션 관리(보유·하고 싶은·위시리스트·펀딩 체크박스), onDelete가 있으면 게임 삭제. triggers(머리 컬렉션 라벨)를 주면 ⋮ 대신 그 라벨들이 메뉴를 연다. 저장은 onChange가 맡고 돌려준 안내 문구를 보여 준다.
 const choices=[['owned','보유'],['wantToPlay','하고 싶은'],['wishlist','위시리스트'],['preordered','펀딩']];
 const icon='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 export function collectionMenu({tier=null,onDelete=null,triggers=null,label:menuLabel='',collection=true,status={},disabled='',hint='',open=false,onToggle=()=>{},onChange}){
@@ -26,6 +26,6 @@ export function collectionMenu({tier=null,onDelete=null,triggers=null,label:menu
  for(const o of openers){o.setAttribute('aria-haspopup','true');o.onclick=()=>setOpen(panel.hidden);}
  box.addEventListener?.('keydown',event=>{if(event.key==='Escape'&&!panel.hidden){setOpen(false);openers[0].focus?.();}});
  panel.hidden=!open;for(const o of openers)o.setAttribute('aria-expanded',String(open));if(open)document.addEventListener?.('pointerdown',outside);
- if(triggers){box.className+=' game-head-labels';box.append(...triggers,panel);}else box.append(button,panel);
+ if(triggers){box.className+=' collection-menu-triggers';box.append(...triggers,panel);}else box.append(button,panel);
  return box;
 }
