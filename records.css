@@ -428,7 +428,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 #settingsPlacesCard .place-actions{display:flex;gap:6px;flex:none}#settingsPlacesCard .place-actions button,#settingsPlacesCard .place-list>button{min-height:36px;padding:6px 12px;border:1px solid #26384f;border-radius:10px;background:#0d1522;color:#b7d3f5;font-size:13px}#settingsPlacesCard .place-actions button[aria-pressed=true]{background:#223c5d;color:#e4f0ff;border-color:#3a5b86}
 #settingsPlacesCard .place-rename{display:flex;gap:8px;width:100%}#settingsPlacesCard .place-rename[hidden]{display:none}#settingsPlacesCard .place-rename input{flex:1;min-width:0;min-height:40px}#settingsPlacesCard .place-rename button{flex:none;min-height:40px;padding:0 14px}#settingsPlacesCard .place-list>button{margin-top:8px}
 /* 기간 분석: 결산 공유 · 플레이 달력 · 플레이 장소, 게임별 통계: 게임 순위 */
-.period-summary-head>.period-range{flex-basis:100%}
+.period-summary-head>.period-range{margin-right:auto}
 .play-calendar .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-top:12px}
 .play-calendar .calendar-weekday{font-size:11px;color:#8fa6c3;text-align:center;padding-bottom:2px}
 .play-calendar .calendar-day{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:42px;border-radius:8px;background:#162336;color:#8fa6c3}
