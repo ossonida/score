@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAnalyticsGate,isExcludedEmail} from '../analytics-policy.js';
+import {createAnalyticsGate,isExcludedEmail,isTestEnvironment} from '../analytics-policy.js';
 import {armUntilTaskEnd,createFeatureAnalytics,playerCountBucket} from '../analytics-events.js';
-function app({storage=new Map(),search='',isExcluded=async email=>email==='internal@example.invalid'}={}){let starts=0,disabled;const gate=createAnalyticsGate({storage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},search,isExcluded,start:()=>{starts++;disabled=false;},stop:()=>{disabled=true;}});return {gate,storage,get starts(){return starts;},get disabled(){return disabled;}};}
+function app({storage=new Map(),search='',testEnvironment=false,isExcluded=async email=>email==='internal@example.invalid'}={}){let starts=0,disabled;const gate=createAnalyticsGate({storage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},search,isExcluded,testEnvironment,start:()=>{starts++;disabled=false;},stop:()=>{disabled=true;}});return {gate,storage,get starts(){return starts;},get disabled(){return disabled;}};}
 test('GA stays disabled until auth is restored, then starts once for ordinary visitors',async()=>{const a=app();assert.equal(a.starts,0);assert.equal(a.disabled,true);await a.gate.onAuthState(null);await a.gate.onAuthState({email:'visitor@example.invalid'});assert.equal(a.starts,1);assert.equal(a.disabled,false);});
 test('excluded accounts never start GA and their browser stays excluded after logout/reload',async()=>{const a=app();await a.gate.onAuthState({email:'internal@example.invalid'});await a.gate.onAuthState(null);assert.equal(a.starts,0);assert.equal(a.disabled,true);const b=app({storage:a.storage});await b.gate.onAuthState(null);assert.equal(b.starts,0);});
 test('signing into an excluded account stops collection already started anonymously',async()=>{const a=app();await a.gate.onAuthState(null);assert.equal(a.disabled,false);await a.gate.onAuthState({email:'internal@example.invalid'});assert.equal(a.disabled,true);await a.gate.onAuthState(null);assert.equal(a.starts,1);assert.equal(a.disabled,true);});
@@ -66,4 +66,15 @@ test('a pending board action survives the microtasks a real tap runs before the 
   const next={type:'score'};armUntilTaskEnd(()=>pending,value=>{pending=value;},next);pending={type:'player_remove'};
   await new Promise(resolve=>setTimeout(resolve,0));
   assert.deepEqual(pending,{type:'player_remove'});
+});
+
+test('local dev hosts and automated browsers never start GA, without marking the device excluded', async () => {
+  assert.equal(isTestEnvironment({hostname:'localhost'}),true);
+  assert.equal(isTestEnvironment({hostname:'127.0.0.1'}),true);
+  assert.equal(isTestEnvironment({hostname:'ossonida.github.io',webdriver:true}),true);
+  assert.equal(isTestEnvironment({hostname:'ossonida.github.io',userAgent:'Mozilla/5.0 HeadlessChrome/131.0'}),true);
+  assert.equal(isTestEnvironment({hostname:'ossonida.github.io',webdriver:false,userAgent:'Mozilla/5.0 (Linux; Android 14) Chrome/131.0 Mobile'}),false);
+  const a=app({testEnvironment:true});await a.gate.onAuthState(null);await a.gate.onAuthState({email:'visitor@example.invalid'});
+  assert.equal(a.starts,0);assert.equal(a.disabled,true);assert.equal(a.storage.get('score.analytics.exclude.v1'),undefined);
+  a.gate.setEnabled(true);assert.equal(a.starts,0);
 });

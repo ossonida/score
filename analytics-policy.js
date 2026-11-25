@@ -6,9 +6,14 @@ export async function isExcludedEmail(email){
  return EXCLUDED_EMAIL_HASHES.has([...new Uint8Array(bytes)].map(b=>b.toString(16).padStart(2,'0')).join(''));
 }
 // 사용자가 끈 이용 분석(optout)은 개발자 제외(exclude)와 따로 저장하며, 다시 켜면 resume으로 전송을 재개한다.
-export function createAnalyticsGate({storage,search='',start,stop,resume=()=>{},isExcluded=isExcludedEmail}){
+// 로컬 개발 주소와 자동화 브라우저(성능 측정·헤드리스 테스트)는 실제 사용자가 아니므로 보내지 않는다. 기기에 저장하지 않고 매번 판단한다.
+export function isTestEnvironment({hostname='',webdriver=false,userAgent=''}={}){
+ return webdriver===true||/HeadlessChrome|Lighthouse/i.test(userAgent)||['localhost','127.0.0.1','[::1]','::1'].includes(hostname)||hostname.endsWith('.localhost');
+}
+export function createAnalyticsGate({storage,search='',start,stop,resume=()=>{},isExcluded=isExcludedEmail,testEnvironment=false}){
  const key='score.analytics.exclude.v1',optKey='score.analytics.optout.v1';let excluded=false,optedOut=false,ready=false,started=false,epoch=0;
  try{excluded=storage.getItem(key)==='1';}catch{excluded=true;}
+ if(testEnvironment)excluded=true;
  try{optedOut=storage.getItem(optKey)==='1';}catch{optedOut=true;}
  if(new URLSearchParams(search).get('analytics')==='off'){excluded=true;try{storage.setItem(key,'1');}catch{}}
  stop();
