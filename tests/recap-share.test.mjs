@@ -100,7 +100,7 @@ test('carousel adds my game tiers page when 3+ games played in the period have a
  const data=recapData([...records,catan,play('old','2026-09-01','옛게임')],month,profile,{locale:'ko',tiers});
  assert.deepEqual(data.tierRows.map(row=>[row.label,row.games.map(game=>game.name)]),[['최애',['게임3']],['S',['카탄']],['B',['게임2','게임0']]],'only this period, tier order, most played first');
  assert.equal(data.unranked,1);const plan=recapPlan(data);assert.equal(plan[plan.indexOf('tiers')-1],'top');
- assert.equal(recapCopy('ko').tierSub(4,1),'이 기간 게임 4개 · 미분류 1개 제외');
+ assert.equal(recapCopy('ko').tierSub('11월',4),'11월 동안 4개 게임 플레이 취향');
  assert.equal(recapData(records,month,profile,{locale:'en',tiers}).tierRows[0].label,'FAV');
 });
 test('share dialog option rows stay hidden when unused (recent-records share has no people/category row)',async()=>{
