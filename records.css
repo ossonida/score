@@ -654,3 +654,5 @@ dialog#turnTimerDialog[open]{display:flex;flex-direction:column}
 #statsInsights:has(.game-overview) .stats-methods[open]>summary::after,#statsPanel:has(.game-overview) #statsDetails[open]>summary::after{margin-top:4px;transform:rotate(-135deg)}
 #statsPanel:has(.game-overview) #statsDetails>summary small{margin-left:auto;color:#8fa9c8}#statsPanel:has(.game-overview) #statsDetails>summary small+*{margin-left:0}#statsPanel:has(.game-overview) #statsDetails>summary:has(small:not(:empty))::after{margin-left:0}
 #statsInsights:has(.game-overview){margin-bottom:14px}#statsPanel:has(.game-overview) #statsDetails{padding-top:14px;border-top-color:#26384f}
+/* 기간 분석 월간·연간: 제목 없이 공유 버튼만 카드 오른쪽 위, 지표는 버튼 자리만큼 비움 */
+.period-summary:has(>.period-summary-head.is-compact){position:relative}.period-summary-head.is-compact{position:absolute;top:14px;right:14px;padding:0;border:0}.period-summary:has(>.period-summary-head.is-compact)>.period-metrics{margin-top:0;padding-right:44px}
