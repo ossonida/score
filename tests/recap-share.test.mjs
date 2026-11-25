@@ -103,3 +103,7 @@ test('carousel adds my game tiers page when 3+ games played in the period have a
  assert.equal(recapCopy('ko').tierSub(4,1),'이 기간 게임 4개 · 미분류 1개 제외');
  assert.equal(recapData(records,month,profile,{locale:'en',tiers}).tierRows[0].label,'FAV');
 });
+test('share dialog option rows stay hidden when unused (recent-records share has no people/category row)',async()=>{
+ const {readFileSync}=await import('node:fs');const css=readFileSync(new URL('../records.css',import.meta.url),'utf8');
+ assert.match(css,/\.recap-option\{display:grid/);assert.match(css,/\.recap-option\[hidden\]\{display:none\}/);
+});
