@@ -618,6 +618,27 @@ test('game stats title offers a collection menu that saves checks on this device
  wish.checked=true;await wish.onchange();assert.equal(wish.checked,false,'a failed save reverts the checkbox');assert.match(note(),/저장하지 못했습니다/);
  edits={13:{owned:false}};a.bridge.renderHistory();assert.match(note(),/내보내기 때/,'a pending change keeps the hint');
 });
+test('game head labels show tier and collection status and open the ⋮ menu; ⋮ › 게임 삭제 follows the games tab rule',async()=>{
+ const play={id:'p1',game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:3},{id:'b',name:'바다',color:'#ffcc00',score:1}]};
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})],['score.games.v1.score.plays.v1.guest',JSON.stringify([{name:'목록게임',bggId:''}])]]);
+ const a=await app(store,false,'',{me:'하늘'});let asked=null;a.vm.window.ScoreCounter.confirm=(title,message,go)=>{asked={title,message,go};};
+ a.vm.window.ScoreBggAccount={state:()=>({collection:[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:true,wantToPlay:false,preordered:false}],plays:[]}),editable:()=>true,collectionEdits:()=>({})};
+ const walk=e=>[e,...(e.children||[]).flatMap(walk)],find=cls=>walk(a.get('statsInsights')).filter(e=>String(e.className||'').split(' ').includes(cls));
+ a.get('statsGames').onclick();assert.deepEqual(find('game-head-labels')[0].children.map(e=>e.textContent),['보유','위시리스트'],'collection labels only, no tier yet');assert.equal(find('game-head-divider').length,1);
+ const panel=()=>find('collection-menu')[0].children[1];assert.equal(panel().hidden,true);find('game-head-label')[0].onclick();assert.equal(panel().hidden,false,'label opens the ⋮ menu');
+ find('collection-menu-delete')[0].onclick();assert.equal(panel().hidden,true);assert.equal(asked,null,'a game with records is not deleted');assert.match(a.get('recordMessage').textContent+a.get('statsStatus').textContent,/경기 기록이 있는 게임은 삭제할 수 없습니다/);
+ find('collection-menu-tier')[0].onclick();a.get('gameTierOptions').children[1].onclick();assert.equal(find('game-head-label')[0].textContent,'취향 S','tier label appears after choosing');
+ a.bridge.openGameStats({name:'목록게임',bggId:''});assert.equal(find('game-head-labels').length,0,'no labels, no divider row');find('collection-menu-delete')[0].onclick();assert.equal(asked?.title,'게임 삭제');asked.go();
+ assert.deepEqual(JSON.parse(store.get('score.games.v1.score.plays.v1.guest')),[],'library-only game removed');assert.equal(JSON.parse(store.get('score.plays.v1.guest')).records.length,1,'records untouched');
+});
+test('save step 2 offers an optional taste tier only when the game has none and stores it with the record',async()=>{
+ const store=new Map();const a=await app(store);
+ a.bridge.openFinish();a.get('playGame').value='티어게임';a.get('playDate').value='2026-10-09';await a.get('savePlayForm').onsubmit({preventDefault(){}});
+ assert.equal(a.get('saveTierField').hidden,false);const opts=a.get('saveTierOptions').children;assert.deepEqual(opts.map(o=>o.textContent),['최애','S','A','B','C']);assert.ok(opts.every(o=>o.attributes['aria-checked']==='false'),'nothing chosen at first');
+ opts[2].onclick();assert.equal(opts[2].attributes['aria-checked'],'true');opts[2].onclick();assert.equal(opts[2].attributes['aria-checked'],'false','tap again clears');opts[1].onclick();
+ await a.get('savePlayForm').onsubmit({preventDefault(){}});assert.deepEqual(Object.values(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest')||'{}')),['s']);
+ a.bridge.openFinish();a.get('playGame').value='티어게임';a.get('playDate').value='2026-10-10';await a.get('savePlayForm').onsubmit({preventDefault(){}});assert.equal(a.get('saveTierField').hidden,true,'hidden once the game has a tier');
+});
 test('collection menu checks owned and wishlist once the BGG collection loads after the stats screen',async()=>{
  const play={id:'p1',game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:3},{id:'b',name:'바다',color:'#ffcc00',score:1}]};
  const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})]]),false,'',{me:'하늘',initialHash:'#stats'});let collection=[];

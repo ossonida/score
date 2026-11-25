@@ -41,3 +41,5 @@ export function addLibraryGame(scope,game,records=[],storage=localStorage,list='
  if(saved.length>=1000)throw Error('추가한 게임은 최대 1,000개까지 저장할 수 있습니다.');
  storage.setItem(storageKey(scope),JSON.stringify([...saved,{name:resolved.name,bggId:String(resolved.bggId||''),...(flag?{[flag]:true}:{})}]));return true;
 }
+// 게임 삭제 규칙(게임 탭·게임별 통계 공통): 내 목록에만 추가한 게임만 지운다. 막을 때는 안내 문구를, 지울 수 있으면 ''를 돌려준다.
+export function libraryDeleteBlock(row,label){if(!row)return label+' · 내 게임 목록에 없는 게임입니다.';if(row.count>0)return label+' · 경기 기록이 있는 게임은 삭제할 수 없습니다.';if(row.bggPlays||row.owned||row.wishlist||row.wantToPlay||row.preordered)return label+' · BGG에서 가져온 게임은 BGG 컬렉션에서 정리해주세요.';return '';}

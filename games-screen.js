@@ -1,9 +1,9 @@
-import './records.js?v=351';
+import './records.js?v=352';
 import {searchLocalGames,gameResolver,searchableGameGroups,normalizeGameQuery} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
 import {scoreGame} from './score-games.js?v=168';
 import {gameKey} from './records-core.js?v=309';
-import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView,LIBRARY_LISTS} from './game-library.js?v=334';
+import {readGameLibrary,libraryGames,addLibraryGame,removeLibraryGame,gameCollectionView,LIBRARY_LISTS,libraryDeleteBlock} from './game-library.js?v=352';
 import {renderGameArtwork,gameImageUrl,coverCrop} from './game-artwork.js?v=312';
 import {idToken} from './cloud-records.js?v=332';
 import {bggSearchUrl} from './firebase-config.js?v=64';
@@ -72,8 +72,7 @@ let indexItems=[],indexKeyNow='';
 // 게임 삭제: 줄을 왼쪽으로 밀거나 길게 누르면 확인 후 내 목록에서 지운다. 기록·BGG 정보가 있는 게임은 이유만 알린다.
 const rowData=new WeakMap();let press=null,suppressClick=0;
 function askDelete(data){if(!data)return;const context=api.context(),{key,label}=data;
- if(data.count>0){$('gamesMessage').textContent=label+' · 경기 기록이 있는 게임은 삭제할 수 없습니다.';return;}
- if(data.bggPlays||data.owned||data.wishlist||data.wantToPlay||data.preordered){$('gamesMessage').textContent=label+' · BGG에서 가져온 게임은 BGG 컬렉션에서 정리해주세요.';return;}
+ const blocked=libraryDeleteBlock(data,label);if(blocked){$('gamesMessage').textContent=blocked;return;}
  window.ScoreCounter.confirm('게임 삭제',label+'을(를) 내 게임 목록에서 삭제할까요?',()=>{if(!current(context))return;let removed=false;try{removed=removeLibraryGame(context.key,key,context.records);}catch{}render();$('gamesMessage').textContent=removed?label+' · 삭제했습니다.':label+' · 삭제하지 못했습니다.';});}
 function resetPress(){if(!press)return;clearTimeout(press.timer);press.item.classList.remove('library-swiping');press.row.style.transform='';press=null;}
 $('gamesList').addEventListener('pointerdown',e=>{const row=e.target.closest?.('.library-row');if(!row||e.isPrimary===false||(e.pointerType==='mouse'&&e.button!==0))return;resetPress();press={row,item:row.parentElement,id:e.pointerId,x:e.clientX,y:e.clientY,dx:0,horizontal:false};press.timer=setTimeout(()=>{const data=rowData.get(row);resetPress();suppressClick=Date.now()+600;askDelete(data);},600);});
