@@ -480,7 +480,7 @@ function gatePeriod(on){
  gate.className='pro-gate';text.textContent=en?'See the full analysis and recap with Pro':'전체 분석과 결산은 Pro에서 볼 수 있어요';button.type='button';button.className='primary';button.textContent=en?'Learn about Pro':'Pro 알아보기';button.onclick=()=>openProSheet({reason:'period',previews:periodPreview});gate.append(text,button);box.children[0].append(gate);
 }
 function periodPeopleText(){const people=activePeople(),en=window.ScoreI18n?.lang==='en';return people?peopleLabel(people.names)+(people.mode==='all'?(en?' · all':' · 모두 함께'):''):(en?'Everyone':'전체');}
-function renderPeopleButton(){const button=$('periodPeopleButton'),people=activePeople(),en=window.ScoreI18n?.lang==='en',label=periodPeopleText();button.textContent=(en?'Played with: ':'함께한 사람: ')+label;button.classList.toggle('is-filtered',Boolean(people));markProLock(button,true,'people');}
+function renderPeopleButton(){const button=$('periodPeopleButton'),people=activePeople(),en=window.ScoreI18n?.lang==='en',label=periodPeopleText();button.textContent=(en?'Played with: ':'함께한 사람: ')+label;button.classList.toggle('is-filtered',Boolean(people));markProLock(button,true,'people');const wrap=button.parentElement;if(wrap&&wrap.classList?.contains('period-people'))wrap.hidden=!people;button.hidden=!people;}
 // 함께한 사람 고르기: 기간 분석 버튼과 결산 공유 창이 같이 쓴다(after: 적용 뒤 결산 다시 만들기).
 function choosePeriodPeople(after){$('periodNotice').textContent='';if(!isPro())return openProSheet({reason:'people',previews:periodPreview});
  const profile=readIdentity(key()),counts=new Map();
