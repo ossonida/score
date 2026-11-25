@@ -682,12 +682,12 @@ test('per-game statistics lead with side win rates for role-style team records',
  const text=node=>[node.textContent||'',...(node.children||[]).map(text)].join(' ');const all=text(a.get('statsInsights'));
  assert.match(all,/3판\s+플레이\s+66.7%\s+전체 승률\s+50%\s+시민 승률 2판\s+100%\s+마피아 승률 1판/);assert.ok(all.indexOf('인원별 성적')<all.indexOf('최근 경기'),'sizes come before recent games');assert.doesNotMatch(all,/팀전 승률|팀 승리|무승부|진영별 기록|결과 확인|통계 집계 기준/);
 });
-test('per-game play sits in the game head and recent games open all records of the game',async()=>{
+test('per-game play floats outside the game head and recent games open all records of the game',async()=>{
  const play=(i,won)=>({id:'s'+i,date:'2026-10-0'+i,createdAt:'2026-10-0'+i+'T12:00:00.000Z',game:{name:'점수테스트',bggId:''},rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score:won?30:10,isSelf:true},{id:'b',name:'철수',color:'#ffcc00',score:20}]});
  const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[1,2,3,4,5,6,7].map(i=>play(i,i%2===1)),pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
  const a=await app(store);a.bridge.openGameStats({name:'점수테스트',bggId:''});
  const walk=(node,out=[])=>{out.push(node);for(const child of node.children||[])walk(child,out);return out;};const nodes=walk(a.get('statsInsights'));
- const actions=nodes.find(n=>n.className==='game-title-actions');assert.ok(actions?.children.includes(a.get('statsPlayFab')),'play button lives in the game head');assert.equal(a.get('statsPlayFab').hidden,false);
+ assert.ok(!nodes.some(n=>n.className==='game-title-actions'||n===a.get('statsPlayFab')),'play button floats outside the game head');assert.equal(a.get('statsPlayFab').hidden,false);
  assert.ok(nodes.some(n=>n.textContent==='우승')&&!nodes.some(n=>/우승 · /.test(n.textContent)),'recent rows show 우승 alone');
  const all=nodes.find(n=>n.textContent==='이 게임 기록 모두 보기');assert.ok(all,'all-records link under recent games');all.onclick();
  assert.equal(a.get('statsDetails').open,true);assert.match(a.get('recordList').children[0]?.id||'',/^record-s/,'records tab lists the game records');
