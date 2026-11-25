@@ -1,6 +1,6 @@
 import {cloudConfigured,connectCloud} from './cloud-records.js?v=332';
 import {createAnalyticsGate} from './analytics-policy.js?v=155';
-import {createFeatureAnalytics} from './analytics-events.js?v=337';
+import {armUntilTaskEnd,createFeatureAnalytics} from './analytics-events.js?v=338';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
 const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
 window[disableKey]=true;
@@ -18,7 +18,7 @@ function installFeatureListeners(){
  let lastSession;try{lastSession=JSON.parse(localStorage.getItem('score.activeGame.v1')||'null')?.recordId||'';}catch{lastSession='';}
  const board=()=>({players:window.ScoreCounter?.getPlayers?.()||[],entry:window.ScoreCounter?.getResultEntry?.()||null});
  let boardBefore=board(),records=null,pendingBoard=null,pendingEnd=false,pendingAccount='',pendingBgg='',pendingInstall=false,nextPlayerEntry='manual';
- const armBoard=value=>{pendingBoard=value;queueMicrotask(()=>{if(pendingBoard===value)pendingBoard=null;});};
+ const armBoard=value=>armUntilTaskEnd(()=>pendingBoard,next=>{pendingBoard=next;},value);
  const currentView=()=>({'#stats':'stats','#games':'games','#settings':'settings'})[location.hash.split('/')[0]]||'home';
  const navViews={navHome:'home',navStats:'stats',navGames:'games',navSettings:'settings'};
  const onClick=event=>{

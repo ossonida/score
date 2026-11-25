@@ -63,3 +63,5 @@ export function createFeatureAnalytics({send,storage}={}){
   resetGame(){gameEnded=false;markFirstScore(false);}
  };
 }
+// 실제 터치에선 캡처 리스너가 끝나자마자 마이크로태스크가 돌아 버튼 핸들러보다 먼저 실행된다. 대기 중인 동작은 현재 태스크가 끝날 때까지 유지한다.
+export function armUntilTaskEnd(read,write,value,schedule=callback=>setTimeout(callback,0)){write(value);schedule(()=>{if(read()===value)write(null);});}

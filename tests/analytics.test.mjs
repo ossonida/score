@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAnalyticsGate,isExcludedEmail} from '../analytics-policy.js';
-import {createFeatureAnalytics,playerCountBucket} from '../analytics-events.js';
+import {armUntilTaskEnd,createFeatureAnalytics,playerCountBucket} from '../analytics-events.js';
 function app({storage=new Map(),search='',isExcluded=async email=>email==='internal@example.invalid'}={}){let starts=0,disabled;const gate=createAnalyticsGate({storage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},search,isExcluded,start:()=>{starts++;disabled=false;},stop:()=>{disabled=true;}});return {gate,storage,get starts(){return starts;},get disabled(){return disabled;}};}
 test('GA stays disabled until auth is restored, then starts once for ordinary visitors',async()=>{const a=app();assert.equal(a.starts,0);assert.equal(a.disabled,true);await a.gate.onAuthState(null);await a.gate.onAuthState({email:'visitor@example.invalid'});assert.equal(a.starts,1);assert.equal(a.disabled,false);});
 test('excluded accounts never start GA and their browser stays excluded after logout/reload',async()=>{const a=app();await a.gate.onAuthState({email:'internal@example.invalid'});await a.gate.onAuthState(null);assert.equal(a.starts,0);assert.equal(a.disabled,true);const b=app({storage:a.storage});await b.gate.onAuthState(null);assert.equal(b.starts,0);});
@@ -54,3 +54,16 @@ test('a visitor can turn analytics off and on again; the choice survives reload 
  a.setEnabled(false);assert.equal(disabled,true);assert.equal(storage.get('score.analytics.optout.v1'),'1');assert.equal(storage.get('score.analytics.exclude.v1'),undefined);
  const b=make();await b.onAuthState(null);assert.equal(starts,1,'opted-out visitors do not start GA after reload');assert.equal(b.enabled(),false);
  b.setEnabled(true);assert.equal(starts,2);assert.equal(disabled,false);b.setEnabled(false);b.setEnabled(true);assert.equal(resumes,1,'turning it back on resumes the loaded GA');});
+
+test('a pending board action survives the microtasks a real tap runs before the button handler', async () => {
+  let pending=null;
+  armUntilTaskEnd(()=>pending,next=>{pending=next;},{type:'score'});
+  // 실제 터치: 캡처 리스너 → (스택이 비어) 마이크로태스크 → 버튼 onclick → scorecounter:changed
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(pending,{type:'score'});
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.equal(pending,null);
+  const next={type:'score'};armUntilTaskEnd(()=>pending,value=>{pending=value;},next);pending={type:'player_remove'};
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.deepEqual(pending,{type:'player_remove'});
+});
