@@ -607,28 +607,29 @@ test('game stats title offers a collection menu that saves checks on this device
  const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})]]),false,'',{me:'하늘'}),calls=[];let editable=false,edits={};
  a.vm.window.ScoreBggAccount={state:()=>({collection:[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:false,wantToPlay:false,preordered:true}],plays:[]}),editable:()=>editable,collectionEdits:()=>edits,setCollectionStatus:(game,status)=>{calls.push([game.bggId,status]);return !status.wishlist;}};
  a.vm.window.ScoreBggLink={state:()=>({connected:false}),updateCollection:async()=>{throw Error('must not call BGG');}};
- const walk=e=>[e,...(e.children||[]).flatMap(walk)],menu=()=>walk(a.get('statsInsights')).find(e=>e.className==='collection-menu'),note=()=>walk(menu().children[1]).find(e=>e.className==='collection-menu-note').textContent;
+ const walk=e=>[e,...(e.children||[]).flatMap(walk)],menu=()=>walk(a.get('statsInsights')).find(e=>e.className==='collection-menu game-head-labels'),note=()=>walk(menu().children.at(-1)).find(e=>e.className==='collection-menu-note').textContent;
  a.get('statsGames').onclick();let box=menu();assert.ok(box,'menu is shown next to the game title');
- const [button,panel]=box.children,boxes=()=>walk(menu().children[1]).filter(e=>e.type==='checkbox'),labels=walk(panel).map(e=>e.textContent).filter(t=>['보유','하고 싶은','위시리스트','펀딩'].includes(t));
- assert.equal(button.attributes['aria-label'],'게임 메뉴');assert.equal(panel.hidden,true);assert.deepEqual(labels,['보유','하고 싶은','위시리스트','펀딩'],'only Korean labels are shown');
+ const button=box.children[0],panel=box.children.at(-1),boxes=()=>walk(menu().children.at(-1)).filter(e=>e.type==='checkbox'),labels=walk(panel).map(e=>e.textContent).filter(t=>['보유','하고 싶은','위시리스트','펀딩'].includes(t));
+ assert.deepEqual(box.children.slice(0,-1).map(e=>e.textContent),['취향 미정','보유','펀딩'],'labels are the menu entrance');assert.equal(panel.hidden,true);assert.deepEqual(labels,['보유','하고 싶은','위시리스트','펀딩'],'only Korean labels are shown');
  assert.deepEqual(boxes().map(i=>i.checked),[true,false,false,true]);assert.ok(boxes().every(i=>i.disabled),'disabled while signed out');assert.match(note(),/로그인/);
  button.onclick();assert.equal(panel.hidden,false);editable=true;a.bridge.renderHistory();
- assert.equal(menu().children[1].hidden,false,'menu stays open across a re-render');assert.ok(boxes().every(i=>!i.disabled));assert.equal(note(),'');
+ assert.equal(menu().children.at(-1).hidden,false,'menu stays open across a re-render');assert.ok(boxes().every(i=>!i.disabled));assert.equal(note(),'');
  const [owned,,wish]=boxes();owned.checked=false;await owned.onchange();assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),['13',{owned:false,wantToPlay:false,wishlist:false,preordered:true}]);assert.equal(owned.checked,false);assert.match(note(),/내보내기 때 BGG 컬렉션에 반영/);
  wish.checked=true;await wish.onchange();assert.equal(wish.checked,false,'a failed save reverts the checkbox');assert.match(note(),/저장하지 못했습니다/);
  edits={13:{owned:false}};a.bridge.renderHistory();assert.match(note(),/내보내기 때/,'a pending change keeps the hint');
 });
-test('game head labels show tier and collection status and open the ⋮ menu; ⋮ › 게임 삭제 follows the games tab rule',async()=>{
+test('game head labels always show tier and collection status and open the label menu; ⋮ only deletes, following the games tab rule',async()=>{
  const play={id:'p1',game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:3},{id:'b',name:'바다',color:'#ffcc00',score:1}]};
  const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})],['score.games.v1.score.plays.v1.guest',JSON.stringify([{name:'목록게임',bggId:''}])]]);
  const a=await app(store,false,'',{me:'하늘'});let asked=null;a.vm.window.ScoreCounter.confirm=(title,message,go)=>{asked={title,message,go};};
  a.vm.window.ScoreBggAccount={state:()=>({collection:[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:true,wantToPlay:false,preordered:false}],plays:[]}),editable:()=>true,collectionEdits:()=>({})};
  const walk=e=>[e,...(e.children||[]).flatMap(walk)],find=cls=>walk(a.get('statsInsights')).filter(e=>String(e.className||'').split(' ').includes(cls));
- a.get('statsGames').onclick();assert.deepEqual(find('game-head-labels')[0].children.map(e=>e.textContent),['보유','위시리스트'],'collection labels only, no tier yet');assert.equal(find('game-head-divider').length,1);
- const panel=()=>find('collection-menu')[0].children[1];assert.equal(panel().hidden,true);find('game-head-label')[0].onclick();assert.equal(panel().hidden,false,'label opens the ⋮ menu');
- find('collection-menu-delete')[0].onclick();assert.equal(panel().hidden,true);assert.equal(asked,null,'a game with records is not deleted');assert.match(a.get('recordMessage').textContent+a.get('statsStatus').textContent,/경기 기록이 있는 게임은 삭제할 수 없습니다/);
+ a.get('statsGames').onclick();assert.deepEqual(find('game-head-labels')[0].children.slice(0,-1).map(e=>e.textContent),['취향 미정','보유','위시리스트']);assert.equal(find('game-head-divider').length,1);
+ const panel=()=>find('game-head-labels')[0].children.at(-1);assert.equal(panel().hidden,true);find('game-head-label')[1].onclick();assert.equal(panel().hidden,false,'a label opens the label menu');assert.equal(find('collection-menu-delete').filter(e=>find('game-head-labels')[0]&&walk(find('game-head-labels')[0]).includes(e)).length,0,'no delete in the label menu');
+ const more=()=>walk(a.get('statsInsights')).find(e=>e.className==='collection-menu');assert.equal(more().children[0].attributes['aria-label'],'게임 메뉴');more().children[0].onclick();assert.deepEqual(walk(more().children[1]).filter(e=>e.tagName==='BUTTON'||e.type==='button').map(e=>e.textContent),['게임 삭제'],'⋮ holds only delete');
+ find('collection-menu-delete')[0].onclick();assert.equal(more().children[1].hidden,true);assert.equal(asked,null,'a game with records is not deleted');assert.match(a.get('recordMessage').textContent+a.get('statsStatus').textContent,/경기 기록이 있는 게임은 삭제할 수 없습니다/);
  find('collection-menu-tier')[0].onclick();a.get('gameTierOptions').children[1].onclick();assert.equal(find('game-head-label')[0].textContent,'취향 S','tier label appears after choosing');
- a.bridge.openGameStats({name:'목록게임',bggId:''});assert.equal(find('game-head-labels').length,0,'no labels, no divider row');find('collection-menu-delete')[0].onclick();assert.equal(asked?.title,'게임 삭제');asked.go();
+ a.bridge.openGameStats({name:'목록게임',bggId:''});assert.deepEqual(find('game-head-labels')[0].children.slice(0,-1).map(e=>e.textContent),['취향 미정'],'no BGG id: tier label only');find('collection-menu-delete')[0].onclick();assert.equal(asked?.title,'게임 삭제');asked.go();
  assert.deepEqual(JSON.parse(store.get('score.games.v1.score.plays.v1.guest')),[],'library-only game removed');assert.equal(JSON.parse(store.get('score.plays.v1.guest')).records.length,1,'records untouched');
 });
 test('save step 2 offers an optional taste tier only when the game has none and stores it with the record',async()=>{
@@ -643,7 +644,7 @@ test('collection menu checks owned and wishlist once the BGG collection loads af
  const play={id:'p1',game:{name:'카탄',bggId:'13'},date:'2026-10-01',createdAt:'2026-10-01T00:00:00.000Z',rule:'highest',players:[{id:'a',name:'하늘',color:'#52c7ef',score:3},{id:'b',name:'바다',color:'#ffcc00',score:1}]};
  const a=await app(new Map([['score.plays.v1.guest',JSON.stringify({records:[play]})]]),false,'',{me:'하늘',initialHash:'#stats'});let collection=[];
  a.vm.window.ScoreBggAccount={state:()=>({collection,plays:[]}),editable:()=>true,collectionEdits:()=>({}),setCollectionStatus:()=>true};
- const walk=e=>[e,...(e.children||[]).flatMap(walk)],boxes=()=>walk(walk(a.get('statsInsights')).find(e=>e.className==='collection-menu')).filter(e=>e.type==='checkbox').map(i=>i.checked);
+ const walk=e=>[e,...(e.children||[]).flatMap(walk)],boxes=()=>walk(walk(a.get('statsInsights')).find(e=>e.className==='collection-menu game-head-labels')).filter(e=>e.type==='checkbox').map(i=>i.checked);
  a.get('statsGames').onclick();assert.deepEqual(boxes(),[false,false,false,false]);
  collection=[{id:'13',gameId:'13',name:'CATAN',owned:true,wishlist:true,wantToPlay:false}];a.vm.window.dispatchEvent(new Event('score-bgg:changed'));await new Promise(r=>setTimeout(r,5));
  assert.deepEqual(boxes(),[true,false,true,false],'owned and wishlist are checked after the collection arrives');
@@ -756,8 +757,8 @@ test('played tab tier view groups games into collapsible personal tiers and the 
  a.get('gamesLayoutList').onclick();assert.equal(store.get('score.gamesPlayedLayout'),'list');assert.equal(list.children.length,9);
  a.bridge.openGameStats({name:'아줄',bggId:'230802'});
  const find=cls=>{const walk=n=>n.className===cls?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));},tierText=()=>find('collection-menu-tier').children.map(n=>n.textContent).join(' · ');
- assert.ok(!find('game-tier-chip'),'no tier chip under the title');const menu=find('collection-menu');assert.ok(menu,'⋮ menu on every game');menu.children[0].onclick();assert.equal(menu.children[1].hidden,false);
- assert.equal(tierText(),'취향 티어 · 정하기');find('collection-menu-tier').onclick();assert.equal(menu.children[1].hidden,true,'menu closes');assert.equal(a.get('gameTierDialog').open,true);
+ assert.ok(!find('game-tier-chip'),'no tier chip under the title');const menu=find('collection-menu game-head-labels');assert.ok(menu,'label menu on every game');assert.equal(menu.children[0].textContent,'취향 미정');menu.children[0].onclick();assert.equal(menu.children.at(-1).hidden,false);
+ assert.equal(tierText(),'취향 티어 · 정하기');find('collection-menu-tier').onclick();assert.equal(menu.children.at(-1).hidden,true,'menu closes');assert.equal(a.get('gameTierDialog').open,true);
  const options=a.get('gameTierOptions').children;assert.deepEqual(options.map(o=>o.children.map(n=>n.textContent).join('|')),['최애|가장 좋아하는 게임','S|아주 좋아요','A|좋아요','B|괜찮아요','C|손이 잘 안 가요','티어 없음']);assert.equal(options[5].attributes['aria-checked'],'true');
  options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);a.bridge.openGameStats({name:'아줄',bggId:'230802'});assert.equal(tierText(),'취향 티어 · S');assert.ok(find('collection-menu-label'),'BGG game also lists collection');assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
 });
