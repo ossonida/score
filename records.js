@@ -16,7 +16,7 @@ import {renderStoryStats} from './story-stats.js?v=309';
 import {recapData,createRecapSet} from './recap-share.js?v=345';
 import {readPlacePrefs,placeSuggestions} from './places.js?v=8';
 import {renderGameTitle} from './personal-dashboard.js?v=350';
-import {collectionMenu} from './collection-menu.js?v=2';
+import {collectionMenu} from './collection-menu.js?v=3';
 import {GAME_TIERS,readGameTiers,setGameTier,tierInfo} from './game-tiers.js?v=2';
 import {restorablePlay} from './bgg-restore.js?v=1';
 import {latestPlayDate} from './stats-overview.js?v=326';
@@ -393,16 +393,16 @@ function openStatsRecord(id){$('statsDetails').open=true;mode='history';renderHi
 let collectionMenuOpen='',bggRenderQueued=false;
 // BGG 컬렉션을 늦게 불러오거나 바뀌면 보이는 게임별 통계만 다시 그려 체크 상태를 맞춘다(숨겨진 화면은 그리지 않음).
 window.addEventListener?.('score-bgg:changed',()=>{if(location.hash!=='#stats'||statsView!=='games'||bggRenderQueued)return;bggRenderQueued=true;setTimeout(()=>{bggRenderQueued=false;if(location.hash==='#stats'&&statsView==='games')renderHistory();},0);});
-// 게임 머리: 제목 아래 취향 티어 칩(모든 게임) + 우측 컬렉션 관리 메뉴(BGG ID가 있을 때).
-// 게임 머리: 취향 티어 칩 옆에 플레이하기(화면에 떠 있지 않아 통계를 가리지 않음). 버튼은 하나(#statsPlayFab)를 머리로 옮겨 쓰며, 다시 그리면 문서에서 빠지므로 처음 잡은 참조로 다룬다.
-function gameTitleAction(game,copy){if(copy){const row=document.createElement('div');row.className='game-title-actions';row.append(tierChip(game),statsPlayButton);copy.append(row);}return collectionAction(game);}
+// 게임 머리: 제목 아래 플레이하기(화면에 떠 있지 않아 통계를 가리지 않음) + 우측 ⋮ 메뉴(모든 게임: 취향 티어, BGG ID가 있으면 컬렉션 관리도).
+// 플레이하기 버튼은 하나(#statsPlayFab)를 머리로 옮겨 쓰며, 다시 그리면 문서에서 빠지므로 처음 잡은 참조로 다룬다.
+function gameTitleAction(game,copy){if(copy){const row=document.createElement('div');row.className='game-title-actions';row.append(statsPlayButton);copy.append(row);}return collectionAction(game);}
 // 최근 경기 '이 게임 기록 모두 보기': 아래 플레이어 성적 · 기록을 펼쳐 기록 탭으로 보여 준다.
 function showGameRecords(){mode='history';$('statsDetails').open=true;renderHistory();$('statsDetails').scrollIntoView?.({behavior:'smooth',block:'start'});}
-function tierChip(game){const scope=key(),id=gameKey(resolveGame(game,records)),info=tierInfo(readGameTiers(scope)[id]),button=document.createElement('button');button.type='button';button.className='game-tier-chip';button.dataset.tier=info.id||'none';button.style.setProperty('--tier-color',info.color);button.textContent=info.id?'취향 티어 · '+info.label:'취향 티어 정하기';button.setAttribute('aria-haspopup','dialog');button.onclick=()=>openTierDialog(game,id,scope);return button;}
+function tierMenuItem(game){const scope=key(),id=gameKey(resolveGame(game,records)),info=tierInfo(readGameTiers(scope)[id]);return {id:info.id||'',label:info.label,color:info.color,onOpen:()=>{collectionMenuOpen='';openTierDialog(game,id,scope);}};}
 // 티어 정하기: 고르면 바로 저장하고 닫는다(현재 값 체크). 계정이 바뀌었으면 저장하지 않는다.
 function openTierDialog(game,id,scope){const now=readGameTiers(scope)[id]||'';$('gameTierGame').textContent=gameNames(game).ko;$('gameTierOptions').replaceChildren(...[...GAME_TIERS,{id:'',label:'티어 없음',note:'',color:''}].map(tier=>{const option=document.createElement('button');option.type='button';option.className='tier-option';option.setAttribute('role','radio');option.setAttribute('aria-checked',String(tier.id===now));option.dataset.tier=tier.id||'none';if(tier.color)option.style.setProperty('--tier-color',tier.color);const name=document.createElement('span');name.textContent=tier.label;option.append(name);if(tier.note){const note=document.createElement('small');note.textContent=tier.note;option.append(note);}option.onclick=()=>{$('gameTierDialog').close();if(key()===scope&&setGameTier(scope,id,tier.id))renderHistory();};return option;}));$('gameTierDialog').showModal();}
-function collectionAction(game){const id=String(game?.bggId||'');if(!/^[1-9][0-9]{0,9}$/.test(id))return null;const account=window.ScoreBggAccount,item=(account?.state().collection||[]).find(entry=>entry.id===id),editable=account?.editable?.()===true,pending=!!account?.collectionEdits?.()[id],hint='BGG 기록 내보내기 때 BGG 컬렉션에 반영됩니다.';
- return collectionMenu({status:{owned:item?.owned===true,wantToPlay:item?.wantToPlay===true,wishlist:item?.wishlist===true,preordered:item?.preordered===true},disabled:editable?'':'로그인하면 관리할 수 있습니다.',hint:pending?hint:'',open:collectionMenuOpen===id,onToggle:open=>{collectionMenuOpen=open?id:'';},onChange:status=>{if(!account?.setCollectionStatus?.(game,status))throw Error('저장하지 못했습니다. 다시 시도해주세요.');return hint;}});}
+function collectionAction(game){const id=String(game?.bggId||''),tier=tierMenuItem(game);if(!/^[1-9][0-9]{0,9}$/.test(id)){const menuId='tier:'+gameKey(game);return collectionMenu({tier,collection:false,open:collectionMenuOpen===menuId,onToggle:open=>{collectionMenuOpen=open?menuId:'';}});}const account=window.ScoreBggAccount,item=(account?.state().collection||[]).find(entry=>entry.id===id),editable=account?.editable?.()===true,pending=!!account?.collectionEdits?.()[id],hint='BGG 기록 내보내기 때 BGG 컬렉션에 반영됩니다.';
+ return collectionMenu({tier,status:{owned:item?.owned===true,wantToPlay:item?.wantToPlay===true,wishlist:item?.wishlist===true,preordered:item?.preordered===true},disabled:editable?'':'로그인하면 관리할 수 있습니다.',hint:pending?hint:'',open:collectionMenuOpen===id,onToggle:open=>{collectionMenuOpen=open?id:'';},onChange:status=>{if(!account?.setCollectionStatus?.(game,status))throw Error('저장하지 못했습니다. 다시 시도해주세요.');return hint;}});}
 function chooseStatsGame(game){statsView='games';if(statsPerson)leavePersonEntry();statsPerson=null;mode='stats';statsGameTarget=game;statsGameTargetGame=null;$('statsDetails').open=false;renderHistory();$('statsViewTabs').scrollIntoView?.({behavior:'smooth',block:'start'});}
 function openGameStats(game){const resolved=resolveGame(game,records);statsView='games';if(statsPerson)leavePersonEntry();statsPerson=null;mode='stats';statsGameTarget=gameKey(resolved);statsGameTargetGame=resolved;$('statsDetails').open=false;renderHistory();void enrichRecordGames();if(location.hash!=='#stats')location.hash='stats';}
 const periodUnitIds={month:'periodUnitMonth',year:'periodUnitYear',all:'periodUnitAll',custom:'periodUnitCustom'};

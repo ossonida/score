@@ -610,7 +610,7 @@ test('game stats title offers a collection menu that saves checks on this device
  const walk=e=>[e,...(e.children||[]).flatMap(walk)],menu=()=>walk(a.get('statsInsights')).find(e=>e.className==='collection-menu'),note=()=>walk(menu().children[1]).find(e=>e.className==='collection-menu-note').textContent;
  a.get('statsGames').onclick();let box=menu();assert.ok(box,'menu is shown next to the game title');
  const [button,panel]=box.children,boxes=()=>walk(menu().children[1]).filter(e=>e.type==='checkbox'),labels=walk(panel).map(e=>e.textContent).filter(t=>['보유','하고 싶은','위시리스트','펀딩'].includes(t));
- assert.equal(button.attributes['aria-label'],'컬렉션 관리');assert.equal(panel.hidden,true);assert.deepEqual(labels,['보유','하고 싶은','위시리스트','펀딩'],'only Korean labels are shown');
+ assert.equal(button.attributes['aria-label'],'게임 메뉴');assert.equal(panel.hidden,true);assert.deepEqual(labels,['보유','하고 싶은','위시리스트','펀딩'],'only Korean labels are shown');
  assert.deepEqual(boxes().map(i=>i.checked),[true,false,false,true]);assert.ok(boxes().every(i=>i.disabled),'disabled while signed out');assert.match(note(),/로그인/);
  button.onclick();assert.equal(panel.hidden,false);editable=true;a.bridge.renderHistory();
  assert.equal(menu().children[1].hidden,false,'menu stays open across a re-render');assert.ok(boxes().every(i=>!i.disabled));assert.equal(note(),'');
@@ -734,10 +734,11 @@ test('played tab tier view groups games into collapsible personal tiers and the 
  assert.equal(none.children[1].hidden,true,'unranked starts collapsed');none.children[0].onclick();assert.equal(none.children[1].hidden,false);assert.deepEqual(JSON.parse(store.get('score.gameTierCollapsed.v1')),[]);
  a.get('gamesLayoutList').onclick();assert.equal(store.get('score.gamesPlayedLayout'),'list');assert.equal(list.children.length,9);
  a.bridge.openGameStats({name:'아줄',bggId:'230802'});
- const chip=(()=>{const walk=n=>n.className==='game-tier-chip'?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));})();
- assert.ok(chip);assert.equal(chip.textContent,'취향 티어 정하기');chip.onclick();assert.equal(a.get('gameTierDialog').open,true);
+ const find=cls=>{const walk=n=>n.className===cls?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));},tierText=()=>find('collection-menu-tier').children.map(n=>n.textContent).join(' · ');
+ assert.ok(!find('game-tier-chip'),'no tier chip under the title');const menu=find('collection-menu');assert.ok(menu,'⋮ menu on every game');menu.children[0].onclick();assert.equal(menu.children[1].hidden,false);
+ assert.equal(tierText(),'취향 티어 · 정하기');find('collection-menu-tier').onclick();assert.equal(menu.children[1].hidden,true,'menu closes');assert.equal(a.get('gameTierDialog').open,true);
  const options=a.get('gameTierOptions').children;assert.deepEqual(options.map(o=>o.children.map(n=>n.textContent).join('|')),['최애|가장 좋아하는 게임','S|아주 좋아요','A|좋아요','B|괜찮아요','C|손이 잘 안 가요','티어 없음']);assert.equal(options[5].attributes['aria-checked'],'true');
- options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);a.bridge.openGameStats({name:'아줄',bggId:'230802'});assert.equal((()=>{const walk=n=>n.className==='game-tier-chip'?n:n.children?.map(walk).find(Boolean);return walk(a.get('statsInsights'));})().textContent,'취향 티어 · S');assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
+ options[1].onclick();assert.equal(a.get('gameTierDialog').open,false);a.bridge.openGameStats({name:'아줄',bggId:'230802'});assert.equal(tierText(),'취향 티어 · S');assert.ok(find('collection-menu-label'),'BGG game also lists collection');assert.equal(JSON.parse(store.get('score.gameTiers.v1.score.plays.v1.guest'))[key({name:'아줄',bggId:'230802'})],'s');
 });
 test("what's new carousel shows once to existing users on the home board and its last CTA opens the played tier view",async()=>{
  const store=new Map(),a=await app(store,false,'',{entry:'whats-new.js',initialHash:'#home'}),{checkWhatsNew,ANNOUNCEMENTS}=a.module('whats-new.js'),dialog=a.get('whatsNewDialog');
