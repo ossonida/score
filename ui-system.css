@@ -342,7 +342,7 @@ dialog .actions .danger{margin-right:0}
 .tier-group{margin:0 0 6px}
 .tier-head{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 4px;border:0;background:transparent;color:#e4f0ff;font-size:15px;font-weight:600;text-align:left}
 .tier-dot{width:12px;height:12px;border-radius:3px;background:var(--tier-color);flex:none}
-.tier-count{color:#7f93ae;font-size:13px;font-weight:500}
+.tier-count{color:#7f93ae;font-size:13px;font-weight:500}.tier-meaning{min-width:0;overflow:hidden;color:#a9bbd2;font-size:13px;font-weight:500;white-space:nowrap;text-overflow:ellipsis}
 .tier-chevron{margin-left:auto;width:8px;height:8px;border-right:2px solid #7f93ae;border-bottom:2px solid #7f93ae;transform:rotate(45deg) translate(-2px,-2px);transition:transform .15s}
 .tier-head[aria-expanded=false] .tier-chevron{transform:rotate(-45deg)}
 .tier-covers{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:2px 0 10px}
