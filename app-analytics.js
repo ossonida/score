@@ -3,8 +3,10 @@ import {createAnalyticsGate,isTestEnvironment} from './analytics-policy.js?v=156
 import {analyticsMode,analyticsUserProperties,armUntilTaskEnd,createFeatureAnalytics} from './analytics-events.js?v=339';
 import {recordMode} from './records-core.js?v=309';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
-const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
-window[disableKey]=true;
+const measurementId='G-NFEYJ27K5H',scoreMeasurementId='G-145GFM02GZ',disableKey='ga-disable-'+measurementId;
+// 전용 속성(Score Counter)과 기존 공용 속성에 함께 보낸다. 끄기는 두 ID 모두에 적용한다.
+const setDisabled=value=>{window[disableKey]=value;window['ga-disable-'+scoreMeasurementId]=value;};
+setDisabled(true);
 const analytics=createFeatureAnalytics({
  storage:sessionStorage,
  // 전송은 화면 전환이 끝난 뒤 한가할 때 한다.
@@ -104,17 +106,17 @@ installFeatureListeners();
 const gate=createAnalyticsGate({
  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},search:location.search,
  testEnvironment:isTestEnvironment({hostname:location.hostname,webdriver:navigator.webdriver,userAgent:navigator.userAgent}),
- stop:()=>{window[disableKey]=true;},resume:()=>{window[disableKey]=false;syncUserProperties();},
+ stop:()=>{setDisabled(true);},resume:()=>{setDisabled(false);syncUserProperties();},
  start:()=>{
-  window[disableKey]=false;window.dataLayer=window.dataLayer||[];
+  setDisabled(false);window.dataLayer=window.dataLayer||[];
   window.gtag=function(){window.dataLayer.push(arguments);};
-  window.gtag('js',new Date());lastUserProperties='';syncUserProperties();window.gtag('config',measurementId,{content_group:'score'});
+  window.gtag('js',new Date());lastUserProperties='';syncUserProperties();window.gtag('config',measurementId,{content_group:'score'});window.gtag('config',scoreMeasurementId);
   const script=document.createElement('script');script.async=true;
   script.src='https://www.googletagmanager.com/gtag/js?id='+measurementId;document.head.append(script);
  }
 });
 // Wait for restored Firebase auth before loading GA. Auth errors leave collection disabled.
-if(cloudConfigured())connectCloud(user=>{signedIn=!!user;const done=gate.onAuthState(user);Promise.resolve(done).then(syncUserProperties,()=>{});return done;}).catch(()=>{window[disableKey]=true;});
+if(cloudConfigured())connectCloud(user=>{signedIn=!!user;const done=gate.onAuthState(user);Promise.resolve(done).then(syncUserProperties,()=>{});return done;}).catch(()=>{setDisabled(true);});
 else void gate.onAuthState(null);
 
 // 이용 분석 안내: 처음 한 번 화면 아래에 띄우고, 확인하거나 끄면 이 기기에서 다시 띄우지 않는다. 설정의 스위치도 같은 값을 쓴다.
