@@ -15,10 +15,12 @@ p,li{color:var(--text)}.muted{color:var(--muted);font-size:14px}a{color:var(--ac
 table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}th,td{border:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}th{background:var(--card)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .consent{display:flex;align-items:flex-start;gap:12px;margin:12px 0;cursor:pointer}.consent input{flex:none;width:22px;height:22px;margin:3px 0 0}.consent .muted{display:block}
+.close-bar{position:sticky;top:0;z-index:2;display:flex;justify-content:flex-end;max-width:760px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 12px 0;pointer-events:none}.close-bar button{pointer-events:auto;min-width:44px;min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
 @media (max-width:520px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px}td{border:0;border-bottom:1px solid var(--line)}td:last-child{border-bottom:0}}
 </style>
 </head>
 <body>
+<div class="close-bar"><button id="privacyClose" type="button" aria-label="닫기">닫기</button></div>
 <main>
 <h1>개인정보처리방침</h1>
 <p class="muted">Score Counter(웹·Android 앱) · 운영자 bgame.wiki · 시행일 2026년 10월 27일</p>
@@ -99,6 +101,8 @@ table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}th,td{bord
 <p class="muted">시행일: 2026년 10월 27일</p>
 </main>
 <script>
+// 앱에서 새 창(또는 PWA·앱 안 화면)으로 열리면 뒤로 갈 곳이 없으므로: 이전 화면 → 창 닫기 → 앱 첫 화면 순으로 빠져나간다.
+document.getElementById('privacyClose').onclick=()=>{if(history.length>1){history.back();return;}window.close();setTimeout(()=>{if(!window.closed)location.replace('./');},300);};
 // 앱과 같은 값(score.analytics.optout.v1)을 쓴다. 바꾸면 첫 방문 안내도 다시 띄우지 않는다.
 (()=>{const box=document.getElementById('analyticsEnabled'),key='score.analytics.optout.v1';try{box.checked=localStorage.getItem(key)!=='1';}catch{box.disabled=true;return;}box.onchange=()=>{try{localStorage.setItem(key,box.checked?'0':'1');localStorage.setItem('score.analytics.notice.v1','1');}catch{}};})();
 </script>
