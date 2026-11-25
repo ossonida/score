@@ -593,6 +593,8 @@ test('stats view, chosen game and period survive a refresh in the same tab',asyn
  assert.equal(b.get('statsGames').attributes['aria-selected'],'true','games tab is kept after refresh');assert.equal(b.get('recordFilter').value,game);
  b.get('statsAll').onclick();const c=await app(a.store,false,'',{me:'하늘',session,initialHash:'#stats'});c.bridge.renderHistory();
  assert.equal(c.get('statsAll').attributes['aria-selected'],'true','period tab is kept after refresh');
+ c.get('periodUnitCustom').onclick();const d=await app(a.store,false,'',{me:'하늘',session,initialHash:'#stats'});d.bridge.renderHistory();
+ assert.equal(d.get('periodUnitCustom').attributes['aria-pressed'],'true','custom tab is kept after refresh before applying');assert.equal(d.get('customPeriodForm').hidden,false);assert.ok(d.get('periodStart').value,'form is prefilled again');
  const fresh=await app(a.store,false,'',{me:'하늘',initialHash:'#stats'});fresh.bridge.renderHistory();assert.equal(fresh.get('statsRecent').attributes['aria-selected'],'true','a new tab starts at recent records');
 });
 test('bottom nav scrolls the current screen to the top instead of re-navigating',async()=>{
