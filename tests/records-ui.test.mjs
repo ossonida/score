@@ -720,8 +720,7 @@ test('played tab tier view groups games into collapsible personal tiers and the 
  a.get('gamesPlayed').onclick();assert.equal(a.get('gamesLayout').hidden,false);assert.equal(a.get('gamesLayoutTier').attributes['aria-pressed'],'true');
  const list=a.get('gamesList'),[note,...sections]=list.children;assert.equal(note.textContent,'좋아하는 정도로 나눈 내 취향 티어예요. 게임을 눌러 바꿀 수 있어요.');assert.deepEqual(sections.map(s=>s.dataset.tier),['fav','b','none']);
  const [fav,b,none]=sections;assert.deepEqual(fav.children[0].children.slice(1,3).map(n=>n.textContent),['최애','1']);assert.equal(fav.children[1].hidden,false);
- assert.equal(b.children[1].children.length,6,'five covers then +N');assert.equal(b.children[1].children[5].textContent,'+2');
- b.children[1].children[5].onclick();assert.equal(b.children[1].children.length,7);
+ assert.equal(b.children[1].children.length,7,'ranked tiers show every cover, no +N');assert.ok(!b.children[1].children.some(n=>n.className==='tier-more'));
  assert.equal(none.children[1].hidden,true,'unranked starts collapsed');none.children[0].onclick();assert.equal(none.children[1].hidden,false);assert.deepEqual(JSON.parse(store.get('score.gameTierCollapsed.v1')),[]);
  a.get('gamesLayoutList').onclick();assert.equal(store.get('score.gamesPlayedLayout'),'list');assert.equal(list.children.length,9);
  a.bridge.openGameStats({name:'아줄',bggId:'230802'});
