@@ -242,16 +242,16 @@ test('period and per-game statistics count only plays where I am a player',async
  const stored=JSON.parse(a.store.get('score.plays.v1.guest'));stored.records.find(p=>p.game.name==='루미큐브').players.forEach(p=>{p.isSelf=false;});stored.records.filter(p=>p.game.name==='카탄')[0].players[0].isSelf=true;stored.records.filter(p=>p.game.name==='카탄')[1].players.forEach(p=>{p.isSelf=false;});a.store.set('score.plays.v1.guest',JSON.stringify(stored));
  const b=await app(a.store);b.bridge.renderHistory();
  const options=b.get('recordFilter').children.map(o=>o.textContent).filter(t=>t!=='게임 선택');
- assert.deepEqual(options,['카탄 (1회)']);
+ assert.deepEqual(options,['카탄 (1판)']);
  assert.equal(b.bridge.context().records.length,3);
 });
 test('save, reload and stats work without Firebase; record management is absent',async()=>{
  const a=await app(new Map(),false,'',{me:'하늘'});await save(a);assert.match(a.get('recordMessage').textContent,/기록되었습니다/);assert.equal(JSON.parse(a.store.get('score.plays.v1.guest')).records.length,1);
  const b=await app(a.store);b.bridge.renderHistory();assert.equal(b.get('recordList').children.length,1);
- b.get('statsGames').onclick();b.get('statsTab').onclick();assert.equal(b.get('recordList').children[0].children[2].children[1].children[0].children[1].children.length,2);
+ b.get('statsGames').onclick();b.get('statsTab').onclick();assert.equal(b.get('recordList').children[0].children[0].children[1].children[0].children[1].children.length,2);
  b.get('historyTab').onclick();const walk=e=>[e,...e.children.flatMap(walk)];assert.equal(walk(b.get('recordList')).some(e=>e.className==='record-options'||e.className==='record-actions'),false);assert.equal(JSON.parse(b.store.get('score.plays.v1.guest')).records.length,1);
 });
-test('a game-library choice opens that game in per-game statistics, including games without records',async()=>{const source=await fs.readFile(resolve(root,'games-screen.js'),'utf8'),a=await app();assert.ok(source.includes("row.onclick=()=>api.openGameStats(game)"));a.bridge.openGameStats({name:'테니스',bggId:''});assert.equal(a.vm.location.hash,'stats');assert.equal(a.get('statsGames').attributes['aria-selected'],'true');assert.equal(a.get('recordFilter').value,'name:테니스');assert.match(a.get('recordFilter').children.find(option=>option.value==='name:테니스').textContent,/테니스 \(0회\)/);const hero=a.get('statsInsights').children[0];assert.match(hero.className,/game-overview/);assert.equal(hero.children[0].children[1].children[0].textContent,'테니스');assert.match(hero.children[1].textContent,/나의 기록 데이터가 없습니다/);});
+test('a game-library choice opens that game in per-game statistics, including games without records',async()=>{const source=await fs.readFile(resolve(root,'games-screen.js'),'utf8'),a=await app();assert.ok(source.includes("row.onclick=()=>api.openGameStats(game)"));a.bridge.openGameStats({name:'테니스',bggId:''});assert.equal(a.vm.location.hash,'stats');assert.equal(a.get('statsGames').attributes['aria-selected'],'true');assert.equal(a.get('recordFilter').value,'name:테니스');assert.match(a.get('recordFilter').children.find(option=>option.value==='name:테니스').textContent,/테니스 \(0판\)/);const hero=a.get('statsInsights').children[0];assert.match(hero.className,/game-overview/);assert.equal(hero.children[0].children[1].children[0].textContent,'테니스');assert.match(hero.children[1].textContent,/나의 기록 데이터가 없습니다/);});
 test('BGG fallback and unavailable login are honest and do not prevent saving',async()=>{const a=await app();a.bridge.openFinish();a.get('playGame').value='Catan';await a.get('openBggWebsite').onclick();assert.match(a.opens[0][0],/^https:\/\/boardgamegeek.com\/geeksearch/);await a.get('accountLogin').onclick();assert.match(a.get('accountError').textContent,/준비 중/);await save(a,'Catan');assert.equal(JSON.parse(a.store.get('score.plays.v1.guest')).records[0].game.name,'Catan');});
 test('untrusted game/player text is inserted as text, not HTML',async()=>{const a=await app();await save(a,'<img src=x onerror=alert(1)>');assert.equal(a.get('recordList').children[0].children[0].textContent,'<img src=x onerror=alert(1)>');});
 
@@ -658,7 +658,17 @@ test('per-game statistics lead with side win rates for role-style team records',
  const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[play('r1','2026-10-01','마피아',true),play('r2','2026-10-02','시민',false),play('r3','2026-10-03','시민',true)],pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
  const a=await app(store);a.bridge.openGameStats({name:'역할테스트',bggId:''});
  const text=node=>[node.textContent||'',...(node.children||[]).map(text)].join(' ');const all=text(a.get('statsInsights'));
- assert.match(all,/3회\s+플레이\s+66.7%\s+전체 승률\s+50%\s+시민 승률 2회\s+100%\s+마피아 승률 1회/);assert.doesNotMatch(all,/팀전 승률|팀 승리|무승부|진영별 기록|결과 확인|통계 집계 기준/);
+ assert.match(all,/3판\s+플레이\s+66.7%\s+전체 승률\s+50%\s+시민 승률 2판\s+100%\s+마피아 승률 1판/);assert.ok(all.indexOf('인원별 성적')<all.indexOf('최근 경기'),'sizes come before recent games');assert.doesNotMatch(all,/팀전 승률|팀 승리|무승부|진영별 기록|결과 확인|통계 집계 기준/);
+});
+test('per-game play sits in the game head and recent games open all records of the game',async()=>{
+ const play=(i,won)=>({id:'s'+i,date:'2026-10-0'+i,createdAt:'2026-10-0'+i+'T12:00:00.000Z',game:{name:'점수테스트',bggId:''},rule:'highest',players:[{id:'a',name:'나',color:'#52c7ef',score:won?30:10,isSelf:true},{id:'b',name:'철수',color:'#ffcc00',score:20}]});
+ const store=new Map([['score.plays.v1.guest',JSON.stringify({records:[1,2,3,4,5,6,7].map(i=>play(i,i%2===1)),pending:[]})],['score.identity.v1.score.plays.v1.guest',JSON.stringify({primary:'나',aliases:[]})]]);
+ const a=await app(store);a.bridge.openGameStats({name:'점수테스트',bggId:''});
+ const walk=(node,out=[])=>{out.push(node);for(const child of node.children||[])walk(child,out);return out;};const nodes=walk(a.get('statsInsights'));
+ const actions=nodes.find(n=>n.className==='game-title-actions');assert.ok(actions?.children.includes(a.get('statsPlayFab')),'play button lives in the game head');assert.equal(a.get('statsPlayFab').hidden,false);
+ assert.ok(nodes.some(n=>n.textContent==='우승')&&!nodes.some(n=>/우승 · /.test(n.textContent)),'recent rows show 우승 alone');
+ const all=nodes.find(n=>n.textContent==='이 게임 기록 모두 보기');assert.ok(all,'all-records link under recent games');all.onclick();
+ assert.equal(a.get('statsDetails').open,true);assert.match(a.get('recordList').children[0]?.id||'',/^record-s/,'records tab lists the game records');
 });
 test('role mode names other hidden-role games mafia and citizens by default',async()=>{const a=await app();a.vm.window.ScoreCounter.clearPlayers();a.bridge.openGameStats({name:'시계탑에 흐른 피'});a.get('statsPlayFab').onclick();a.get('scorelessCount').value='2';a.get('scorelessSetupForm').onsubmit({preventDefault(){}});if(!a.get('scorelessSetupDialog').open)a.get('recordModeChange').onclick();a.get('scorelessWinMode').onclick();a.get('scorelessRoleWinMode').onclick();assert.deepEqual(a.players().map(p=>p.teamName),['시민','시민']);});
 

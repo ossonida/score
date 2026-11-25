@@ -108,7 +108,9 @@ function opponentCard(records,profile,onPerson,period=false,people=null){
  note(card,(period?'선택 기간의 전적이며 줄을 누르면 전체 기간 전적을 봅니다. ':'')+'다인 경기는 나와 그 상대 중 순위(없으면 점수)가 앞선 사람을 승으로 셉니다. 3판 이상 비교한 상대만 강조하며 협동 경기와 익명 상대는 제외합니다.');return card;
 }
 // 게임별 통계: 집계 기준 바로 위(나의 라이벌이 있던 자리)에 상대 전적을 넣는다.
-export function renderGameOpponents(container,records,{scope,onPerson}){const card=opponentCard(records,readIdentity(scope),onPerson);if(card.style)card.style.marginTop='14px';const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);}
+// 게임별 통계: 게임 순위·상대 전적은 게임 머리 바로 아래에 둔다(이미 넣은 순위·전적 카드 다음).
+function afterGameHead(container,card){const kids=[...(container.children||[])],has=(node,name)=>String(node?.className||'').split(/\s+/).includes(name);let at=kids.findIndex(node=>has(node,'game-overview'));if(at<0){container.append(card);return;}while(has(kids[at+1],'leaderboard-card')||has(kids[at+1],'opponent-card'))at++;const next=kids[at+1];if(next&&container.insertBefore)container.insertBefore(card,next);else container.append(card);}
+export function renderGameOpponents(container,records,{scope,onPerson}){const card=opponentCard(records,readIdentity(scope),onPerson);if(card.style)card.style.marginTop='14px';afterGameHead(container,card);}
 // 게임별 통계: 상대 전적 위에 이 게임 경쟁 기록의 플레이어 순위를 넣는다. 다른 사람 줄은 그 사람과의 이 게임 전적을 연다.
 function leaderboardRow(r,index,onPerson){const row=el(r.isSelf?'div':'button',undefined,'opponent-row leaderboard-row'+(r.isSelf?' is-self':'')),copy=el('span',undefined,'opponent-copy'),name=el('strong',r.name),record=el('span',undefined,'opponent-record');if(r.isSelf&&r.name.trim()!=='나')name.append(el('span','나','leaderboard-me'));copy.append(name,el('small',r.plays+'판'));record.append(el('strong',r.wins+'승'),el('small',r.rate===null?'결과 없음':'승률 '+percent(r.rate)+'%'));row.append(el('span',String(index+1),'leaderboard-rank'),copy,record);if(!r.isSelf){row.type='button';row.setAttribute('aria-label',withParticle(r.name)+'의 전적 보기');row.onclick=()=>onPerson(r.key);}return row;}
 export function renderGameLeaderboard(container,records,{scope,onPerson}){
@@ -116,7 +118,7 @@ export function renderGameLeaderboard(container,records,{scope,onPerson}){
  const card=el('section',undefined,'insight-card leaderboard-card'),head=el('div',undefined,'opponent-head'),box=el('div',undefined,'leaderboard-list');head.append(el('h3','게임 순위'),el('span',list.length+'명','opponent-summary'));card.append(head,box);if(card.style)card.style.marginTop='14px';
  list.slice(0,8).forEach((r,index)=>box.append(leaderboardRow(r,index,onPerson)));
  if(list.length>8){const more=el('button',(list.length-8)+'명 더 보기','opponent-more');more.type='button';more.onclick=()=>{list.slice(8).forEach((r,index)=>box.append(leaderboardRow(r,index+8,onPerson)));more.remove();};card.append(more);}
- const lastDetails=node=>{let hit=null;for(const child of [...(node.children||[])]){if(child.tagName==='DETAILS')hit=child;hit=lastDetails(child)||hit;}return hit;};const methods=lastDetails(container);if(methods?.parentNode?.insertBefore)methods.parentNode.insertBefore(card,methods);else container.append(card);
+ afterGameHead(container,card);
 }
 // 기간 분석: 기간 요약 바로 아래에 선택 기간의 상대 전적을 넣는다.
 export function renderPeriodOpponents(container,records,{scope,onPerson,people}){const card=opponentCard(records,readIdentity(scope),onPerson,true,people),first=[...(container.children||[])][0];if(first?.after)first.after(card);else container.append(card);}

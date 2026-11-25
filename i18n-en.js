@@ -372,7 +372,7 @@ function dictionary(){return /*<dict>*/{
 "설정에서 BGG 컬렉션을 가져오면":"Import your BGG collection in Settings to see",
 "이 표시됩니다.":".",
 "삭제":"Delete",
-"게임별 통계 보기":"View game stats",
+"게임별 통계 보기":"View game stats","이 게임 기록 모두 보기":"View all records for this game",
 "· 경기 기록이 있는 게임은 삭제할 수 없습니다.":"· Games with plays can't be deleted.",
 "· BGG에서 가져온 게임은 BGG 컬렉션에서 정리해주세요.":"· Manage games imported from BGG in your BGG collection.",
 "게임 삭제":"Delete game",

@@ -52,6 +52,14 @@ test('game leaderboard ranks named players by wins, merges my aliases and skips 
  assert.ok(texts(root).includes('게임 순위'));
 });
 
+test('per-game leaderboard and opponents sit right under the game head, above my record',async()=>{
+ const {renderGameOpponents}=await import('../overview-dashboard.js');
+ const records=[play('1','2026-10-01'),play('2','2026-10-02'),play('3','2026-10-03')];
+ const root=new Element('div'),head=Object.assign(new Element('section'),{className:'insight-hero game-overview'}),mine=Object.assign(new Element('div'),{className:'personal-game-heading'}),methods=new Element('details');root.append(head,mine,methods);
+ renderGameLeaderboard(root,records,{scope:'none',onPerson(){}});renderGameOpponents(root,records,{scope:'none',onPerson(){}});
+ assert.deepEqual(root.children.map(n=>n.className.split(' ').at(-1)),['game-overview','leaderboard-card','opponent-card','personal-game-heading','']);
+});
+
 test('play days find the busiest day and the longest streak',()=>{
  const {busiest,streak}=playDays([play('1','2026-10-01'),play('2','2026-10-02'),play('3','2026-10-02'),play('4','2026-10-03'),play('5','2026-10-07')]);
  assert.deepEqual(busiest,{date:'2026-10-02',count:2});assert.equal(streak,3);
