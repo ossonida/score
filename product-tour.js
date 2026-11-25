@@ -73,7 +73,7 @@ function check(){
  if(!state.seen.welcome){
   // 기존 사용자(기록이 있거나 로그인했던 기기)는 안내를 모두 본 것으로 둔다.
   if(!replay&&(data.count>0||rememberedUid())){mark(...TIPS);return;}
-  if(view==='#home')welcome();return;
+  if(view==='#home'){if(replay)ensurePlayers();welcome();}return;
  }
  if(view==='#home'&&!state.seen.firstSave&&startCount===0&&data.count>0&&tip('firstSave'))return;
  if(view==='#stats'&&!state.seen.stats&&data.count>=3&&tip('stats'))return;
@@ -83,8 +83,10 @@ function check(){
 function schedule(delay=500){clearTimeout(timer);timer=setTimeout(check,delay);}
 
 // 설정 '사용법 다시 보기': 본 기록을 지우고 점수판에서 첫 실행 안내를 다시 보여 준다(기록이 있어도).
+// 점수판에 플레이어가 없으면 첫 실행처럼 기본 플레이어 3명을 만들어 카드를 가리키는 단계(점수·삭제)를 건너뛰지 않게 한다.
+function ensurePlayers(){const board=window.ScoreCounter;try{if(board&&!board.getPlayers().length)board.startPlayers(3);}catch{}}
 export function replayTour(){replay=true;state={seen:Object.fromEntries(TIPS.filter(key=>key!=='welcome').map(key=>[key,true]))};save();close(false);
- const run=()=>{if(route()==='#home'&&!busy())welcome();else schedule();};if(route()==='#home')setTimeout(run,300);else{location.hash='home';setTimeout(run,600);}}
+ const run=()=>{if(route()==='#home'&&!busy()){ensurePlayers();welcome();}else schedule();};if(route()==='#home')setTimeout(run,300);else{location.hash='home';setTimeout(run,600);}}
 
 document.getElementById('replayTour')?.addEventListener('click',event=>{event.preventDefault();replayTour();});
 addEventListener('score-records:changed',()=>schedule());
