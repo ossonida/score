@@ -53,7 +53,7 @@ function achievements(container,records,selected,onRecord){
 
 // locked: 비Pro 미리보기 기간이면 결산 공유 대신 Pro 소개 시트를 연다.
 // 결산 공유 창의 '함께한 사람' 줄: 기간 분석과 같은 선택을 고르고, 적용하면 화면이 다시 계산한 판들로 창을 다시 만든다.
-function recapPeople(source,scope){if(!source)return undefined;return {label:source.label(),locked:source.locked(),pick:()=>source.choose(()=>{if(!document.getElementById('recapShareDialog')?.open)return;const now=source.current();openRecapShare(now.records,now.model,readIdentity(scope),{people:recapPeople(source,scope),keep:true,tierScope:scope});})};}
+function recapPeople(source,scope){if(!source)return undefined;return {label:source.label(),pick:()=>source.choose(()=>{if(!document.getElementById('recapShareDialog')?.open)return;const now=source.current();openRecapShare(now.records,now.model,readIdentity(scope),{people:recapPeople(source,scope),keep:true,tierScope:scope});})};}
 export function renderPeriodDashboard(container,records,model,{scope,onGame,onRecord,locked,sharePeople}={}){
  container.replaceChildren();const selected=recordsInPeriod(records,model.current),current=summarizePeriod(records,model.current),previous=model.previous?summarizePeriod(records,model.previous):null;
  const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head');head.append(el('h2',model.title));

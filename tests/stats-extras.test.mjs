@@ -110,3 +110,13 @@ test('period view also counts family and party games once per day, not strategy 
  assert.deepEqual(out.map(p=>p.sessionIds||p.id),[['b1','b2'],'c1','c2']);
  assert.deepEqual(countSessions([g('h1','','홀덤'),g('h2','','홀덤')]).map(p=>p.sessionIds),[['h1','h2']]);
 });
+test('period recap share uses only the people source fields records.js passes',async()=>{
+ const fs=await import('node:fs');const dash=fs.readFileSync(new URL('../period-dashboard.js',import.meta.url),'utf8'),records=fs.readFileSync(new URL('../records.js',import.meta.url),'utf8');
+ const used=new Set([...dash.match(/function recapPeople[\s\S]*?\n/)[0].matchAll(/source\.(\w+)\(/g)].map(m=>m[1]));
+ const given=new Set([...records.match(/sharePeople:\{([^}]*)\}/)[1].matchAll(/(\w+):/g)].map(m=>m[1]));
+ for(const name of used)assert.ok(given.has(name),`sharePeople is missing ${name}`);
+ const records2=[play('s1','2026-10-02','카탄'),play('s2','2026-10-03','아줄')],root=new Element('div');
+ renderPeriodDashboard(root,records2,monthModel,{scope:'none',sharePeople:{label:()=>'함께한 사람: 전체',choose(){},current:()=>({records:records2,model:monthModel})}});
+ const share=walk(root).find(n=>n.className==='stats-share-trigger');let error;try{await share.onclick();}catch(e){error=e;}
+ assert.doesNotMatch(String(error?.stack||''),/recapPeople/);assert.equal(share.disabled,false);
+});

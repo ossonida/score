@@ -25,7 +25,7 @@ import {isAutomatic,savingPlayers,withSelf,selectedSelf,rememberIdentity,savedPl
 import {readIdentity,meIn,personalRecordIds,hasPendingIdentity,syncIdentity,nameKey} from './personal-stats.js?v=310';
 import {renderStatsDashboard} from './stats-dashboard.js?v=312';
 import {customPeriod,periodForPreset,periodForStep,recordsInPeriod} from './period-stats.js?v=309';
-import {renderPeriodDashboard} from './period-dashboard.js?v=342';
+import {renderPeriodDashboard} from './period-dashboard.js?v=346';
 import {mergeImported} from './data-transfer.js?v=312';
 import {searchLocalGames,resolveGame,matchGameRecords,searchableGameGroups,starterGames} from './game-catalog.js?v=309';
 import {hasHangul,readGameAliases,rememberGameAlias,withAliasMatches} from './game-aliases.js?v=309';
