@@ -8,7 +8,7 @@ const KEY='score.whatsNew.v1';
 const openGames=detail=>{window.dispatchEvent(new CustomEvent('score-games:open',{detail}));location.hash='games';};
 export const ANNOUNCEMENTS=[{id:'2026-11-game-tiers',until:'2027-01-31',cta:'내 취향 티어 보기',action:()=>openGames({view:'played',layout:'tier'}),slides:[
  {image:'assets/whats-new/tier-pick.webp',title:'취향 티어가 뭐예요?',text:'좋아하는 정도에 따라 게임을 최애·S·A·B·C로 나눠요. 실력이나 랭킹과는 상관없어요.'},
- {image:'assets/whats-new/tier-menu.webp',title:'게임별 통계에서 정해요',text:'게임 오른쪽 위 ⋮을 눌러 취향 티어를 고르면 바로 저장돼요.'},
+ {image:'assets/whats-new/tier-label.webp',title:'게임별 통계에서 정해요',text:'게임 이름 아래 취향 라벨을 누르고 티어를 고르면 바로 저장돼요.'},
  {image:'assets/whats-new/tier-view.webp',title:'해본 게임을 취향 티어로 모아 보기',text:'게임 탭 › 해본에서 취향 티어를 누르면 티어별로 묶여 보여요.'},
  {image:'assets/whats-new/tier-recap.webp',title:'결산에 내 취향 티어표',text:'기간 분석 › 결산 공유의 여러 장에 그 기간 게임의 취향 티어표가 들어가요.'}]}];
 
