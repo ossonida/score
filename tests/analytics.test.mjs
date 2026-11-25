@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAnalyticsGate,isExcludedEmail,isTestEnvironment} from '../analytics-policy.js';
-import {armUntilTaskEnd,createFeatureAnalytics,playerCountBucket} from '../analytics-events.js';
+import {analyticsUserProperties,armUntilTaskEnd,createFeatureAnalytics,playerCountBucket,recordBucket} from '../analytics-events.js';
 function app({storage=new Map(),search='',testEnvironment=false,isExcluded=async email=>email==='internal@example.invalid'}={}){let starts=0,disabled;const gate=createAnalyticsGate({storage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},search,isExcluded,testEnvironment,start:()=>{starts++;disabled=false;},stop:()=>{disabled=true;}});return {gate,storage,get starts(){return starts;},get disabled(){return disabled;}};}
 test('GA stays disabled until auth is restored, then starts once for ordinary visitors',async()=>{const a=app();assert.equal(a.starts,0);assert.equal(a.disabled,true);await a.gate.onAuthState(null);await a.gate.onAuthState({email:'visitor@example.invalid'});assert.equal(a.starts,1);assert.equal(a.disabled,false);});
 test('excluded accounts never start GA and their browser stays excluded after logout/reload',async()=>{const a=app();await a.gate.onAuthState({email:'internal@example.invalid'});await a.gate.onAuthState(null);assert.equal(a.starts,0);assert.equal(a.disabled,true);const b=app({storage:a.storage});await b.gate.onAuthState(null);assert.equal(b.starts,0);});
@@ -77,4 +77,18 @@ test('local dev hosts and automated browsers never start GA, without marking the
   const a=app({testEnvironment:true});await a.gate.onAuthState(null);await a.gate.onAuthState({email:'visitor@example.invalid'});
   assert.equal(a.starts,0);assert.equal(a.disabled,true);assert.equal(a.storage.get('score.analytics.exclude.v1'),undefined);
   a.gate.setEnabled(true);assert.equal(a.starts,0);
+});
+
+test('user properties are coarse buckets and enums only', () => {
+  assert.deepEqual(['0','1','2-4','5-19','20+'],[0,1,4,19,20].map(recordBucket));
+  const modes={a:'highest',b:'lowest',c:'win',d:'unknown'};
+  const values=analyticsUserProperties({records:[{m:'a'},{m:'b'},{m:'c'},{m:'d'}],signedIn:true,standalone:true,bggLinked:false,lang:'en',modeOf:play=>modes[play.m]});
+  assert.deepEqual(values,{display_mode:'standalone',signed_in:'yes',record_bucket:'2-4',main_mode:'score',bgg_linked:'no',ui_lang:'en'});
+  assert.deepEqual(analyticsUserProperties({}),{display_mode:'browser',signed_in:'no',record_bucket:'0',main_mode:'none',bgg_linked:'no',ui_lang:'ko'});
+});
+
+test('first_game_saved accepts only a known mode', () => {
+  const events=[],analytics=createFeatureAnalytics({storage:{getItem:()=>null,setItem(){}},send:(name,params)=>events.push([name,params])});
+  analytics.track('first_game_saved',{mode:'cooperative'});analytics.track('first_game_saved',{mode:'mighty'});analytics.track('first_game_saved',{});
+  assert.deepEqual(events,[['first_game_saved',{mode:'cooperative'}]]);
 });

@@ -1,6 +1,7 @@
 import {cloudConfigured,connectCloud} from './cloud-records.js?v=332';
 import {createAnalyticsGate,isTestEnvironment} from './analytics-policy.js?v=156';
-import {armUntilTaskEnd,createFeatureAnalytics} from './analytics-events.js?v=338';
+import {analyticsMode,analyticsUserProperties,armUntilTaskEnd,createFeatureAnalytics} from './analytics-events.js?v=339';
+import {recordMode} from './records-core.js?v=309';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
 const measurementId='G-NFEYJ27K5H',disableKey='ga-disable-'+measurementId;
 window[disableKey]=true;
@@ -10,6 +11,13 @@ const analytics=createFeatureAnalytics({
  send:(name,params)=>{if(window[disableKey]||typeof window.gtag!=='function')return;(window.requestIdleCallback||setTimeout)(()=>window.gtag('event',name,params),{timeout:2000});}
 });
 window.ScoreAnalytics=analytics;
+// 사용자 속성: 값이 바뀔 때만 다시 보낸다. 기록 수·로그인·설치 실행·BGG 연결·언어(언어 변경은 새로고침).
+let signedIn=false,lastUserProperties='';
+function syncUserProperties(){
+ if(window[disableKey]||typeof window.gtag!=='function')return;
+ const values=analyticsUserProperties({records:currentRecords()||[],signedIn,standalone:globalThis.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true,bggLinked:document.getElementById('bggAccountSection')?.dataset.connected==='true',lang:window.ScoreI18n?.lang,modeOf:recordMode});
+ const key=JSON.stringify(values);if(key===lastUserProperties)return;lastUserProperties=key;window.gtag('set','user_properties',values);
+}
 
 function activeMode(){const mode=window.ScoreCounter?.getResultEntry?.()?.mode;return mode==='coop'?'cooperative':mode||'score';}
 function currentRecords(){try{return window.ScoreRecords?.context?.().records||null;}catch{return null;}}
@@ -83,11 +91,11 @@ function installFeatureListeners(){
   const next=currentRecords();if(!next)return;if(records===null){records=next;return;}
   const before=new Map(records.map(play=>[play.id,play])),after=new Map(next.map(play=>[play.id,play]));
   const added=next.filter(play=>!before.has(play.id)),changed=next.filter(play=>before.has(play.id)&&recordStamp(before.get(play.id))!==recordStamp(play));
-  if(pendingEnd&&(added.length||changed.length)){analytics.gameEnded(activeMode(),'saved');pendingEnd=false;}
-  records=next;
+  if(pendingEnd&&(added.length||changed.length)){const mode=activeMode();analytics.gameEnded(mode,'saved');pendingEnd=false;if(!records.length&&added.length){let first=false;try{first=localStorage.getItem('score.analytics.firstSaved.v1')!=='1';localStorage.setItem('score.analytics.firstSaved.v1','1');}catch{}if(first)analytics.track('first_game_saved',{mode:analyticsMode(mode)});}}
+  records=next;syncUserProperties();
  });
  const accountLogin=document.getElementById('accountLogin'),accountLogout=document.getElementById('accountLogout');if(accountLogin&&accountLogout)new MutationObserver(()=>{if(pendingAccount==='login'&&accountLogin.hidden){analytics.track('feature_used',{feature:'account',action:'login_completed'});pendingAccount='';}else if(pendingAccount==='logout'&&accountLogout.hidden){analytics.track('feature_used',{feature:'account',action:'logout_completed'});pendingAccount='';}}).observe(accountLogin.parentElement,{subtree:true,attributes:true,attributeFilter:['hidden']});
- const bgg=document.getElementById('bggAccountSection');if(bgg)new MutationObserver(()=>{const connected=bgg.dataset.connected==='true';if(pendingBgg==='link'&&connected){analytics.track('feature_used',{feature:'bgg',action:'link_completed'});pendingBgg='';}else if(pendingBgg==='unlink'&&!connected){analytics.track('feature_used',{feature:'bgg',action:'unlink_completed'});pendingBgg='';}}).observe(bgg,{attributes:true,attributeFilter:['data-connected']});
+ const bgg=document.getElementById('bggAccountSection');if(bgg)new MutationObserver(()=>{syncUserProperties();const connected=bgg.dataset.connected==='true';if(pendingBgg==='link'&&connected){analytics.track('feature_used',{feature:'bgg',action:'link_completed'});pendingBgg='';}else if(pendingBgg==='unlink'&&!connected){analytics.track('feature_used',{feature:'bgg',action:'unlink_completed'});pendingBgg='';}}).observe(bgg,{attributes:true,attributeFilter:['data-connected']});
  const watchBusy=(id,feature,action)=>{const button=document.getElementById(id);if(!button)return;let armed=false,sawBusy=false;button.addEventListener('click',()=>{armed=true;sawBusy=false;},true);new MutationObserver(()=>{if(!armed)return;const busy=button.getAttribute('aria-busy')==='true';if(busy)sawBusy=true;else if(sawBusy){analytics.track('feature_used',{feature,action});armed=false;sawBusy=false;}}).observe(button,{attributes:true,attributeFilter:['aria-busy']});};
  watchBusy('cloudSync','cloud_sync','sync_completed');watchBusy('librarySearchButton','game_library','search_completed');watchBusy('bggExport','bgg','export_completed');
  window.addEventListener('appinstalled',()=>{if(pendingInstall)analytics.track('feature_used',{feature:'install',action:'install_accepted'});pendingInstall=false;});
@@ -96,17 +104,17 @@ installFeatureListeners();
 const gate=createAnalyticsGate({
  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)},search:location.search,
  testEnvironment:isTestEnvironment({hostname:location.hostname,webdriver:navigator.webdriver,userAgent:navigator.userAgent}),
- stop:()=>{window[disableKey]=true;},resume:()=>{window[disableKey]=false;},
+ stop:()=>{window[disableKey]=true;},resume:()=>{window[disableKey]=false;syncUserProperties();},
  start:()=>{
   window[disableKey]=false;window.dataLayer=window.dataLayer||[];
   window.gtag=function(){window.dataLayer.push(arguments);};
-  window.gtag('js',new Date());window.gtag('config',measurementId,{content_group:'score'});
+  window.gtag('js',new Date());lastUserProperties='';syncUserProperties();window.gtag('config',measurementId,{content_group:'score'});
   const script=document.createElement('script');script.async=true;
   script.src='https://www.googletagmanager.com/gtag/js?id='+measurementId;document.head.append(script);
  }
 });
 // Wait for restored Firebase auth before loading GA. Auth errors leave collection disabled.
-if(cloudConfigured())connectCloud(user=>gate.onAuthState(user)).catch(()=>{window[disableKey]=true;});
+if(cloudConfigured())connectCloud(user=>{signedIn=!!user;const done=gate.onAuthState(user);Promise.resolve(done).then(syncUserProperties,()=>{});return done;}).catch(()=>{window[disableKey]=true;});
 else void gate.onAuthState(null);
 
 // 이용 분석 안내: 처음 한 번 화면 아래에 띄우고, 확인하거나 끄면 이 기기에서 다시 띄우지 않는다. 설정의 스위치도 같은 값을 쓴다.

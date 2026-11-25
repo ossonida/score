@@ -77,3 +77,22 @@
 ## 존재하지 않는 기능
 
 실행 취소·재실행, 앱 데이터(JSON) 내보내기 기능은 현재 앱에 없어 이벤트도 없다. 내보내기는 BGG 플레이 내보내기(`bgg`/`export_completed`)만 있다.
+
+## 활성화
+
+| 이벤트 | 발생 조건 | 허용 매개변수 |
+|---|---|---|
+| `first_game_saved` | 이 기기에서 저장 기록이 0개인 상태에서 첫 기록 저장 완료. 기기당 1회(`score.analytics.firstSaved.v1`) | `mode` |
+
+## 사용자 속성
+
+`app-analytics.js`가 GA 시작 시와 값이 바뀔 때(기록 변경·로그인 상태·BGG 연결) `gtag('set','user_properties')`로 보낸다. 값 계산은 `analytics-events.js`의 `analyticsUserProperties`.
+
+| 속성 | 값 |
+|---|---|
+| `display_mode` | `standalone`, `browser` |
+| `signed_in` | `yes`, `no` |
+| `record_bucket` | `0`, `1`, `2-4`, `5-19`, `20+` |
+| `main_mode` | `score`, `win`, `team`, `rank`, `cooperative`, `none` (저장 기록에서 가장 많은 방식) |
+| `bgg_linked` | `yes`, `no` |
+| `ui_lang` | `ko`, `en` |

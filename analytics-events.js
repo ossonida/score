@@ -11,6 +11,7 @@ const allowed={
  score_changed:{direction:['increase','decrease'],input_method:['step','direct']},
  game_end_started:{mode:['score','win','team','rank','cooperative']},
  game_ended:{mode:['score','win','team','rank','cooperative'],outcome:['saved','discarded']},
+ first_game_saved:{mode:['score','win','team','rank','cooperative']},
  statistics_viewed:{entry_point:['navigation','game_library','record']},
  history_viewed:{entry_point:['navigation','statistics']},
  screen_viewed:{screen:['home','games','settings']},
@@ -24,7 +25,7 @@ const allowed={
   action:['scores_reset','players_reset','mode_selected','result_changed','filter_changed','game_opened','game_added','search_completed','import_previewed','import_completed','import_cancelled','export_completed','login_completed','logout_completed','sync_completed','recovery_completed','guest_records_merged','guest_records_deleted','link_completed','unlink_completed','share_completed','install_accepted','identity_changed']
  }
 };
-const required={setup_started:['entry_point'],player_added:['entry_point','player_count'],player_removed:['context'],player_reordered:['context'],player_updated:['change_type'],game_started:['mode','player_count'],first_score_changed:['direction','input_method'],score_changed:['direction','input_method'],game_end_started:['mode'],game_ended:['mode','outcome'],statistics_viewed:['entry_point'],history_viewed:['entry_point'],screen_viewed:['screen'],record_changed:['change_type'],feature_used:['feature','action']};
+const required={setup_started:['entry_point'],player_added:['entry_point','player_count'],player_removed:['context'],player_reordered:['context'],player_updated:['change_type'],game_started:['mode','player_count'],first_score_changed:['direction','input_method'],score_changed:['direction','input_method'],game_end_started:['mode'],game_ended:['mode','outcome'],first_game_saved:['mode'],statistics_viewed:['entry_point'],history_viewed:['entry_point'],screen_viewed:['screen'],record_changed:['change_type'],feature_used:['feature','action']};
 // Saved-record edit fields (records.js recordEditing.field) mapped to record_changed.change_type.
 const recordFields={name:'name',score:'score',result:'result',cooperativeResult:'cooperative_result',sharedScore:'shared_score'};
 export const recordChangeType=field=>recordFields[field];
@@ -65,3 +66,13 @@ export function createFeatureAnalytics({send,storage}={}){
 }
 // 실제 터치에선 캡처 리스너가 끝나자마자 마이크로태스크가 돌아 버튼 핸들러보다 먼저 실행된다. 대기 중인 동작은 현재 태스크가 끝날 때까지 유지한다.
 export function armUntilTaskEnd(read,write,value,schedule=callback=>setTimeout(callback,0)){write(value);schedule(()=>{if(read()===value)write(null);});}
+
+// 사용자 속성: 마케팅 비교용 구간·열거형만 만든다(이름·게임·점수·계정 식별자 없음). modeOf는 records-core.js의 recordMode.
+export const RECORD_BUCKETS=['0','1','2-4','5-19','20+'];
+export function recordBucket(count){return count<=0?'0':count===1?'1':count<5?'2-4':count<20?'5-19':'20+';}
+const MAIN_MODE={highest:'score',lowest:'score',cooperative:'cooperative',team:'team',mystery:'team',rank:'rank',win:'win'};
+export function analyticsUserProperties({records=[],signedIn=false,standalone=false,bggLinked=false,lang='ko',modeOf}={}){
+ const counts=new Map();if(modeOf)for(const play of records){const mode=MAIN_MODE[modeOf(play)];if(mode)counts.set(mode,(counts.get(mode)||0)+1);}
+ let main='none',best=0;for(const [mode,count] of counts)if(count>best){main=mode;best=count;}
+ return {display_mode:standalone?'standalone':'browser',signed_in:signedIn?'yes':'no',record_bucket:recordBucket(records.length),main_mode:main,bgg_linked:bggLinked?'yes':'no',ui_lang:lang==='en'?'en':'ko'};
+}
