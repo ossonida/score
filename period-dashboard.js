@@ -56,8 +56,8 @@ function achievements(container,records,selected,onRecord){
 function recapPeople(source,scope){if(!source)return undefined;return {label:source.label(),pick:()=>source.choose(()=>{if(!document.getElementById('recapShareDialog')?.open)return;const now=source.current();openRecapShare(now.records,now.model,readIdentity(scope),{people:recapPeople(source,scope),keep:true,tierScope:scope});})};}
 export function renderPeriodDashboard(container,records,model,{scope,onGame,onRecord,locked,sharePeople}={}){
  container.replaceChildren();const selected=recordsInPeriod(records,model.current),current=summarizePeriod(records,model.current),previous=model.previous?summarizePeriod(records,model.previous):null;
- const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head'),compact=model.preset==='month'||model.preset==='year';
- // 월간·연간은 위 기간 이동 줄에 이미 'N년 N월'이 있어 제목·날짜 범위를 빼고 공유 버튼만 카드 오른쪽 위에 둔다.
+ const hero=el('section',undefined,'insight-hero period-summary'),head=el('div',undefined,'period-summary-head'),compact=!model.choosing&&(model.preset==='month'||model.preset==='year');
+ // 직접 설정 탭(choosing)은 고르기 전에도 제목 '선택 기간'과 날짜 범위. 월간·연간은 위 기간 이동 줄에 이미 'N년 N월'이 있어 제목·날짜 범위를 빼고 공유 버튼만 카드 오른쪽 위에 둔다.
  if(compact)head.className+=' is-compact';else head.append(el('h2',model.title),el('p',rangeLabel(model.current),'period-range'));
  // 결산 공유: 기록이 있는 기간만, 최근 기록 공유와 같은 창.
  if(selected.length){const share=el('button',undefined,'stats-share-trigger');share.append(el('span','결산 공유','share-label'));share.title='결산 공유';share.type='button';share.onclick=async()=>{if(locked)return locked();share.disabled=true;try{await openRecapShare(records,model,readIdentity(scope),{people:recapPeople(sharePeople,scope),tierScope:scope});}finally{share.disabled=false;}};head.append(share);}

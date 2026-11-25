@@ -1224,7 +1224,7 @@ function dictionary(){return /*<dict>*/{
 "을(를) 이 경기 기록에서 삭제할까요?":" — remove from this play?",
 "BGG 기록 내보내기 때 BGG 컬렉션에 반영됩니다.":"Applied to your BGG collection on the next BGG export.",
 "로그인하면 관리할 수 있습니다.":"Sign in to manage.",
-"직접 설정 기간":"Custom period",
+"직접 설정 기간":"Custom period","선택 기간":"Selected period",
 "전체 기간":"All time",
 "달":"Month",
 "해":"Year",
