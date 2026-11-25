@@ -44,7 +44,8 @@ function updateIcon(){
 const speech=window.speechSynthesis&&window.SpeechSynthesisUtterance?window.speechSynthesis:null;
 let voiceLoop=0,voiceLast=null,voiceReady=false;
 const voiceOn=s=>!!speech&&!!limitOf(s).voice&&s.status==='running'&&remainingTime(s,Date.now())!==null;
-function speak(text){if(!speech)return;const u=new SpeechSynthesisUtterance(text),ko=speech.getVoices().find(v=>/^ko/i.test(v.lang));u.lang='ko-KR';if(ko)u.voice=ko;if(/^\d$/.test(text))speech.cancel();speech.speak(u);}
+// 음성 안내는 화면 언어로 읽는다(영어 화면이면 사전으로 바꾸고 영어 음성).
+function speak(text){if(!speech)return;const en=window.ScoreI18n?.lang==='en',said=en&&window.ScoreI18n.t?window.ScoreI18n.t(text):text,u=new SpeechSynthesisUtterance(said),voice=speech.getVoices().find(v=>(en?/^en/i:/^ko/i).test(v.lang));u.lang=en?'en-US':'ko-KR';if(voice)u.voice=voice;if(/^\d$/.test(text))speech.cancel();speech.speak(u);}
 // 아이폰은 사용자가 누른 순간에만 소리를 열 수 있어 켜기·턴 조작 때 무음으로 한 번 연다.
 function unlockVoice(){if(!speech||voiceReady)return;voiceReady=true;const u=new SpeechSynthesisUtterance(' ');u.volume=0;speech.speak(u);}
 function voiceCheck(){

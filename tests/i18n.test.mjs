@@ -38,6 +38,8 @@ test('the English dictionary translates fixed, templated and joined messages but
  assert.equal(t('철수와의 전적 보기'),'View head-to-head with 철수');
  assert.equal(t('영희을(를) 내 게임 목록에서 삭제할까요?'),'Remove 영희 from my games?');
  assert.equal(t('기록 12회 · 최근 2026-10-01'),'12 plays · Last 2026-10-01');
+ assert.equal(t('25판 · 4승 · 16%'),'25 plays · 4W · 16%');assert.equal(t('가장 많이 한 날 11/1 · 1판'),'Busiest day 11/1 · 1 play');assert.equal(t('상대 4명'),'4 opponents');
+ assert.equal(t('카탄의 개척자 2026-11-11 기록 삭제'),'Delete record: 카탄의 개척자 2026-11-11');assert.equal(t('Dawn 선플레이어 지정'),'Make Dawn first player');assert.equal(t('취향 미정'),'No taste tier');assert.equal(t('컬렉션 없음'),'Not in collection');
  assert.equal(t('내보낼 새 기록이나 수정된 기록이 없습니다. 변경 없음 3개 · Score 자체 게임 2개는 제외됩니다.'),'No new or edited records to export. 3 unchanged · 2 Score-only games are excluded.');
  assert.equal(t('2026년 10월'),'Oct 2026');assert.equal(t('3승 2패'),'3W 2L');
  assert.equal(t('하늘'),'하늘');
