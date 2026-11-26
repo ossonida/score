@@ -214,3 +214,19 @@ test('several campaign plays of one game on the same day are shown in order, not
  assert.equal(recentShareData(plays.slice(1,2),{},'ko').games[0].mission,'시나리오 1 실패');
  assert.equal(recentShareData(plays,{},'en').games[0].mission,'Scenario 1 Cleared → Lost → Scenario 2 Cleared');
 });
+
+test('recent share cover: solo and all-zero plays crown nobody, draws are labelled, a story game played twice shows its success count',()=>{
+ const D='2026-10-10',p=(id,game,players,extra={})=>({id,date:D,createdAt:`${D}T10:00:00Z`,game:{name:game,bggId:''},rule:'highest',players,...extra});
+ const records=[p('a','솔로',[{id:'1',name:'나',score:132}]),p('b','카탄',[{id:'1',name:'나',score:0},{id:'2',name:'김민수',score:0}]),p('c','체스',[{id:'1',name:'나',score:null,draw:true},{id:'2',name:'김민수',score:null,draw:true}]),
+  p('d','아컴 호러',[{id:'1',name:'나',score:null}],{rule:'cooperative',cooperativeResult:'failure',ending:'배드'}),p('e','아컴 호러',[{id:'1',name:'나',score:null}],{rule:'cooperative',cooperativeResult:'success',ending:'진'})];
+ const data=recentShareData(records,{primary:'나',aliases:[]},'ko-KR',{mask:false}),by=name=>data.games.find(game=>game.game.name===name);
+ assert.deepEqual(by('솔로').winners,[]);assert.deepEqual(by('카탄').winners,[]);
+ assert.equal(by('체스').mission,'무승부');assert.equal(by('아컴 호러').mission,'2판 중 1번 성공');
+ assert.equal(data.cards.some(card=>card.kind==='winners'),false);
+});
+
+test('day cards: solo and all-zero plays do not make an MVP or a closest game',()=>{
+ const D='2026-10-10',p=(id,game,players)=>({id,date:D,createdAt:`${D}T10:00:00Z`,game:{name:game,bggId:''},rule:'highest',players});
+ const data=recentShareData([p('a','솔로',[{id:'1',name:'나',score:88}]),p('b','카탄',[{id:'1',name:'나',score:0},{id:'2',name:'김민수',score:0}])],{primary:'나',aliases:[]},'ko-KR',{mask:false});
+ assert.deepEqual(data.cards.map(card=>card.kind),[]);
+});

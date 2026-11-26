@@ -94,7 +94,7 @@ test('campaign co-op: several scenarios in a day each get a result, levels show,
 test('difficulty co-op: each difficulty gets a mark per play, one play reads as level + result, several show the best numeric level cleared',()=>{
  const play=(id,hour,difficulty,result)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'스피릿 아일랜드',bggId:''},rule:'cooperative',difficulty,cooperativeResult:result,players:[{id:'a',name:'나',score:null}]});
  const one=gameStory([play('d1',10,'3','failure')],'2026-10-10',K('스피릿 아일랜드'),profile,{locale:'ko-KR',winners:false});
- assert.equal(one.chart.kind,'missions');assert.deepEqual(one.chart.rows.map(row=>[row.label,row.marks.map(Number).join('')]),[['3','0']]);assert.equal(one.stories.find(item=>item.title==='오늘 협력 결과').headline,'난이도 3 실패');
+ assert.equal(one.chart,null);assert.equal(one.stories.find(item=>item.title==='오늘 협력 결과').headline,'난이도 3 실패');
  const many=gameStory([play('d1',10,'3','failure'),play('d2',11,'3','success'),play('d3',12,'4','failure')],'2026-10-10',K('스피릿 아일랜드'),profile,{locale:'ko-KR',winners:false}),today=many.stories.find(item=>item.title==='오늘 협력 결과');
  assert.deepEqual(many.chart.rows.map(row=>[row.label,row.marks.map(Number).join('')]),[['3','01'],['4','0']]);assert.deepEqual([today.headline,today.detail],['3판 중 1번 성공','최고 난이도 3 클리어']);
  assert.equal(gameStory([play('h1',10,'영웅','success')],'2026-10-10',K('스피릿 아일랜드'),profile,{locale:'ko-KR',winners:false}).stories.find(item=>item.title==='오늘 협력 결과').headline,'영웅 성공');
@@ -136,6 +136,17 @@ test('a campaign recorded from a middle scenario still points to the next one; a
  const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
  assert.equal(story.stories.find(item=>item.title==='오늘의 우승자'),undefined);
  assert.deepEqual(story.stories.filter(item=>item.title==='개인 최고점 갱신').map(item=>[item.headline,item.detail]),[['나 12점','공동 1위: 이지연 · 이전 10']]);
+});
+
+test('blank and solo plays have no winner; one draw reads as a result; one holdem hand is not repeated',()=>{
+ const zero=gameStory([scored('z','2026-10-10',10,{나:0,김민수:0})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(zero.stories.some(item=>/우승자|최고점/.test(item.title)),false);
+ const solo=gameStory([scored('s','2026-10-10',10,{나:132})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
+ assert.deepEqual(solo.stories.map(item=>[item.title,item.headline]),[['오늘 점수','나 132점']]);
+ const draw=gameStory([{id:'c',date:'2026-10-10',createdAt:at('2026-10-10',10),game:{name:'체스',bggId:''},rule:'highest',players:[{id:'a',name:'나',score:null,draw:true},{id:'b',name:'김민수',score:null,draw:true}]}],'2026-10-10',K('체스'),profile,{locale:'ko-KR',mask:false});
+ assert.deepEqual(draw.stories.filter(item=>item.headline==='무승부').map(item=>item.title),['오늘 결과']);
+ const hand=gameStory([{...scored('h','2026-10-10',10,{나:120,김민수:-120}),game:{name:'텍사스 홀덤',bggId:''}}],'2026-10-10',K('텍사스 홀덤'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(hand.chart?.kind,'bars');assert.equal(hand.stories.some(item=>item.title==='한 판 최대 획득'),false);
 });
 
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
