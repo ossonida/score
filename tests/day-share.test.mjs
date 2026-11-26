@@ -18,7 +18,7 @@ test('score game: personal best, blowout, win chart and players, no smallest-mar
  assert.equal(story.todayLine,'오늘 2판 · 통산 5판');
  assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','평균 우승 점수 대비','최근 성적','참여자','플레이 순위']);
  assert.deepEqual(story.stories[0],{title:'개인 최고점 갱신',headline:'나* 60점',detail:'이전 42'});
- assert.deepEqual(story.stories.find(item=>item.kind==='players'),{kind:'players',title:'참여자',headline:'나*, 김**',detail:''});
+ assert.deepEqual(story.stories.find(item=>item.kind==='players'),{kind:'players',lang:'ko',title:'참여자',headline:'나*, 김**',detail:''});
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]),[['나*',1],['김**',1]]);
  assert.ok(!titles(gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false})).includes('가장 적은 점수 차'));
  const single=gameStory([scored('s1','2026-10-10',10,{나:40,김민수:52})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
@@ -126,6 +126,16 @@ test('story co-op keeps ending names hidden; mystery counts every case; unrecord
  const drawn={id:'d1',date:'2026-10-10',createdAt:at('2026-10-10',10),game:{name:'체스',bggId:''},rule:'highest',players:[{id:'a',name:'나',score:null,draw:true},{id:'b',name:'김민수',score:null,draw:true}]};
  const chess=gameStory([drawn,won('d2','2026-10-10',11,['나','김민수'],'나','체스')],'2026-10-10',K('체스'),profile,{locale:'ko-KR',mask:false});
  assert.equal(chess.stories.find(item=>item.title==='무승부').headline,'2판 중 1판 무승부');
+});
+
+test('a campaign recorded from a middle scenario still points to the next one; a joint top score that is a personal best becomes one line',()=>{
+ const play=(id,date,hour,scenario,result)=>({id,date,createdAt:at(date,hour),game:{name:'팬데믹 레거시',bggId:''},rule:'cooperative',scenario,cooperativeResult:result,players:[{id:'a',name:'나',score:null}]});
+ const mid=gameStory([play('a','2026-10-01',10,2,'success'),play('b','2026-10-10',10,3,'success')],'2026-10-10',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false});
+ assert.equal(mid.stories.find(item=>item.title==='시나리오 진행').detail,'다음 시나리오 4');
+ const raw=[scored('p0','2026-10-01',10,{나:10,이지연:8}),scored('p1','2026-10-10',10,{나:12,이지연:12,김민수:5})];
+ const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(story.stories.find(item=>item.title==='오늘의 우승자'),undefined);
+ assert.deepEqual(story.stories.filter(item=>item.title==='개인 최고점 갱신').map(item=>[item.headline,item.detail]),[['나 12점','공동 1위: 이지연 · 이전 10']]);
 });
 
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
