@@ -57,6 +57,18 @@ test('co-op missions chart each attempt, hold\'em totals show only the leaders',
  assert.deepEqual(holdem.chart.rows.map(row=>[row.label,row.text]),[['나*','+25']]);assert.equal(holdem.stories.find(item=>item.title==='한 판 최대 획득').headline,'나* +30');
 });
 
+test('campaign co-op: today line, scenario marks across the campaign and the next scenario',()=>{
+ const play=(id,date,hour,scenario,result)=>({id,date,createdAt:at(date,hour),game:{name:'팬데믹 레거시',bggId:''},rule:'cooperative',scenario,cooperativeResult:result,players:[{id:'a',name:'나',score:null},{id:'b',name:'김민수',score:null}]});
+ const raw=[play('p0','2026-10-01',10,1,'failure'),play('p1','2026-10-10',10,1,'failure'),play('p2','2026-10-10',11,1,'success')];
+ const story=gameStory(raw,'2026-10-10',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false});
+ const today=story.stories.find(item=>item.title==='오늘의 시나리오'),camp=story.stories.find(item=>item.title==='캠페인 진행');
+ assert.equal(today.headline,'시나리오 1 실패 → 성공');assert.equal(today.detail,'3번째 시도에 클리어');
+ assert.deepEqual(camp.marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','001']]);
+ assert.equal(camp.headline,'시나리오 1개 클리어');assert.equal(camp.detail,'다음 시나리오 2');
+ const failed=gameStory([...raw,play('p3','2026-10-12',10,2,'failure')],'2026-10-12',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false});
+ assert.equal(failed.stories.find(item=>item.title==='캠페인 진행').detail,'시나리오 2 재도전');assert.equal(failed.stories.find(item=>item.title==='오늘의 시나리오').detail,'');
+});
+
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
  const one=gameStory([scored('a','2026-10-10',10,{나:61,Chris:40,민수:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true});
  assert.equal(one.chart.kind,'table');assert.deepEqual(one.chart.rows.map(row=>[row.rank,row.name,row.text]),[[1,'나','61'],[2,'Chris','40'],[2,'민수','40']]);
