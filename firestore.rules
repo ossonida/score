@@ -1,6 +1,51 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 히든노트(ossonida.github.io/clues) 한줄 후기. 누구나 읽고, 로그인한 사람만 사건마다 한 줄(문서 id = note_uid).
+    match /clueReviews/{reviewId} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && reviewId == request.resource.data.note + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['note','text','uid','createdAt'])
+        && request.resource.data.keys().hasAll(['note','text','uid','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.note is string && request.resource.data.note.matches('^note[0-9]{2}$')
+        && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 80
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+    // 히든노트 추천 수. 누구나 읽고, 로그인 없이 한 번에 +1 또는 -1만 바꿀 수 있다(문서 id = note01 형식).
+    match /clueLikes/{note} {
+      allow read: if true;
+      allow create: if note.matches('^note[0-9]{2}$')
+        && request.resource.data.keys().hasOnly(['count'])
+        && request.resource.data.count == 1;
+      allow update: if request.resource.data.keys().hasOnly(['count'])
+        && request.resource.data.count is int
+        && (request.resource.data.count == resource.data.count + 1
+          || (request.resource.data.count == resource.data.count - 1 && resource.data.count > 0));
+      allow delete: if false;
+    }
+    // 히든노트 결말 화면 한 줄 피드백. 누구나 쓰기만, 아무도 읽기·수정·삭제 불가(콘솔에서만 봄).
+    match /clueFeedback/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['note','r','text','ms','hints','lang','at'])
+        && request.resource.data.note is string && request.resource.data.note.matches('^note[0-9]{2}$')
+        && request.resource.data.r in ['fun','meh','hard']
+        && request.resource.data.text is string && request.resource.data.text.size() <= 200
+        && request.resource.data.ms is int && request.resource.data.hints is int
+        && request.resource.data.lang in ['ko','en']
+        && request.resource.data.at == request.time;
+      allow read, update, delete: if false;
+    }
+    // 히든노트 새 사건 소식(뉴스레터) 신청. 누구나 쓰기만, 읽기·수정·삭제는 콘솔에서만.
+    match /clueNewsletter/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['email','lang','at'])
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254
+        && request.resource.data.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+        && request.resource.data.lang in ['ko','en']
+        && request.resource.data.at == request.time;
+      allow read, update, delete: if false;
+    }
     match /users/{uid}/settings/identity {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
