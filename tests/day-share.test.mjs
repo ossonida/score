@@ -72,6 +72,25 @@ test('campaign co-op: today names the scenario, progress shows every play per sc
  assert.deepEqual(progress.marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','10']]);assert.equal(progress.detail,'다음 시나리오 2');assert.equal(flipped.stories.find(item=>item.title==='오늘의 시나리오').detail,'클리어');
 });
 
+test('score game: an anonymous winner is never credited to someone else, joint leaders show together, ties have no margin',()=>{
+ const anon=scored('n1','2026-10-10',10,{나:20,익명:60,이지연:30},'아줄',{});anon.players[1].anonymous=true;
+ const story=gameStory([scored('n0','2026-10-10',9,{나:50,김민수:50,이지연:40},'아줄'),anon],'2026-10-10',K('아줄'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(story.stories.find(item=>item.title==='가장 큰 점수 차'),undefined);assert.equal(story.stories.find(item=>item.title==='오늘 최고점'),undefined);
+ const tied=gameStory([scored('n2','2026-10-10',9,{나:50,김민수:50,이지연:20},'아줄')],'2026-10-10',K('아줄'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(tied.stories.find(item=>item.title==='오늘의 우승자').headline,'나, 김민수 50점');assert.equal(tied.stories.find(item=>item.title==='가장 큰 점수 차'),undefined);
+});
+
+test('campaign co-op: several scenarios in a day each get a result, levels show, branching campaigns do not guess the next number',()=>{
+ const play=(id,date,hour,scenario,result,scenarioLevel)=>({id,date,createdAt:at(date,hour),game:{name:'글룸헤이븐',bggId:''},rule:'cooperative',scenario,scenarioLevel,cooperativeResult:result,players:[{id:'a',name:'나',score:null}]});
+ const raw=[play('g0','2026-10-01',10,1,'success',1),play('g1','2026-10-10',10,3,'success',2),play('g2','2026-10-10',11,8,'failure',2)];
+ const story=gameStory(raw,'2026-10-10',K('글룸헤이븐'),profile,{locale:'ko-KR',winners:false}),today=story.stories.find(item=>item.title==='오늘의 시나리오'),progress=story.stories.find(item=>item.title==='시나리오 진행');
+ assert.deepEqual([today.headline,today.detail],['시나리오 3 · 8 · 레벨 2','3 클리어 · 8 실패']);assert.equal(progress.detail,'시나리오 8 재도전');
+ const branch=gameStory([...raw,play('g3','2026-10-12',10,8,'success',3)],'2026-10-12',K('글룸헤이븐'),profile,{locale:'ko-KR',winners:false});
+ assert.equal(branch.stories.find(item=>item.title==='시나리오 진행').detail,'시나리오 3개 클리어');assert.equal(branch.stories.find(item=>item.title==='오늘의 시나리오').headline,'시나리오 8 · 레벨 3');
+ const mixed=gameStory([play('m1','2026-10-10',10,1,'success',1),play('m2','2026-10-10',11,2,'failure',2)],'2026-10-10',K('글룸헤이븐'),profile,{locale:'ko-KR',winners:false});
+ assert.equal(mixed.stories.find(item=>item.title==='오늘의 시나리오').headline,'시나리오 1(레벨 1) · 2(레벨 2)');
+});
+
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
  const one=gameStory([scored('a','2026-10-10',10,{나:61,Chris:40,민수:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true});
  assert.equal(one.chart.kind,'table');assert.deepEqual(one.chart.rows.map(row=>[row.rank,row.name,row.text]),[[1,'나','61'],[2,'Chris','40'],[2,'민수','40']]);

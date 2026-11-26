@@ -50,6 +50,8 @@ test('day cards list MVP first and then close games within three points (one per
  assert.deepEqual({headline:cards[0].headline,detail:cards[0].detail},{headline:'하늘',detail:'3승 · 3판 중'});
  assert.deepEqual({title:cards[1].title,rows:cards[1].rows.map(row=>row.text)},{title:'오늘의 접전',rows:['아줄 2점 차 · 하늘 30 : 28 바다','카탄 2점 차 · 하늘 10 : 8 바다']});
  const one=pickDayCards(plays.filter(play=>play.id!=='a'),'2026-10-10','ko-KR')[1];assert.deepEqual({kind:one.kind,playId:one.playId,headline:one.headline,detail:one.detail},{kind:'close',playId:'b',headline:'아줄 2점 차',detail:'하늘 30 : 28 바다'});
+ // 동점은 승리가 아니라 동점·공동 1위로.
+ const tie=pickDayCards([scoredPlay('t','카탄',{하늘:12,바다:12})],'2026-10-10','ko-KR',{mask:true,show:name=>name[0]+'*'}).find(card=>card.kind==='close');assert.deepEqual({headline:tie.headline,detail:tie.detail},{headline:'카탄 동점',detail:'하* · 바* 공동 1위'});
  const three=pickDayCards([scoredPlay('x','카탄',{하늘:13,바다:10})],'2026-10-10','ko-KR');assert.deepEqual(three.map(card=>[card.kind,card.gap]),[['close',3]]);
  assert.deepEqual(pickDayCards([scoredPlay('x','카탄',{하늘:14,바다:10})],'2026-10-10','ko-KR'),[]);
  assert.match(pickDayCards(plays,'2026-10-10','en-US')[1].rows[0].text,/^아줄 by 2 points/);
