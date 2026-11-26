@@ -6,7 +6,7 @@ import {meIn,nameKey} from './personal-stats.js?v=310';
 import {firstPlays,milestones,playDays} from './stats-extras.js?v=326';
 import {gameResolver} from './game-catalog.js?v=309';
 import {GAME_TIERS,readGameTiers} from './game-tiers.js?v=2';
-import {coverSource,stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=329';
+import {coverSource,stackText,shareLanguage,localizedGameName,shareCoverUrl,loadLargeCovers,periodShareLabel,formatShareDate,roundRect,fillRound,loadImage,clippedText,drawBackground,metric,maskName,uniformSize,shareGameType,shareTypeName,SHARE_TYPES} from './stats-share.js?v=330';
 
 // 기간 결산 공유: 여러 장(표지 → 표지 격자 → Top 5 → 사람 → 달력 → 하이라이트) 또는 요약 한 장(많이 한 게임 · 나의 성적). 이미지 안 글은 모두 한 줄(줄이고 넘치면 …).
 const W=1080,H=1350,X=72,CW=936,SELF='\u0000self',FONT='system-ui, -apple-system, "Noto Sans KR", sans-serif';
