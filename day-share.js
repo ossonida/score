@@ -1,8 +1,8 @@
 import {gameKey,winnerIds,coopKind,recordMode} from './records-core.js?v=309';
 import {meIn,nameKey} from './personal-stats.js?v=310';
 import {milestones,MILESTONES} from './stats-extras.js?v=326';
-import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome} from './stats-share.js?v=327';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=357';
+import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=328';
+import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=358';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -49,7 +49,7 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
    chart={kind:'missions',title:words.missionChart,rows:[...rows.values()]};stories.push({title:words.missionTitle,headline:share.missionHeadline(day,game),detail:share.missionFacts(day,game)});}
   else if(type==='difficulty'){const rows=new Map();for(const play of plays){const row=rows.get(play.difficulty)||{label:play.difficulty,value:0,fail:0};if(play.cooperativeResult==='success')row.value++;else if(play.cooperativeResult==='failure')row.fail++;rows.set(play.difficulty,row);}chart={kind:'bars',title:words.difficultyChart,rows:[...rows.values()].slice(0,4).map(row=>({...row,text:`✓${row.value} ✕${row.fail}`}))};stories.push({title:words.coopToday,headline:words.coopRate(wins,plays.length),detail:''});}
   else if(type==='score'){const scores=plays.map(play=>play.sharedScore).filter(Number.isFinite),prior=before.map(play=>play.sharedScore).filter(Number.isFinite);if(scores.length){const top=Math.max(...scores);stories.push({title:words.sharedBest,headline:words.points(top),detail:prior.length&&top>Math.max(...prior)?words.newBest:''});}stories.push({title:words.coopToday,headline:words.coopRate(wins,plays.length),detail:''});}
-  else stories.push({title:words.scenario,headline:coopOutcome(plays.at(-1),raw,lang),detail:words.coopRate(wins,plays.length)});
+  else stories.push({title:words.scenario,headline:coopDaySummary(plays,plays.at(-1),raw,lang),detail:words.coopRate(wins,plays.length)});
  }else if(kind==='holdem'&&winners){
   const sums=new Map();let pot=null;for(const play of plays)for(const person of play.players){if(!named(person)||typeof person.score!=='number')continue;const p=who(play,person),row=sums.get(p.key)||{label:p.name,value:0};row.value+=person.score;sums.set(p.key,row);if(!pot||person.score>pot.score)pot={score:person.score,name:p.name};}
   const rows=[...sums.values()].filter(row=>row.value>0).sort((a,b)=>b.value-a.value).slice(0,3);if(rows.length)chart={kind:'bars',title:words.chipsChart,rows:rows.map(row=>({...row,text:`+${row.value.toLocaleString(lang==='ko'?'ko-KR':'en-US')}`}))};

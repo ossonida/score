@@ -202,3 +202,13 @@ test('anonymous players never show up as winners or count as people',()=>{
  const data=recentShareData([play],null,'ko-KR');
  assert.deepEqual(data.games[0].winners,[]);assert.equal(data.peopleCount,1);
 });
+
+test('several campaign plays of one game on the same day are shown in order, not only the last one',()=>{
+ const base={game:{name:'팬데믹 레거시: 시즌 1',bggId:'161936'},rule:'cooperative',players:[{id:'a',name:'하늘',score:null,isSelf:true},{id:'b',name:'바다',score:null}]};
+ const plays=[{...base,id:'c1',date:'2026-11-26',createdAt:'2026-11-26T10:00:00Z',scenario:1,cooperativeResult:'success'},{...base,id:'c2',date:'2026-11-26',createdAt:'2026-11-26T11:00:00Z',scenario:1,cooperativeResult:'failure'},{...base,id:'c3',date:'2026-11-26',createdAt:'2026-11-26T12:00:00Z',scenario:2,cooperativeResult:'success'}];
+ const data=recentShareData(plays,{},'ko');
+ assert.equal(data.games[0].mission,'시나리오 1 성공 → 실패 → 시나리오 2 성공');
+ assert.equal(data.cards.find(card=>card.kind==='coop').detail,'시나리오 1 성공 → 실패 → 시나리오 2 성공');
+ assert.equal(recentShareData(plays.slice(1,2),{},'ko').games[0].mission,'시나리오 1 실패');
+ assert.equal(recentShareData(plays,{},'en').games[0].mission,'Scenario 1 Won → Lost → Scenario 2 Won');
+});
