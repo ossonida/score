@@ -49,11 +49,12 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
    chart={kind:'missions',title:words.missionChart,rows:[...rows.values()]};stories.push({title:words.missionTitle,headline:share.missionHeadline(day,game),detail:share.missionFacts(day,game)});}
   else if(type==='difficulty'){const rows=new Map();for(const play of plays){const row=rows.get(play.difficulty)||{label:play.difficulty,value:0,fail:0};if(play.cooperativeResult==='success')row.value++;else if(play.cooperativeResult==='failure')row.fail++;rows.set(play.difficulty,row);}chart={kind:'bars',title:words.difficultyChart,rows:[...rows.values()].slice(0,4).map(row=>({...row,text:`✓${row.value} ✕${row.fail}`}))};stories.push({title:words.coopToday,headline:words.coopRate(wins,plays.length),detail:''});}
   else if(type==='score'){const scores=plays.map(play=>play.sharedScore).filter(Number.isFinite),prior=before.map(play=>play.sharedScore).filter(Number.isFinite);if(scores.length){const top=Math.max(...scores);stories.push({title:words.sharedBest,headline:words.points(top),detail:prior.length&&top>Math.max(...prior)?words.newBest:''});}stories.push({title:words.coopToday,headline:words.coopRate(wins,plays.length),detail:''});}
-  // 시나리오형(레거시 등): 오늘 한 시나리오 + 시나리오 진행(시나리오마다 클리어 ✓·미클리어 ✕ 한 칸, 다음 시나리오).
-  else if(type==='campaign'){const last=plays.at(-1),attempt=last.cooperativeResult==='success'?scenarioAttempt(raw,last):0,groups=new Map();
-   for(const play of all){if(coopKind(play)!=='campaign'||!['success','failure'].includes(play.cooperativeResult))continue;const group=groups.get(play.scenario)||{label:String(play.scenario),marks:[false]};if(play.cooperativeResult==='success')group.marks=[true];groups.set(play.scenario,group);}
-   stories.push({title:words.scenarioToday,headline:words.scenarioList([...new Set(plays.filter(play=>coopKind(play)==='campaign').map(play=>play.scenario))]),detail:last.cooperativeResult==='success'?(attempt>1?words.clearTry(attempt):words.cleared):last.cooperativeResult==='failure'?words.notCleared:''});
-   if(groups.size)stories.push({title:words.campaign,headline:words.campaignHead([...groups.values()].filter(group=>group.marks.includes(true)).length),marks:[...groups.values()],detail:last.cooperativeResult==='success'?words.nextScenario(last.scenario+1):last.cooperativeResult==='failure'?words.retryScenario(last.scenario):''});}
+  // 시나리오형(레거시 등): 오늘 한 시나리오 + 시나리오 진행(시나리오별로 판마다 실패 ✕·성공 ✓, 다음 시나리오).
+  // 깼는지는 등록 순서와 무관하게 그 시나리오에 성공이 한 번이라도 있는지로 본다.
+  else if(type==='campaign'){const last=plays.at(-1),groups=new Map(),todayWin=plays.find(play=>play.scenario===last.scenario&&play.cooperativeResult==='success'),attempt=todayWin?scenarioAttempt(raw,todayWin):0,cleared=all.some(play=>play.scenario===last.scenario&&coopKind(play)==='campaign'&&play.cooperativeResult==='success'),tried=plays.some(play=>play.scenario===last.scenario&&play.cooperativeResult==='failure');
+   for(const play of all){if(coopKind(play)!=='campaign'||!['success','failure'].includes(play.cooperativeResult))continue;const group=groups.get(play.scenario)||{label:String(play.scenario),marks:[]};group.marks.push(play.cooperativeResult==='success');groups.set(play.scenario,group);}
+   stories.push({title:words.scenarioToday,headline:words.scenarioList([...new Set(plays.filter(play=>coopKind(play)==='campaign').map(play=>play.scenario))]),detail:todayWin?(attempt>1?words.clearTry(attempt):words.cleared):tried?words.notCleared:''});
+   if(groups.size)stories.push({title:words.campaign,headline:words.campaignHead([...groups.values()].filter(group=>group.marks.includes(true)).length),marks:[...groups.values()],detail:cleared?words.nextScenario(last.scenario+1):tried||last.cooperativeResult==='failure'?words.retryScenario(last.scenario):''});}
   else stories.push({title:words.scenario,headline:coopDaySummary(plays,plays.at(-1),raw,lang),detail:words.coopRate(wins,plays.length)});
  }else if(kind==='holdem'&&winners){
   const sums=new Map();let pot=null;for(const play of plays)for(const person of play.players){if(!named(person)||typeof person.score!=='number')continue;const p=who(play,person),row=sums.get(p.key)||{label:p.name,value:0};row.value+=person.score;sums.set(p.key,row);if(!pot||person.score>pot.score)pot={score:person.score,name:p.name};}
@@ -167,7 +168,7 @@ function drawChart(ctx,chart,x,y,w,h){
 }
 // 미션 차트: 위 여백 28 + 제목 33 + 12, 아래 여백 30(Figma B-4).
 const MISSION_ROWS=8,MISSION_TOP=73,missionChartH=n=>MISSION_TOP+Math.min(4,n)*48-12+30;
-// 시나리오 진행 줄: 시나리오 번호 옆에 클리어(✓)·미클리어(✕) 칸. 폭이 모자라면 최근 시나리오부터 남긴다.
+// 시나리오 진행 줄: 시나리오 번호 옆에 판마다 실패(✕)·성공(✓) 칸. 폭이 모자라면 최근 시나리오부터 남긴다.
 function drawMarks(ctx,groups,x,base,w){const size=34,gap=6,space=18,cy=base-12,fit=[];let used=0;
  line(ctx,'',x,base,1,{size:22,min:16,weight:700});// 번호 글꼴로 폭을 잰다.
  for(const group of [...groups].reverse()){const marks=group.marks.slice(-6),width=ctx.measureText(group.label).width+10+marks.length*(size+gap)-gap;if(fit.length&&used+width+space>w)break;fit.unshift({...group,marks,width});used+=width+(fit.length>1?space:0);}

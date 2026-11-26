@@ -57,16 +57,19 @@ test('co-op missions chart each attempt, hold\'em totals show only the leaders',
  assert.deepEqual(holdem.chart.rows.map(row=>[row.label,row.text]),[['나*','+25']]);assert.equal(holdem.stories.find(item=>item.title==='한 판 최대 획득').headline,'나* +30');
 });
 
-test('campaign co-op: today names the scenario, progress shows one mark per scenario and the next one',()=>{
+test('campaign co-op: today names the scenario, progress shows every play per scenario and the next one',()=>{
  const play=(id,date,hour,scenario,result)=>({id,date,createdAt:at(date,hour),game:{name:'팬데믹 레거시',bggId:''},rule:'cooperative',scenario,cooperativeResult:result,players:[{id:'a',name:'나',score:null},{id:'b',name:'김민수',score:null}]});
  const raw=[play('p0','2026-10-01',10,1,'failure'),play('p1','2026-10-10',10,1,'failure'),play('p2','2026-10-10',11,1,'success')];
  const story=gameStory(raw,'2026-10-10',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false});
  const today=story.stories.find(item=>item.title==='오늘의 시나리오'),camp=story.stories.find(item=>item.title==='시나리오 진행');
  assert.equal(today.headline,'시나리오 1');assert.equal(today.detail,'3번째 시도에 클리어');
- assert.deepEqual(camp.marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','1']]);
+ assert.deepEqual(camp.marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','001']]);
  assert.equal(camp.headline,'시나리오 1개 클리어');assert.equal(camp.detail,'다음 시나리오 2');
  const failed=gameStory([...raw,play('p3','2026-10-12',10,2,'failure')],'2026-10-12',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false});
- assert.equal(failed.stories.find(item=>item.title==='시나리오 진행').detail,'시나리오 2 재도전');assert.equal(failed.stories.find(item=>item.title==='오늘의 시나리오').detail,'실패');assert.deepEqual(failed.stories.find(item=>item.title==='시나리오 진행').marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','1'],['2','0']]);
+ assert.equal(failed.stories.find(item=>item.title==='시나리오 진행').detail,'시나리오 2 재도전');assert.equal(failed.stories.find(item=>item.title==='오늘의 시나리오').detail,'실패');assert.deepEqual(failed.stories.find(item=>item.title==='시나리오 진행').marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','001'],['2','0']]);
+ // 성공을 먼저, 실패를 나중에 등록해도 깬 시나리오는 다음 시나리오로 안내하고 실패 칸도 보인다.
+ const flipped=gameStory([play('q1','2026-10-10',10,1,'success'),play('q2','2026-10-10',11,1,'failure')],'2026-10-10',K('팬데믹 레거시'),profile,{locale:'ko-KR',winners:false}),progress=flipped.stories.find(item=>item.title==='시나리오 진행');
+ assert.deepEqual(progress.marks.map(group=>[group.label,group.marks.map(Number).join('')]),[['1','10']]);assert.equal(progress.detail,'다음 시나리오 2');assert.equal(flipped.stories.find(item=>item.title==='오늘의 시나리오').detail,'클리어');
 });
 
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
