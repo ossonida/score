@@ -420,6 +420,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}body{min-width:0}main{m
 .mode-score-chip.down{background:#ff8a8a1a;color:#ff8a8a}
 /* 협력 캠페인 · 시나리오 레벨 0~7 한 줄 */
 .coop-level-options{flex-wrap:nowrap;gap:6px}
+.coop-level-details>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:36px;color:#aebdd1;font-size:13px;font-weight:700}
+.coop-level-details>summary::-webkit-details-marker{display:none}
+.coop-level-details>summary::after{content:"›";display:inline-block;color:#8096b4;font-size:16px;line-height:1;transform:rotate(90deg);transition:transform .15s}
+.coop-level-details[open]>summary::after{transform:rotate(-90deg)}
+.coop-level-details[open]>summary{margin-bottom:6px}
 .coop-difficulty-options.coop-level-options button{flex:1 1 0;min-width:0;padding:0}
 
 /* 설정 · 장소 관리 */
