@@ -1,8 +1,8 @@
 import {gameKey,winnerIds,coopKind,recordMode,scenarioAttempt} from './records-core.js?v=309';
 import {meIn,nameKey} from './personal-stats.js?v=310';
 import {milestones,MILESTONES} from './stats-extras.js?v=326';
-import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=333';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=362';
+import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=334';
+import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=364';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -222,8 +222,8 @@ export async function createGameSlide(story,image,page,total){
  if(story.isNew)badge('NEW',{fill:'#ffcf5c',color:'#1a1300'});for(const text of story.badges||[])badge(text);
  line(ctx,story.name,X+32,top+coverH-70,CW-64,{size:46,min:26,weight:800});line(ctx,story.todayLine,X+32,top+coverH-28,CW-64,{size:24,min:18,weight:600,color:'#cfe3ff'});
  let y=top+coverH+24;
- if(story.chart){drawChart(ctx,story.chart,X,y,CW,chartH);y+=chartH+24;const cards=story.stories.slice(0,2),h=Math.min(196,bottom-y),cw=(CW-24*(cards.length-1))/cards.length,head=uniformSize(ctx,cards.filter(item=>item.kind!=='players').map(item=>item.headline),cw-64,36,20);cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),y,cw,h,head,cards.some(other=>other.detail)?3:2));}
- else{const head=uniformSize(ctx,rows.filter(item=>item.kind!=='players').map(item=>item.headline),CW*.62,34,20);rows.forEach((item,index)=>storyRow(ctx,item,X,y+index*(rowH+14),CW,rowH,head));}
+ if(story.chart){drawChart(ctx,story.chart,X,y,CW,chartH);y+=chartH+24;const cards=story.stories.slice(0,2),h=Math.min(196,bottom-y),cw=(CW-24*(cards.length-1))/cards.length,head=36;cards.forEach((item,index)=>card(ctx,item,X+index*(cw+24),y,cw,h,head,cards.some(other=>other.detail)?3:2));}
+ else{const head=34;rows.forEach((item,index)=>storyRow(ctx,item,X,y+index*(rowH+14),CW,rowH,head));}
  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('image')),'image/png'));
 }
 

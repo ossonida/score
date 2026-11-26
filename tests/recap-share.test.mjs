@@ -36,7 +36,7 @@ test('carousel plan adds the cover wall for 9+ games and a second page for 18+',
 test('single recap summary data: my wins and best score, partner only for friends, milestone says the game total',()=>{
  const records=[play('1','2026-10-01'),play('2','2026-10-02','아줄',{players:[{id:'a',name:'나',score:12,winner:false},{id:'b',name:'김민수',score:40,winner:true}]})];
  const pub=recapData(records,month,profile,{locale:'ko'}),friends=recapData(records,month,profile,{locale:'ko',scope:'friends'});
- assert.deepEqual([pub.self.wins,pub.self.plays,pub.myBest],[1,2,{score:30,game:'카탄'}]);
+ assert.deepEqual([pub.self.wins,pub.self.plays,pub.myBest],[1,2,{score:30,game:'카탄',chips:false}]);
  assert.deepEqual(friends.partner,{name:'김민수',count:2});
  const words=recapCopy('ko');assert.equal(words.ms.game(100,'윙스팬'),'윙스팬 통산 100판째');assert.equal(words.ms.plays(200),'전체 게임 통산 200판째');
 });
@@ -101,4 +101,10 @@ test('carousel adds my game tiers page when 3+ games played in the period have a
 test('share dialog option rows stay hidden when unused (recent-records share has no people/category row)',async()=>{
  const {readFileSync}=await import('node:fs');const css=readFileSync(new URL('../records.css',import.meta.url),'utf8');
  assert.match(css,/\.recap-option\{display:grid/);assert.match(css,/\.recap-option\[hidden\]\{display:none\}/);
+});
+
+test('recap best score from a hold’em game is counted in chips',()=>{
+ const play={id:'h',date:'2026-10-05',createdAt:'2026-10-05T10:00:00Z',game:{name:'텍사스 홀덤',bggId:''},rule:'highest',players:[{id:'a',name:'나',score:120,isSelf:true},{id:'b',name:'김민수',score:-120}]};
+ const data=recapData([play],month,{primary:'나',aliases:[]},{locale:'ko-KR'});
+ assert.equal(data.myBest.chips,true);
 });
