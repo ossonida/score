@@ -27,6 +27,7 @@ test('shares hide the culprit and ending name; stats count guesses, escapes and 
  const data=recentShareData([mystery('m1',false)],null,'ko-KR');
  assert.deepEqual([data.games[0].mission,data.games[0].winners],['사건 해결 · 추리 성공 1/2명',[]]);
  assert.equal(recentShareData([mystery('m2',true)],null,'ko-KR').games[0].mission,'범인 도주');
+ assert.equal(recentShareData([mystery('m1',false),{...mystery('m2',true),createdAt:'2026-10-10T23:00:00Z'}],null,'ko-KR').games[0].mission,'해결 1 · 도주 1');
  const story=createPlay({...base,rule:'cooperative',cooperativeResult:'failure',ending:'배드엔딩',players:[{id:'a',name:'나',color:'#52c7ef',score:null}]},'s2');
  assert.equal(recentShareData([story],null,'ko-KR').games[0].mission,'실패 결말');
  const s=storyStats([mystery('m1',false),mystery('m2',true),story],null);

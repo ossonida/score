@@ -108,6 +108,26 @@ test('same game with score and co-op records on one day keeps both stories; crew
  assert.deepEqual(crew.stories.filter(item=>['같은 멤버','이번 달'].includes(item.title)).map(item=>[item.title,item.headline]),[['같은 멤버','2번째 판']]);
 });
 
+test('story co-op keeps ending names hidden; mystery counts every case; unrecorded co-op results are not failures; swapped teams show per-person wins; draws are named',()=>{
+ const base=(id,hour,extra)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'아컴 호러',bggId:''},rule:'cooperative',players:[{id:'a',name:'나',score:null}],...extra});
+ const story=gameStory([base('e0',8,{ending:'진엔딩',cooperativeResult:'success',date:'2026-10-01',createdAt:at('2026-10-01',8)}),base('e1',10,{ending:'배드엔딩',cooperativeResult:'failure'})],'2026-10-10',K('아컴 호러'),profile,{locale:'ko-KR',winners:false});
+ assert.deepEqual(story.stories.filter(item=>item.title!=='연속 기록').map(item=>[item.title,item.headline]).slice(0,2),[['오늘의 결말','실패 결말'],['지금까지 본 결말','2개']]);
+ assert.ok(!JSON.stringify(story.stories).includes('배드엔딩'));
+ const unrecorded=gameStory([{...base('u1',10,{}),game:{name:'하나비',bggId:''}}],'2026-10-10',K('하나비'),profile,{locale:'ko-KR',winners:false});
+ assert.equal(unrecorded.stories.find(item=>item.title==='오늘 협력 결과'),undefined);
+ const m=(id,hour,escaped,guesses)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'디텍티브 클럽',bggId:''},rule:'highest',players:[{id:'a',name:'나',score:null,guess:guesses[0],winner:!escaped},{id:'b',name:'김민수',score:null,culprit:true,winner:escaped},{id:'c',name:'이지연',score:null,guess:guesses[1],winner:!escaped}]});
+ const mystery=gameStory([m('m1',10,false,['right','wrong']),m('m2',11,true,['wrong','wrong'])],'2026-10-10',K('디텍티브 클럽'),profile,{locale:'ko-KR',mask:false}).stories.find(item=>item.title==='사건 결과');
+ assert.deepEqual([mystery.headline,mystery.detail],['사건 해결 1 · 범인 도주 1','추리 성공 1/4명']);
+ const team=(id,hour,red,blue,winner)=>({id,date:'2026-10-10',createdAt:at('2026-10-10',hour),game:{name:'코드네임',bggId:''},rule:'highest',players:[...red.map((name,i)=>({id:'r'+i,name,teamId:'r',teamName:'레드',score:null,winner:winner==='레드'})),...blue.map((name,i)=>({id:'b'+i,name,teamId:'b',teamName:'블루',score:null,winner:winner==='블루'}))]});
+ const swapped=gameStory([team('t1',10,['나','김민수'],['이지연','박서준'],'레드'),team('t2',11,['나','이지연'],['김민수','박서준'],'블루')],'2026-10-10',K('코드네임'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(swapped.chart.title,'오늘 우승');assert.equal(swapped.stories.some(item=>item.kind==='team'),false);assert.ok(swapped.stories.some(item=>item.kind==='players'));
+ const fixed=gameStory([team('f1',10,['나','김민수'],['이지연','박서준'],'레드'),team('f2',11,['나','김민수'],['이지연','박서준'],'블루')],'2026-10-10',K('코드네임'),profile,{locale:'ko-KR',mask:false});
+ assert.deepEqual(fixed.stories.filter(item=>item.kind==='team').map(item=>item.headline),['나, 김민수','이지연, 박서준']);
+ const drawn={id:'d1',date:'2026-10-10',createdAt:at('2026-10-10',10),game:{name:'체스',bggId:''},rule:'highest',players:[{id:'a',name:'나',score:null,draw:true},{id:'b',name:'김민수',score:null,draw:true}]};
+ const chess=gameStory([drawn,won('d2','2026-10-10',11,['나','김민수'],'나','체스')],'2026-10-10',K('체스'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(chess.stories.find(item=>item.title==='무승부').headline,'2판 중 1판 무승부');
+});
+
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
  const one=gameStory([scored('a','2026-10-10',10,{나:61,Chris:40,민수:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true});
  assert.equal(one.chart.kind,'table');assert.deepEqual(one.chart.rows.map(row=>[row.rank,row.name,row.text]),[[1,'나','61'],[2,'Chris','40'],[2,'민수','40']]);

@@ -4,8 +4,8 @@ import {overviewStats,latestPlayDate,typeLabels,attendanceCount} from './stats-o
 import {readIdentity,meIn} from './personal-stats.js?v=310';
 import {renderGameArtwork} from './game-artwork.js?v=312';
 import {metadata,gameNames} from './bgg-metadata.js?v=309';
-import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=331';
-import {openDayShare} from './day-share.js?v=361';
+import {formatRecentRecordTitle,coopOutcome} from './stats-share.js?v=332';
+import {openDayShare} from './day-share.js?v=362';
 import {milestones,milestoneTitle,milestoneDetail,gameLeaderboard} from './stats-extras.js?v=326';
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 const num=n=>n===null?'—':n.toLocaleString('ko-KR');
