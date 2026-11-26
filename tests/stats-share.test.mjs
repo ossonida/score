@@ -142,8 +142,8 @@ test('co-op plays add a co-op card after MVP and close game, up to three cards i
  const two=recentShareData([mission,coop('p','판데믹','failure'),coop('q','판데믹','success')],null,'ko-KR').cards.find(card=>card.kind==='coop');
  assert.equal(two.headline,'협력 게임 2개');assert.equal(two.detail,'전지적 추리시점 미션 4개 클리어 · 판데믹 2판 중 1번 성공');const plain=recentShareData([coop('p','판데믹','failure')],null,'ko-KR');assert.equal(plain.cards.find(card=>card.kind==='coop').detail,'실패');assert.equal(plain.games[0].mission,'실패');
  const kinds=recentShareData([coop('s','하나비','success',{sharedScore:21}),coop('d','판데믹','success',{difficulty:'영웅'}),coop('c1','글룸헤이븐','failure',{scenario:3,date:'2026-10-09'}),coop('c2','글룸헤이븐','success',{scenario:3})],null,'ko-KR');
- assert.deepEqual(kinds.games.map(game=>game.mission),['성공 · 21점','영웅 난이도 성공','시나리오 3 성공 (2번째 시도)']);
- assert.equal(kinds.cards.find(card=>card.kind==='coop').detail,'하나비 성공 · 21점 · 판데믹 영웅 난이도 성공 · 글룸헤이븐 시나리오 3 성공 (2번째 시도)');
+ assert.deepEqual(kinds.games.map(game=>game.mission),['성공 · 21점','영웅 난이도 성공','시나리오 3 클리어 (2번째 시도)']);
+ assert.equal(kinds.cards.find(card=>card.kind==='coop').detail,'하나비 성공 · 21점 · 판데믹 영웅 난이도 성공 · 글룸헤이븐 시나리오 3 클리어 (2번째 시도)');
  assert.equal(shareCoverLayout(12,3).cards.length,3);assert.deepEqual(shareCoverLayout(12,3).others,{x:660,y:1034,w:348,h:251});
  assert.equal(shareCoverLayout(8,3).cards.length,3);{const five=shareCoverLayout(5,3);assert.equal(five.cards.length,3);assert.deepEqual([five.cards[2].x,five.cards[2].w,five.cards[2].y-five.cards[0].y],[72,936,214]);}
 });
@@ -209,8 +209,8 @@ test('several campaign plays of one game on the same day are shown in order, not
  const base={game:{name:'팬데믹 레거시: 시즌 1',bggId:'161936'},rule:'cooperative',players:[{id:'a',name:'하늘',score:null,isSelf:true},{id:'b',name:'바다',score:null}]};
  const plays=[{...base,id:'c1',date:'2026-11-26',createdAt:'2026-11-26T10:00:00Z',scenario:1,cooperativeResult:'success'},{...base,id:'c2',date:'2026-11-26',createdAt:'2026-11-26T11:00:00Z',scenario:1,cooperativeResult:'failure'},{...base,id:'c3',date:'2026-11-26',createdAt:'2026-11-26T12:00:00Z',scenario:2,cooperativeResult:'success'}];
  const data=recentShareData(plays,{},'ko');
- assert.equal(data.games[0].mission,'시나리오 1 성공 → 실패 → 시나리오 2 성공');
- assert.equal(data.cards.find(card=>card.kind==='coop').detail,'시나리오 1 성공 → 실패 → 시나리오 2 성공');
+ assert.equal(data.games[0].mission,'시나리오 1 클리어 → 실패 → 시나리오 2 클리어');
+ assert.equal(data.cards.find(card=>card.kind==='coop').detail,'시나리오 1 클리어 → 실패 → 시나리오 2 클리어');
  assert.equal(recentShareData(plays.slice(1,2),{},'ko').games[0].mission,'시나리오 1 실패');
- assert.equal(recentShareData(plays,{},'en').games[0].mission,'Scenario 1 Won → Lost → Scenario 2 Won');
+ assert.equal(recentShareData(plays,{},'en').games[0].mission,'Scenario 1 Cleared → Lost → Scenario 2 Cleared');
 });

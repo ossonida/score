@@ -1,7 +1,7 @@
 import {gameKey,winnerIds,coopKind,recordMode,scenarioAttempt} from './records-core.js?v=309';
 import {meIn,nameKey} from './personal-stats.js?v=310';
 import {milestones,MILESTONES} from './stats-extras.js?v=326';
-import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=330';
+import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=331';
 import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card,uniformSize} from './recap-share.js?v=360';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
@@ -14,13 +14,13 @@ const COPY={
   topScore:'오늘 최고점',personalBest:'개인 최고점 갱신',before:n=>`이전 ${n}`,blowout:'가장 큰 점수 차',wonBy:n=>`${n}점 차`,closest:'가장 적은 점수 차',gap:n=>`${n}점 차`,usual:'평균 우승 점수 대비',usualHead:d=>`${d>0?'+':''}${d}점`,usualDetail:(a,b)=>`평균 ${a}점 → 오늘 ${b}점`,
   streak:'연승',streakHead:(who,n)=>`${who} ${n}연승`,leader:'통산 최다 우승',winsChart:'오늘 우승',teamWins:'팀별 승리',teamWon:'승리',sidesChart:'진영별 승리',roleMost:side=>`${side} 역할 최다`,roleTimes:n=>`${n}번`,liar:'최고의 블러퍼',liarDetail:(side,n)=>`${side} ${n}승`,
   missionChart:'미션별 도전',missionTitle:'오늘의 미션',difficultyChart:'난이도별 결과',difficultyResult:(d,r)=>`${/^[0-9]/.test(d)?`난이도 ${d}`:d} ${r==='success'?'성공':r==='failure'?'실패':'결과 미입력'}`,bestDifficulty:n=>`최고 난이도 ${n} 클리어`,coopToday:'오늘 협력 결과',coopRate:(w,n)=>`${n}판 중 ${w}번 성공`,sharedBest:'최고 공동 점수',newBest:'최고 기록 갱신',scenario:'시나리오',scenarioToday:'오늘의 시나리오',campaign:'시나리오 진행',scenarioList:list=>`시나리오 ${list.join(' · ')}`,campaignHead:n=>`시나리오 ${n}개 클리어`,clearTry:n=>`${n}번째 시도에 클리어`,cleared:'클리어',notCleared:'실패',level:n=>`레벨 ${n}`,scenarioResults:list=>list.map(([n,ok])=>`${n} ${ok?'클리어':'실패'}`).join(' · '),nextScenario:n=>`다음 시나리오 ${n}`,retryScenario:n=>`시나리오 ${n} 재도전`,
-  caseTitle:'사건 결과',solved:'사건 해결',escaped:'범인 도주',guessed:(n,total)=>`추리 성공 ${n}/${total}명`,chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',more:n=>`외 ${n}개`},
+  caseTitle:'사건 결과',solved:'사건 해결',escaped:'범인 도주',guessed:(n,total)=>`추리 성공 ${n}/${total}명`,chipsChart:'오늘 칩 합계',results:'오늘 결과',gameN:n=>`${n}판`,sideWon:side=>`${side} 승`,morePlays:n=>`외 ${n}판`,bigHand:'한 판 최대 획득',todayTitle:'오늘의 플레이',moreGames:n=>`외 ${n}게임은 첫 장에`,more:n=>`외 ${n}개`},
  en:{me:'Me',today:(n,total)=>`${plural(n,'play','plays')} today · ${total} all-time`,points:n=>`${n.toLocaleString('en-US')} pts`,playsN:n=>plural(n,'play','plays'),winsN:n=>plural(n,'win','wins'),
   revenge:'Last match-up',revengeHead:'Won this time',versus:who=>`vs ${who}`,h2h:'Head to head',h2hHead:(a,x,y,b)=>`${a} ${x} : ${y} ${b}`,form:'Recent results',formHead:(w,n)=>`${w} wins in last ${n}`,goal:'Next milestone',goalHead:(g,n,left)=>`${left} more to ${n} ${g} plays`,totalGoal:(n,left)=>`${left} more to ${n} total plays`,steady:'Streak',weeksHead:n=>`${n} weeks in a row`,weekHead:n=>`Play day #${n} this week`,crew:'Same players',crewHead:n=>`Game #${n}`,month:'This month',monthHead:n=>`Game #${n}`,favorite:'Play rank',favoriteHead:n=>`#${n} all-time`,players:'Players',winner:"Today's winner",milestone:'Milestone',gamePlay:(game,n)=>`${game} play #${n}`,
   topScore:"Today's top score",personalBest:'New personal best',before:n=>`Before: ${n}`,blowout:'Biggest win',wonBy:n=>`Won by ${n}`,closest:'Smallest margin',gap:n=>plural(n,'point','points'),usual:'vs. average winning score',usualHead:d=>`Winning score ${d>0?'+':''}${d}`,usualDetail:(a,b)=>`Avg ${a} → ${b}`,
   streak:'Win streak',streakHead:(who,n)=>`${who} · ${n} in a row`,leader:'Most wins overall',winsChart:'Wins today',teamWins:'Team wins',teamWon:'Won',sidesChart:'Wins by side',roleMost:side=>`Most often ${side}`,roleTimes:n=>plural(n,'time','times'),liar:'Best bluffer',liarDetail:(side,n)=>`${plural(n,'win','wins')} as ${side}`,
   missionChart:'Missions today',missionTitle:"Today's missions",difficultyChart:'By difficulty',difficultyResult:(d,r)=>`${/^[0-9]/.test(d)?`Level ${d}`:d} · ${r==='success'?'Won':r==='failure'?'Lost':'No result'}`,bestDifficulty:n=>`Best: level ${n} cleared`,coopToday:'Co-op today',coopRate:(w,n)=>`${w} of ${n} won`,sharedBest:'Best team score',newBest:'New best',scenario:'Scenario',scenarioToday:"Today's scenario",campaign:'Scenario progress',scenarioList:list=>`Scenario ${list.join(' · ')}`,campaignHead:n=>`${plural(n,'scenario','scenarios')} cleared`,clearTry:n=>`Cleared on try ${n}`,cleared:'Cleared',notCleared:'Lost',level:n=>`Lv ${n}`,scenarioResults:list=>list.map(([n,ok])=>`${n} ${ok?'cleared':'lost'}`).join(' · '),nextScenario:n=>`Next: Scenario ${n}`,retryScenario:n=>`Retry Scenario ${n}`,
-  caseTitle:'The case',solved:'Case solved',escaped:'Culprit escaped',guessed:(n,total)=>`${n}/${total} guessed right`,chipsChart:'Chip totals today',results:"Today's results",gameN:n=>`Game ${n}`,sideWon:side=>`${side} won`,morePlays:n=>`+${n} more`,bigHand:'Biggest pot',todayTitle:"Today's play",more:n=>`+${n} more`},
+  caseTitle:'The case',solved:'Case solved',escaped:'Culprit escaped',guessed:(n,total)=>`${n}/${total} guessed right`,chipsChart:'Chip totals today',results:"Today's results",gameN:n=>`Game ${n}`,sideWon:side=>`${side} won`,morePlays:n=>`+${n} more`,bigHand:'Biggest pot',todayTitle:"Today's play",moreGames:n=>`+${n} more on page 1`,more:n=>`+${n} more`},
 };
 const byTime=(a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||''));
 const HIDDEN=/마피아|스파이|악|mafia|spy|evil|werewolf|늑대/i,HOLDEM=/홀덤|hold[’']?em/i;
@@ -40,9 +40,9 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
  stories.push(...personalStories(all,plays,words,who,named,profile,{mask,winners}));
  // 공통: 이 게임 달성 기록.
  const mark=milestones(raw,{start:date,end:date}).filter(item=>item.kind==='game'&&gameKey(item.play.game)===key).at(-1);if(mark)stories.push({title:words.milestone,headline:words.gamePlay(name,mark.count),detail:formatShareDate(date,lang)});
- const kind=plays[0].rule==='cooperative'?'coop':plays.some(play=>play.players.some(person=>person.culprit===true))?'mystery':HOLDEM.test(String(game.name||''))?'holdem':plays.some(play=>play.players.some(person=>person.teamId))?(plays.some(play=>play.players.some(person=>HIDDEN.test(String(person.teamName||''))))?'role':'team'):['highest','lowest'].includes(recordMode(plays[0]))?'score':'win';
- if(kind==='mystery'){const last=plays.at(-1),culprits=last.players.filter(person=>person.culprit===true),others=last.players.filter(person=>person.culprit!==true&&named(person)),escaped=culprits.length>0&&culprits.every(person=>person.winner===true);stories.push({title:words.caseTitle,headline:escaped?words.escaped:words.solved,detail:words.guessed(others.filter(person=>person.guess==='right').length,others.length)});}
- else if(kind==='coop'){
+ // 같은 게임에 점수·승패 기록과 협력 기록이 섞인 날: 방식 이야기는 경쟁 판으로 정하고, 협력 판 이야기는 뒤에 따로 붙인다.
+ const allToday=plays,comp=plays.filter(play=>play.rule!=='cooperative'),coopPlays=plays.filter(play=>play.rule==='cooperative'),mixed=comp.length>0&&coopPlays.length>0;
+ const coopBlock=plays=>{
   const wins=plays.filter(play=>play.cooperativeResult==='success').length,type=coopKind(plays.at(-1));
   if(type==='mission'){const attempts=plays.flatMap(play=>play.missionAttempts||[]),prior=before.flatMap(play=>play.missionAttempts||[]),best=before.some(play=>Array.isArray(play.missionAttempts))?Math.max(0,...prior.filter(item=>item.result==='success').map(item=>item.mission)):null,day=missionDay(attempts,best),rows=new Map();
    for(const attempt of attempts){const row=rows.get(attempt.mission)||{label:lang==='ko'?`미션 ${attempt.mission}`:`Mission ${attempt.mission}`,mission:attempt.mission,marks:[]};row.marks.push(attempt.result==='success');rows.set(attempt.mission,row);}
@@ -66,7 +66,12 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
    const clearedAll=[...groups.values()].filter(group=>group.marks.includes(true)).length,numbers=[...groups.keys()].sort((a,b)=>a-b),straight=numbers.every((n,index)=>n===index+1),cleared=all.some(play=>play.scenario===last.scenario&&coopKind(play)==='campaign'&&play.cooperativeResult==='success');
    if(groups.size)stories.push({title:words.campaign,headline:words.campaignHead(clearedAll),marks:[...groups.values()],detail:cleared?(straight&&last.scenario===numbers.at(-1)?words.nextScenario(last.scenario+1):words.campaignHead(clearedAll)):all.some(play=>play.scenario===last.scenario&&coopKind(play)==='campaign'&&play.cooperativeResult==='failure')?words.retryScenario(last.scenario):''});}
   else stories.push({title:words.scenario,headline:coopDaySummary(plays,plays.at(-1),raw,lang),detail:words.coopRate(wins,plays.length)});
- }else if(kind==='holdem'&&winners){
+ };
+ const kind=!comp.length?'coop':comp.some(play=>play.players.some(person=>person.culprit===true))?'mystery':HOLDEM.test(String(game.name||''))?'holdem':comp.some(play=>play.players.some(person=>person.teamId))?(comp.some(play=>play.players.some(person=>HIDDEN.test(String(person.teamName||''))))?'role':'team'):['highest','lowest'].includes(recordMode(comp[0]))?'score':'win';
+ {const plays=mixed?comp:allToday;
+ if(kind==='mystery'){const last=plays.at(-1),culprits=last.players.filter(person=>person.culprit===true),others=last.players.filter(person=>person.culprit!==true&&named(person)),escaped=culprits.length>0&&culprits.every(person=>person.winner===true);stories.push({title:words.caseTitle,headline:escaped?words.escaped:words.solved,detail:words.guessed(others.filter(person=>person.guess==='right').length,others.length)});}
+ else if(kind==='coop')coopBlock(plays);
+ else if(kind==='holdem'&&winners){
   const sums=new Map();let pot=null;for(const play of plays)for(const person of play.players){if(!named(person)||typeof person.score!=='number')continue;const p=who(play,person),row=sums.get(p.key)||{label:p.name,value:0};row.value+=person.score;sums.set(p.key,row);if(!pot||person.score>pot.score)pot={score:person.score,name:p.name};}
   const rows=[...sums.values()].filter(row=>row.value>0).sort((a,b)=>b.value-a.value).slice(0,3);if(rows.length)chart={kind:'bars',title:words.chipsChart,rows:rows.map(row=>({...row,text:`+${row.value.toLocaleString(lang==='ko'?'ko-KR':'en-US')}`}))};
   if(pot&&pot.score>0)stories.push({title:words.bigHand,headline:`${pot.name} +${pot.score.toLocaleString(lang==='ko'?'ko-KR':'en-US')}`,detail:''});
@@ -110,8 +115,10 @@ export function gameStory(raw,date,key,profile,{locale,mask=true,winners=true,fu
   const leader=list=>{const rows=new Map();for(const play of list)for(const id of winnerIds(play)){const p=play.players.find(item=>item.id===id);if(!p||!named(p))continue;const k=who(play,p),row=rows.get(k.key)||{...k,wins:0};row.wins++;rows.set(k.key,row);}const sorted=[...rows.values()].sort((a,b)=>b.wins-a.wins);return sorted[0]&&(!sorted[1]||sorted[0].wins>sorted[1].wins)?sorted[0]:null;};
   const was=leader(before),now=leader(all);if(was&&now&&was.key!==now.key)stories.push({title:words.leader,headline:now.name,detail:words.winsN(now.wins)});
  }
+ }
+ if(mixed)coopBlock(coopPlays);
  stories.push(...progressStories(all,name,words,profile,winners),...contextStories(raw,all,before,plays,date,key,words,who,named,lang).filter(story=>!(kind==='team'&&story.kind==='players')));
- if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(plays,kind,words,who,named,lang);if(results){chart=results;for(let index=stories.length-1;index>=0;index--)if(stories[index].kind==='players')stories.splice(index,1);}}
+ if(full&&winners&&!mask&&kind!=='coop'){const results=resultsChart(comp.length?comp:plays,kind,words,who,named,lang);if(results){chart=results;for(let index=stories.length-1;index>=0;index--)if(stories[index].kind==='players')stories.splice(index,1);}}
  if(!stories.length)stories.push({title:words.todayTitle,headline:words.playsN(plays.length),detail:formatShareDate(date,lang)});
  return {key,game,name,imageUrl:shareCoverUrl(game),isNew:!before.length,today:plays.length,total:all.length,todayLine:words.today(plays.length,all.length),chart,stories};
 }
@@ -147,12 +154,12 @@ export function dayStories(raw,date,{locale}={}){
  const total=raw.filter(play=>play.date&&play.date<=date).length,next=[...MILESTONES.plays,...Array.from({length:20},(_,i)=>1500+i*500)].find(count=>count>total);if(next&&next-total<=5)out.push({title:words.goal,headline:words.totalGoal(next,next-total),detail:''});
  return out;
 }
-// 승부와 무관한 이야기: 참여자(먼저, 4줄 제한에 밀리지 않게) · 이 멤버로 N번째 · 이번 달 N번째 · 많이 한 게임 N위. ('N일 만에 플레이'는 두지 않는다.)
+// 승부와 무관한 이야기: 참여자(먼저, 4줄 제한에 밀리지 않게) · 이 멤버로 N번째 · 이번 달 N번째 · 많이 한 게임 N위. 통산 판 수와 같은 숫자는 표지 아래 '통산 N판'과 겹치므로 생략. ('N일 만에 플레이'는 두지 않는다.)
 function contextStories(raw,all,before,plays,date,key,words,who,named,lang){
  const out=[];
  const crewKey=play=>play.players.filter(named).map(person=>who(play,person).key).sort().join('\u0001'),crew=crewKey(plays.at(-1));
- if(crew&&before.some(play=>crewKey(play)===crew)){const count=all.filter(play=>crewKey(play)===crew).length;out.push({title:words.crew,headline:words.crewHead(count),detail:''});}
- const month=date.slice(0,7);if(before.some(play=>play.date.startsWith(month))){const count=all.filter(play=>play.date.startsWith(month)).length;if(count>=3)out.push({title:words.month,headline:words.monthHead(count),detail:''});}
+ if(crew&&before.some(play=>crewKey(play)===crew)){const count=all.filter(play=>crewKey(play)===crew).length;if(count<all.length)out.push({title:words.crew,headline:words.crewHead(count),detail:''});}
+ const month=date.slice(0,7);if(before.some(play=>play.date.startsWith(month))){const count=all.filter(play=>play.date.startsWith(month)).length;if(count>=3&&count<all.length)out.push({title:words.month,headline:words.monthHead(count),detail:''});}
  if(all.length>=5){const counts=new Map();for(const play of raw)if(play.date&&play.date<=date){const k=gameKey(play.game);counts.set(k,(counts.get(k)||0)+1);}const rank=[...counts.values()].filter(count=>count>all.length).length+1;if(rank<=5)out.push({title:words.favorite,headline:words.favoriteHead(rank),detail:words.playsN(all.length)});}
  const people=new Map();for(const play of plays)for(const person of play.players.filter(named)){const p=who(play,person);if(!people.has(p.key))people.set(p.key,p.name);}if(people.size>=2)out.unshift({kind:'players',title:words.players,headline:[...people.values()].join(', '),detail:''});
  return out;
@@ -173,12 +180,12 @@ function resultsChart(plays,kind,words,who,named,lang){
 // 게임 장 한 장: 표지(이름·오늘/통산) → 차트(있으면) → 이야기 카드 2장, 차트가 없으면 이야기 카드를 세로로 최대 4장.
 function drawChart(ctx,chart,x,y,w,h){
  box(ctx,x,y,w,h);line(ctx,chart.title,x+32,y+50,w-64,{size:26,weight:600,color:'#9fc8f7'});
- if(chart.kind==='table'){const rowH=(h-96)/chart.rows.length;chart.rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2+10;line(ctx,String(row.rank),x+52,cy,60,{size:30,weight:800,color:row.rank===1?'#5fe0d0':'#82bfff',align:'center'});line(ctx,row.name,x+100,cy,w-330,{size:30,min:16,weight:800});if(row.text)line(ctx,row.text,x+w-32,cy,190,{size:30,min:16,weight:800,align:'right'});});return;}
+ if(chart.kind==='table'){const rowH=(h-96)/chart.rows.length;chart.rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2+10;line(ctx,String(row.rank),x+52,cy,60,{size:30,weight:800,color:row.rank===1?'#5fe0d0':'#82bfff',align:'center'});line(ctx,row.name,x+100,cy,w-330,{size:30,min:22,weight:800});if(row.text)line(ctx,row.text,x+w-32,cy,190,{size:30,min:16,weight:800,align:'right'});});return;}
  if(chart.kind==='plays'){const rowH=(h-96)/(chart.rows.length+(chart.more?1:0));chart.rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2+10;line(ctx,row.label,x+32,cy,110,{size:24,weight:700,color:'#9fc8f7'});line(ctx,row.text,x+150,cy,w-182,{size:26,min:15,weight:700});});if(chart.more)line(ctx,chart.more,x+32,y+80+chart.rows.length*rowH+rowH/2+10,w-64,{size:22,weight:600,color:'#9fc8f7'});return;}
  // 최근 미션 8개까지. 5개 이상이면 두 열(왼쪽 열을 위에서부터 4줄 채운 뒤 오른쪽 열). 크기는 Figma 'Share/Mission Row'(줄 36·간격 12, 이름 110, 칸 36·간격 8) 기준.
  if(chart.kind==='missions'){const rows=chart.rows.slice(-MISSION_ROWS),cols=rows.length>4?2:1,colW=(w-68)/cols,labelW=126,size=36,fit=Math.max(1,Math.floor((colW-labelW+8)/(size+8)));rows.forEach((row,index)=>{const left=x+34+Math.floor(index/4)*colW,cy=y+MISSION_TOP+(index%4)*(size+12)+size/2;line(ctx,row.label,left,cy+7,labelW-16,{size:20,min:14,weight:600});row.marks.slice(-Math.min(10,fit)).forEach((ok,k)=>{const mx=left+labelW+k*(size+8);fillRound(ctx,mx,cy-size/2,size,size,8,ok?'#3fcf9a':'#d9566a');line(ctx,ok?'✓':'✕',mx+size/2,cy+9,size,{size:24,min:12,weight:800,align:'center'});});});return;}
  const rows=chart.rows.slice(0,4),max=Math.max(1,...rows.map(row=>row.value)),rowH=(h-96)/Math.max(rows.length,1),labelW=180,textW=150;
- rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2;line(ctx,row.label,x+32,cy+10,labelW-16,{size:28,min:16,weight:800});const barW=(w-64-labelW-textW)*row.value/max;fillRound(ctx,x+32+labelW,cy-12,Math.max(barW,8),24,12,index===0?'#5fe0d0':'#4fa3ff');line(ctx,row.text,x+w-32,cy+10,textW-12,{size:26,min:14,weight:700,align:'right'});});
+ rows.forEach((row,index)=>{const cy=y+80+index*rowH+rowH/2;line(ctx,row.label,x+32,cy+10,labelW-16,{size:28,min:22,weight:800});const barW=(w-64-labelW-textW)*row.value/max;fillRound(ctx,x+32+labelW,cy-12,Math.max(barW,8),24,12,index===0?'#5fe0d0':'#4fa3ff');line(ctx,row.text,x+w-32,cy+10,textW-12,{size:26,min:14,weight:700,align:'right'});});
 }
 // 미션 차트: 위 여백 28 + 제목 33 + 12, 아래 여백 30(Figma B-4).
 const MISSION_ROWS=8,MISSION_TOP=73,missionChartH=n=>MISSION_TOP+Math.min(4,n)*48-12+30;
@@ -214,6 +221,8 @@ export function openDayShare(records,profile,{raw=records}={}){
   if(light&&stories.length){stories[0]={...stories[0],badges:dayStories(raw,data.date,{locale:state.lang}).map(item=>item.headline)};const blobs=[];for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+1,stories.length+1));
    // 이번 달 결산은 이번 달에 플레이한 날이 2일 이상일 때만(그날뿐이면 같은 내용이 반복된다).
    const start=data.date.slice(0,8)+'01',monthDays=new Set(records.filter(play=>play.date>=start&&play.date<=data.date).map(play=>play.date));if(monthDays.size>=2){const month=recapData(records,{preset:'month',current:{start,end:data.date},previous:null},profile,{locale:state.lang,scope:state.scope});blobs.push(await createRecapSingle(month));}return {blobs,title:data.title};}
+  // 게임 장은 첫 장 포함 10장까지(9게임). 넘친 게임은 마지막 게임 장 배지로 알린다.
+  const extra=data.games.length-stories.length;if(extra>0&&stories.length)stories[stories.length-1]={...stories.at(-1),badges:[COPY[shareLanguage(state.lang)].moreGames(extra)]};
   const blobs=[first];for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+2,stories.length+1));
   return {blobs,title:data.title};}});
 }

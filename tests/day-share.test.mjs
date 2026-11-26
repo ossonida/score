@@ -16,7 +16,7 @@ test('score game: personal best, blowout, win chart and players, no smallest-mar
   scored('t1','2026-10-10',10,{나:60,김민수:40}),scored('t2','2026-10-10',11,{나:30,김민수:31})];
  const story=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR'});
  assert.equal(story.todayLine,'오늘 2판 · 통산 5판');
- assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','평균 우승 점수 대비','최근 성적','참여자','같은 멤버','이번 달','플레이 순위']);
+ assert.deepEqual(titles(story),['개인 최고점 갱신','가장 큰 점수 차','평균 우승 점수 대비','최근 성적','참여자','플레이 순위']);
  assert.deepEqual(story.stories[0],{title:'개인 최고점 갱신',headline:'나* 60점',detail:'이전 42'});
  assert.deepEqual(story.stories.find(item=>item.kind==='players'),{kind:'players',title:'참여자',headline:'나*, 김**',detail:''});
  assert.deepEqual(story.chart.rows.map(row=>[row.label,row.value]),[['나*',1],['김**',1]]);
@@ -25,7 +25,7 @@ test('score game: personal best, blowout, win chart and players, no smallest-mar
  assert.deepEqual(single.stories[0],{title:'오늘의 우승자',headline:'김** 52점',detail:''});
  assert.deepEqual(titles(gameStory([scored('s1','2026-10-10',10,{나:40,김민수:52})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false,full:true})),['오늘의 우승자','가장 큰 점수 차'],'the ranking table already lists the players');
  const quiet=gameStory(raw,'2026-10-10',K('카탄'),profile,{locale:'ko-KR',winners:false});
- assert.equal(quiet.chart,null);assert.deepEqual(quiet.stories.map(item=>[item.title,item.headline]),[['참여자','나*, 김**'],['같은 멤버','5번째 판'],['이번 달','5번째 판'],['플레이 순위','1위']]);
+ assert.equal(quiet.chart,null);assert.deepEqual(quiet.stories.map(item=>[item.title,item.headline]),[['참여자','나*, 김**'],['플레이 순위','1위']]);
 });
 
 test('first play and streak and new all-time leader for win/lose games',()=>{
@@ -98,6 +98,14 @@ test('difficulty co-op: each difficulty gets a mark per play, one play reads as 
  const many=gameStory([play('d1',10,'3','failure'),play('d2',11,'3','success'),play('d3',12,'4','failure')],'2026-10-10',K('스피릿 아일랜드'),profile,{locale:'ko-KR',winners:false}),today=many.stories.find(item=>item.title==='오늘 협력 결과');
  assert.deepEqual(many.chart.rows.map(row=>[row.label,row.marks.map(Number).join('')]),[['3','01'],['4','0']]);assert.deepEqual([today.headline,today.detail],['3판 중 1번 성공','최고 난이도 3 클리어']);
  assert.equal(gameStory([play('h1',10,'영웅','success')],'2026-10-10',K('스피릿 아일랜드'),profile,{locale:'ko-KR',winners:false}).stories.find(item=>item.title==='오늘 협력 결과').headline,'영웅 성공');
+});
+
+test('same game with score and co-op records on one day keeps both stories; crew and month counts equal to the total are left out',()=>{
+ const coop={id:'c1',date:'2026-10-10',createdAt:at('2026-10-10',12),game:{name:'카탄',bggId:''},rule:'cooperative',scenario:2,cooperativeResult:'success',players:[{id:'a',name:'나',score:null},{id:'b',name:'김민수',score:null}]};
+ const story=gameStory([scored('s1','2026-10-10',10,{나:60,김민수:40}),coop],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
+ assert.equal(story.stories.find(item=>item.title==='오늘의 우승자').headline,'나 60점');assert.equal(story.stories.find(item=>item.title==='오늘의 시나리오').headline,'시나리오 2');
+ const crew=gameStory([scored('o1','2026-10-01',10,{나:40,김민수:30}),scored('o2','2026-10-02',10,{나:42,김민수:35,이지연:1}),scored('t1','2026-10-10',10,{나:60,김민수:40})],'2026-10-10',K('카탄'),profile,{locale:'ko-KR',mask:false});
+ assert.deepEqual(crew.stories.filter(item=>['같은 멤버','이번 달'].includes(item.title)).map(item=>[item.title,item.headline]),[['같은 멤버','2번째 판']]);
 });
 
 test('full rankings: one play shows the ranking table, several plays one line each, teams show the winning side',()=>{
