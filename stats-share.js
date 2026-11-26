@@ -241,9 +241,11 @@ function dayCard(ctx,card,{x,y,w,h},head=38,lines=card.detail?3:2){
 }
 function winnersCard(ctx,card,words,{x,y,w,h},columns){
  fillRound(ctx,x,y,w,h,28,'rgba(255,255,255,.10)');ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillStyle='#9fc8f7';ctx.font='600 25px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(clippedText(ctx,card.title,w-68),x+34,y+46);
- const lineH=38,perColumn=Math.max(1,Math.floor((h-74)/lineH)),capacity=perColumn*columns,rows=card.rows.length>capacity?card.rows.slice(0,capacity-1):card.rows,colW=(w-68-(columns-1)*24)/columns;
+ const lineH=38,perColumn=Math.max(1,Math.floor((h-74)/lineH));columns=Math.max(1,Math.min(columns,Math.ceil(card.rows.length/perColumn)));const capacity=perColumn*columns,rows=card.rows.length>capacity?card.rows.slice(0,capacity-1):card.rows,colW=(w-68-(columns-1)*24)/columns;
  const at=index=>({cx:x+34+Math.floor(index/perColumn)*(colW+24),cy:y+92+index%perColumn*lineH});
- rows.forEach((row,index)=>{const {cx,cy}=at(index),text=row.text||`${row.game} · 🏆 ${row.winners.join(', ')}`;ctx.fillStyle='#fff';fitText(ctx,text,colW,26,20);ctx.fillText(clippedText(ctx,text,colW),cx,cy);});
+ rows.forEach((row,index)=>{const {cx,cy}=at(index);ctx.fillStyle='#fff';if(row.text){fitText(ctx,row.text,colW,26,20);ctx.fillText(clippedText(ctx,row.text,colW),cx,cy);return;}
+ // 칸이 좁으면 우승자를 남기고 게임명을 먼저 줄입니다(게임명은 최소 40%).
+ const suffix=` · 🏆 ${row.winners.join(', ')}`,text=row.game+suffix;fitText(ctx,text,colW,26,20);if(ctx.measureText(text).width<=colW){ctx.fillText(text,cx,cy);return;}const tail=Math.min(ctx.measureText(suffix).width,colW*.6),game=clippedText(ctx,row.game,colW-tail),gameW=ctx.measureText(game).width;ctx.fillText(game,cx,cy);ctx.fillText(clippedText(ctx,suffix,colW-gameW),cx+gameW,cy);});
  if(rows.length<card.rows.length){const {cx,cy}=at(rows.length);ctx.fillStyle='#9fc8f7';ctx.font='600 22px system-ui, -apple-system, "Noto Sans KR", sans-serif';ctx.fillText(words.moreGames(card.rows.length-rows.length),cx,cy);}
 }
 
