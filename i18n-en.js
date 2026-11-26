@@ -429,7 +429,7 @@ function dictionary(){return /*<dict>*/{
 "판 기록":"Rounds",
 "↶ 되돌리기":"↶ Undo",
 "마지막 판 되돌리기":"Undo last round",
-"아직 기록한 판이 없습니다.":"No rounds recorded yet.","내 닉네임 지정하기":"Set my nickname","이 게임 기록 {0}판이 있지만 아직 내 닉네임을 지정하지 않아 통계에 나오지 않아요. 기록에서 쓴 내 이름을 지정하면 바로 반영돼요.":"There are {0} plays of this game, but they don't appear in your stats because you haven't set your nickname yet. Choose the name you used in your records and they'll show up right away.","이 게임 기록 {0}판에 내 닉네임이 없어 통계에 나오지 않아요. 그 기록에서 쓴 이름을 내 닉네임으로 연결하세요.":"Your nickname isn't in the {0} plays of this game, so they don't appear in your stats. Link the name you used in those plays to your nickname.",
+"아직 기록한 판이 없습니다.":"No rounds recorded yet.","내 닉네임 지정하기":"Set my nickname","이 플레이어가 나예요":"This player is me","이 게임 기록 보기":"See this game's records","이 게임 기록 {0}판의 플레이어가 모두 익명이라 닉네임으로 찾을 수 없어요. 기록에서 나였던 플레이어 이름을 눌러 '이 플레이어가 나예요'를 고르세요.":"All players in the {0} plays of this game are anonymous, so your nickname can't find you. Tap the player who was you in a record and choose 'This player is me'.","이 게임 기록 {0}판이 있지만 아직 내 닉네임을 지정하지 않아 통계에 나오지 않아요. 기록에서 쓴 내 이름을 지정하면 바로 반영돼요.":"There are {0} plays of this game, but they don't appear in your stats because you haven't set your nickname yet. Choose the name you used in your records and they'll show up right away.","이 게임 기록 {0}판에 내 닉네임이 없어 통계에 나오지 않아요. 그 기록에서 쓴 이름을 내 닉네임으로 연결하세요.":"Your nickname isn't in the {0} plays of this game, so they don't appear in your stats. Link the name you used in those plays to your nickname.",
 "{0}판 · {1}{2} {3}{4} {5}":"Round {0} · {1}{2} {3}{4} {5}",
 "미션 {0}":"Mission {0}",
 "마이티 기록":"Mighty",
