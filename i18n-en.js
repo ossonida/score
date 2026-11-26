@@ -656,7 +656,7 @@ function dictionary(){return /*<dict>*/{
 "미션형":"Missions",
 "플레이하며 미션마다 성공·실패 · 미션 진행이 쌓입니다":"Success or fail each mission as you play · progress builds up",
 "난이도형":"Difficulty",
-"판데믹처럼 난이도를 고르고 성공·실패 기록":"Choose a difficulty and record success/fail, like Pandemic",
+"팬데믹 기본판처럼 난이도를 고르고 성공·실패 기록":"Choose a difficulty and record success/fail, like base Pandemic",
 "캠페인형":"Campaign",
 "글룸헤이븐처럼 시나리오 번호와 성공·실패 · 시도 횟수는 자동":"Scenario number and success/fail, like Gloomhaven · attempts counted automatically",
 "기록 방식으로":"Back to modes",
