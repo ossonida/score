@@ -3,9 +3,9 @@ import {createAnalyticsGate,isTestEnvironment} from './analytics-policy.js?v=156
 import {analyticsMode,analyticsUserProperties,armUntilTaskEnd,createFeatureAnalytics} from './analytics-events.js?v=339';
 import {recordMode} from './records-core.js?v=309';
 // Keep the site's existing GA property; never pass email, email hashes or Firebase UID to GA.
-const measurementId='G-NFEYJ27K5H',scoreMeasurementId='G-145GFM02GZ',disableKey='ga-disable-'+measurementId;
+const measurementId='G-145GFM02GZ',disableKey='ga-disable-'+measurementId;
 // 전용 속성(Score Counter)과 기존 공용 속성에 함께 보낸다. 끄기는 두 ID 모두에 적용한다.
-const setDisabled=value=>{window[disableKey]=value;window['ga-disable-'+scoreMeasurementId]=value;};
+const setDisabled=value=>{window[disableKey]=value;};
 setDisabled(true);
 const analytics=createFeatureAnalytics({
  storage:sessionStorage,
@@ -110,7 +110,7 @@ const gate=createAnalyticsGate({
  start:()=>{
   setDisabled(false);window.dataLayer=window.dataLayer||[];
   window.gtag=function(){window.dataLayer.push(arguments);};
-  window.gtag('js',new Date());lastUserProperties='';syncUserProperties();window.gtag('config',measurementId,{content_group:'score'});window.gtag('config',scoreMeasurementId);
+  window.gtag('js',new Date());lastUserProperties='';syncUserProperties();window.gtag('config',measurementId,{content_group:'score'});
   const script=document.createElement('script');script.async=true;
   script.src='https://www.googletagmanager.com/gtag/js?id='+measurementId;document.head.append(script);
  }
