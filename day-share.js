@@ -2,7 +2,7 @@ import {gameKey,winnerIds,coopKind,recordMode,scenarioAttempt} from './records-c
 import {meIn,nameKey} from './personal-stats.js?v=310';
 import {milestones,MILESTONES} from './stats-extras.js?v=326';
 import {stackText,shareLanguage,shareCopy,localizedGameName,shareCoverUrl,loadLargeCovers,formatShareDate,recentShareData,createRecentShareImage,missionDay,maskName,fillRound,loadImage,coopOutcome,coopDaySummary} from './stats-share.js?v=334';
-import {openShareDialog,recapCopy,recapData,createRecapSingle,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=364';
+import {openShareDialog,recapCopy,line,pill,cover,shade,frame,box,card} from './recap-share.js?v=364';
 
 // 최근 기록 공유 캐러셀: 1장은 그날 전체(createRecentShareImage), 2장부터 그날 한 게임마다 한 장(표지 · 오늘/통산 판 수 · 방식별 차트 · 이야기 카드).
 // 다른 사람은 칭찬 자리에만, 공개용은 이름을 가리고, 우승자 표시를 끄면 승부·점수·승리 이야기는 뺀다. 이미지 글은 모두 한 줄.
@@ -234,10 +234,8 @@ export function openDayShare(records,profile,{raw=records}={}){
   const mask=state.scope!=='friends',data=recentShareData(records,profile,state.lang,{winners:state.winners,mask});await loadLargeCovers(data.games.map(game=>game.game));for(const game of data.games)game.imageUrl=shareCoverUrl(game.game);const first=await createRecentShareImage(data);
   if(state.format!=='set')return {blobs:[first],title:data.title};
   const light=data.games.length<=2,stories=data.games.slice(0,MAX_GAMES).map(game=>gameStory(raw,data.date,game.key,profile,{locale:state.lang,mask,winners:state.winners,full:state.full&&!mask&&state.winners})).filter(Boolean),images=await Promise.all(stories.map(story=>loadImage(story.imageUrl)));
-  // 가벼운 날(1~2게임): 1장 요약 없이 게임 장 + 이번 달 결산. 하루 이야기는 첫 게임 장 표지 배지로(아래 이야기 줄을 차지하지 않게).
-  if(light&&stories.length){stories[0]={...stories[0],badges:dayStories(raw,data.date,{locale:state.lang}).map(item=>item.headline)};const blobs=[];for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+1,stories.length+1));
-   // 이번 달 결산은 이번 달에 플레이한 날이 2일 이상일 때만(그날뿐이면 같은 내용이 반복된다).
-   const start=data.date.slice(0,8)+'01',monthDays=new Set(records.filter(play=>play.date>=start&&play.date<=data.date).map(play=>play.date));if(monthDays.size>=2){const month=recapData(records,{preset:'month',current:{start,end:data.date},previous:null},profile,{locale:state.lang,scope:state.scope});blobs.push(await createRecapSingle(month));}return {blobs,title:data.title};}
+  // 가벼운 날(1~2게임): 1장 요약 없이 게임 장만(이번 달 결산 장은 붙이지 않는다). 하루 이야기는 첫 게임 장 표지 배지로(아래 이야기 줄을 차지하지 않게).
+  if(light&&stories.length){stories[0]={...stories[0],badges:dayStories(raw,data.date,{locale:state.lang}).map(item=>item.headline)};const blobs=[];for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+1,stories.length));return {blobs,title:data.title};}
   // 게임 장은 첫 장 포함 10장까지(9게임). 넘친 게임은 마지막 게임 장 배지로 알린다.
   const extra=data.games.length-stories.length;if(extra>0&&stories.length)stories[stories.length-1]={...stories.at(-1),badges:[COPY[shareLanguage(state.lang)].moreGames(extra)]};
   const blobs=[first];for(const [index,story]of stories.entries())blobs.push(await createGameSlide(story,images[index],index+2,stories.length+1));
